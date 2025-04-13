@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function hasSellerRole() {
+      // For testing, let's assume all signed-in users can be sellers
+      return isSignedIn();
+      // In production, use this:
+      // return isSignedIn() && 
+      //   (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_seller == true ||
+      //    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller');
+    }
+    
+    function isAdmin() {
+      // For testing
+      return isSignedIn();
+      // In production:
+      // return isSignedIn() && 
+      //   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // User profiles
+    match /users/{userId} {
+      allow read;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Tool listings
+    match /tools/{toolId} {
+      allow read;
+      // Check for user_id instead of seller_id to match our implementation
+      allow create: if isSignedIn() && hasSellerRole() &&
+                    request.resource.data.user_id == request.auth.uid;
+      allow update: if isSignedIn() && 
+                    (resource.data.user_id == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && 
+                   (resource.data.user_id == request.auth.uid || isAdmin());
+    }
+    
+    // Carts
+    match /carts/{cartId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Cart items
+      match /items/{itemId} {
+        allow read: if isSignedIn() && get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
+        allow write: if isSignedIn() && get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
+      }
+    }
+    
+    // Orders
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+    
+    // Allow other read-only collections for users
+    match /{path=**}/tools {
+      allow read;
+    }
+  }
+}

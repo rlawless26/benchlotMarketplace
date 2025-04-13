@@ -28,7 +28,8 @@ This is a clean implementation of Firebase authentication, Firestore database, a
 - ✅ Firestore User Profiles
 - ✅ Tool Listings & Marketplace
 - ✅ Image Handling with Firebase Storage
-- ⏳ Stripe Integration for Payments
+- ✅ Shopping Cart Functionality
+- ✅ Stripe Integration for Payments
 - ⏳ SendGrid for Email Notifications
 - ⏳ Security Rules Implementation
 
@@ -45,7 +46,7 @@ This is a clean implementation of Firebase authentication, Firestore database, a
    - Listing display components
    - Image handling with Storage
 
-3. **Stripe Integration** ⏳
+3. **Stripe Integration** ✅
    - Connect Firebase Functions with Stripe
    - Implement payment processing
    - Set up connected accounts
@@ -88,6 +89,6 @@ The Firebase configuration is loaded from environment variables with fallbacks f
 
 ## Next Steps
 
-- Implement Stripe integration for payments
 - Set up SendGrid for email notifications
 - Configure Firebase security rules
+- Implement Stripe webhook handling for async payment events

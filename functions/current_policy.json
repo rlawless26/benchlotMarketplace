@@ -1,0 +1,10 @@
+{
+  "constraint": "constraints/iam.allowedPolicyMemberDomains",
+  "etag": "CLXm378GEPD7tpoB",
+  "listPolicy": {
+    "allowedValues": [
+      "C00my0lpa"
+    ]
+  },
+  "updateTime": "2025-04-10T16:35:01.323862Z"
+}

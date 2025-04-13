@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User images
+    match /user_images/{userId}/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Tool images
+    match /tools/{toolId}/{allPaths=**} {
+      allow read;
+      // For testing purposes, allow any authenticated user to write
+      allow write: if request.auth != null;
+      
+      // In production, you'd want this more restrictive rule:
+      // allow write: if request.auth != null && 
+      //             exists(/databases/$(database)/documents/tools/$(toolId)) &&
+      //             get(/databases/$(database)/documents/tools/$(toolId)).data.user_id == request.auth.uid;
+    }
+    
+    // Backward compatibility
+    match /tool_images/{toolId}/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null;
+    }
+    
+    // Public assets
+    match /public/{allPaths=**} {
+      allow read;
+      // For testing, allow any authenticated user to write
+      allow write: if request.auth != null;
+    }
+  }
+}

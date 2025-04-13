@@ -1,0 +1,12 @@
+{
+  "name": "organizations/892371153437/policies/iam.allowedPolicyMemberDomains",
+  "spec": {
+    "rules": [
+      {
+        "values": {
+          "allowedValues": ["allUsers", "C00my0lpa"]
+        }
+      }
+    ]
+  }
+}

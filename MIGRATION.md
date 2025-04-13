@@ -33,7 +33,7 @@ This document outlines the strategy for migrating Benchlot from Supabase to Fire
 ## Implementation Order
 1. ✅ Tool Listings & Image Handling
 2. ✅ Marketplace/Browsing Functionality
-3. ⏳ Stripe Integration
+3. ✅ Stripe Integration
 4. ⏳ SendGrid Email Integration
 5. ⏳ Security Rules & Deployment
 
@@ -47,6 +47,17 @@ This document outlines the strategy for migrating Benchlot from Supabase to Fire
 - ✅ Tool listings model and components implemented
 - ✅ Marketplace browsing functionality implemented
 - ✅ Image handling with Firebase Storage implemented
-- ⏳ Stripe integration for payments pending
+- ✅ Shopping cart system implemented
+- ✅ Stripe frontend integration complete
+- ✅ Firebase Functions successfully deployed
 - ⏳ SendGrid email notifications pending
 - ⏳ Security rules implementation pending
+
+## Stripe Integration (Updated 4/13/2025)
+The Stripe integration has been fully implemented with Firebase Functions:
+
+1. ✅ Firebase Functions successfully deployed to https://stripeapi-sed2e4p6ua-uc.a.run.app
+2. ✅ StripeCheckout component updated to use the deployed functions
+3. ⏳ Firestore security rules still pending implementation
+
+The Stripe integration now uses a secure server-side approach through Firebase Functions, with proper error handling and production-ready code. See the STRIPE-INTEGRATION.md file for more details on how to use and test the integration.

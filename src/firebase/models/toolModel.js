@@ -14,6 +14,7 @@ import {
   where, 
   orderBy, 
   limit,
+  startAfter,
   serverTimestamp 
 } from 'firebase/firestore';
 import { 
@@ -177,32 +178,40 @@ export const getToolsByUserId = async (userId) => {
 /**
  * Get all active tools (for marketplace)
  * @param {Object} options - Query options
- * @param {number} options.limitCount - Number of tools to retrieve
+ * @param {number} options.limitCount - Number of tools to retrieve (defaults to 20 for pagination)
  * @param {string} options.category - Filter by category
- * @returns {Promise<Array>} - Array of tool objects
+ * @param {string} options.lastVisible - Last document for pagination
+ * @returns {Promise<Object>} - Object with tools array and pagination info
  */
 export const getActiveTools = async (options = {}) => {
   try {
-    let q = query(
-      toolsCollection,
-      where('status', '==', 'active')
-    );
+    // Default limit to 20 items for better performance
+    const itemLimit = options.limitCount || 20;
+    let queryConstraints = [where('status', '==', 'active')];
     
     // Add category filter if provided
     if (options.category) {
-      q = query(q, where('category', '==', options.category));
+      queryConstraints.push(where('category', '==', options.category));
     }
     
     // Add sorting
-    q = query(q, orderBy('created_at', 'desc'));
+    queryConstraints.push(orderBy('created_at', 'desc'));
     
-    // Add limit if provided
-    if (options.limitCount) {
-      q = query(q, limit(options.limitCount));
+    // Create the base query
+    let q = query(toolsCollection, ...queryConstraints);
+    
+    // Add pagination if a last document is provided
+    if (options.lastVisible) {
+      q = query(q, startAfter(options.lastVisible), limit(itemLimit));
+    } else {
+      q = query(q, limit(itemLimit));
     }
     
     const querySnapshot = await getDocs(q);
     const tools = [];
+    
+    // Get the last visible document for pagination
+    const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
     
     querySnapshot.forEach((doc) => {
       tools.push({
@@ -211,7 +220,12 @@ export const getActiveTools = async (options = {}) => {
       });
     });
     
-    return tools;
+    // Return both the tools and pagination info
+    return {
+      tools,
+      lastVisible,
+      hasMore: querySnapshot.docs.length === itemLimit
+    };
   } catch (error) {
     console.error('Error getting active tools:', error);
     throw error;

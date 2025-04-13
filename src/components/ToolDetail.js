@@ -7,6 +7,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getToolById } from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
 import ImageComponent from './ImageComponent';
+import AddToCartButton from './AddToCartButton';
 
 const ToolDetail = () => {
   const { id } = useParams();
@@ -252,15 +253,7 @@ const ToolDetail = () => {
                 </>
               ) : (
                 <>
-                  <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700"
-                    onClick={() => {
-                      // Temporary placeholder - will implement cart functionality later
-                      alert('Add to cart functionality coming soon!');
-                    }}
-                  >
-                    Add to Cart
-                  </button>
+                  <AddToCartButton tool={tool} />
                   <button
                     className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
                     onClick={() => {
