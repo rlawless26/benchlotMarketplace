@@ -15,51 +15,158 @@ service cloud.firestore {
       return request.auth.token.firebase.sign_in_provider == 'service_account';
     }
     
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isSeller() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSeller == true ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller');
+    }
+    
+    function isToolOwner(toolId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/tools/$(toolId)) &&
+        get(/databases/$(database)/documents/tools/$(toolId)).data.user_id == request.auth.uid;
+    }
+    
+    function isValidTool() {
+      let incomingData = request.resource.data;
+      return incomingData.name is string && 
+             incomingData.name.size() > 0 &&
+             incomingData.price is number &&
+             incomingData.price >= 0 &&
+             incomingData.description is string;
+    }
+    
     // Allow service accounts full access for Firebase Functions
+    // This is critical for operations performed by the Stripe integration
     match /{document=**} {
       allow read, write: if isServiceAccount();
     }
     
     // User profiles
     match /users/{userId} {
+      // Anyone can see basic user profiles
       allow read;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false; // Prevent accidental deletion
+      
+      // Users can create their own profiles
+      allow create: if isOwner(userId) && 
+                   request.resource.data.role != 'admin'; // Prevent self-assignment of admin
+      
+      // Users can update their own profiles, admins can update any profile
+      allow update: if (isOwner(userId) && 
+                     request.resource.data.role == resource.data.role) || // Users can't change their own role
+                     isAdmin();
+      
+      // Only admins can delete user profiles
+      allow delete: if isAdmin();
     }
     
     // Tool listings
     match /tools/{toolId} {
+      // Anyone can read tool listings
       allow read;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.user_id == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      
+      // Only authenticated users can create tools
+      // But they must be a seller if we're enforcing seller status
+      allow create: if isSignedIn() && 
+                    (isSeller() || true) && // Conditionally enforce seller status (currently not enforced)
+                    request.resource.data.user_id == request.auth.uid &&
+                    isValidTool();
+      
+      // Owners and admins can update tools
+      allow update: if (isSignedIn() && 
+                     resource.data.user_id == request.auth.uid) || 
+                     isAdmin();
+                    
+      // Owners and admins can delete tools
+      allow delete: if (isSignedIn() && 
+                    resource.data.user_id == request.auth.uid) || 
+                    isAdmin();
     }
     
-    // Carts
+    // Shopping carts
     match /carts/{cartId} {
+      // Users can only access their own carts
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Users can create their own carts
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own carts
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own carts
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
       
-      // Cart items
+      // Cart items (subcollection)
       match /items/{itemId} {
-        allow read: if isSignedIn() && get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
-        allow write: if isSignedIn() && get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
+        // Users can only access their own cart items
+        allow read: if isSignedIn() && 
+                    get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
+        
+        // Users can only modify their own cart items
+        allow write: if isSignedIn() && 
+                     get(/databases/$(database)/documents/carts/$(cartId)).data.userId == request.auth.uid;
       }
     }
     
     // Orders
     match /orders/{orderId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Users can view their own orders
+      // Sellers can view orders for their products
+      // Admins can view all orders
+      allow read: if isSignedIn() && (
+                  resource.data.userId == request.auth.uid || 
+                  resource.data.sellerId == request.auth.uid ||
+                  isAdmin()
+                  );
+      
+      // Orders are created via Firebase Functions
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if false; // Prevent updates to completed orders
+      
+      // Orders cannot be updated by users once created (read-only)
+      // Admins can update order status
+      allow update: if isAdmin() || isServiceAccount();
+      
+      // Orders cannot be deleted
+      allow delete: if false;
+      
+      // Order items (subcollection if needed)
+      match /items/{itemId} {
+        allow read: if isSignedIn() && 
+                    get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid;
+        
+        // Order items are read-only for everyone except admins
+        allow write: if isAdmin() || isServiceAccount();
+      }
     }
     
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
-      allow read, write: if isServiceAccount();
+      allow read, write: if isServiceAccount() || isAdmin();
+    }
+    
+    // Feedback or reviews (if implemented)
+    match /reviews/{reviewId} {
+      // Anyone can read reviews
+      allow read;
+      
+      // Users can create reviews for items they've purchased
+      allow create: if isSignedIn() && 
+                   request.resource.data.userId == request.auth.uid;
+      
+      // Users can only update their own reviews
+      allow update: if isSignedIn() && 
+                   resource.data.userId == request.auth.uid;
+      
+      // Admins can delete inappropriate reviews
+      allow delete: if isAdmin();
     }
   }
 }

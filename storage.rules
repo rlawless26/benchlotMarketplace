@@ -2,35 +2,76 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // User images
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isServiceAccount() {
+      return request.auth.token.firebase.sign_in_provider == 'service_account';
+    }
+    
+    function isToolOwner(toolId) {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/tools/$(toolId)) &&
+        firestore.get(/databases/(default)/documents/tools/$(toolId)).data.user_id == request.auth.uid;
+    }
+    
+    function isImageTypeValid() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isFileSizeValid() {
+      // Limit file size to 5MB
+      return request.resource.size <= 5 * 1024 * 1024;
+    }
+    
+    // Service account has full access
+    match /{allPaths=**} {
+      allow read, write: if isServiceAccount();
+    }
+    
+    // User profile images
     match /user_images/{userId}/{allPaths=**} {
+      // Anyone can view user profile images
       allow read;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can only upload/modify their own profile images
+      allow write: if isOwner(userId) && 
+                   isImageTypeValid() && 
+                   isFileSizeValid();
     }
     
     // Tool images
     match /tools/{toolId}/{allPaths=**} {
+      // Anyone can view tool images
       allow read;
-      // For testing purposes, allow any authenticated user to write
-      allow write: if request.auth != null;
       
-      // In production, you'd want this more restrictive rule:
-      // allow write: if request.auth != null && 
-      //             exists(/databases/$(database)/documents/tools/$(toolId)) &&
-      //             get(/databases/$(database)/documents/tools/$(toolId)).data.user_id == request.auth.uid;
+      // Only the tool owner can upload/modify images for their tools
+      allow write: if isToolOwner(toolId) && 
+                   isImageTypeValid() && 
+                   isFileSizeValid();
     }
     
-    // Backward compatibility
-    match /tool_images/{toolId}/{allPaths=**} {
-      allow read;
-      allow write: if request.auth != null;
-    }
-    
-    // Public assets
+    // Public assets like logos, marketing images, etc.
     match /public/{allPaths=**} {
+      // Anyone can view public assets
       allow read;
-      // For testing, allow any authenticated user to write
-      allow write: if request.auth != null;
+      
+      // Only admins can modify public assets
+      allow write: if isAdmin() && 
+                   isImageTypeValid() && 
+                   isFileSizeValid();
     }
   }
 }
