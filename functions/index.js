@@ -173,13 +173,25 @@ app.post('/confirm-payment', async (req, res) => {
       
       console.log(`Order created successfully with ID: ${orderRef.id}`);
       
-      // Update the cart status
-      console.log(`Updating cart ${cartId} status to completed`);
+      // Update the cart status and clear its contents
+      console.log(`Updating cart ${cartId} status to completed and clearing items`);
       const cartRef = db.collection('carts').doc(cartId);
       await cartRef.update({
         status: 'completed',
-        orderId: orderRef.id
+        orderId: orderRef.id,
+        items: [],
+        itemCount: 0,
+        totalAmount: 0
       });
+      
+      // Also clear the items subcollection
+      console.log(`Clearing items subcollection for cart ${cartId}`);
+      const itemsSnapshot = await db.collection('carts').doc(cartId).collection('items').get();
+      const batch = db.batch();
+      itemsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
       
       console.log(`Cart ${cartId} updated successfully`);
       

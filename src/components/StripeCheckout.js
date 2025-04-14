@@ -40,6 +40,7 @@ const CheckoutForm = ({ clientSecret, cartId }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { user } = useAuth();
+  const { emptyCart } = useCart(); // Import the emptyCart function
   const navigate = useNavigate();
   
   const [succeeded, setSucceeded] = useState(false);
@@ -93,6 +94,15 @@ const CheckoutForm = ({ clientSecret, cartId }) => {
           setSucceeded(true);
           setError(null);
           setProcessing(false);
+          
+          // Clear the cart in the local state
+          try {
+            await emptyCart();
+            console.log('Cart successfully cleared after purchase');
+          } catch (cartError) {
+            console.error('Error clearing cart:', cartError);
+            // Continue with the purchase flow even if cart clearing fails
+          }
           
           // Navigate to the order confirmation page
           setTimeout(() => {

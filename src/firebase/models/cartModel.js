@@ -68,17 +68,48 @@ export const getOrCreateCart = async (userId) => {
       };
     }
     
-    // Get cart items
-    const itemsCollection = collection(db, 'carts', cart.id, 'items');
-    const itemsSnapshot = await getDocs(itemsCollection);
+    // Check if cart is completed - if so, treat it as empty
+    if (cart.status === 'completed') {
+      console.log('Cart is marked as completed, returning empty cart');
+      return {
+        ...cart,
+        items: [],
+        itemCount: 0,
+        totalAmount: 0
+      };
+    }
     
-    const items = [];
-    itemsSnapshot.forEach(doc => {
-      items.push({
-        id: doc.id,
-        ...doc.data()
+    // Get cart items (first from parent document if available, otherwise from subcollection)
+    let items = cart.items || [];
+    
+    // If we don't have items in the parent document, or they might be out of sync, 
+    // get them from the subcollection
+    if (!items || items.length === 0) {
+      const itemsCollection = collection(db, 'carts', cart.id, 'items');
+      const itemsSnapshot = await getDocs(itemsCollection);
+      
+      items = [];
+      itemsSnapshot.forEach(doc => {
+        items.push({
+          id: doc.id,
+          ...doc.data()
+        });
       });
-    });
+      
+      // If we found items in the subcollection but they weren't in the parent document,
+      // update the parent document
+      if (items.length > 0 && (!cart.items || cart.items.length === 0)) {
+        await updateCartTotals(cart.id);
+        // Re-fetch the cart after updating it
+        const updatedCartRef = await getDoc(doc(db, 'carts', cart.id));
+        if (updatedCartRef.exists()) {
+          cart = {
+            id: updatedCartRef.id,
+            ...updatedCartRef.data()
+          };
+        }
+      }
+    }
     
     return {
       ...cart,
@@ -128,7 +159,8 @@ export const addItemToCart = async (cartId, item) => {
       await addDoc(itemsCollection, itemData);
     }
     
-    // The cart totals will be updated by the Cloud Function
+    // Calculate and update cart totals
+    await updateCartTotals(cartId);
     
     // Return the updated cart
     return getOrCreateCart(item.userId);
@@ -160,7 +192,8 @@ export const updateCartItemQuantity = async (cartId, itemId, quantity, userId) =
       });
     }
     
-    // The cart totals will be updated by the Cloud Function
+    // Calculate and update cart totals
+    await updateCartTotals(cartId);
     
     // Return the updated cart
     return getOrCreateCart(userId);
@@ -181,7 +214,8 @@ export const removeCartItem = async (cartId, itemId, userId) => {
     const itemRef = doc(db, 'carts', cartId, 'items', itemId);
     await deleteDoc(itemRef);
     
-    // The cart totals will be updated by the Cloud Function
+    // Calculate and update cart totals
+    await updateCartTotals(cartId);
     
     // Return the updated cart
     return getOrCreateCart(userId);
@@ -209,11 +243,12 @@ export const clearCart = async (cartId, userId) => {
     
     await Promise.all(deletePromises);
     
-    // Update cart totals
+    // Update cart totals to zero
     const cartRef = doc(db, 'carts', cartId);
     await updateDoc(cartRef, {
       itemCount: 0,
       totalAmount: 0,
+      items: [],
       updatedAt: serverTimestamp()
     });
     
@@ -266,11 +301,66 @@ export const getCartById = async (cartId) => {
   }
 };
 
+/**
+ * Calculate and update cart totals based on items in the subcollection
+ * @param {string} cartId - The cart ID to update
+ * @returns {Promise<boolean>} - Success status
+ */
+export const updateCartTotals = async (cartId) => {
+  try {
+    console.log(`Updating cart totals for: ${cartId}`);
+    const cartRef = doc(db, 'carts', cartId);
+    const cartDoc = await getDoc(cartRef);
+    
+    if (!cartDoc.exists()) {
+      console.log(`Cart ${cartId} not found`);
+      return false;
+    }
+    
+    // Get items from the subcollection
+    const itemsCollectionRef = collection(db, 'carts', cartId, 'items');
+    const itemsSnapshot = await getDocs(itemsCollectionRef);
+    
+    let totalAmount = 0;
+    let itemCount = 0;
+    const items = [];
+    
+    itemsSnapshot.forEach((doc) => {
+      const item = doc.data();
+      if (item.price && item.quantity) {
+        totalAmount += item.price * item.quantity;
+        itemCount += item.quantity;
+        items.push({
+          id: doc.id,
+          ...item
+        });
+      }
+    });
+    
+    console.log(`Calculated totals: itemCount=${itemCount}, totalAmount=${totalAmount}`);
+    
+    // Update the cart with correct values
+    await updateDoc(cartRef, {
+      itemCount,
+      totalAmount,
+      items, // Also store items in the parent document for easier access
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log(`Cart ${cartId} totals updated successfully!`);
+    return true;
+  } catch (error) {
+    console.error(`Error updating cart totals for ${cartId}:`, error);
+    return false;
+  }
+};
+
 export default {
   getOrCreateCart,
   addItemToCart,
   updateCartItemQuantity,
   removeCartItem,
   clearCart,
-  getCartById
+  getCartById,
+  updateCartTotals
 };
