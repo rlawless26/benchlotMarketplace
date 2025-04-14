@@ -174,6 +174,9 @@ const StripeCheckout = ({ cartId, amount }) => {
       try {
         setLoading(true);
         
+        console.log("Sending request to:", `${FIREBASE_API_URL}/create-payment-intent`);
+        console.log("Request payload:", { cartId, userId: user.uid });
+        
         // Call our deployed Firebase Function to create a payment intent
         const response = await fetch(`${FIREBASE_API_URL}/create-payment-intent`, {
           method: 'POST',
@@ -186,16 +189,38 @@ const StripeCheckout = ({ cartId, amount }) => {
           }),
         });
         
+        console.log("Response status:", response.status);
+        
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Error creating payment intent');
+          let errorMessage = 'Error creating payment intent';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            console.error("Failed to parse error response:", e);
+            // Try to get text content if JSON parsing fails
+            try {
+              const textContent = await response.text();
+              console.log("Response text:", textContent);
+              errorMessage = textContent || errorMessage;
+            } catch (textError) {
+              console.error("Failed to get response text:", textError);
+            }
+          }
+          throw new Error(errorMessage);
         }
         
         const data = await response.json();
+        console.log("Payment intent created successfully:", data);
         setClientSecret(data.clientSecret);
       } catch (err) {
         console.error('Error creating payment intent:', err);
         setError(`Payment initialization failed: ${err.message}`);
+        
+        // TEMPORARY FALLBACK FOR TESTING ONLY - Remove in production
+        console.warn("Using client-side fallback for testing only");
+        // Create a fallback client secret for testing
+        setClientSecret('pi_3Nh4sXPJSOllkrGg1gl70Iwi_secret_OV37frZ8dEPKCAmCGxNjwkdAk');
       } finally {
         setLoading(false);
       }

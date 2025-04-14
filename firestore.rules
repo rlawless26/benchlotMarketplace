@@ -11,41 +11,29 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    function hasSellerRole() {
-      // For testing, let's assume all signed-in users can be sellers
-      return isSignedIn();
-      // In production, use this:
-      // return isSignedIn() && 
-      //   (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_seller == true ||
-      //    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller');
+    function isServiceAccount() {
+      return request.auth.token.firebase.sign_in_provider == 'service_account';
     }
     
-    function isAdmin() {
-      // For testing
-      return isSignedIn();
-      // In production:
-      // return isSignedIn() && 
-      //   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    // Allow service accounts full access for Firebase Functions
+    match /{document=**} {
+      allow read, write: if isServiceAccount();
     }
     
     // User profiles
     match /users/{userId} {
       allow read;
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow update: if isOwner(userId);
+      allow delete: if false; // Prevent accidental deletion
     }
     
     // Tool listings
     match /tools/{toolId} {
       allow read;
-      // Check for user_id instead of seller_id to match our implementation
-      allow create: if isSignedIn() && hasSellerRole() &&
-                    request.resource.data.user_id == request.auth.uid;
-      allow update: if isSignedIn() && 
-                    (resource.data.user_id == request.auth.uid || isAdmin());
-      allow delete: if isSignedIn() && 
-                   (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
     }
     
     // Carts
@@ -64,18 +52,14 @@ service cloud.firestore {
     
     // Orders
     match /orders/{orderId} {
-      allow read: if isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
-        resource.data.sellerId == request.auth.uid ||
-        isAdmin()
-      );
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
+      allow update: if false; // Prevent updates to completed orders
     }
     
-    // Allow other read-only collections for users
-    match /{path=**}/tools {
-      allow read;
+    // Diagnostics collection for service testing
+    match /_diagnostics/{docId} {
+      allow read, write: if isServiceAccount();
     }
   }
 }

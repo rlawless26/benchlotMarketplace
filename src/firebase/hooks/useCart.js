@@ -27,19 +27,26 @@ export function CartProvider({ children }) {
   // Load or create cart when user authenticates
   useEffect(() => {
     const loadCart = async () => {
+      // Debug logging
+      console.log("useCart - Auth check:", { isAuthenticated: isAuthenticated(), userId: user?.uid });
+      
       if (!isAuthenticated() || !user) {
+        console.log("useCart - User not authenticated, setting cart to null");
         setCart(null);
         setLoading(false);
         return;
       }
 
       try {
+        console.log("useCart - Loading cart for user:", user.uid);
         setLoading(true);
         const userCart = await getOrCreateCart(user.uid);
+        console.log("useCart - Cart loaded:", userCart);
         setCart(userCart);
         setError(null);
       } catch (err) {
         console.error('Error loading cart:', err);
+        console.log("useCart - Error details:", { message: err.message, code: err.code });
         setError('Failed to load your cart. Please try again.');
       } finally {
         setLoading(false);

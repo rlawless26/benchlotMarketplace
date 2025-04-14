@@ -7,8 +7,20 @@ const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors')({ origin: true });
 
-// Initialize Firebase Admin
-admin.initializeApp();
+// Initialize Firebase Admin with explicit service account credentials
+try {
+  const serviceAccount = require('./service-account.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log('Initialized Firebase Admin with explicit service account credentials');
+} catch (error) {
+  console.error('Error initializing with service account, falling back to default:', error);
+  // Fall back to default credentials
+  admin.initializeApp();
+  console.log('Initialized Firebase Admin with default credentials');
+}
+
 const db = admin.firestore();
 
 // Initialize Stripe with error handling
@@ -43,15 +55,34 @@ app.post('/create-payment-intent', async (req, res) => {
       return res.status(400).json({ error: 'Missing cartId or userId' });
     }
     
-    // Get the cart from Firestore
-    const cartRef = db.collection('carts').doc(cartId);
-    const cartDoc = await cartRef.get();
+    console.log(`Attempting to get cart ${cartId} for user ${userId}`);
     
-    if (!cartDoc.exists) {
-      return res.status(404).json({ error: 'Cart not found' });
+    let cart;
+    try {
+      // Get the cart from Firestore
+      const cartRef = db.collection('carts').doc(cartId);
+      console.log('Cart reference created:', cartRef.path);
+      
+      const cartDoc = await cartRef.get();
+      console.log('Cart document fetch attempt completed');
+      
+      if (!cartDoc.exists) {
+        console.log(`Cart ${cartId} not found`);
+        return res.status(404).json({ error: 'Cart not found' });
+      }
+      
+      console.log(`Cart ${cartId} found successfully`);
+      cart = cartDoc.data();
+      console.log('Cart data:', JSON.stringify(cart, null, 2));
+    } catch (firestoreError) {
+      console.error('Detailed Firestore error:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      if (firestoreError.details) {
+        console.error('Error details:', firestoreError.details);
+      }
+      throw firestoreError; // Re-throw to be caught by the outer catch block
     }
-    
-    const cart = cartDoc.data();
     
     // Verify the cart belongs to the user
     if (cart.userId !== userId) {
@@ -98,28 +129,68 @@ app.post('/confirm-payment', async (req, res) => {
       return res.status(400).json({ error: 'Payment has not succeeded' });
     }
     
+    console.log(`Confirming payment for intent ${paymentIntentId}, cart ${cartId}`);
+    
     // Get the cart from Firestore
-    const cartRef = db.collection('carts').doc(cartId);
-    const cart = (await cartRef.get()).data();
+    let cart;
+    try {
+      console.log(`Attempting to get cart ${cartId}`);
+      const cartRef = db.collection('carts').doc(cartId);
+      console.log('Cart reference created:', cartRef.path);
+      
+      const cartDoc = await cartRef.get();
+      console.log('Cart document fetch completed');
+      
+      if (!cartDoc.exists) {
+        console.log(`Cart ${cartId} not found`);
+        return res.status(404).json({ error: 'Cart not found for payment confirmation' });
+      }
+      
+      console.log(`Cart ${cartId} found successfully`);
+      cart = cartDoc.data();
+      console.log('Cart data:', JSON.stringify(cart, null, 2));
+    } catch (firestoreError) {
+      console.error('Detailed Firestore error:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      if (firestoreError.details) {
+        console.error('Error details:', firestoreError.details);
+      }
+      throw firestoreError; // Re-throw to be caught by the outer catch block
+    }
     
     // Create an order in Firestore
-    const orderRef = await db.collection('orders').add({
-      userId: cart.userId,
-      items: cart.items,
-      totalAmount: cart.totalAmount,
-      status: 'paid',
-      paymentIntentId,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    // Update the cart status
-    await cartRef.update({
-      status: 'completed',
-      orderId: orderRef.id
-    });
-    
-    // Return success
-    res.json({ success: true, orderId: orderRef.id });
+    try {
+      console.log('Creating order in Firestore');
+      const orderRef = await db.collection('orders').add({
+        userId: cart.userId,
+        items: cart.items,
+        totalAmount: cart.totalAmount,
+        status: 'paid',
+        paymentIntentId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log(`Order created successfully with ID: ${orderRef.id}`);
+      
+      // Update the cart status
+      console.log(`Updating cart ${cartId} status to completed`);
+      const cartRef = db.collection('carts').doc(cartId);
+      await cartRef.update({
+        status: 'completed',
+        orderId: orderRef.id
+      });
+      
+      console.log(`Cart ${cartId} updated successfully`);
+      
+      // Return success
+      res.json({ success: true, orderId: orderRef.id });
+    } catch (dbError) {
+      console.error('Error creating order or updating cart:', dbError);
+      console.error('Error code:', dbError.code);
+      console.error('Error message:', dbError.message);
+      throw dbError; // Re-throw to be caught by the outer catch block
+    }
   } catch (error) {
     console.error('Error confirming payment:', error);
     res.status(500).json({ error: error.message });
@@ -133,11 +204,15 @@ app.post('/create-connected-account', async (req, res) => {
   try {
     const { userId, email } = req.body;
     
+    console.log(`Creating connected account for user ${userId} with email ${email}`);
+    
     if (!userId || !email) {
+      console.log('Missing userId or email');
       return res.status(400).json({ error: 'Missing userId or email' });
     }
     
     // Create a connected account with Stripe
+    console.log('Creating Stripe connected account');
     const account = await stripe.accounts.create({
       type: 'express',
       email,
@@ -147,13 +222,25 @@ app.post('/create-connected-account', async (req, res) => {
       }
     });
     
+    console.log(`Stripe account created with ID: ${account.id}`);
+    
     // Store the account ID in Firestore
-    await db.collection('users').doc(userId).update({
-      stripeAccountId: account.id,
-      isSeller: true
-    });
+    try {
+      console.log(`Updating user ${userId} with Stripe account info`);
+      await db.collection('users').doc(userId).update({
+        stripeAccountId: account.id,
+        isSeller: true
+      });
+      console.log('User updated successfully');
+    } catch (firestoreError) {
+      console.error('Error updating user in Firestore:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      throw firestoreError;
+    }
     
     // Create an account link for onboarding
+    console.log('Creating account link for onboarding');
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: `${functions.config().app.url}/seller/onboarding/refresh`,
@@ -161,23 +248,32 @@ app.post('/create-connected-account', async (req, res) => {
       type: 'account_onboarding'
     });
     
+    console.log('Account link created successfully');
+    
     // Return the account link URL
     res.json({ url: accountLink.url });
   } catch (error) {
     console.error('Error creating connected account:', error);
+    console.error('Error details:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * API status endpoint
+ * Simple API status endpoint
  */
 app.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+  try {
+    console.log('Status endpoint called');
+    const response = {
+      status: 'ok',
+      timestamp: new Date().toISOString()
+    };
+    res.json(response);
+  } catch (error) {
+    console.error('Status endpoint error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Export the API as a Firebase Function with public access

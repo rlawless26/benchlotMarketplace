@@ -1,25 +1,34 @@
 # Benchlot - Firebase Implementation
 
-This is a clean implementation of Firebase authentication, Firestore database, and Storage for the Benchlot application.
+A modern tool rental marketplace built with Firebase and React, featuring Stripe payment processing.
+
+## Overview
+
+Benchlot is a platform that allows users to:
+- List tools for rental
+- Browse available tools in the marketplace
+- Add items to cart and complete checkout with Stripe
+- Manage their tool listings and orders
 
 ## Project Structure
 
-- `/src/firebase` - Core Firebase configuration and services
-  - `config.js` - Firebase initialization and service exports
-  - `hooks/useAuth.js` - Authentication hook for React components
-  - `models/toolModel.js` - Tool data models and Firestore functions
-  - `index.js` - Entry point for Firebase modules
+- `/src` - React application code
+  - `/firebase` - Core Firebase configuration and services
+    - `config.js` - Firebase initialization and exports
+    - `/hooks` - Custom React hooks for Firebase services
+    - `/models` - Data models and Firestore functions
+  - `/components` - React components
+    - Authentication components (AuthForm, AuthComponent)
+    - Tool listing components (ToolListingCard, ToolListingForm, etc.)
+    - Checkout components (StripeCheckout, CartPage, etc.)
 
-- `/src/components` - React components
-  - `AuthForm.js` - Authentication form for Firebase auth
-  - `ImageComponent.js` - Reliable image handling with fallbacks
-  - `ToolImage.js` - Tool image display component
-  - `ToolListingCard.js` - Card display for tool listings
-  - `ToolListingForm.js` - Form for creating/editing tool listings
-  - `ToolDetail.js` - Detailed view of a tool listing
-  - `MyListings.js` - User's own tool listings management
-  - `Marketplace.js` - Main marketplace page
-  - `ToolGrid.js` - Grid display for tool listings
+- `/functions` - Firebase Cloud Functions
+  - `index.js` - Stripe API integration and payment processing
+
+- `/docs` - Project documentation
+  - Implementation guides
+  - API documentation
+  - Development tutorials
 
 ## Features Implemented
 
@@ -31,39 +40,38 @@ This is a clean implementation of Firebase authentication, Firestore database, a
 - ✅ Shopping Cart Functionality
 - ✅ Stripe Integration for Payments
 - ⏳ SendGrid for Email Notifications
-- ⏳ Security Rules Implementation
+- ✅ Security Rules Implementation
 
-## Implementation Plan
+## Technology Stack
 
-1. **Establish Firebase Foundation** ✅
-   - Core services configuration
-   - Authentication system
-   - User profiles
+- **Frontend**: React.js with Hooks, React Router
+- **Styling**: Tailwind CSS
+- **Backend**: Firebase (Firestore, Authentication, Storage, Functions)
+- **Payments**: Stripe integration via Firebase Functions
+- **Deployment**: Firebase Hosting (with Vercel option)
 
-2. **Tool Listing & Marketplace** ✅
-   - Tool data model in Firestore
-   - Tool CRUD operations
-   - Listing display components
-   - Image handling with Storage
+## Getting Started
 
-3. **Stripe Integration** ✅
-   - Connect Firebase Functions with Stripe
-   - Implement payment processing
-   - Set up connected accounts
+### Prerequisites
+- Node.js (v14+)
+- Firebase CLI: `npm install -g firebase-tools`
+- A Firebase project with Blaze plan (required for Functions)
+- Stripe account with API keys
 
-4. **Email Notifications** ⏳
-   - Integrate SendGrid via Firebase Functions
-   - Create email templates
-   - Set up transactional emails
+### Running Locally
 
-5. **Security & Production** ⏳
-   - Implement Firestore & Storage security rules
-   - Set up proper error handling
-   - Deploy to Vercel
+The easiest way to run the project is using the start script:
 
-## Development
+```bash
+./start.sh
+```
 
-To run this project locally:
+This script:
+1. Installs dependencies if needed
+2. Sets up environment variables
+3. Starts the development server on http://localhost:3000
+
+Alternatively, run these commands manually:
 
 ```bash
 # Install dependencies
@@ -73,22 +81,35 @@ npm install
 npm start
 ```
 
-The application will run on http://localhost:3000.
+## Firebase Functions
 
-## Firebase Configuration
+Benchlot uses Firebase Functions for secure Stripe payment processing. The function is deployed at:
+```
+https://stripeapi-sed2e4p6ua-uc.a.run.app
+```
 
-This project uses Firebase for:
+Key endpoints:
+- `/create-payment-intent` - Creates a Stripe payment intent
+- `/confirm-payment` - Processes a successful payment
+- `/create-connected-account` - Sets up Stripe Connect for sellers
 
-- Authentication
-- Firestore Database
-- Storage (for images)
-- Analytics (coming soon)
-- Functions (for Stripe and SendGrid integration)
+See [STRIPE-INTEGRATION.md](./docs/STRIPE-INTEGRATION.md) for detailed information.
 
-The Firebase configuration is loaded from environment variables with fallbacks for development.
+## Environment Configuration
+
+The application requires these environment variables:
+- Firebase configuration variables
+- `REACT_APP_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
+- `REACT_APP_FIREBASE_API_URL` - URL of the deployed Firebase Function
+
+## Documentation
+
+For more detailed information, see the docs directory:
+- [Stripe Integration Guide](./docs/STRIPE-INTEGRATION.md)
+- [Migration Strategy](./docs/MIGRATION.md)
 
 ## Next Steps
 
 - Set up SendGrid for email notifications
-- Configure Firebase security rules
 - Implement Stripe webhook handling for async payment events
+- Improve error handling and recovery

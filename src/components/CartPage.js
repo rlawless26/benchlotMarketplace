@@ -2,7 +2,7 @@
  * Cart Page Component
  * Displays the user's shopping cart
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
@@ -10,15 +10,20 @@ import ToolImage from './ToolImage';
 
 const CartPage = () => {
   const { cart, loading, error, updateItemQuantity, removeItem, emptyCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   
-  // Redirect to login if not authenticated
-  if (!isAuthenticated()) {
-    navigate('/login', { state: { redirect: '/cart' } });
-    return null;
-  }
+  // Debug logging
+  console.log("CartPage - Auth state:", user);
+  console.log("CartPage - Is authenticated:", isAuthenticated());
+  
+  // Redirect to login if not authenticated - using useEffect to avoid setState during render
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login', { state: { redirect: '/cart' } });
+    }
+  }, [isAuthenticated, navigate]);
   
   // Format price as USD
   const formatPrice = (price) => {
