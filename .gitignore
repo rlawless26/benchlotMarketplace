@@ -74,3 +74,11 @@ functions/service-account.json
 # dataconnect generated files
 .dataconnect
 google-cloud-cli-darwin-arm.tar
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# built files
+build/
+**/build/
