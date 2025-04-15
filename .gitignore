@@ -82,3 +82,7 @@ google-cloud-cli-darwin-arm.tar
 # built files
 build/
 **/build/
+
+# reference codebase
+benchlot-app/
+**/benchlot-app/

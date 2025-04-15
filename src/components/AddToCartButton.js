@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
 
-const AddToCartButton = ({ tool, className = '', quantity = 1 }) => {
+const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1 }) => {
   const { isAuthenticated } = useAuth();
   const { addToCart, isItemInCart } = useCart();
   const [loading, setLoading] = useState(false);
@@ -49,17 +49,27 @@ const AddToCartButton = ({ tool, className = '', quantity = 1 }) => {
     }
   };
 
+  // Determine button style based on state
+  const getButtonClasses = () => {
+    if (inCart) {
+      return 'bg-benchlot-success hover:bg-green-700 text-white';
+    }
+    if (success) {
+      return 'bg-benchlot-success text-white';
+    }
+    if (extraClasses) {
+      return extraClasses;  // Use provided classes if available
+    }
+    return 'btn-primary'; // Default to primary button style
+  };
+
   return (
     <button
       onClick={handleAddToCart}
       disabled={loading}
-      className={`flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors ${
-        inCart
-          ? 'bg-green-600 hover:bg-green-700 text-white'
-          : success
-          ? 'bg-green-600 text-white'
-          : 'bg-blue-600 hover:bg-blue-700 text-white'
-      } disabled:opacity-50 ${className}`}
+      aria-label={inCart ? "View your cart" : "Add this item to your cart"}
+      className={`flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors 
+        ${getButtonClasses()} disabled:opacity-50 ${className}`}
     >
       {loading ? (
         <span className="flex items-center">
@@ -71,21 +81,21 @@ const AddToCartButton = ({ tool, className = '', quantity = 1 }) => {
         </span>
       ) : inCart ? (
         <span className="flex items-center">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
           </svg>
           View Cart
         </span>
       ) : success ? (
         <span className="flex items-center">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
           </svg>
           Added to Cart
         </span>
       ) : (
         <span className="flex items-center">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
           </svg>
           Add to Cart

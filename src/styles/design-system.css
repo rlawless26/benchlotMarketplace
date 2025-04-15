@@ -1,0 +1,240 @@
+/**
+ * Benchlot Design System
+ * Global styles and design tokens for consistent UI
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=Montserrat:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Base element styling */
+  html {
+    @apply text-benchlot-text-primary;
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-sans bg-benchlot-base;
+  }
+
+  h1, h2, h3 {
+    @apply font-serif font-semibold text-benchlot-text-primary;
+  }
+
+  h4, h5, h6 {
+    @apply font-sans font-semibold text-benchlot-text-primary;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.2;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl;
+  }
+  
+  /* Adding forest color utility classes for backward compatibility */
+  .text-forest-700 {
+    @apply text-benchlot-primary;
+  }
+  
+  .text-forest-800 {
+    @apply text-benchlot-secondary;
+  }
+  
+  .text-forest-400 {
+    @apply text-benchlot-accent;
+  }
+  
+  .bg-forest-700 {
+    @apply bg-benchlot-primary;
+  }
+  
+  .bg-forest-800 {
+    @apply bg-benchlot-secondary;
+  }
+  
+  .bg-forest-50 {
+    @apply bg-benchlot-accent-light;
+  }
+  
+  .bg-forest-100 {
+    @apply bg-benchlot-accent-light;
+  }
+  
+  .hover\:bg-forest-800:hover {
+    @apply hover:bg-benchlot-secondary;
+  }
+  
+  .hover\:bg-forest-50:hover {
+    @apply hover:bg-benchlot-accent-light;
+  }
+  
+  .border-forest-700 {
+    @apply border-benchlot-primary;
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn bg-benchlot-primary text-white hover:bg-benchlot-secondary;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-benchlot-text-primary border border-benchlot-accent hover:bg-benchlot-accent-bg;
+  }
+
+  .btn-accent {
+    @apply btn bg-benchlot-accent text-white hover:bg-benchlot-accent-hover;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-5 py-3 text-lg;
+  }
+
+  /* Card components */
+  .card {
+    @apply bg-white rounded-lg shadow-card transition-shadow duration-200 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply hover:shadow-card-hover;
+  }
+
+  /* Form elements */
+  .form-input {
+    @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary placeholder-benchlot-text-secondary focus:outline-none focus:border-benchlot-primary transition duration-200;
+  }
+
+  .form-select {
+    @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary focus:outline-none focus:border-benchlot-primary transition duration-200;
+  }
+
+  .form-checkbox {
+    @apply h-4 w-4 text-benchlot-primary rounded focus:ring-benchlot-primary focus:ring-offset-0 border-2 border-benchlot-primary;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-benchlot-text-primary mb-1;
+  }
+
+  .form-group {
+    @apply mb-4;
+  }
+
+  /* Status indicators */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-error {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .badge-accent {
+    @apply badge bg-benchlot-accent-light text-benchlot-primary;
+  }
+
+  /* Message styles */
+  .alert {
+    @apply p-4 border-l-4 rounded-md mb-4;
+  }
+
+  .alert-success {
+    @apply alert bg-green-50 border-benchlot-success text-green-700;
+  }
+
+  .alert-error {
+    @apply alert bg-red-50 border-benchlot-error text-red-700;
+  }
+
+  .alert-info {
+    @apply alert bg-benchlot-accent-light border-benchlot-primary text-benchlot-primary;
+  }
+
+  /* Layout utilities */
+  .page-container {
+    @apply max-w-container mx-auto px-4 sm:px-6 lg:px-8 py-6 w-[90%];
+  }
+
+  .section-container {
+    @apply max-w-container mx-auto;
+  }
+
+  .form-container {
+    @apply w-[90%] bg-white max-w-container mx-auto p-6 rounded-lg shadow-card;
+  }
+
+  /* Header Styles */
+  .main-header {
+    @apply py-6 sticky top-0 left-0 right-0 bg-benchlot-base z-50;
+  }
+
+  .logo {
+    @apply font-serif font-semibold text-xl text-benchlot-primary tracking-wider;
+  }
+
+  .nav-link {
+    @apply text-benchlot-text-secondary text-sm transition duration-200 hover:text-benchlot-primary;
+  }
+
+  /* Feature Card */
+  .feature-card {
+    @apply flex flex-col items-center text-center;
+  }
+
+  .feature-icon {
+    @apply w-8 h-8 text-benchlot-primary mb-4;
+  }
+
+  .feature-title {
+    @apply text-xl font-serif font-semibold mb-2;
+  }
+
+  .feature-text {
+    @apply text-benchlot-text-secondary;
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .transition-fast {
+    @apply transition duration-150 ease-in-out;
+  }
+
+  .transition-medium {
+    @apply transition duration-300 ease-in-out;
+  }
+
+  .transition-slow {
+    @apply transition duration-500 ease-in-out;
+  }
+}

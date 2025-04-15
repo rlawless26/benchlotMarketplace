@@ -1,302 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* Base styles */
+body {
+  background-color: #F0EEE6;
+  font-family: 'Montserrat', sans-serif;
+  color: #44403C;
+}
+
+h1, h2, h3 {
+  font-family: 'Spectral', serif;
+  font-weight: 500;
+}
+
 .App {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-.App-header {
-  background-color: #3c4532; /* Benchlot forest theme */
-  min-height: 10vh;
+  min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 1vmin);
-  color: white;
+  flex-direction: column;
 }
 
-.migration-message {
-  background-color: #f5f9ff;
-  border-left: 4px solid #3f51b5;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  text-align: left;
-  border-radius: 4px;
-}
-
-.migration-message h2 {
-  margin-top: 0;
-  color: #3f51b5;
-}
-
-.firebase-status {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-}
-
-.firebase-status ul {
-  list-style: none;
-  padding: 0;
-  text-align: left;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.firebase-status li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-/* Auth Form Styles */
-.auth-form-container {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 2rem 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.auth-error {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #c62828;
-}
-
-.auth-success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #2e7d32;
-}
-
-.auth-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100px;
-  font-size: 1.2rem;
-  color: #666;
-}
-
-.auth-mode-selector {
-  display: flex;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e1e1e1;
-}
-
-.auth-tab {
-  padding: 0.75rem 1rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  font-weight: 500;
-  position: relative;
-}
-
-.auth-tab.active {
-  color: #3c4532;
-}
-
-.auth-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #3c4532;
-}
-
-.auth-form {
-  padding: 1rem 0;
-}
-
-.auth-form h3 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #3c4532;
-}
-
-.form-group {
-  margin-bottom: 1.25rem;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #3c4532;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.submit-button, .sign-out-button {
-  background-color: #3c4532;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.submit-button:hover, .sign-out-button:hover {
-  background-color: #4e5a41;
-}
-
-.auth-user {
-  text-align: left;
-  padding: 1rem;
-  background-color: #f5f9ff;
-  border-radius: 4px;
-}
-
-.auth-user h3 {
-  margin-top: 0;
-  color: #3c4532;
-  border-bottom: 1px solid #e1e1e1;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-main {
-  max-width: 800px;
+/* Header styles */
+.header-content {
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-/* Auth Component Styles */
-.auth-container {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.auth-error {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #c62828;
-}
-
-.auth-success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #2e7d32;
-}
-
-.auth-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1.2rem;
-  color: #666;
-}
-
-.auth-forms {
-  margin: 2rem 0;
-}
-
-.auth-mode-selector {
-  display: flex;
-  margin-bottom: 1rem;
-}
-
-.auth-mode-selector button {
-  flex: 1;
-  padding: 0.75rem;
-  background-color: #f1f1f1;
-  border: none;
-  cursor: pointer;
-}
-
-.auth-mode-selector button.active {
-  background-color: #3f51b5;
-  color: white;
-}
-
-.auth-forms form {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.form-group input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
 }
 
-button {
-  background-color: #3f51b5;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+/* Override some Tailwind defaults */
+.max-w-7xl {
+  max-width: 80rem;
 }
 
-button:hover {
-  background-color: #303f9f;
+/* Add any custom utility classes */
+.bg-stone-50 {
+  background-color: #F0EEE6;
 }
 
-.auth-user {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin: 1rem 0 2rem;
-  text-align: left;
+.bg-benchlot-primary {
+  background-color: #17613F;
 }
 
-.auth-debug {
-  margin-top: 2rem;
-  text-align: left;
-  background-color: #263238;
-  color: #e0e0e0;
-  padding: 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
+.text-benchlot-primary {
+  color: #17613F;
 }
 
-.auth-debug pre {
-  font-family: monospace;
-  font-size: 0.9rem;
-  white-space: pre-wrap;
+/* For debugging */
+.debug-outline {
+  outline: 1px solid red;
 }
