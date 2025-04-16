@@ -4,10 +4,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config';
+import * as emailService from '../../utils/emailService';
 
 // Create context for authentication
 const AuthContext = createContext();
@@ -23,6 +24,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     console.log("Setting up auth state listener");
     
+    // Set loading to true when initializing
+    setLoading(true);
+    
     const unsubscribe = onAuthStateChange();
     
     // Cleanup subscription on unmount
@@ -31,13 +35,13 @@ export function AuthProvider({ children }) {
 
   // Listen for Firebase auth state changes
   const onAuthStateChange = () => {
-    return onAuthStateChanged(auth, async (user) => {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       try {
-        if (user) {
-          console.log("User signed in:", user.uid);
+        if (firebaseUser) {
+          console.log("User signed in:", firebaseUser.uid);
           
-          const userRef = doc(db, 'users', user.uid);
+          const userRef = doc(db, 'users', firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           
           let userProfile = null;
@@ -49,10 +53,10 @@ export function AuthProvider({ children }) {
             console.log("No user profile found, creating...");
             // Create a basic profile
             userProfile = {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
-              photoURL: user.photoURL || null,
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              photoURL: firebaseUser.photoURL || null,
               createdAt: new Date().toISOString(),
             };
             
@@ -66,11 +70,11 @@ export function AuthProvider({ children }) {
           
           // Merge auth and profile data
           const userData = {
-            uid: user.uid,
-            email: user.email,
-            emailVerified: user.emailVerified,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            emailVerified: firebaseUser.emailVerified,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
             profile: userProfile
           };
           
@@ -123,6 +127,15 @@ export function AuthProvider({ children }) {
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, userProfile);
       
+      // Send welcome email
+      try {
+        console.log("Sending welcome email to new user:", email);
+        await emailService.sendAccountCreationEmail(email, userProfile.displayName);
+      } catch (emailError) {
+        // Don't fail signup if email fails
+        console.error("Error sending welcome email:", emailError);
+      }
+      
       return { user: userCredential.user, error: null };
     } catch (err) {
       console.error("Sign up error:", err.message);
@@ -148,7 +161,25 @@ export function AuthProvider({ children }) {
   // Reset password
   const resetPassword = async (email) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      // First, use Firebase's built-in password reset
+      await firebaseSendPasswordResetEmail(auth, email);
+      
+      // Get the action code settings to extract the reset URL
+      const actionCodeSettings = {
+        url: `${window.location.origin}/login`,
+        handleCodeInApp: false,
+      };
+      
+      // Also send our customized email with more detailed instructions
+      try {
+        console.log("Sending custom password reset email:", email);
+        const resetLink = `${window.location.origin}/reset-password?email=${encodeURIComponent(email)}`;
+        await emailService.sendPasswordResetEmail(email, resetLink);
+      } catch (emailError) {
+        // Don't fail the password reset if our custom email fails
+        console.error("Error sending custom password reset email:", emailError);
+      }
+      
       return { success: true };
     } catch (err) {
       console.error("Password reset error:", err.message);

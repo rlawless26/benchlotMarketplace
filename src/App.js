@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, CartProvider } from './firebase';
+import { SellerProvider } from './firebase/hooks/useSeller';
 
 // Page imports
 import LandingPage from './Pages/LandingPage';
@@ -17,6 +18,12 @@ import AboutPage from './Pages/AboutPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
 
+// Seller page imports
+import SellerSignupPage from './components/SellerSignupPage';
+import SellerOnboardingPage from './components/SellerOnboardingPage';
+import SellerDashboardPage from './components/SellerDashboardPage';
+import SellerLandingPage from './components/SellerLandingPage';
+
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -29,46 +36,59 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>
-          <div className="App min-h-screen flex flex-col bg-stone-50">
-            <Header />
-            
-            <main className="flex-grow">
-              <Routes>
-                {/* Landing Page (Home) */}
-                <Route path="/" element={<LandingPage />} />
-                
-                {/* Marketplace */}
-                <Route path="/marketplace" element={<MarketplacePage />} />
-                <Route path="/browse" element={<MarketplacePage />} />
-                
-                {/* Tool Routes */}
-                <Route path="/tools/:id" element={<ToolDetailPage />} />
-                <Route path="/tools/new" element={<ToolListingFormPage />} />
-                <Route path="/tools/edit/:id" element={<ToolListingFormPage />} />
-                
-                {/* User Routes */}
-                <Route path="/my-listings" element={<MyListingsPage />} />
-                <Route path="/login" element={<AuthPage />} />
-                
-                {/* Cart Routes */}
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/orders/:id" element={<OrderConfirmationPage />} />
-                
-                {/* About, Help, and Categories */}
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                
-                {/* Demo Auth Page */}
-                <Route path="/demo" element={<AuthPage />} />
-              </Routes>
-            </main>
-            
-            <Footer />
-          </div>
-        </Router>
+        <SellerProvider>
+          <Router>
+            <div className="App min-h-screen flex flex-col bg-stone-50">
+              <Header />
+              
+              <main className="flex-grow">
+                <Routes>
+                  {/* Landing Page (Home) */}
+                  <Route path="/" element={<LandingPage />} />
+                  
+                  {/* Marketplace */}
+                  <Route path="/marketplace" element={<MarketplacePage />} />
+                  <Route path="/browse" element={<MarketplacePage />} />
+                  
+                  {/* Tool Routes */}
+                  <Route path="/tools/:id" element={<ToolDetailPage />} />
+                  <Route path="/tools/new" element={<ToolListingFormPage />} />
+                  <Route path="/tools/edit/:id" element={<ToolListingFormPage />} />
+                  
+                  {/* Seller Tool Routes */}
+                  <Route path="/seller/tools/new" element={<ToolListingFormPage />} />
+                  
+                  {/* User Routes */}
+                  <Route path="/my-listings" element={<MyListingsPage />} />
+                  <Route path="/login" element={<AuthPage />} />
+                  
+                  {/* Cart Routes */}
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/orders/:id" element={<OrderConfirmationPage />} />
+                  
+                  {/* Seller Routes */}
+                  <Route path="/sell" element={<SellerLandingPage />} />
+                  <Route path="/seller/signup" element={<SellerSignupPage />} />
+                  <Route path="/seller/onboarding" element={<SellerOnboardingPage />} />
+                  <Route path="/seller/onboarding/refresh" element={<SellerOnboardingPage />} />
+                  <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
+                  <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+                  
+                  {/* About, Help, and Categories */}
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  
+                  {/* Demo Auth Page */}
+                  <Route path="/demo" element={<AuthPage />} />
+                </Routes>
+              </main>
+              
+              <Footer />
+            </div>
+          </Router>
+        </SellerProvider>
       </CartProvider>
     </AuthProvider>
   );

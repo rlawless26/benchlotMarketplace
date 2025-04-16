@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^1.54.2",
     "@testing-library/jest-dom": "^5.17.0",

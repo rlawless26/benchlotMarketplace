@@ -24,6 +24,7 @@ import {
   deleteObject 
 } from 'firebase/storage';
 import { db, storage } from '../config';
+import * as emailService from '../../utils/emailService';
 
 // Collection references
 const toolsCollection = collection(db, 'tools');
@@ -49,10 +50,38 @@ export const createTool = async (toolData, userId) => {
 
     const docRef = await addDoc(toolsCollection, toolWithMeta);
     
-    return {
+    const newTool = {
       id: docRef.id,
       ...toolWithMeta
     };
+    
+    // Send email notification to the seller
+    try {
+      // Get user details to get the email
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        
+        if (userData.email) {
+          console.log('Sending listing published email to', userData.email);
+          
+          // Send the email notification
+          await emailService.sendListingPublishedEmail(userData.email, {
+            id: docRef.id,
+            title: toolData.name,
+            price: toolData.current_price,
+            image: null // Images will be added separately
+          });
+        }
+      }
+    } catch (emailError) {
+      // Don't fail the tool creation if email sending fails
+      console.error('Error sending listing published email:', emailError);
+    }
+    
+    return newTool;
   } catch (error) {
     console.error('Error creating tool:', error);
     throw error;
@@ -306,6 +335,37 @@ export const uploadToolImage = async (file, toolId) => {
       images: [...images, imageData],
       updated_at: serverTimestamp()
     });
+    
+    // If this is the first image and we now have it, send an email with the image
+    if (images.length === 0) {
+      try {
+        // Get the user who owns this tool
+        const userId = toolData.user_id;
+        if (userId) {
+          const userRef = doc(db, 'users', userId);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            
+            if (userData.email) {
+              console.log('Sending updated listing published email with image to', userData.email);
+              
+              // Send the email notification with the image
+              await emailService.sendListingPublishedEmail(userData.email, {
+                id: toolId,
+                title: toolData.name,
+                price: toolData.current_price,
+                image: downloadURL
+              });
+            }
+          }
+        }
+      } catch (emailError) {
+        // Don't fail if email sending fails
+        console.error('Error sending updated listing published email:', emailError);
+      }
+    }
     
     return imageData;
   } catch (error) {

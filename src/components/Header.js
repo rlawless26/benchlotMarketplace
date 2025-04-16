@@ -15,6 +15,7 @@ import {
   Settings,
   Package,
   Hammer,
+  Bell,
   X
 } from 'lucide-react';
 
@@ -28,6 +29,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Use the auth hook to access user data
   const { user, isAuthenticated, signOut } = useAuth();
@@ -64,6 +66,13 @@ const Header = () => {
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const categories = [
     {
       name: "Power Tools",
@@ -84,119 +93,76 @@ const Header = () => {
   ];
 
   return (
-    <header className="border-b">
-      {/* Top Bar */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 h-8 flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4">
-            <Link to="/about" className="hover:text-benchlot-primary">About</Link>
-            <Link to="/help" className="hover:text-benchlot-primary">Help</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Empty for spacing */}
-          </div>
-        </div>
-      </div>
+    <header className="border-b shadow-sm">
+      {/* Primary Header - Tall section with logo, search, and key actions */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center">
+          {/* Mobile menu button */}
+          <button
+            className="mr-4 lg:hidden text-stone-700"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
 
-      {/* Main Header */}
-      <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Left Section */}
-          <div className="flex items-center gap-8">
-            <button
-              className="lg:hidden text-stone-700"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-
-            {/* Logo link */}
+          {/* Logo */}
+          <div className="mr-6 flex-shrink-0">
             <Link to="/" className="text-2xl font-serif text-benchlot-primary">Benchlot</Link>
-
-            {/* Desktop Categories with links to marketplace with filters */}
-            <nav className="hidden lg:flex items-center gap-4">
-              <Link
-                to="/marketplace"
-                className="text-stone-700 hover:text-benchlot-primary text-sm whitespace-nowrap"
-              >
-                Browse All
-              </Link>
-              
-              <Link
-                to="/categories"
-                className="text-stone-700 hover:text-benchlot-primary text-sm whitespace-nowrap"
-              >
-                All Categories
-              </Link>
-              
-              {categories.map((category) => (
-                <div key={category.name} className="relative group">
-                  <Link 
-                    to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                    className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary text-sm whitespace-nowrap"
-                  >
-                    {category.name} <ChevronDown className="h-3 w-3" />
-                  </Link>
-                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover:block z-10">
-                    {category.subcategories.map((sub) => (
-                      <Link
-                        key={sub}
-                        to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
-                        className="block px-4 py-2 text-sm text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary rounded-md"
-                      >
-                        {sub}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </nav>
           </div>
 
-          {/* Center - Search */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className="relative w-full">
+          {/* Search bar - centered and expanded */}
+          <div className="hidden md:flex flex-1 max-w-3xl">
+            <form onSubmit={handleSearch} className="w-full relative">
               <input
                 type="text"
-                placeholder="Search for tools..."
-                className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary"
+                placeholder="Search for tools, brands, or categories..."
+                className="w-full pl-10 pr-14 py-2.5 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-stone-400" />
-            </div>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
+              <button 
+                type="submit"
+                className="absolute right-0 top-0 w-12 h-full border-l border-stone-300 flex items-center justify-center hover:bg-stone-50"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5 text-benchlot-primary" />
+              </button>
+            </form>
           </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-4">
+          {/* Right side - key actions section */}
+          <div className="ml-6 flex items-center gap-6">
             {isAuthenticated() ? (
               // Authenticated user options
               <>
-                {/* Sell your gear button */}
+                {/* Sell your tools button */}
                 <Link 
-                  to="/tools/new" 
-                  className="text-benchlot-primary hover:bg-benchlot-accent-light inline-flex items-center px-3 py-1.5 border border-benchlot-primary rounded-md"
+                  to="/seller/tools/new" 
+                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
                 >
-                  <Hammer className="h-4 w-4 mr-1" />
-                  <span className="hidden md:inline text-sm whitespace-nowrap">Sell your gear</span>
-                </Link>
-                
-                {/* Wishlist icon */}
-                <Link to="/wishlist" className="text-stone-700 hover:text-benchlot-primary">
-                  <Heart className="h-4 w-4" />
+                  <Hammer className="h-4 w-4 mr-1.5" />
+                  Sell Your Tools
                 </Link>
                 
                 {/* Cart Icon */}
                 <CartIcon />
                 
+                {/* Wishlist icon */}
+                <Link to="/wishlist" className="hidden md:flex text-stone-700 hover:text-benchlot-primary" aria-label="Wishlist">
+                  <Heart className="h-5 w-5" />
+                </Link>
+                
                 {/* Messages Icon */}
-                <Link to="/messages" className="text-stone-700 hover:text-benchlot-primary">
-                  <MessageSquare className="h-4 w-4" />
+                <Link to="/messages" className="hidden md:flex text-stone-700 hover:text-benchlot-primary" aria-label="Messages">
+                  <MessageSquare className="h-5 w-5" />
                 </Link>
                 
                 {/* User Profile Dropdown */}
                 <div className="relative">
                   <button
-                    className="text-stone-700 hover:text-benchlot-primary hover:bg-benchlot-accent-light relative cursor-pointer p-1 rounded-full flex items-center justify-center"
+                    className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary"
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     aria-label="Open user menu"
                     aria-expanded={profileMenuOpen}
@@ -205,13 +171,14 @@ const Header = () => {
                     <div className="w-8 h-8 rounded-full bg-benchlot-accent-light flex items-center justify-center">
                       <User className="h-4 w-4 text-benchlot-primary" />
                     </div>
+                    <ChevronDown className="h-3 w-3 hidden md:block" />
                   </button>
 
                   {profileMenuOpen && (
                     <div 
                       ref={profileMenuRef} 
                       id="profile-dropdown"
-                      className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[200px] z-[100]"
+                      className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] z-[100]"
                     >
                       <div className="px-4 py-2 text-sm font-medium text-stone-700 border-b">
                         {user?.email || 'User'}
@@ -232,9 +199,14 @@ const Header = () => {
                         Shop Dashboard
                       </Link>
 
-                      <Link to="/wishlist" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                      <Link to="/wishlist" className="md:hidden flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
                         <Heart className="h-4 w-4" />
                         Saved Tools
+                      </Link>
+
+                      <Link to="/messages" className="md:hidden flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <MessageSquare className="h-4 w-4" />
+                        Messages
                       </Link>
 
                       <Link to="/settings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
@@ -258,21 +230,30 @@ const Header = () => {
             ) : (
               // Unauthenticated user options
               <>
-                <Link to="/tools/new" className="text-benchlot-primary hover:bg-benchlot-accent-light inline-flex items-center px-3 py-1.5 border border-benchlot-primary rounded-md">
-                  <Hammer className="h-4 w-4 mr-1" />
-                  <span className="hidden md:inline text-sm whitespace-nowrap">Sell your tools</span>
+                {/* Sell your tools button */}
+                <Link 
+                  to="/sell" 
+                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
+                >
+                  <Hammer className="h-4 w-4 mr-1.5" />
+                  Sell Your Tools
                 </Link>
                 
                 {/* Cart Icon */}
                 <CartIcon />
                 
-                <Link to="/login" className="text-stone-700 hover:text-benchlot-primary text-sm whitespace-nowrap">
+                {/* Login link - text only */}
+                <Link 
+                  to="/login" 
+                  className="text-stone-700 hover:text-benchlot-primary text-sm font-medium whitespace-nowrap hidden md:block"
+                >
                   Log In
                 </Link>
                 
+                {/* Sign Up link - text only */}
                 <Link
                   to="/login?signup=true"
-                  className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-benchlot-primary hover:bg-benchlot-secondary text-white rounded-md text-sm whitespace-nowrap"
+                  className="hidden md:block text-benchlot-primary hover:text-benchlot-secondary text-sm font-medium whitespace-nowrap"
                 >
                   Sign Up
                 </Link>
@@ -282,16 +263,85 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Secondary Header - Categories and utility links */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between h-10 items-center">
+            {/* Left side - Category links */}
+            <nav className="hidden lg:flex items-center gap-6 text-sm">
+              <Link
+                to="/marketplace"
+                className="text-stone-700 hover:text-benchlot-primary whitespace-nowrap font-medium"
+              >
+                Browse All
+              </Link>
+
+              <Link
+                to="/categories"
+                className="text-stone-700 hover:text-benchlot-primary whitespace-nowrap font-medium"
+              >
+                All Categories
+              </Link>
+              
+              {categories.map((category) => (
+                <div key={category.name} className="relative group">
+                  <Link 
+                    to={`/marketplace?category=${encodeURIComponent(category.name)}`}
+                    className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary whitespace-nowrap"
+                  >
+                    {category.name} <ChevronDown className="h-3 w-3" />
+                  </Link>
+                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover:block z-10">
+                    {category.subcategories.map((sub) => (
+                      <Link
+                        key={sub}
+                        to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
+                        className="block px-4 py-2 text-sm text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary rounded-md"
+                      >
+                        {sub}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </nav>
+
+            {/* Right side - Utility links */}
+            <div className="hidden lg:flex items-center gap-6 text-sm">
+              <Link to="/help" className="text-stone-700 hover:text-benchlot-primary">Help</Link>
+              <Link to="/about" className="text-stone-700 hover:text-benchlot-primary">About</Link>
+              <a 
+                href="https://blog.benchlot.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-stone-700 hover:text-benchlot-primary"
+              >
+                Updates
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Mobile Search - Visible on small screens */}
       <div className="md:hidden border-t p-4">
-        <div className="relative">
+        <form onSubmit={handleSearch} className="relative">
           <input
             type="text"
             placeholder="Search for tools..."
-            className="w-full pl-10 pr-4 py-2 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary"
+            className="w-full pl-10 pr-14 py-2.5 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary shadow-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-stone-400" />
-        </div>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
+          <button 
+            type="submit"
+            className="absolute right-0 top-0 w-12 h-full border-l border-stone-300 flex items-center justify-center hover:bg-stone-50"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5 text-benchlot-primary" />
+          </button>
+        </form>
       </div>
 
       {/* Mobile Menu - Slides in from the left */}
@@ -302,7 +352,7 @@ const Header = () => {
             onClick={() => setIsMenuOpen(false)}
           ></div>
 
-          <div className="absolute inset-y-0 left-0 w-64 bg-white shadow-lg p-5 overflow-y-auto">
+          <div className="absolute inset-y-0 left-0 w-72 bg-white shadow-lg p-5 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <span className="text-xl font-serif font-medium">Menu</span>
               <button
@@ -315,11 +365,27 @@ const Header = () => {
 
             {/* Mobile Categories with updated links */}
             <div className="space-y-4">
+              <Link 
+                to="/marketplace"
+                className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Browse All Tools
+              </Link>
+              
+              <Link 
+                to="/categories"
+                className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                All Categories
+              </Link>
+              
               {categories.map((category) => (
                 <div key={category.name} className="space-y-2">
                   <Link 
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                    className="font-medium text-stone-800 block hover:text-benchlot-primary"
+                    className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {category.name}
@@ -329,7 +395,7 @@ const Header = () => {
                       <Link
                         key={sub}
                         to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
-                        className="block text-stone-700 hover:text-benchlot-primary"
+                        className="block text-stone-700 hover:text-benchlot-primary py-1"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {sub}
@@ -340,21 +406,26 @@ const Header = () => {
               ))}
             </div>
 
+            {/* Mobile Sell link */}
+            <div className="mt-6 mb-6 pt-4 border-t border-stone-200">
+              <Link 
+                to={isAuthenticated() ? "/seller/tools/new" : "/sell"}
+                className="flex items-center gap-3 px-4 py-3 bg-benchlot-accent text-benchlot-primary rounded-md font-medium mb-4"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Hammer className="h-5 w-5" />
+                Sell Your Tools
+              </Link>
+            </div>
+
             {/* Mobile User Links */}
-            <div className="mt-8 pt-6 border-t border-stone-200">
+            <div className="space-y-1 mb-6">
               {isAuthenticated() ? (
-                <div className="space-y-3">
-                  <Link 
-                    to="/cart" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    Cart
-                  </Link>
+                // Logged in mobile links
+                <>
                   <Link 
                     to="/profile" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="h-5 w-5" />
@@ -362,57 +433,50 @@ const Header = () => {
                   </Link>
                   <Link 
                     to="/my-listings" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <List className="h-5 w-5" />
                     My Listings
                   </Link>
                   <Link 
-                    to="/dashboard" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Package className="h-5 w-5" />
-                    Shop Dashboard
-                  </Link>
-                  <Link 
                     to="/wishlist" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Heart className="h-5 w-5" />
                     Saved Tools
                   </Link>
                   <Link 
-                    to="/tools/new"
-                    className="flex items-center gap-3 py-2 px-3 text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-benchlot-accent-light"
+                    to="/messages" 
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Hammer className="h-5 w-5" />
-                    Sell your gear
+                    <MessageSquare className="h-5 w-5" />
+                    Messages
+                  </Link>
+                  <Link 
+                    to="/cart" 
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    Cart
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
                   >
                     <LogOut className="h-5 w-5" />
                     Sign Out
                   </button>
-                </div>
+                </>
               ) : (
-                <div className="space-y-3">
-                  <Link 
-                    to="/tools/new" 
-                    className="flex items-center gap-3 py-2 px-3 text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-benchlot-accent-light"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Hammer className="h-5 w-5" />
-                    Sell your tools
-                  </Link>
+                // Logged out mobile links
+                <>
                   <Link 
                     to="/cart" 
-                    className="flex items-center gap-3 py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <ShoppingCart className="h-5 w-5" />
@@ -420,20 +484,49 @@ const Header = () => {
                   </Link>
                   <Link 
                     to="/login" 
-                    className="block py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
+                    <User className="h-5 w-5" />
                     Log In
                   </Link>
                   <Link 
                     to="/login?signup=true" 
-                    className="block py-2 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-3 py-3 px-3 bg-benchlot-primary text-white rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
+                    <Plus className="h-5 w-5" />
                     Sign Up
                   </Link>
-                </div>
+                </>
               )}
+            </div>
+
+            {/* Mobile utility links */}
+            <div className="border-t pt-4 border-stone-200">
+              <Link 
+                to="/help" 
+                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Help
+              </Link>
+              <Link 
+                to="/about" 
+                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              <a 
+                href="https://blog.benchlot.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Updates
+              </a>
             </div>
           </div>
         </div>

@@ -86,3 +86,5 @@ build/
 # reference codebase
 benchlot-app/
 **/benchlot-app/
+sendgrid.env
+sendgrid.env
