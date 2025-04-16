@@ -8,6 +8,37 @@ const express = require('express');
 const cors = require('cors')({ origin: true });
 const emailService = require('./emailService');
 
+/**
+ * Utility function to get config values with fallbacks
+ * First tries Firebase config, then environment variables, then default value
+ */
+const getConfig = (key, envVarName, defaultValue) => {
+  try {
+    // Convert key like 'stripe.secret' to an object path for functions.config()
+    const keyParts = key.split('.');
+    let configValue = functions.config();
+    for (const part of keyParts) {
+      configValue = configValue[part];
+    }
+    if (configValue) {
+      console.log(`Using ${key} from Firebase config`);
+      return configValue;
+    }
+  } catch (e) {
+    // Config not found in Firebase, continue to environment variable
+  }
+  
+  // Try environment variable
+  if (process.env[envVarName]) {
+    console.log(`Using ${envVarName} from environment variables`);
+    return process.env[envVarName];
+  }
+  
+  // Fall back to default
+  console.log(`Using default value for ${key}`);
+  return defaultValue;
+};
+
 // Initialize Firebase Admin with explicit service account credentials
 try {
   const serviceAccount = require('./service-account.json');
@@ -27,13 +58,14 @@ const db = admin.firestore();
 // Initialize Stripe with error handling
 let stripe;
 try {
-  const stripeSecret = process.env.STRIPE_SECRET;
-  if (!stripeSecret) {
-    console.error('Stripe secret key not found in environment variables. Falling back to a placeholder for testing only.');
-    stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
-  } else {
-    stripe = require('stripe')(stripeSecret);
-  }
+  // Get Stripe secret key from config or environment
+  const stripeSecret = getConfig(
+    'stripe.secret', 
+    'STRIPE_SECRET_KEY',
+    'sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS'
+  );
+  
+  stripe = require('stripe')(stripeSecret);
 } catch (error) {
   console.error('Error initializing Stripe:', error);
   stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
@@ -487,10 +519,11 @@ app.get('/refresh-account-link', async (req, res) => {
     }
     
     // Create a new account link
+    const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
     const accountLink = await stripe.accountLinks.create({
       account: userData.stripeAccountId,
-      refresh_url: `${process.env.APP_URL || 'https://benchlot.com'}/seller/onboarding/refresh`,
-      return_url: `${process.env.APP_URL || 'https://benchlot.com'}/seller/onboarding/complete`,
+      refresh_url: `${appUrl}/seller/onboarding/refresh`,
+      return_url: `${appUrl}/seller/onboarding/complete`,
       type: 'account_onboarding'
     });
     
@@ -553,7 +586,11 @@ app.post('/stripe-webhook', async (req, res) => {
   
   try {
     // Verify the webhook signature
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
+    const endpointSecret = getConfig(
+      'stripe.webhook_secret',
+      'STRIPE_WEBHOOK_SECRET',
+      'whsec_test' // Fallback for local testing only
+    );
     
     try {
       event = stripe.webhooks.constructEvent(

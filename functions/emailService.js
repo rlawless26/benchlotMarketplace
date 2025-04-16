@@ -10,6 +10,7 @@
  * - Offer notifications
  */
 const sgMail = require('@sendgrid/mail');
+const functions = require('firebase-functions');
 
 // API key is set within each function call to ensure it's available
 // This pattern works reliably with Firebase Functions
@@ -37,13 +38,44 @@ exports.TEMPLATE_IDS = TEMPLATE_IDS;
  * @param {string} from - Sender email (default: notifications@benchlot.com)
  * @returns {Promise<Object>} - Success status and any error details
  */
+// Helper function to get config with fallbacks
+const getConfig = (key, envVarName, defaultValue) => {
+  try {
+    // Convert key like 'stripe.secret' to an object path for functions.config()
+    const keyParts = key.split('.');
+    let configValue = functions.config();
+    for (const part of keyParts) {
+      configValue = configValue[part];
+    }
+    if (configValue) {
+      return configValue;
+    }
+  } catch (e) {
+    // Config not found in Firebase, continue to environment variable
+  }
+  
+  // Try environment variable
+  if (process.env[envVarName]) {
+    return process.env[envVarName];
+  }
+  
+  // Fall back to default
+  return defaultValue;
+};
+
 const sendEmail = async (to, templateId, dynamicTemplateData, from = 'notifications@benchlot.com') => {
   // Timestamp for logging
   console.log(`[${new Date().toISOString()}] Sending email to ${to} using template ${templateId}`);
   
   try {
-    // Set SendGrid API key - using direct key approach for reliability
-    const apiKey = "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";
+    // Get SendGrid API key from config or environment
+    const apiKey = getConfig('sendgrid.apikey', 'SENDGRID_API_KEY', null);
+    
+    if (!apiKey) {
+      console.error('ERROR: SendGrid API key not found in Firebase config or environment variables');
+      return { success: false, error: { message: 'API key not configured' } };
+    }
+    
     sgMail.setApiKey(apiKey);
     
     // Validate inputs
@@ -167,7 +199,7 @@ exports.sendListingPublishedEmail = (to, listingDetails) => {
   const imageUrl = listingDetails.image || listingDetails.images?.[0]?.url || 'https://benchlot.com/images/placeholder-tool.jpg';
   
   // Create the listing URL
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   const listingUrl = `${appUrl}/tools/${listingDetails.id}`;
   
   // Prepare listing price with proper formatting
@@ -205,7 +237,7 @@ exports.sendListingPublishedEmail = (to, listingDetails) => {
  * @returns {Promise<Object>} - Success status and any error details
  */
 exports.sendMessageReceivedEmail = (to, messageDetails) => {
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   return sendEmail(
     to, 
@@ -235,7 +267,7 @@ exports.sendOfferReceivedEmail = (to, offerDetails) => {
     discountPercentage = Math.max(0, discountPercentage); // Ensure non-negative
   }
   
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   return sendEmail(
     to, 
@@ -253,7 +285,7 @@ exports.sendOfferReceivedEmail = (to, offerDetails) => {
 
 // Test function for verifying SendGrid setup
 exports.sendTestEmail = (to) => {
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   return sendEmail(
     to,
@@ -272,7 +304,7 @@ exports.sendTestEmail = (to) => {
  * @returns {Promise<Object>} - Success status and any error details
  */
 exports.sendSellerOnboardingCompleteEmail = (to, sellerDetails) => {
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   return sendEmail(
     to, 
@@ -292,7 +324,7 @@ exports.sendSellerOnboardingCompleteEmail = (to, sellerDetails) => {
  * @returns {Promise<Object>} - Success status and any error details
  */
 exports.sendPayoutNotificationEmail = (to, payoutDetails) => {
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -321,7 +353,7 @@ exports.sendPayoutNotificationEmail = (to, payoutDetails) => {
  * @returns {Promise<Object>} - Success status and any error details
  */
 exports.sendOrderReceivedEmail = (to, orderDetails) => {
-  const appUrl = process.env.APP_URL || 'https://benchlot.com';
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {

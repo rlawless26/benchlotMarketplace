@@ -18,9 +18,8 @@ exports.sendEmailTest = functions.https.onCall(async (data, context) => {
   console.log("Environment check - SENDGRID_API_KEY length:", process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.length : 0);
   
   try {
-    // Use hard-coded API key for testing
-    // IMPORTANT: Replace with the actual API key value we know works from our direct test
-    const apiKey = process.env.SENDGRID_API_KEY || "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";
+    // Use API key from environment variables
+    const apiKey = process.env.SENDGRID_API_KEY;
     
     if (!apiKey) {
       console.error("SendGrid API key not available");
@@ -111,8 +110,8 @@ exports.sendEmailTestHttp = functions.https.onRequest(async (req, res) => {
     console.log("HTTP function invoked with email:", email);
     console.log("Environment check - SENDGRID_API_KEY exists:", !!process.env.SENDGRID_API_KEY);
     
-    // Use hard-coded API key for testing
-    const apiKey = process.env.SENDGRID_API_KEY || "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";
+    // Use API key from environment variables
+    const apiKey = process.env.SENDGRID_API_KEY;
     
     if (!apiKey) {
       console.error("SendGrid API key not available");

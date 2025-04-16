@@ -6,9 +6,15 @@
 // Import the SendGrid mail client
 const sgMail = require('@sendgrid/mail');
 
-// Set your SendGrid API key directly
-// IMPORTANT: Replace with your actual SendGrid API key
-const SENDGRID_API_KEY = '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';
+// Get SendGrid API key from environment variables
+// Usage: SENDGRID_API_KEY=your_api_key node test-sendgrid-direct.js
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+
+if (!SENDGRID_API_KEY) {
+  console.error('ERROR: SENDGRID_API_KEY environment variable is not set');
+  console.error('Usage: SENDGRID_API_KEY=your_api_key node test-sendgrid-direct.js');
+  process.exit(1);
+}
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 // Get the test email from command line args or use default
