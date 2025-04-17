@@ -12,7 +12,7 @@ const ToolListingFormPage = () => {
       <h1 className="text-3xl font-serif font-semibold mb-6">
         {isEditing ? 'Edit Tool Listing' : 'Add New Tool Listing'}
       </h1>
-      <ToolListingForm />
+      <ToolListingForm hideTitle={true} />
     </div>
   );
 };

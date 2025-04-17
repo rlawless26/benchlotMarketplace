@@ -168,5 +168,29 @@ service cloud.firestore {
       // Admins can delete inappropriate reviews
       allow delete: if isAdmin();
     }
+    
+    // Wishlist
+    match /wishlists/{userId} {
+      // Users can only access their own wishlist
+      allow read: if isSignedIn() && userId == request.auth.uid;
+      
+      // Users can create their own wishlist
+      allow create: if isSignedIn() && userId == request.auth.uid;
+      
+      // Users can update their own wishlist
+      allow update: if isSignedIn() && userId == request.auth.uid;
+      
+      // Users can delete their own wishlist
+      allow delete: if isSignedIn() && userId == request.auth.uid;
+      
+      // Wishlist items (subcollection)
+      match /items/{itemId} {
+        // Users can only access their own wishlist items
+        allow read: if isSignedIn() && userId == request.auth.uid;
+        
+        // Users can only modify their own wishlist items
+        allow write: if isSignedIn() && userId == request.auth.uid;
+      }
+    }
   }
 }

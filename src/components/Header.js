@@ -19,8 +19,9 @@ import {
   X
 } from 'lucide-react';
 
-// Import the useAuth hook from firebase
+// Import hooks from firebase
 import { useAuth } from '../firebase/hooks/useAuth';
+import { useWishlist } from '../firebase/hooks/useWishlist';
 
 // Import cart components
 import CartIcon from './CartIcon';
@@ -31,8 +32,9 @@ const Header = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Use the auth hook to access user data
+  // Use hooks to access user data and wishlist
   const { user, isAuthenticated, signOut } = useAuth();
+  const { count: wishlistCount } = useWishlist();
   
   // Create a ref for the profile menu
   const profileMenuRef = useRef(null);
@@ -150,8 +152,13 @@ const Header = () => {
                 <CartIcon />
                 
                 {/* Wishlist icon */}
-                <Link to="/wishlist" className="hidden md:flex text-stone-700 hover:text-benchlot-primary" aria-label="Wishlist">
+                <Link to="/wishlist" className="hidden md:flex text-stone-700 hover:text-benchlot-primary relative" aria-label="Wishlist">
                   <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {wishlistCount > 9 ? '9+' : wishlistCount}
+                    </span>
+                  )}
                 </Link>
                 
                 {/* Messages Icon */}
@@ -462,6 +469,14 @@ const Header = () => {
                   >
                     <ShoppingCart className="h-5 w-5" />
                     Cart
+                  </Link>
+                  <Link 
+                    to="/settings" 
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Settings className="h-5 w-5" />
+                    Account Settings
                   </Link>
                   <button
                     onClick={handleLogout}

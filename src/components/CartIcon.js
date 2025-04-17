@@ -5,20 +5,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
-import { useAuth } from '../firebase/hooks/useAuth';
-
-// In a full implementation, we would use:
-// import { useCart } from '../firebase/hooks/useCart';
+import { useCart } from '../firebase/hooks/useCart';
 
 const CartIcon = () => {
-  const { isAuthenticated } = useAuth();
+  const { getItemCount } = useCart();
   
-  // In a real implementation, we would get this from the cart state:
-  // const { cartItems } = useCart();
-  // const itemCount = cartItems.length;
-  
-  // For demonstration purposes:
-  const itemCount = isAuthenticated() ? 3 : 0;
+  // Get the actual item count from the cart
+  const itemCount = getItemCount();
 
   return (
     <Link 

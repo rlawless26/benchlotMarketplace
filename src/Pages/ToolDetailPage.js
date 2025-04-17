@@ -18,6 +18,7 @@ import { getToolById } from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
 import ImageComponent from '../components/ImageComponent';
 import AddToCartButton from '../components/AddToCartButton';
+import SaveToolButton from '../components/SaveToolButton';
 
 const ToolDetailPage = () => {
   const { id } = useParams();
@@ -29,7 +30,6 @@ const ToolDetailPage = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [inWishlist, setInWishlist] = useState(false);
   
   // Fetch tool data
   useEffect(() => {
@@ -66,16 +66,10 @@ const ToolDetailPage = () => {
     return isAuthenticated && user && tool && user.uid === tool.user_id;
   };
 
-  // Wishlist toggle placeholder
-  const toggleWishlist = () => {
-    // Placeholder for wishlist functionality
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/tools/${id}` } });
-      return;
-    }
-    setInWishlist(!inWishlist);
-    // Show toast notification
-    alert(inWishlist ? 'Removed from wishlist' : 'Added to wishlist');
+  // Toast notification for wishlist actions
+  const handleWishlistAction = (added) => {
+    // In a real implementation, you might want to use a toast notification library
+    alert(added ? 'Added to wishlist' : 'Removed from wishlist');
   };
 
   // Share tool listing
@@ -476,16 +470,15 @@ const ToolDetailPage = () => {
                     </button>
                     
                     {/* Wishlist button */}
-                    <button
-                      className={`w-full py-3 rounded-md flex items-center justify-center font-medium 
-                        ${inWishlist 
-                          ? 'bg-benchlot-success-light text-benchlot-success border border-benchlot-success'
-                          : 'bg-white border border-stone-300 text-stone-700 hover:bg-stone-50'}`}
-                      onClick={toggleWishlist}
-                    >
-                      <Heart className={`h-5 w-5 mr-2 ${inWishlist ? 'fill-benchlot-success' : ''}`} />
-                      {inWishlist ? 'Saved to Wishlist' : 'Save to Wishlist'}
-                    </button>
+                    <SaveToolButton
+                      toolId={tool.id}
+                      variant="outline"
+                      showText={true}
+                      size="large" 
+                      className="w-full py-3 justify-center font-medium"
+                      onSaveSuccess={(isInWishlist) => handleWishlistAction(isInWishlist)}
+                      onSaveError={(error) => alert(`Error: ${error}`)}
+                    />
                     
                     {/* Share button */}
                     <button

@@ -5,6 +5,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ToolImage from './ToolImage';
+import SaveToolButton from './SaveToolButton';
 
 const ToolListingCard = ({ tool, featured = false }) => {
   // Format price as USD
@@ -33,7 +34,7 @@ const ToolListingCard = ({ tool, featured = false }) => {
     >
       {/* Featured badge */}
       {featured && (
-        <div className="absolute top-2 right-2 z-10 bg-benchlot-primary text-white px-2.5 py-1 text-xs font-medium rounded-full shadow-sm">
+        <div className="absolute top-2 right-12 z-10 bg-benchlot-primary text-white px-2.5 py-1 text-xs font-medium rounded-full shadow-sm">
           Featured
         </div>
       )}
@@ -52,6 +53,16 @@ const ToolListingCard = ({ tool, featured = false }) => {
             <span className="mr-0.5">✓</span> Verified
           </div>
         )}
+        
+        {/* Save to wishlist button */}
+        <div className="absolute top-2 right-2 z-10">
+          <SaveToolButton 
+            toolId={tool.id} 
+            iconOnly={true} 
+            size="small" 
+            variant="filled" 
+          />
+        </div>
       </Link>
       
       {/* Tool details */}

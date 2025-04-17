@@ -17,6 +17,8 @@ import ToolListingFormPage from './Pages/ToolListingFormPage';
 import AboutPage from './Pages/AboutPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
+import WishlistPage from './Pages/WishlistPage';
+import SettingsPage from './Pages/SettingsPage';
 
 // Seller page imports
 import SellerSignupPage from './components/SellerSignupPage';
@@ -61,6 +63,8 @@ function App() {
                   {/* User Routes */}
                   <Route path="/my-listings" element={<MyListingsPage />} />
                   <Route path="/login" element={<AuthPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                   
                   {/* Cart Routes */}
                   <Route path="/cart" element={<CartPage />} />
