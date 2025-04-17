@@ -127,7 +127,7 @@ const PaymentSettings = ({ user }) => {
   const renderPaymentMethod = (method) => (
     <div 
       key={method.id} 
-      className="bg-white border border-stone-200 rounded-lg p-5 relative"
+      className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 relative"
     >
       {/* Default badge */}
       {method.isDefault && (
@@ -173,7 +173,7 @@ const PaymentSettings = ({ user }) => {
   
   // Form for adding a new card
   const renderAddCardForm = () => (
-    <div className="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+    <div className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
       <h3 className="text-lg font-medium mb-4">Add Payment Method</h3>
       
       <form onSubmit={handleCardSubmit}>
@@ -184,7 +184,7 @@ const PaymentSettings = ({ user }) => {
           
           {/* Card Elements placeholder */}
           <div className="p-4 border border-stone-300 rounded-md bg-stone-50">
-            <p className="text-center text-stone-500">
+            <p className="text-center text-stone-500 py-4">
               [Stripe Card Element would be integrated here]
             </p>
             <p className="text-center text-xs text-stone-400 mt-2">
@@ -283,7 +283,9 @@ const PaymentSettings = ({ user }) => {
         {/* Payment methods list or empty state */}
         {paymentMethods.length === 0 && !isAddingCard ? (
           <div className="text-center py-10 border border-stone-200 rounded-lg">
-            <CreditCard className="h-12 w-12 text-stone-400 mx-auto mb-4" />
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-stone-100">
+              <CreditCard className="h-8 w-8 text-benchlot-primary" />
+            </div>
             <h3 className="text-lg font-medium mb-2">No payment methods</h3>
             <p className="text-stone-500 mb-6">
               Add a payment method to make checkout faster
@@ -321,10 +323,10 @@ const PaymentSettings = ({ user }) => {
         )}
         
         {/* Security information */}
-        <div className="mt-8 bg-stone-50 p-4 rounded-lg border border-stone-200">
+        <div className="mt-8 bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <Lock className="h-5 w-5 text-stone-500" />
+            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+              <Lock className="h-5 w-5" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-stone-800">Secure Payment Processing</h3>

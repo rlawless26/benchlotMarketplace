@@ -188,7 +188,7 @@ const ShippingSettings = ({ user }) => {
         </div>
         
         {/* Shipping Toggles */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6">
+        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6 p-4">
           <ToggleSwitch
             id="accept-local-pickup"
             checked={shippingPrefs.acceptLocalPickup}
@@ -231,10 +231,10 @@ const ShippingSettings = ({ user }) => {
         </div>
         
         {/* Shipping Information */}
-        <div className="bg-stone-50 p-4 rounded-lg border border-stone-200 mb-6">
+        <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <Package className="h-5 w-5 text-stone-500" />
+            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+              <Package className="h-5 w-5" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-stone-800">Tool Shipping Information</h3>

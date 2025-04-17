@@ -52,6 +52,17 @@ service firebase.storage {
                    isFileSizeValid();
     }
     
+    // Profile images (alternative path)
+    match /profileImages/{userId} {
+      // Anyone can view profile images
+      allow read;
+      
+      // Users can only upload/modify their own profile images
+      allow write: if isOwner(userId) && 
+                   isImageTypeValid() && 
+                   isFileSizeValid();
+    }
+    
     // Tool images
     match /tools/{toolId}/{allPaths=**} {
       // Anyone can view tool images

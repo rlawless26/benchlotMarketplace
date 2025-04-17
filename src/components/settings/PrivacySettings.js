@@ -154,7 +154,7 @@ const PrivacySettings = ({ user }) => {
         )}
         
         {/* Privacy Settings */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6">
+        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6 p-4">
           <RadioButtonGroup
             title="Profile Visibility"
             description="Control who can view your profile information"
@@ -242,25 +242,32 @@ const PrivacySettings = ({ user }) => {
         </div>
         
         {/* Data & Privacy Info */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-stone-800 mb-2">Your Data</h3>
-          <p className="text-sm text-stone-600">
-            You can request a copy of your data or delete your account at any time. Please note that deleting your account will permanently remove all your data from our platform.
-          </p>
-          
-          <div className="mt-4 space-x-4">
-            <button
-              type="button"
-              className="text-benchlot-primary hover:text-benchlot-secondary text-sm font-medium"
-            >
-              Request Data Export
-            </button>
-            <button
-              type="button"
-              className="text-red-600 hover:text-red-700 text-sm font-medium"
-            >
-              Delete Account
-            </button>
+        <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+              <Shield className="h-5 w-5" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-stone-800 mb-2">Your Data</h3>
+              <p className="text-xs text-stone-500 mb-3">
+                You can request a copy of your data or delete your account at any time. Please note that deleting your account will permanently remove all your data from our platform.
+              </p>
+              
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  className="px-3 py-1.5 text-xs border border-benchlot-primary text-benchlot-primary rounded hover:bg-benchlot-accent-light"
+                >
+                  Request Data Export
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         

@@ -199,7 +199,7 @@ const AddressSettings = ({ user }) => {
   
   // Render the address form
   const renderAddressForm = () => (
-    <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-lg p-6 mb-6">
+    <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
       <h3 className="text-lg font-medium mb-4">
         {editingAddress ? 'Edit Address' : 'Add New Address'}
       </h3>
@@ -466,7 +466,7 @@ const AddressSettings = ({ user }) => {
   const renderAddressCard = (address) => (
     <div 
       key={address.id} 
-      className="bg-white border border-stone-200 rounded-lg p-5 relative"
+      className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 relative"
     >
       {/* Default badge */}
       {address.isDefault && (
@@ -547,7 +547,9 @@ const AddressSettings = ({ user }) => {
         {/* Addresses list or empty state */}
         {addresses.length === 0 && !isAdding ? (
           <div className="text-center py-10 border border-stone-200 rounded-lg">
-            <MapPin className="h-12 w-12 text-stone-400 mx-auto mb-4" />
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-stone-100">
+              <MapPin className="h-8 w-8 text-benchlot-primary" />
+            </div>
             <h3 className="text-lg font-medium mb-2">No addresses yet</h3>
             <p className="text-stone-500 mb-6">
               Add a shipping or billing address to make checkout faster

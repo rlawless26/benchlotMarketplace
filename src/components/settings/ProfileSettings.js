@@ -24,6 +24,7 @@ const ProfileSettings = ({ user }) => {
   // Initialize form with user data
   useEffect(() => {
     if (user) {
+      console.log('User data in ProfileSettings:', JSON.stringify(user, null, 2));
       setProfileData({
         displayName: user.displayName || '',
         fullName: user.profile?.fullName || '',
@@ -86,12 +87,16 @@ const ProfileSettings = ({ user }) => {
     setSuccess(false);
     
     try {
-      // Update profile data
+      // Update profile data, preserving the role field to satisfy security rules
       await updateUserProfile(user.uid, {
         displayName: profileData.displayName,
-        fullName: profileData.fullName,
-        bio: profileData.bio,
-        location: profileData.location
+        // Always preserve the role field from the user object
+        role: user.profile?.role || 'user',
+        profile: {
+          fullName: profileData.fullName,
+          bio: profileData.bio,
+          location: profileData.location
+        }
       });
       
       // Upload profile image if selected
@@ -117,11 +122,13 @@ const ProfileSettings = ({ user }) => {
         <p className="text-stone-600 text-sm mt-1">Update your profile information and account details</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="p-6">
+      <div className="p-6">
+        <form onSubmit={handleSubmit}>
         {/* Status messages */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6 flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2" />
+            <span>{error}</span>
           </div>
         )}
         
@@ -278,6 +285,7 @@ const ProfileSettings = ({ user }) => {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 };

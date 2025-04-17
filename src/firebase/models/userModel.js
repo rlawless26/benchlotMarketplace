@@ -64,11 +64,44 @@ export const updateUserProfile = async (userId, userData) => {
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
-      // Update existing user
-      await updateDoc(userRef, {
-        ...userData,
-        updated_at: serverTimestamp()
-      });
+      // Get current user data to preserve fields like role
+      const currentData = userSnap.data();
+      
+      // Create an update object that preserves the role
+      let updateObj = {};
+      
+      // Handle displayName field
+      if (userData.displayName) {
+        updateObj.displayName = userData.displayName;
+      }
+      
+      // Handle photoURL field
+      if (userData.photoURL) {
+        updateObj.photoURL = userData.photoURL;
+      }
+      
+      // Handle profile fields
+      if (userData.profile) {
+        // Update the entire profile object at once instead of using dot notation
+        const currentProfile = currentData.profile || {};
+        // Merge the current profile with new profile data
+        updateObj.profile = {
+          ...currentProfile,
+          ...userData.profile
+        };
+        console.log('Updated profile object:', updateObj.profile);
+      }
+      
+      // Add timestamp
+      updateObj.updated_at = serverTimestamp();
+      
+      // Always preserve the role field if it exists
+      if (currentData.role) {
+        updateObj.role = currentData.role;
+      }
+      
+      // Update existing user with dot notation for nested fields
+      await updateDoc(userRef, updateObj);
     } else {
       // Create new user
       await setDoc(userRef, {
@@ -156,11 +189,38 @@ export const updateUserSettings = async (userId, settings) => {
 export const updateUserAddress = async (userId, addressData) => {
   try {
     const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
     
-    await updateDoc(userRef, {
-      address: addressData,
-      updated_at: serverTimestamp()
-    });
+    if (userSnap.exists()) {
+      const currentData = userSnap.data();
+      
+      // Prepare data to update
+      const dataToUpdate = {
+        updated_at: serverTimestamp()
+      };
+      
+      // If we're updating addresses, add to profile
+      if (addressData.addresses) {
+        dataToUpdate['profile.addresses'] = addressData.addresses;
+      } else {
+        dataToUpdate.address = addressData;
+      }
+      
+      // Preserve the role field if it exists
+      if (currentData.role) {
+        dataToUpdate.role = currentData.role;
+      }
+      
+      await updateDoc(userRef, dataToUpdate);
+    } else {
+      // Create new user document with address data
+      await setDoc(userRef, {
+        profile: addressData.addresses ? { addresses: addressData.addresses } : {},
+        address: addressData.addresses ? undefined : addressData,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp()
+      });
+    }
     
     return addressData;
   } catch (error) {
@@ -178,11 +238,20 @@ export const updateUserAddress = async (userId, addressData) => {
 export const updateNotificationPreferences = async (userId, preferences) => {
   try {
     const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
     
-    await updateDoc(userRef, {
+    // Prepare data to update
+    const dataToUpdate = {
       'preferences.notifications': preferences,
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
     
     return preferences;
   } catch (error) {
@@ -200,11 +269,20 @@ export const updateNotificationPreferences = async (userId, preferences) => {
 export const updatePrivacySettings = async (userId, privacySettings) => {
   try {
     const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
     
-    await updateDoc(userRef, {
+    // Prepare data to update
+    const dataToUpdate = {
       'preferences.privacy': privacySettings,
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
     
     return privacySettings;
   } catch (error) {
@@ -222,11 +300,20 @@ export const updatePrivacySettings = async (userId, privacySettings) => {
 export const updateShippingPreferences = async (userId, shippingPrefs) => {
   try {
     const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
     
-    await updateDoc(userRef, {
+    // Prepare data to update
+    const dataToUpdate = {
       'preferences.shipping': shippingPrefs,
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
     
     return shippingPrefs;
   } catch (error) {
@@ -254,10 +341,20 @@ export const uploadProfileImage = async (userId, imageFile) => {
     
     // Update user profile with the new photo URL
     const userRef = doc(usersCollection, userId);
-    await updateDoc(userRef, {
+    const userSnap = await getDoc(userRef);
+    
+    // Create an update object with dot notation for nested fields
+    let updateObj = {
       photoURL: downloadURL,
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      updateObj.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, updateObj);
     
     // Update auth profile if this is the current user
     const currentUser = auth.currentUser;
@@ -289,10 +386,20 @@ export const deleteProfileImage = async (userId) => {
     
     // Update user profile to remove the photo URL
     const userRef = doc(usersCollection, userId);
-    await updateDoc(userRef, {
+    const userSnap = await getDoc(userRef);
+    
+    // Prepare update data
+    const dataToUpdate = {
       photoURL: deleteField(),
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
     
     // Update auth profile if this is the current user
     const currentUser = auth.currentUser;
@@ -345,12 +452,21 @@ export const updatePassword = async (currentPassword, newPassword) => {
 export const updateSellerSettings = async (userId, sellerSettings) => {
   try {
     const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
     
-    await updateDoc(userRef, {
+    // Prepare data to update
+    const dataToUpdate = {
       'seller': sellerSettings,
       'isSeller': true,
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.exists() && userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
     
     return sellerSettings;
   } catch (error) {

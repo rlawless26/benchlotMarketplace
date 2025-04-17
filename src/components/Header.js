@@ -141,7 +141,7 @@ const Header = () => {
               <>
                 {/* Sell your tools button */}
                 <Link 
-                  to="/seller/tools/new" 
+                  to={user?.isSeller || user?.profile?.isSeller ? "/seller/tools/new" : "/sell"}
                   className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
@@ -175,9 +175,21 @@ const Header = () => {
                     aria-expanded={profileMenuOpen}
                     aria-haspopup="true"
                   >
-                    <div className="w-8 h-8 rounded-full bg-benchlot-accent-light flex items-center justify-center">
-                      <User className="h-4 w-4 text-benchlot-primary" />
-                    </div>
+                    {user?.photoURL ? (
+                      // User has a profile image - display it
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200">
+                        <img
+                          src={user.photoURL}
+                          alt="Profile"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      // No profile image - show default icon
+                      <div className="w-8 h-8 rounded-full bg-benchlot-accent-light flex items-center justify-center">
+                        <User className="h-4 w-4 text-benchlot-primary" />
+                      </div>
+                    )}
                     <ChevronDown className="h-3 w-3 hidden md:block" />
                   </button>
 
@@ -187,8 +199,26 @@ const Header = () => {
                       id="profile-dropdown"
                       className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] z-[100]"
                     >
-                      <div className="px-4 py-2 text-sm font-medium text-stone-700 border-b">
-                        {user?.email || 'User'}
+                      <div className="px-4 py-3 border-b">
+                        <div className="flex items-center gap-3">
+                          {user?.photoURL ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-stone-200">
+                              <img
+                                src={user.photoURL}
+                                alt="Profile"
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-benchlot-accent-light flex items-center justify-center">
+                              <User className="h-5 w-5 text-benchlot-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium text-stone-800">{user?.displayName || 'User'}</div>
+                            <div className="text-xs text-stone-500">{user?.email}</div>
+                          </div>
+                        </div>
                       </div>
 
                       <Link to="/profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
@@ -435,7 +465,17 @@ const Header = () => {
                     className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="h-5 w-5" />
+                    {user?.photoURL ? (
+                      <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+                        <img
+                          src={user.photoURL}
+                          alt="Profile"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <User className="h-5 w-5" />
+                    )}
                     View Profile
                   </Link>
                   <Link 

@@ -27,6 +27,7 @@ const NotificationSettings = React.lazy(() => import('../components/settings/Not
 const PrivacySettings = React.lazy(() => import('../components/settings/PrivacySettings'));
 const ShippingSettings = React.lazy(() => import('../components/settings/ShippingSettings'));
 const SellerSettings = React.lazy(() => import('../components/settings/SellerSettings'));
+const SellerOnboarding = React.lazy(() => import('../components/settings/SellerOnboarding'));
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -34,7 +35,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   
   // Check if user is a seller
-  const isSeller = user?.profile?.isSeller || false;
+  const isSeller = user?.isSeller || user?.profile?.isSeller || false;
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -143,16 +144,14 @@ const SettingsPage = () => {
                     onClick={setActiveTab} 
                   />
                   
-                  {/* Conditional Seller Settings Tab */}
-                  {isSeller && (
-                    <TabButton 
-                      id="seller" 
-                      icon={Store} 
-                      label="Seller Settings" 
-                      active={activeTab === 'seller'} 
-                      onClick={setActiveTab} 
-                    />
-                  )}
+                  {/* Seller Settings Tab - shown for all users */}
+                  <TabButton 
+                    id="seller" 
+                    icon={Store} 
+                    label="Seller Settings" 
+                    active={activeTab === 'seller'} 
+                    onClick={setActiveTab} 
+                  />
                 </ul>
               </nav>
             </div>
@@ -174,7 +173,9 @@ const SettingsPage = () => {
               {activeTab === 'notifications' && <NotificationSettings user={user} />}
               {activeTab === 'privacy' && <PrivacySettings user={user} />}
               {activeTab === 'shipping' && <ShippingSettings user={user} />}
-              {activeTab === 'seller' && isSeller && <SellerSettings user={user} />}
+              {activeTab === 'seller' && (
+                isSeller ? <SellerSettings user={user} /> : <SellerOnboarding />
+              )}
             </React.Suspense>
           </div>
         </div>

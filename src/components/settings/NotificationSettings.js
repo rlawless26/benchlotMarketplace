@@ -176,7 +176,7 @@ const NotificationSettings = ({ user }) => {
         </div>
         
         {/* Categories */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
+        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4">
           <NotificationCategory
             icon={ShoppingBag}
             title="Order Updates"

@@ -185,7 +185,8 @@ const PasswordSettings = () => {
         <p className="text-stone-600 text-sm mt-1">Update your password to keep your account secure</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="p-6">
+      <div className="p-6">
+        <form onSubmit={handleSubmit}>
         {/* Status messages */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6 flex items-start">
@@ -367,6 +368,7 @@ const PasswordSettings = () => {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 };

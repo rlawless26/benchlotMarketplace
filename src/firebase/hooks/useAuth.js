@@ -51,13 +51,22 @@ export function AuthProvider({ children }) {
             userProfile = userSnap.data();
           } else {
             console.log("No user profile found, creating...");
-            // Create a basic profile
+            // Create a basic profile with role field to satisfy security rules
             userProfile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
               photoURL: firebaseUser.photoURL || null,
               createdAt: new Date().toISOString(),
+              // Add a default role field to satisfy security rules
+              role: 'user',
+              // Add a profile object for structured user data
+              profile: {
+                // Default empty values that will be populated through settings
+                fullName: '',
+                bio: '',
+                location: ''
+              }
             };
             
             try {
@@ -68,15 +77,23 @@ export function AuthProvider({ children }) {
             }
           }
           
-          // Merge auth and profile data
+          // Merge auth and profile data - use the Firestore data as the source of truth
           const userData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             emailVerified: firebaseUser.emailVerified,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            profile: userProfile
+            // Use Firestore values if available, fallback to auth values
+            displayName: userProfile.displayName || firebaseUser.displayName,
+            photoURL: userProfile.photoURL || firebaseUser.photoURL,
+            // Include the role from Firestore
+            role: userProfile.role,
+            // Spread the actual Firestore document
+            ...userProfile,
+            // Make sure profile is included
+            profile: userProfile.profile || {}
           };
+          
+          console.log('Merged user data:', JSON.stringify(userData, null, 2));
           
           setUser(userData);
         } else {
