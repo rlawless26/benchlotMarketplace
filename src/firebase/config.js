@@ -9,16 +9,15 @@ import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
-// Firebase configuration
-// Using environment variables with fallback values for development
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAzzPSBiOb-vPqNtaEYQfq2FgTHI1uydJ4",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "benchlot-6d64e.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "benchlot-6d64e",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "benchlot-6d64e.firebasestorage.app",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "261795762325",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:261795762325:web:088e8fbcfaa2f8c6530b9c",
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-EDNXNY6RYM"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

@@ -3,8 +3,18 @@
  * Handles communication with the Stripe API endpoints
  */
 
-// API URL for Firebase Functions
-const API_URL = process.env.REACT_APP_FIREBASE_API_URL || 'https://stripeapi-sed2e4p6ua-uc.a.run.app';
+// Import environment utilities
+import { getEnvironment, getConfig } from './environment';
+
+// API URL for Firebase Functions - environment specific
+const API_URL = process.env.REACT_APP_FIREBASE_API_URL || getConfig(
+  // Dev - use localhost if running emulator, otherwise use production
+  'http://localhost:5001/benchlot-6d64e/us-central1/api',
+  // Staging
+  'https://stripeapi-sed2e4p6ua-uc.a.run.app',
+  // Production
+  'https://stripeapi-sed2e4p6ua-uc.a.run.app'
+);
 
 /**
  * Create a new Stripe Connect account for a seller

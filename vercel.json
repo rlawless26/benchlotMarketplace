@@ -1,14 +1,18 @@
 {
      "framework": "create-react-app",
-     "buildCommand": "npm run build",
      "outputDirectory": "build",
      "regions": ["iad1"],
-     "env": {
-       "NODE_ENV": "production"
-     },
      "github": {
        "silent": true,
        "autoAlias": true
+     },
+     "buildCommand": {
+       "development": "npm run build:development",
+       "preview": "npm run build:staging",
+       "production": "npm run build"
+     },
+     "env": {
+       "NODE_ENV": "production"
      },
      "headers": [
        {

@@ -1,8 +1,18 @@
 // Client-side email service that forwards requests to Firebase Functions
 // This handles all email-related functionality for the Benchlot frontend
 
-// Base API URL - default to production but can be overridden by environment variable
-const API_URL = process.env.REACT_APP_API_URL || 'https://api-sed2e4p6ua-uc.a.run.app';
+// Import environment utilities
+import { getEnvironment, getConfig } from './environment';
+
+// Base API URL - environment-specific configuration
+const API_URL = process.env.REACT_APP_API_URL || getConfig(
+  // Development
+  'http://localhost:5001/benchlot-6d64e/us-central1/api',
+  // Staging
+  'https://api-sed2e4p6ua-uc.a.run.app',
+  // Production
+  'https://api-sed2e4p6ua-uc.a.run.app'
+);
 
 // Generic request helper function
 const sendRequest = async (endpoint, data) => {
