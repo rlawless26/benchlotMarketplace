@@ -1,0 +1,277 @@
+/**
+ * MakeOfferModal Component
+ * Modal for users to submit offers on tools
+ */
+import React, { useState, useEffect } from 'react';
+import { X, DollarSign, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { useOffers } from '../firebase/hooks/useOffers';
+import { useAuth } from '../firebase/hooks/useAuth';
+
+const MakeOfferModal = ({ 
+  isOpen, 
+  onClose, 
+  tool, 
+  onSuccess 
+}) => {
+  const { user } = useAuth();
+  const { createOffer } = useOffers();
+  
+  const [offerAmount, setOfferAmount] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Set initial offer amount to 90% of list price
+      if (tool?.price) {
+        const suggestedOffer = Math.floor(tool.price * 0.9);
+        setOfferAmount(suggestedOffer.toString());
+      } else {
+        setOfferAmount('');
+      }
+      setMessage('');
+      setError('');
+      setSuccess(false);
+    }
+  }, [isOpen, tool]);
+  
+  // Close on escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
+  
+  // Format price for display
+  const formatPrice = (price) => {
+    if (!price) return '$0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+  
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      setError('You must be logged in to make an offer.');
+      return;
+    }
+    
+    if (tool.sellerId === user.uid) {
+      setError('You cannot make an offer on your own listing.');
+      return;
+    }
+    
+    const amount = parseFloat(offerAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid offer amount.');
+      return;
+    }
+    
+    // Don't allow offers higher than the asking price
+    if (amount >= tool.price) {
+      setError('Your offer should be lower than the asking price.');
+      return;
+    }
+    
+    // Don't allow offers less than 50% of asking price
+    if (amount < tool.price * 0.5) {
+      setError('Please offer at least 50% of the asking price.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      const offerData = {
+        toolId: tool.id,
+        toolTitle: tool.title,
+        sellerId: tool.sellerId,
+        originalPrice: tool.price,
+        price: amount,
+        message: message.trim()
+      };
+      
+      await createOffer(offerData);
+      
+      setSuccess(true);
+      
+      // Close modal after success if callback provided
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      }
+    } catch (err) {
+      console.error('Error creating offer:', err);
+      setError(err.message || 'Failed to submit offer. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
+        
+        <div className="relative bg-white rounded-lg max-w-md w-full mx-auto shadow-xl">
+          {/* Header */}
+          <div className="flex justify-between items-center p-5 border-b">
+            <h3 className="text-xl font-medium text-stone-900">Make an Offer</h3>
+            <button 
+              onClick={onClose}
+              className="text-stone-400 hover:text-stone-500 focus:outline-none"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Content */}
+          <div className="p-5 space-y-4">
+            {!success ? (
+              <form onSubmit={handleSubmit}>
+                {/* Tool info */}
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-stone-100 rounded flex-shrink-0 flex items-center justify-center mr-3">
+                    {tool?.images?.[0] ? (
+                      <img 
+                        src={tool.images[0]} 
+                        alt={tool.title} 
+                        className="w-full h-full object-cover rounded"
+                      />
+                    ) : (
+                      <div className="text-stone-400 text-sm">No img</div>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{tool?.title}</h4>
+                    <div className="text-stone-600">Asking: {formatPrice(tool?.price)}</div>
+                  </div>
+                </div>
+                
+                {/* Offer amount */}
+                <div className="mb-4">
+                  <label htmlFor="offerAmount" className="block text-sm font-medium text-stone-700 mb-1">
+                    Your Offer
+                  </label>
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <DollarSign className="h-5 w-5 text-stone-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="offerAmount"
+                      id="offerAmount"
+                      className="focus:ring-benchlot-primary focus:border-benchlot-primary block w-full pl-10 pr-12 sm:text-sm border-stone-300 rounded-md"
+                      placeholder="0"
+                      autoFocus
+                      value={offerAmount}
+                      onChange={(e) => {
+                        // Only allow numbers and decimals
+                        const value = e.target.value.replace(/[^\d.]/g, '');
+                        setOfferAmount(value);
+                      }}
+                      required
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-stone-500 sm:text-sm">.00</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Message */}
+                <div className="mb-4">
+                  <label htmlFor="message" className="block text-sm font-medium text-stone-700 mb-1">
+                    Message to Seller (Optional)
+                  </label>
+                  <textarea
+                    id="message"
+                    rows="3"
+                    className="shadow-sm focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm border-stone-300 rounded-md"
+                    placeholder="Add a note to the seller..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
+                </div>
+                
+                {/* Error Message */}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start mb-4">
+                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mr-2 mt-0.5" />
+                    <span className="text-sm text-red-800">{error}</span>
+                  </div>
+                )}
+                
+                {/* Buttons */}
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    className="px-4 py-2 border border-stone-300 rounded-md shadow-sm text-sm font-medium text-stone-700 bg-white hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-accent"
+                    onClick={onClose}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary disabled:bg-benchlot-primary/70"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Offer'
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center py-6">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-medium text-stone-900 mb-2">Offer Submitted!</h3>
+                <p className="text-stone-600">
+                  Your offer of {formatPrice(parseFloat(offerAmount))} for {tool?.title} has been sent to the seller. 
+                  They'll be notified right away.
+                </p>
+                <button
+                  type="button"
+                  className="mt-6 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
+                  onClick={onClose}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MakeOfferModal;

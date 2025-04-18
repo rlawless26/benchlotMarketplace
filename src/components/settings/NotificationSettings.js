@@ -14,20 +14,11 @@ const NotificationSettings = ({ user }) => {
       messages: true,
       deals: false,
       wishlist: true,
-      reminders: true,
-      maintenance: false,
       newsletter: false
     },
     sms: {
       orders: false,
-      messages: false,
-      reminders: false
-    },
-    app: {
-      orders: true,
-      messages: true,
-      wishlist: true,
-      reminders: true
+      messages: false
     }
   };
   
@@ -44,8 +35,7 @@ const NotificationSettings = ({ user }) => {
       if (notifications) {
         setNotificationPrefs({
           email: { ...defaultSettings.email, ...notifications.email },
-          sms: { ...defaultSettings.sms, ...notifications.sms },
-          app: { ...defaultSettings.app, ...notifications.app }
+          sms: { ...defaultSettings.sms, ...notifications.sms }
         });
       }
     }
@@ -102,7 +92,7 @@ const NotificationSettings = ({ user }) => {
   );
   
   // Notification category row
-  const NotificationCategory = ({ icon, title, description, emailKey, smsKey, appKey }) => {
+  const NotificationCategory = ({ icon, title, description, emailKey, smsKey }) => {
     const Icon = icon;
     
     return (
@@ -117,7 +107,7 @@ const NotificationSettings = ({ user }) => {
           </div>
         </div>
         
-        <div className="ml-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="ml-10 grid grid-cols-1 md:grid-cols-2 gap-4">
           <ToggleSwitch
             checked={notificationPrefs.email[emailKey]}
             onChange={() => handleToggleChange('email', emailKey)}
@@ -129,14 +119,6 @@ const NotificationSettings = ({ user }) => {
               checked={notificationPrefs.sms[smsKey]}
               onChange={() => handleToggleChange('sms', smsKey)}
               label="SMS"
-            />
-          )}
-          
-          {appKey && (
-            <ToggleSwitch
-              checked={notificationPrefs.app[appKey]}
-              onChange={() => handleToggleChange('app', appKey)}
-              label="App"
             />
           )}
         </div>
@@ -168,11 +150,10 @@ const NotificationSettings = ({ user }) => {
         )}
         
         {/* Section headers */}
-        <div className="hidden md:grid md:grid-cols-4 gap-4 mb-2 mt-2">
+        <div className="hidden md:grid md:grid-cols-3 gap-4 mb-2 mt-2">
           <div></div>
           <div className="text-xs font-medium text-stone-500">EMAIL</div>
           <div className="text-xs font-medium text-stone-500">SMS</div>
-          <div className="text-xs font-medium text-stone-500">APP</div>
         </div>
         
         {/* Categories */}
@@ -180,28 +161,17 @@ const NotificationSettings = ({ user }) => {
           <NotificationCategory
             icon={ShoppingBag}
             title="Order Updates"
-            description="Get notified about order status changes and rental updates"
+            description="Get notified about order status changes"
             emailKey="orders"
             smsKey="orders"
-            appKey="orders"
           />
           
           <NotificationCategory
             icon={MessageSquare}
-            title="Messages"
-            description="Receive notifications when someone sends you a message"
+            title="Messages & Offers"
+            description="Receive notifications when someone sends you a message or makes an offer"
             emailKey="messages"
             smsKey="messages"
-            appKey="messages"
-          />
-          
-          <NotificationCategory
-            icon={Calendar}
-            title="Rental Reminders"
-            description="Reminders about upcoming returns and rental expirations"
-            emailKey="reminders"
-            smsKey="reminders"
-            appKey="reminders"
           />
           
           <NotificationCategory
@@ -210,16 +180,6 @@ const NotificationSettings = ({ user }) => {
             description="Get notified when items in your wishlist change price or availability"
             emailKey="wishlist"
             smsKey={null}
-            appKey="wishlist"
-          />
-          
-          <NotificationCategory
-            icon={Wrench}
-            title="Maintenance Reminders"
-            description="Tool maintenance recommendations and safety tips"
-            emailKey="maintenance"
-            smsKey={null}
-            appKey={null}
           />
           
           <NotificationCategory
@@ -228,7 +188,6 @@ const NotificationSettings = ({ user }) => {
             description="Special promotions, new features, and community news"
             emailKey="newsletter"
             smsKey={null}
-            appKey={null}
           />
         </div>
         

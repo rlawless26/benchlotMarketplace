@@ -29,7 +29,7 @@ const SellerLandingPage = () => {
   };
   
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-gray-100 min-h-screen">
       {/* Hero Section */}
       <section className="py-16 md:py-24 bg-stone-50 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">

@@ -4,17 +4,19 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Truck, Check, Loader, AlertCircle, MapPin, Package, Clock } from 'lucide-react';
-import { updateShippingPreferences } from '../../firebase/models/userModel';
+import { updateSellerSettings } from '../../firebase/models/userModel';
 
 const ShippingSettings = ({ user }) => {
-  // Default shipping preferences
+  // Default shipping preferences for sellers
   const defaultPreferences = {
-    preferredShipping: 'standard',
-    acceptLocalPickup: true,
-    autoCalculateShipping: true,
-    consolidateOrders: true,
-    contactBeforeShipping: false,
-    packageRecycling: false
+    offersFreeShipping: false,
+    freeShippingThreshold: 100,
+    processingTime: 1,
+    shippingMethods: ['standard', 'express'],
+    offerLocalPickup: true,
+    requireConfirmation: false,
+    defaultShippingPrice: 15,
+    internationalShipping: false
   };
   
   // State
@@ -23,16 +25,18 @@ const ShippingSettings = ({ user }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   
-  // Load user's shipping preferences
+  // Load seller's shipping preferences
   useEffect(() => {
-    if (user && user.profile && user.profile.preferences) {
-      const { shipping } = user.profile.preferences || {};
-      if (shipping) {
-        setShippingPrefs({
-          ...defaultPreferences,
-          ...shipping
-        });
-      }
+    if (user && user.seller && user.seller.policies && user.seller.policies.shipping) {
+      setShippingPrefs({
+        ...defaultPreferences,
+        ...user.seller.policies.shipping
+      });
+    } else if (user && user.profile && user.profile.seller && user.profile.seller.policies && user.profile.seller.policies.shipping) {
+      setShippingPrefs({
+        ...defaultPreferences,
+        ...user.profile.seller.policies.shipping
+      });
     }
   }, [user]);
   
@@ -53,13 +57,18 @@ const ShippingSettings = ({ user }) => {
     }));
   };
   
-  // Save shipping preferences
+  // Save seller shipping preferences
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     
     try {
-      await updateShippingPreferences(user.uid, shippingPrefs);
+      // We'll use updateSellerSettings to update just the shipping portion
+      await updateSellerSettings(user.uid, { 
+        policies: { 
+          shipping: shippingPrefs 
+        } 
+      });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -122,8 +131,8 @@ const ShippingSettings = ({ user }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-medium text-stone-800">Shipping Preferences</h2>
-        <p className="text-stone-600 text-sm mt-1">Manage your shipping and delivery preferences</p>
+        <h2 className="text-xl font-medium text-stone-800">Seller Shipping Settings</h2>
+        <p className="text-stone-600 text-sm mt-1">Configure your shipping options for buyers</p>
       </div>
       
       <div className="p-6">
@@ -142,104 +151,198 @@ const ShippingSettings = ({ user }) => {
           </div>
         )}
         
-        {/* Preferred Shipping Method */}
+        {/* Shipping Methods Section */}
         <div className="mb-6">
           <div className="flex items-start mb-4">
             <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
               <Truck className="h-5 w-5" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-stone-800">Preferred Shipping Method</h3>
-              <p className="text-xs text-stone-500 mt-1">Choose your default shipping method for tool orders</p>
+              <h3 className="text-sm font-medium text-stone-800">Shipping Methods</h3>
+              <p className="text-xs text-stone-500 mt-1">Select the shipping options you offer to buyers</p>
             </div>
           </div>
           
-          <div className="ml-10 space-y-3">
-            <RadioOption
-              id="shipping-standard"
-              name="preferredShipping"
-              value="standard"
-              currentValue={shippingPrefs.preferredShipping}
-              onChange={handleRadioChange}
-              label="Standard Shipping"
-              description="Regular delivery time, typically 3-5 business days"
-            />
+          <div className="ml-10 space-y-4">
+            <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg">
+              <h4 className="font-medium mb-3">Available Shipping Methods</h4>
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    id="method-standard"
+                    type="checkbox"
+                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    checked={shippingPrefs.shippingMethods.includes('standard')}
+                    onChange={() => {
+                      const methods = [...shippingPrefs.shippingMethods];
+                      if (methods.includes('standard')) {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: methods.filter(m => m !== 'standard')});
+                      } else {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: [...methods, 'standard']});
+                      }
+                    }}
+                  />
+                  <label htmlFor="method-standard" className="ml-2 block text-sm">
+                    <span className="font-medium text-stone-700">Standard Shipping</span>
+                    <p className="text-xs text-stone-500">Regular delivery (3-5 business days)</p>
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="method-express"
+                    type="checkbox"
+                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    checked={shippingPrefs.shippingMethods.includes('express')}
+                    onChange={() => {
+                      const methods = [...shippingPrefs.shippingMethods];
+                      if (methods.includes('express')) {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: methods.filter(m => m !== 'express')});
+                      } else {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: [...methods, 'express']});
+                      }
+                    }}
+                  />
+                  <label htmlFor="method-express" className="ml-2 block text-sm">
+                    <span className="font-medium text-stone-700">Express Shipping</span>
+                    <p className="text-xs text-stone-500">Faster delivery (1-2 business days)</p>
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="method-economy"
+                    type="checkbox"
+                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    checked={shippingPrefs.shippingMethods.includes('economy')}
+                    onChange={() => {
+                      const methods = [...shippingPrefs.shippingMethods];
+                      if (methods.includes('economy')) {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: methods.filter(m => m !== 'economy')});
+                      } else {
+                        setShippingPrefs({...shippingPrefs, shippingMethods: [...methods, 'economy']});
+                      }
+                    }}
+                  />
+                  <label htmlFor="method-economy" className="ml-2 block text-sm">
+                    <span className="font-medium text-stone-700">Economy Shipping</span>
+                    <p className="text-xs text-stone-500">Budget-friendly (5-7 business days)</p>
+                  </label>
+                </div>
+              </div>
+            </div>
             
-            <RadioOption
-              id="shipping-express"
-              name="preferredShipping"
-              value="express"
-              currentValue={shippingPrefs.preferredShipping}
-              onChange={handleRadioChange}
-              label="Express Shipping"
-              description="Faster delivery, typically 1-2 business days"
-            />
-            
-            <RadioOption
-              id="shipping-economy"
-              name="preferredShipping"
-              value="economy"
-              currentValue={shippingPrefs.preferredShipping}
-              onChange={handleRadioChange}
-              label="Economy Shipping"
-              description="Slower delivery, but more cost-effective"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-white border border-stone-200 rounded-lg">
+                <h4 className="font-medium mb-2 text-sm">Default Shipping Price</h4>
+                <div className="flex items-center">
+                  <span className="text-stone-600 mr-2">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                    value={shippingPrefs.defaultShippingPrice}
+                    onChange={(e) => setShippingPrefs({...shippingPrefs, defaultShippingPrice: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <p className="text-xs text-stone-500 mt-1">Applied when no specific price is set</p>
+              </div>
+              
+              <div className="p-4 bg-white border border-stone-200 rounded-lg">
+                <h4 className="font-medium mb-2 text-sm">Processing Time (Days)</h4>
+                <input
+                  type="number"
+                  min="0"
+                  className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                  value={shippingPrefs.processingTime}
+                  onChange={(e) => setShippingPrefs({...shippingPrefs, processingTime: parseInt(e.target.value) || 0})}
+                />
+                <p className="text-xs text-stone-500 mt-1">Days to prepare before shipping</p>
+              </div>
+            </div>
           </div>
         </div>
         
-        {/* Shipping Toggles */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6 p-4">
-          <ToggleSwitch
-            id="accept-local-pickup"
-            checked={shippingPrefs.acceptLocalPickup}
-            onChange={() => handleToggleChange('acceptLocalPickup')}
-            label="Enable Local Pickup"
-            description="Allow the option to pick up tools in person when available (often reduces costs)"
-          />
-          
-          <ToggleSwitch
-            id="auto-calculate"
-            checked={shippingPrefs.autoCalculateShipping}
-            onChange={() => handleToggleChange('autoCalculateShipping')}
-            label="Auto-calculate Shipping"
-            description="Automatically calculate shipping costs based on your address and tool location"
-          />
-          
-          <ToggleSwitch
-            id="consolidate-orders"
-            checked={shippingPrefs.consolidateOrders}
-            onChange={() => handleToggleChange('consolidateOrders')}
-            label="Consolidate Orders"
-            description="Combine multiple items from the same seller to reduce shipping costs"
-          />
-          
-          <ToggleSwitch
-            id="contact-before-shipping"
-            checked={shippingPrefs.contactBeforeShipping}
-            onChange={() => handleToggleChange('contactBeforeShipping')}
-            label="Contact Before Shipping"
-            description="Sellers will contact you before shipping to confirm details"
-          />
-          
-          <ToggleSwitch
-            id="package-recycling"
-            checked={shippingPrefs.packageRecycling}
-            onChange={() => handleToggleChange('packageRecycling')}
-            label="Package Recycling Program"
-            description="Opt into our packaging recycling program to reduce waste"
-          />
-        </div>
-        
-        {/* Shipping Information */}
-        <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
-          <div className="flex">
+        {/* Free Shipping Options */}
+        <div className="mb-6">
+          <div className="flex items-start mb-4">
             <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
               <Package className="h-5 w-5" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-stone-800">Tool Shipping Information</h3>
+              <h3 className="text-sm font-medium text-stone-800">Free Shipping Options</h3>
+              <p className="text-xs text-stone-500 mt-1">Configure free shipping offers for your buyers</p>
+            </div>
+          </div>
+          
+          <div className="ml-10 bg-white border border-stone-200 rounded-lg overflow-hidden p-4">
+            <ToggleSwitch
+              id="offers-free-shipping"
+              checked={shippingPrefs.offersFreeShipping}
+              onChange={() => setShippingPrefs({...shippingPrefs, offersFreeShipping: !shippingPrefs.offersFreeShipping})}
+              label="Offer Free Shipping"
+              description="Provide free shipping on orders that meet the threshold"
+            />
+            
+            {shippingPrefs.offersFreeShipping && (
+              <div className="ml-9 mt-2 mb-4">
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded-md">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    Free Shipping Threshold ($)
+                  </label>
+                  <div className="flex items-center">
+                    <span className="text-stone-600 mr-2">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                      value={shippingPrefs.freeShippingThreshold}
+                      onChange={(e) => setShippingPrefs({...shippingPrefs, freeShippingThreshold: parseFloat(e.target.value) || 0})}
+                    />
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">Orders above this amount qualify for free shipping</p>
+                </div>
+              </div>
+            )}
+            
+            <ToggleSwitch
+              id="offer-local-pickup"
+              checked={shippingPrefs.offerLocalPickup}
+              onChange={() => setShippingPrefs({...shippingPrefs, offerLocalPickup: !shippingPrefs.offerLocalPickup})}
+              label="Offer Local Pickup"
+              description="Allow buyers to pick up items in person (no shipping)"
+            />
+            
+            <ToggleSwitch
+              id="international-shipping"
+              checked={shippingPrefs.internationalShipping}
+              onChange={() => setShippingPrefs({...shippingPrefs, internationalShipping: !shippingPrefs.internationalShipping})}
+              label="Offer International Shipping"
+              description="Ship to international addresses (additional costs may apply)"
+            />
+            
+            <ToggleSwitch
+              id="require-confirmation"
+              checked={shippingPrefs.requireConfirmation}
+              onChange={() => setShippingPrefs({...shippingPrefs, requireConfirmation: !shippingPrefs.requireConfirmation})}
+              label="Require Shipping Confirmation"
+              description="Review and confirm shipping details before sending items"
+            />
+          </div>
+        </div>
+        
+        {/* Shipping Policy Information */}
+        <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-stone-800">Shipping Policies</h3>
               <p className="text-xs text-stone-500 mt-1">
-                Tools and equipment are shipped following strict packaging guidelines to ensure safe delivery. Rental tools must be returned using the provided return label and packaging.
+                These settings will be applied as your default shipping options for all your tools. You can override these settings for specific listings when creating or editing a tool.
               </p>
             </div>
           </div>

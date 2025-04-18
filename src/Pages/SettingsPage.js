@@ -3,7 +3,7 @@
  * Provides a complete user settings interface with Firebase integration
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   User, 
   Lock, 
@@ -30,19 +30,36 @@ const SellerSettings = React.lazy(() => import('../components/settings/SellerSet
 const SellerOnboarding = React.lazy(() => import('../components/settings/SellerOnboarding'));
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('profile');
   const { user, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Parse tab from URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const tabFromQuery = queryParams.get('tab');
+  
+  // Set initial active tab based on URL or default to 'profile'
+  const [activeTab, setActiveTab] = useState(
+    tabFromQuery && ['profile', 'password', 'address', 'payment', 'notifications', 'privacy', 'shipping', 'seller'].includes(tabFromQuery)
+      ? tabFromQuery
+      : 'profile'
+  );
   
   // Check if user is a seller
   const isSeller = user?.isSeller || user?.profile?.isSeller || false;
   
+  // Update URL when tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`/settings?tab=${tab}`, { replace: true });
+  };
+  
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated()) {
-      navigate('/login', { state: { from: '/settings' } });
+      navigate('/login', { state: { from: location.pathname + location.search } });
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, navigate, location]);
   
   // Loading state
   if (loading) {
@@ -93,7 +110,7 @@ const SettingsPage = () => {
                     icon={User} 
                     label="Profile" 
                     active={activeTab === 'profile'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
                   <TabButton 
@@ -101,7 +118,7 @@ const SettingsPage = () => {
                     icon={Lock} 
                     label="Password" 
                     active={activeTab === 'password'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
                   <TabButton 
@@ -109,7 +126,7 @@ const SettingsPage = () => {
                     icon={MapPin} 
                     label="Address" 
                     active={activeTab === 'address'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
                   <TabButton 
@@ -117,7 +134,7 @@ const SettingsPage = () => {
                     icon={CreditCard} 
                     label="Payment Methods" 
                     active={activeTab === 'payment'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
                   <TabButton 
@@ -125,7 +142,7 @@ const SettingsPage = () => {
                     icon={Bell} 
                     label="Notifications" 
                     active={activeTab === 'notifications'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
                   <TabButton 
@@ -133,16 +150,19 @@ const SettingsPage = () => {
                     icon={Shield} 
                     label="Privacy" 
                     active={activeTab === 'privacy'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                   
-                  <TabButton 
-                    id="shipping" 
-                    icon={Truck} 
-                    label="Shipping" 
-                    active={activeTab === 'shipping'} 
-                    onClick={setActiveTab} 
-                  />
+                  {/* Only show shipping tab for sellers */}
+                  {isSeller && (
+                    <TabButton 
+                      id="shipping" 
+                      icon={Truck} 
+                      label="Shipping" 
+                      active={activeTab === 'shipping'} 
+                      onClick={handleTabChange} 
+                    />
+                  )}
                   
                   {/* Seller Settings Tab - shown for all users */}
                   <TabButton 
@@ -150,7 +170,7 @@ const SettingsPage = () => {
                     icon={Store} 
                     label="Seller Settings" 
                     active={activeTab === 'seller'} 
-                    onClick={setActiveTab} 
+                    onClick={handleTabChange} 
                   />
                 </ul>
               </nav>

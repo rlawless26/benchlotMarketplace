@@ -11,9 +11,6 @@ const PrivacySettings = ({ user }) => {
   const defaultSettings = {
     profileVisibility: 'registered',
     locationPrecision: 'city',
-    activityVisibility: true,
-    reviewsVisibility: true,
-    toolsVisibility: true,
     searchIndexing: true
   };
   
@@ -210,27 +207,6 @@ const PrivacySettings = ({ user }) => {
                 description: 'Do not show your location to others'
               }
             ]}
-          />
-          
-          <ToggleSwitch
-            checked={privacySettings.activityVisibility}
-            onChange={() => handleChange('activityVisibility', !privacySettings.activityVisibility)}
-            label="Show Activity Status"
-            description="Allow others to see when you were last active on the platform"
-          />
-          
-          <ToggleSwitch
-            checked={privacySettings.reviewsVisibility}
-            onChange={() => handleChange('reviewsVisibility', !privacySettings.reviewsVisibility)}
-            label="Show Reviews"
-            description="Allow others to see reviews you've received"
-          />
-          
-          <ToggleSwitch
-            checked={privacySettings.toolsVisibility}
-            onChange={() => handleChange('toolsVisibility', !privacySettings.toolsVisibility)}
-            label="Show Tools You've Rented"
-            description="Allow others to see tools you've previously rented or purchased"
           />
           
           <ToggleSwitch

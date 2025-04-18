@@ -37,8 +37,8 @@ const SellerDashboardPage = () => {
           return;
         }
         
-        // Check if user is a seller
-        if (!user.profile?.isSeller) {
+        // Check if user is a seller - check both locations where seller flag might be stored
+        if (!(user.profile?.isSeller || user.isSeller)) {
           navigate('/seller/signup');
           return;
         }
@@ -125,13 +125,29 @@ const SellerDashboardPage = () => {
           <div className="col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="flex items-center space-x-4 mb-6">
-                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-xl font-bold text-green-800">
-                    {user?.profile?.sellerName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'S'}
-                  </span>
-                </div>
+                {user?.photoURL ? (
+                  // Display user's profile image if available
+                  <div className="h-16 w-16 rounded-full overflow-hidden border border-gray-200">
+                    <img 
+                      src={user.photoURL} 
+                      alt="Profile" 
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23047857'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E`;
+                      }}
+                    />
+                  </div>
+                ) : (
+                  // Fallback to initial if no profile image
+                  <div className="h-16 w-16 rounded-full bg-benchlot-accent-light flex items-center justify-center">
+                    <span className="text-xl font-bold text-benchlot-primary">
+                      {user?.profile?.sellerName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'S'}
+                    </span>
+                  </div>
+                )}
                 <div>
-                  <h2 className="text-xl font-medium">{user?.profile?.sellerName || 'Seller'}</h2>
+                  <h2 className="text-xl font-medium">{user?.profile?.sellerName || user?.displayName || 'Seller'}</h2>
                   <p className="text-gray-600 text-sm">{user?.profile?.location || 'Boston, MA'}</p>
                 </div>
               </div>
@@ -288,7 +304,7 @@ const SellerDashboardPage = () => {
                 {listings.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <p className="text-gray-500">No listings yet.</p>
-                    <Link to="/seller/new-listing" className="text-green-700 font-medium underline mt-2 inline-block">
+                    <Link to="/seller/tools/new" className="text-green-700 font-medium underline mt-2 inline-block">
                       Create your first listing
                     </Link>
                   </div>

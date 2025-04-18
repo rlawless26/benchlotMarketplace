@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Page imports
 import LandingPage from './Pages/LandingPage';
@@ -19,6 +20,9 @@ import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
 import WishlistPage from './Pages/WishlistPage';
 import SettingsPage from './Pages/SettingsPage';
+import OrdersPage from './Pages/OrdersPage';
+import OrderDetailPage from './Pages/OrderDetailPage';
+import MessagesPage from './Pages/MessagesPage';
 
 // Seller page imports
 import SellerSignupPage from './components/SellerSignupPage';
@@ -29,6 +33,7 @@ import SellerLandingPage from './components/SellerLandingPage';
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
+// Note: TestNotificationButton and UserIdDisplay removed
 
 // Styles
 import './styles/design-system.css';
@@ -39,9 +44,10 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <SellerProvider>
-          <Router>
-            <div className="App min-h-screen flex flex-col bg-stone-50">
-              <Header />
+          <NotificationProvider>
+            <Router>
+              <div className="App min-h-screen flex flex-col bg-stone-50">
+                <Header />
               
               <main className="flex-grow">
                 <Routes>
@@ -65,11 +71,17 @@ function App() {
                   <Route path="/login" element={<AuthPage />} />
                   <Route path="/wishlist" element={<WishlistPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/messages/conversation/:conversationId" element={<MessagesPage />} />
                   
                   {/* Cart Routes */}
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/orders/:id" element={<OrderConfirmationPage />} />
+                  
+                  {/* Order Routes */}
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/orders/:id" element={<OrderDetailPage />} />
+                  <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
                   
                   {/* Seller Routes */}
                   <Route path="/sell" element={<SellerLandingPage />} />
@@ -91,7 +103,8 @@ function App() {
               
               <Footer />
             </div>
-          </Router>
+            </Router>
+          </NotificationProvider>
         </SellerProvider>
       </CartProvider>
     </AuthProvider>

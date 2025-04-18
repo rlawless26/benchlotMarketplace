@@ -16,15 +16,19 @@ import {
   Package,
   Hammer,
   Bell,
-  X
+  X,
+  Store
 } from 'lucide-react';
 
 // Import hooks from firebase
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useWishlist } from '../firebase/hooks/useWishlist';
+import useNotifications from '../firebase/hooks/useNotifications';
+import { useMessages } from '../firebase/hooks/useMessages';
 
-// Import cart components
+// Import components
 import CartIcon from './CartIcon';
+import NotificationBadge from './NotificationBadge';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -32,9 +36,11 @@ const Header = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Use hooks to access user data and wishlist
+  // Use hooks to access user data, wishlist, and notifications
   const { user, isAuthenticated, signOut } = useAuth();
   const { count: wishlistCount } = useWishlist();
+  const { totalCount: notificationCount } = useNotifications();
+  const { hasUnreadMessages, unreadCount: messageCount } = useMessages();
   
   // Create a ref for the profile menu
   const profileMenuRef = useRef(null);
@@ -141,7 +147,7 @@ const Header = () => {
               <>
                 {/* Sell your tools button */}
                 <Link 
-                  to={user?.isSeller || user?.profile?.isSeller ? "/seller/tools/new" : "/sell"}
+                  to={user?.isSeller || user?.profile?.isSeller ? "/seller/dashboard" : "/sell"}
                   className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
@@ -161,9 +167,14 @@ const Header = () => {
                   )}
                 </Link>
                 
-                {/* Messages Icon */}
-                <Link to="/messages" className="hidden md:flex text-stone-700 hover:text-benchlot-primary" aria-label="Messages">
+                {/* Messages Icon with notifications */}
+                <Link to="/messages" className="hidden md:flex text-stone-700 hover:text-benchlot-primary relative" aria-label="Messages">
                   <MessageSquare className="h-5 w-5" />
+                  {(notificationCount > 0 || messageCount > 0) && (
+                    <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {(notificationCount + messageCount) > 9 ? '9+' : (notificationCount + messageCount)}
+                    </span>
+                  )}
                 </Link>
                 
                 {/* User Profile Dropdown */}
@@ -199,6 +210,7 @@ const Header = () => {
                       id="profile-dropdown"
                       className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] z-[100]"
                     >
+                      {/* User info header */}
                       <div className="px-4 py-3 border-b">
                         <div className="flex items-center gap-3">
                           {user?.photoURL ? (
@@ -221,45 +233,82 @@ const Header = () => {
                         </div>
                       </div>
 
-                      <Link to="/profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <User className="h-4 w-4" />
-                        View Profile
-                      </Link>
+                      {/* Main Account Options */}
+                      <div className="py-1">
+                        <Link to="/settings?tab=profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <User className="h-4 w-4" />
+                          My Account
+                        </Link>
 
-                      <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <List className="h-4 w-4" />
-                        My Listings
-                      </Link>
+                        <Link to="/wishlist" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <Heart className="h-4 w-4" />
+                          Saved Tools
+                        </Link>
+
+                        <Link to="/messages" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <div className="relative">
+                            <MessageSquare className="h-4 w-4" />
+                            {(notificationCount > 0 || messageCount > 0) && (
+                              <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-3.5 w-3.5 flex items-center justify-center text-[0.6rem]">
+                                {(notificationCount + messageCount) > 9 ? '9+' : (notificationCount + messageCount)}
+                              </span>
+                            )}
+                          </div>
+                          Messages
+                        </Link>
+                      </div>
                       
-                      <Link to="/dashboard" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <Package className="h-4 w-4" />
-                        Shop Dashboard
-                      </Link>
+                      {/* Purchase Activity Section */}
+                      <div className="border-t my-1 pt-1">
+                        <div className="px-4 py-1">
+                          <span className="text-xs font-medium text-stone-500">PURCHASES</span>
+                        </div>
+                        <Link to="/orders" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <Package className="h-4 w-4" />
+                          My Orders
+                        </Link>
+                      </div>
 
-                      <Link to="/wishlist" className="md:hidden flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <Heart className="h-4 w-4" />
-                        Saved Tools
-                      </Link>
+                      {/* Seller Section - Conditionally rendered */}
+                      <div className="border-t my-1 pt-1">
+                        <div className="px-4 py-1">
+                          <span className="text-xs font-medium text-stone-500">SELLING</span>
+                        </div>
+                        
+                        {user?.isSeller || user?.profile?.isSeller ? (
+                          <>
+                            <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                              <List className="h-4 w-4" />
+                              My Tools
+                            </Link>
+                            <Link to="/seller/dashboard" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                              <Package className="h-4 w-4" />
+                              Seller Dashboard
+                            </Link>
+                          </>
+                        ) : (
+                          <Link to="/sell" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                            <Store className="h-4 w-4" />
+                            Become a Seller
+                          </Link>
+                        )}
+                      </div>
 
-                      <Link to="/messages" className="md:hidden flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <MessageSquare className="h-4 w-4" />
-                        Messages
-                      </Link>
-
-                      <Link to="/settings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
-                        <Settings className="h-4 w-4" />
-                        Account Settings
-                      </Link>
-
-                      <div className="border-t my-1"></div>
-
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </button>
+                      {/* Settings and Logout */}
+                      <div className="border-t my-1 pt-1">
+                        <Link to="/settings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <Settings className="h-4 w-4" />
+                          Settings
+                        </Link>
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -455,76 +504,140 @@ const Header = () => {
               </Link>
             </div>
 
-            {/* Mobile User Links */}
-            <div className="space-y-1 mb-6">
+            {/* Mobile User Links - Organized into sections */}
+            <div className="mb-6">
               {isAuthenticated() ? (
-                // Logged in mobile links
+                // Logged in mobile links with organized sections
                 <>
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {user?.photoURL ? (
-                      <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
-                        <img
-                          src={user.photoURL}
-                          alt="Profile"
-                          className="h-full w-full object-cover"
-                        />
+                  {/* Main Account Options */}
+                  <div className="mb-4">
+                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                      ACCOUNT
+                    </div>
+                    <Link 
+                      to="/settings?tab=profile" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {user?.photoURL ? (
+                        <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+                          <img
+                            src={user.photoURL}
+                            alt="Profile"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <User className="h-5 w-5" />
+                      )}
+                      My Account
+                    </Link>
+                    <Link 
+                      to="/wishlist" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Heart className="h-5 w-5" />
+                      Saved Tools
+                    </Link>
+                    <Link 
+                      to="/messages" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="relative">
+                        <MessageSquare className="h-5 w-5" />
+                        {notificationCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            {notificationCount > 9 ? '9+' : notificationCount}
+                          </span>
+                        )}
                       </div>
+                      Messages
+                    </Link>
+                    <Link 
+                      to="/cart" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ShoppingCart className="h-5 w-5" />
+                      Cart
+                    </Link>
+                  </div>
+
+                  {/* Purchase Activity Section */}
+                  <div className="mb-4 border-t border-stone-100 pt-2">
+                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                      PURCHASES
+                    </div>
+                    <Link 
+                      to="/orders" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Package className="h-5 w-5" />
+                      My Orders
+                    </Link>
+                  </div>
+
+                  {/* Seller Section */}
+                  <div className="mb-4 border-t border-stone-100 pt-2">
+                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                      SELLING
+                    </div>
+                    
+                    {user?.isSeller || user?.profile?.isSeller ? (
+                      <>
+                        <Link 
+                          to="/my-listings" 
+                          className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <List className="h-5 w-5" />
+                          My Tools
+                        </Link>
+                        <Link 
+                          to="/seller/dashboard" 
+                          className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Package className="h-5 w-5" />
+                          Seller Dashboard
+                        </Link>
+                      </>
                     ) : (
-                      <User className="h-5 w-5" />
+                      <Link 
+                        to="/sell" 
+                        className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Store className="h-5 w-5" />
+                        Become a Seller
+                      </Link>
                     )}
-                    View Profile
-                  </Link>
-                  <Link 
-                    to="/my-listings" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <List className="h-5 w-5" />
-                    My Listings
-                  </Link>
-                  <Link 
-                    to="/wishlist" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Heart className="h-5 w-5" />
-                    Saved Tools
-                  </Link>
-                  <Link 
-                    to="/messages" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    Messages
-                  </Link>
-                  <Link 
-                    to="/cart" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    Cart
-                  </Link>
-                  <Link 
-                    to="/settings" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Settings className="h-5 w-5" />
-                    Account Settings
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Sign Out
-                  </button>
+                  </div>
+
+                  {/* Settings and Sign Out */}
+                  <div className="border-t border-stone-100 pt-2">
+                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                      SETTINGS
+                    </div>
+                    <Link 
+                      to="/settings" 
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Settings className="h-5 w-5" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Sign Out
+                    </button>
+                  </div>
                 </>
               ) : (
                 // Logged out mobile links

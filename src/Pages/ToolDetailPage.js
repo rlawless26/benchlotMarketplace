@@ -12,13 +12,15 @@ import {
   Star, 
   Check, 
   Loader, 
-  AlertCircle 
+  AlertCircle,
+  DollarSign
 } from 'lucide-react';
 import { getToolById } from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
 import ImageComponent from '../components/ImageComponent';
 import AddToCartButton from '../components/AddToCartButton';
 import SaveToolButton from '../components/SaveToolButton';
+import MakeOfferModal from '../components/MakeOfferModal';
 
 const ToolDetailPage = () => {
   const { id } = useParams();
@@ -30,6 +32,37 @@ const ToolDetailPage = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  
+  // Contact seller
+  const contactSeller = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/tools/${id}` } });
+      return;
+    }
+    
+    // Redirect to messages page
+    navigate('/messages');
+  };
+  
+  // Make an offer
+  const openOfferModal = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/tools/${id}` } });
+      return;
+    }
+    
+    setShowOfferModal(true);
+  };
+  
+  // Handle offer success
+  const handleOfferSuccess = () => {
+    setTimeout(() => {
+      setShowOfferModal(false);
+      // Could navigate to messages page
+      navigate('/messages');
+    }, 1500);
+  };
   
   // Fetch tool data
   useEffect(() => {
@@ -116,16 +149,7 @@ const ToolDetailPage = () => {
       });
   };
 
-  // Contact seller placeholder
-  const contactSeller = () => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/tools/${id}` } });
-      return;
-    }
-    
-    // Placeholder for contact functionality
-    alert('Contact seller functionality coming soon!');
-  };
+  // We already have a contactSeller function defined above
 
   // Navigate to previous image
   const prevImage = () => {
@@ -215,7 +239,7 @@ const ToolDetailPage = () => {
 
   // Main content when tool is loaded successfully
   return (
-    <div className="bg-base min-h-screen">
+    <div className={`${isOwner() ? 'bg-gray-100' : 'bg-stone-50'} min-h-screen`}>
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Breadcrumb navigation */}
         <div className="mb-6">
@@ -460,7 +484,17 @@ const ToolDetailPage = () => {
                       extraClasses="btn-primary inline-flex items-center"
                     />
                     
-                    {/* Make offer button */}
+                    {/* Make offer button - for demo, always show it */}
+                    {/* In production, we would check tool.acceptsOffers */}
+                    <button
+                      className="w-full py-3 bg-benchlot-accent text-benchlot-primary rounded-md hover:bg-benchlot-accent-light flex items-center justify-center font-medium"
+                      onClick={openOfferModal}
+                    >
+                      <DollarSign className="h-5 w-5 mr-2" />
+                      Make an Offer
+                    </button>
+                    
+                    {/* Contact seller button */}
                     <button
                       className="w-full py-3 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 flex items-center justify-center font-medium"
                       onClick={contactSeller}
@@ -552,6 +586,14 @@ const ToolDetailPage = () => {
           </div>
         </div>
       </main>
+      
+      {/* Offer Modal */}
+      <MakeOfferModal
+        isOpen={showOfferModal}
+        onClose={() => setShowOfferModal(false)}
+        tool={tool}
+        onSuccess={handleOfferSuccess}
+      />
     </div>
   );
 };

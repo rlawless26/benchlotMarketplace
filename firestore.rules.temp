@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TEMPORARY RULE FOR TESTING - REMOVE AFTER TESTING
+    match /conversations/{conversationId} {
+      // Allow anyone to create/read conversations for testing
+      allow read, create: if true;
+      
+      // Allow updates for testing
+      allow update: if true;
+      
+      // Direct messages subcollection
+      match /messages/{messageId} {
+        // Allow read/write for testing
+        allow read, write: if true;
+      }
+    }
+    
+    // Fallback to the existing rules for all other collections
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

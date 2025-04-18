@@ -193,7 +193,7 @@ export function SellerProvider({ children }) {
   
   // Check if the current user is a seller
   const isSeller = () => {
-    const result = !!(user?.profile?.isSeller);
+    const result = !!(user?.profile?.isSeller || user?.isSeller);
     console.log('isSeller check:', { result, user: !!user });
     return result;
   };
@@ -207,7 +207,7 @@ export function SellerProvider({ children }) {
   
   // Context value
   const value = {
-    isSeller: user?.profile?.isSeller || false,
+    isSeller: user?.profile?.isSeller || user?.isSeller || false,
     isOnboardingComplete: !!(sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled),
     sellerStatus,
     isLoading,

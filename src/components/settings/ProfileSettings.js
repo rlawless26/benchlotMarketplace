@@ -166,7 +166,7 @@ const ProfileSettings = ({ user }) => {
                 />
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-sm text-benchlot-primary bg-benchlot-accent-light rounded border border-benchlot-primary hover:bg-benchlot-accent flex items-center"
+                  className="px-3 py-1.5 text-sm text-benchlot-primary bg-benchlot-accent-light rounded border border-benchlot-primary hover:bg-benchlot-accent flex items-center cursor-pointer"
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Change Photo
