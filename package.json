@@ -1,4 +1,4 @@
-{
+ {
   "name": "benchlot",
   "version": "0.1.0",
   "private": true,
@@ -9,7 +9,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "firebase": "^11.6.0",
+    "firebase": "^10.7.0",
     "is-regexp": "^3.1.0",
     "lucide-react": "^0.488.0",
     "react": "^18.2.0",
