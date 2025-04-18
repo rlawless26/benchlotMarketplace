@@ -7,6 +7,7 @@ import { NotificationProvider } from './context/NotificationContext';
 
 // Page imports
 import LandingPage from './Pages/LandingPage';
+import LandingPageNew from './Pages/LandingPageNew';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
 import AuthPage from './Pages/AuthPage';
@@ -52,7 +53,8 @@ function App() {
               <main className="flex-grow">
                 <Routes>
                   {/* Landing Page (Home) */}
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/" element={<LandingPageNew />} />
+                  <Route path="/old-home" element={<LandingPage />} />
                   
                   {/* Marketplace */}
                   <Route path="/marketplace" element={<MarketplacePage />} />
