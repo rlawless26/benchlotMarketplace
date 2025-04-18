@@ -88,3 +88,4 @@ benchlot-app/
 **/benchlot-app/
 sendgrid.env
 sendgrid.env
+.vercel

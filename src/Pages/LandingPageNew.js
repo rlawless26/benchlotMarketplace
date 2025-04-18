@@ -100,84 +100,66 @@ const LandingPageNew = () => {
   return (
     <div className="bg-stone-50">
       {/* Hero Section with Dual CTA */}
-      <section className="relative py-20 bg-stone-900">
+      <section className="relative min-h-[680px] py-40 bg-stone-900">
         {/* Hero background image with overlay */}
         <div className="absolute inset-0 z-0">
           <div 
-            className="w-full h-full bg-cover bg-center opacity-75"
+            className="w-full h-full bg-cover bg-center opacity-90"
             style={{ backgroundImage: `url('/images/hero-background.jpg')` }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-r from-stone-900/70 via-stone-800/50 to-stone-800/40"></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center">
-            {/* Left column - Hero text and search */}
-            <div className="lg:w-1/2 lg:pr-12 mb-10 lg:mb-0">
-              <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+          <div className="flex flex-col items-start justify-center max-w-[875px]">
+            {/* Hero text */}
+            <div className="w-full text-left mb-8">
+              <h1 className="text-4xl md:text-6xl font-serif font-medium mb-6 text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                 Buy and sell woodworking tools with confidence
               </h1>
               <p className="text-xl text-white mb-8" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 The premier marketplace connecting woodworkers with quality tools and trusted sellers.
               </p>
+            </div>
               
-              {/* Search Bar */}
-              <div className="mb-8">
-                <form onSubmit={handleSearch} className="relative">
-                  <input
-                    type="text"
-                    placeholder="What tool are you looking for?"
-                    className="w-full pl-12 pr-4 py-4 border border-stone-600 bg-stone-800/50 text-white rounded-md focus:outline-none focus:border-benchlot-accent shadow-md text-lg placeholder-stone-400"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
-                  <button 
-                    type="submit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-benchlot-accent text-benchlot-primary rounded-md hover:bg-benchlot-accent-light font-medium"
-                    aria-label="Search"
-                  >
-                    Search
-                  </button>
-                </form>
-              </div>
+            {/* Search Bar */}
+            <div className="w-full mb-6">
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  placeholder="What tool are you looking for?"
+                  className="w-full pl-12 pr-4 py-4 border border-stone-200 bg-white text-stone-800 rounded-md focus:outline-none focus:border-benchlot-accent shadow-md text-lg placeholder-stone-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-500" />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-[#17613F] rounded-md hover:bg-[#17613F]/90 flex items-center justify-center"
+                  aria-label="Search"
+                >
+                  <Search className="h-5 w-5 text-white" />
+                </button>
+              </form>
             </div>
             
-            {/* Right column - Dual CTA cards */}
-            <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Buy Tools Card */}
-              <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div className="w-14 h-14 rounded-full bg-benchlot-accent-light flex items-center justify-center mb-4">
-                  <ShoppingBag className="h-7 w-7 text-benchlot-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Find Quality Tools</h3>
-                <p className="text-stone-600 mb-4">
-                  Browse thousands of new, used, and vintage woodworking tools from verified sellers.
-                </p>
-                <Link 
-                  to="/marketplace" 
-                  className="flex items-center font-medium text-benchlot-primary hover:text-benchlot-secondary"
-                >
-                  Shop Now <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </div>
+            {/* Dual CTA buttons - now below search bar */}
+            <div className="flex flex-wrap gap-4 mt-2">
+              {/* Browse Tools Button - Primary buyer journey */}
+              <Link 
+                to="/marketplace" 
+                className="px-6 py-3 bg-[#17613F] backdrop-blur-sm border border-[#17613F]/30 rounded-md text-white font-medium hover:bg-[#17613F]/90 transition-colors flex items-center justify-center"
+              >
+                <ShoppingBag className="h-4 w-4 mr-2" /> Browse Tools
+              </Link>
               
-              {/* Sell Tools Card */}
-              <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div className="w-14 h-14 rounded-full bg-benchlot-accent-light flex items-center justify-center mb-4">
-                  <Wrench className="h-7 w-7 text-benchlot-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Sell Your Tools</h3>
-                <p className="text-stone-600 mb-4">
-                  List your tools to our community of passionate woodworkers and hobbyists.
-                </p>
-                <Link 
-                  to={isSeller() ? "/tools/new" : "/sell"} 
-                  className="flex items-center font-medium text-benchlot-primary hover:text-benchlot-secondary"
-                >
-                  Start Selling <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </div>
+              {/* Sell Tools Button - Secondary seller journey */}
+              <Link 
+                to={isSeller() ? "/tools/new" : "/sell"} 
+                className="px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/40 rounded-md text-white font-medium hover:bg-black/30 transition-colors flex items-center justify-center"
+              >
+                <Hammer className="h-4 w-4 mr-2" /> Start Selling
+              </Link>
             </div>
           </div>
         </div>

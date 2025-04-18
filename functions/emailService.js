@@ -69,7 +69,7 @@ const sendEmail = async (to, templateId, dynamicTemplateData, from = 'notificati
   
   try {
     // Get SendGrid API key from config or environment
-    const apiKey = getConfig('sendgrid.apikey', 'SENDGRID_API_KEY', null);
+    const apiKey = getConfig('sendgrid.api_key', 'SENDGRID_API_KEY', null);
     
     if (!apiKey) {
       console.error('ERROR: SendGrid API key not found in Firebase config or environment variables');
