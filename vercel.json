@@ -6,11 +6,7 @@
        "silent": true,
        "autoAlias": true
      },
-     "buildCommand": {
-       "development": "npm run build:development",
-       "preview": "npm run build:staging",
-       "production": "npm run build"
-     },
+     "buildCommand": "npm run build",
      "env": {
        "NODE_ENV": "production"
      },

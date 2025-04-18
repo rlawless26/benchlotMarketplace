@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
 import { NotificationProvider } from './context/NotificationContext';
+import EnvironmentDisplay from './components/EnvironmentDisplay';
 
 // Page imports
 import LandingPage from './Pages/LandingPage';
@@ -104,6 +105,7 @@ function App() {
               </main>
               
               <Footer />
+              <EnvironmentDisplay />
             </div>
             </Router>
           </NotificationProvider>
