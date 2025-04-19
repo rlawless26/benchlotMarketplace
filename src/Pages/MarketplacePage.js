@@ -142,6 +142,8 @@ const MarketplacePage = () => {
       setError(null);
       
       try {
+        console.log("Loading marketplace tools...");
+        
         // Prepare filter object for the API call
         const options = {
           limitCount: 20

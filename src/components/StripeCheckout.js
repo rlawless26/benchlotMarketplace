@@ -106,7 +106,7 @@ const CheckoutForm = ({ clientSecret, cartId }) => {
           
           // Navigate to the order confirmation page
           setTimeout(() => {
-            navigate(`/orders/${data.orderId}`);
+            navigate(`/order-confirmation/${data.orderId}`);
           }, 2000);
         } catch (err) {
           console.error('Error confirming payment:', err);
@@ -184,6 +184,16 @@ const StripeCheckout = ({ cartId, amount }) => {
       try {
         setLoading(true);
         
+        // For development/testing, create mock client secret if we're in development
+        if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_MOCK_PAYMENT === 'true') {
+          console.log("Using mock payment in development mode");
+          setTimeout(() => {
+            setClientSecret('mock_client_secret_for_dev');
+            setLoading(false);
+          }, 1000);
+          return;
+        }
+        
         console.log("Sending request to:", `${FIREBASE_API_URL}/create-payment-intent`);
         console.log("Request payload:", { cartId, userId: user.uid });
         
@@ -227,10 +237,12 @@ const StripeCheckout = ({ cartId, amount }) => {
         console.error('Error creating payment intent:', err);
         setError(`Payment initialization failed: ${err.message}`);
         
-        // TEMPORARY FALLBACK FOR TESTING ONLY - Remove in production
-        console.warn("Using client-side fallback for testing only");
-        // Create a fallback client secret for testing
-        setClientSecret('pi_3Nh4sXPJSOllkrGg1gl70Iwi_secret_OV37frZ8dEPKCAmCGxNjwkdAk');
+        // Fallback for development environments only
+        if (process.env.NODE_ENV === 'development') {
+          console.warn("Using client-side fallback for development only");
+          // Create a fallback client secret for testing
+          setClientSecret('pi_3Nh4sXPJSOllkrGg1gl70Iwi_secret_OV37frZ8dEPKCAmCGxNjwkdAk');
+        }
       } finally {
         setLoading(false);
       }

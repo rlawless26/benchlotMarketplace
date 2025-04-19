@@ -5,6 +5,8 @@ import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
 import { NotificationProvider } from './context/NotificationContext';
 import EnvironmentDisplay from './components/EnvironmentDisplay';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Page imports
 import LandingPage from './Pages/LandingPage';
@@ -35,6 +37,7 @@ import SellerLandingPage from './components/SellerLandingPage';
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
+import TestOrderButton from './components/TestOrderButton';
 // Note: TestNotificationButton and UserIdDisplay removed
 
 // Styles
@@ -85,6 +88,7 @@ function App() {
                   <Route path="/orders" element={<OrdersPage />} />
                   <Route path="/orders/:id" element={<OrderDetailPage />} />
                   <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+                  <Route path="/order-complete" element={<OrderConfirmationPage />} />
                   
                   {/* Seller Routes */}
                   <Route path="/sell" element={<SellerLandingPage />} />
@@ -106,6 +110,9 @@ function App() {
               
               <Footer />
               <EnvironmentDisplay />
+              {process.env.NODE_ENV === 'development' && <TestOrderButton />}
+              <Analytics />
+              <SpeedInsights />
             </div>
             </Router>
           </NotificationProvider>

@@ -216,6 +216,8 @@ export const getActiveTools = async (options = {}) => {
   try {
     // Default limit to 20 items for better performance
     const itemLimit = options.limitCount || 20;
+    
+    // Build query constraints - filter by active status
     let queryConstraints = [where('status', '==', 'active')];
     
     // Add category filter if provided
@@ -223,7 +225,7 @@ export const getActiveTools = async (options = {}) => {
       queryConstraints.push(where('category', '==', options.category));
     }
     
-    // Add sorting
+    // Add sorting by created_at timestamp
     queryConstraints.push(orderBy('created_at', 'desc'));
     
     // Create the base query
@@ -236,16 +238,20 @@ export const getActiveTools = async (options = {}) => {
       q = query(q, limit(itemLimit));
     }
     
+    console.log('Fetching active tools for marketplace');
     const querySnapshot = await getDocs(q);
+    
+    console.log(`Found ${querySnapshot.size} active tools`);
     const tools = [];
     
     // Get the last visible document for pagination
     const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       tools.push({
         id: doc.id,
-        ...doc.data()
+        ...data
       });
     });
     

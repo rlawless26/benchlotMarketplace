@@ -89,3 +89,25 @@ benchlot-app/
 sendgrid.env
 sendgrid.env
 .vercel
+
+# temporary files and test scripts
+fix-*.js
+test-*.js
+create-*.js
+admin-create-*.js
+populate-*.js
+run-*.js
+update-*.js
+deploy-indexes.js
+**/public/cors-test.html
+**/public/fetch-test.html
+**/public/marketplace-test*.html
+firestore.rules.*
+temp-firestore-rules.rules
+restore-firestore-rules.sh
+test-tool.json
+Screenshot*.png
+
+# Keep these useful development files
+!/src/components/TestOrderButton.js
+!/src/utils/mockData.js
