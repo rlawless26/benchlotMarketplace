@@ -193,7 +193,9 @@
   }
 
   .form-container {
-    @apply w-[90%] bg-white max-w-container mx-auto p-6 rounded-lg shadow-card;
+    @apply w-[90%] bg-white max-w-container mx-auto p-6 rounded-lg;
+    /* Remove the shadow */
+    box-shadow: none;
   }
 
   /* Header Styles */

@@ -1,6 +1,6 @@
 // src/Pages/HelpPage.js
 import React from 'react';
-import { Phone, Mail, HelpCircle, Wrench } from 'lucide-react';
+import { Phone, Mail, HelpCircle, Wrench, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HelpPage = () => {
@@ -93,6 +93,45 @@ const HelpPage = () => {
               <p className="text-stone-600">
                 After purchase, we connect buyers and sellers to arrange a convenient pickup location. We recommend meeting in public places during daylight hours. Payment is processed through our platform for security.
               </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Legal Links Section */}
+        <div className="mt-16 max-w-4xl mx-auto">
+          <h2 className="text-3xl font-serif font-medium text-stone-800 mb-8 text-center">Legal Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center">
+              <div className="bg-benchlot-accent-light w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <ShieldCheck className="h-8 w-8 text-benchlot-primary" />
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-stone-800">Terms of Service</h3>
+              <p className="text-stone-600 text-center mb-4">
+                Our Terms of Service outline the rules and guidelines for using the Benchlot platform.
+              </p>
+              <Link 
+                to="/terms" 
+                className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary transition-colors mt-auto"
+              >
+                Read Terms of Service
+              </Link>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center">
+              <div className="bg-benchlot-accent-light w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <ShieldCheck className="h-8 w-8 text-benchlot-primary" />
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-stone-800">Privacy Policy</h3>
+              <p className="text-stone-600 text-center mb-4">
+                Our Privacy Policy explains how we collect, use, and protect your personal information.
+              </p>
+              <Link 
+                to="/privacy" 
+                className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary transition-colors mt-auto"
+              >
+                Read Privacy Policy
+              </Link>
             </div>
           </div>
         </div>

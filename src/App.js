@@ -22,6 +22,8 @@ import ToolListingFormPage from './Pages/ToolListingFormPage';
 import AboutPage from './Pages/AboutPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
+import TermsPage from './Pages/TermsPage';
+import PrivacyPage from './Pages/PrivacyPage';
 import WishlistPage from './Pages/WishlistPage';
 import SettingsPage from './Pages/SettingsPage';
 import OrdersPage from './Pages/OrdersPage';
@@ -100,10 +102,12 @@ function App() {
                   <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
                   <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
                   
-                  {/* About, Help, and Categories */}
+                  {/* About, Help, Legal and Categories */}
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
                   
                   {/* Demo Pages */}
                   <Route path="/demo" element={<AuthPage />} />
