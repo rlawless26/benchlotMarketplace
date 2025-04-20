@@ -18,13 +18,18 @@ export const getEnvironment = () => {
     return 'development';
   }
   
+  // Check for staging environment explicitly
+  if (hostname.includes('staging.benchlot.com')) {
+    return 'staging';
+  }
+  
   // Check for Vercel preview deployments
   if (hostname.includes('vercel.app') && !hostname.includes('benchlot-marketplace.vercel.app')) {
     return 'staging';
   }
   
-  // Production domains
-  if (hostname.includes('benchlot.com') || hostname === 'benchlot-marketplace.vercel.app') {
+  // Production domains - explicitly check for exact match on benchlot.com
+  if (hostname === 'benchlot.com' || hostname === 'www.benchlot.com' || hostname === 'benchlot-marketplace.vercel.app') {
     return 'production';
   }
   

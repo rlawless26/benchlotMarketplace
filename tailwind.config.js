@@ -57,7 +57,7 @@ module.exports = {
     },
     fontFamily: {
       serif: ['Spectral', 'serif'],
-      sans: ['Montserrat', 'sans-serif'],
+      sans: ['Mulish', 'sans-serif'],
     }
   },
   plugins: [],

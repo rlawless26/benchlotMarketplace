@@ -32,7 +32,7 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
       await addToCart({
         toolId: tool.id,
         name: tool.name,
-        price: tool.current_price,
+        price: tool.current_price || tool.price,
         quantity: quantity,
         imageUrl: tool.images && tool.images.length > 0 ? tool.images[0].url : null
       });
@@ -60,7 +60,8 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
     if (extraClasses) {
       return extraClasses;  // Use provided classes if available
     }
-    return 'btn-primary'; // Default to primary button style
+    // Explicitly include background color in default case
+    return 'bg-benchlot-primary text-white hover:bg-benchlot-secondary';
   };
 
   return (

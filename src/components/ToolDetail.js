@@ -177,7 +177,7 @@ const ToolDetail = () => {
                 </span>
               )}
               <span className="text-2xl font-bold text-benchlot-accent">
-                {formatPrice(tool.current_price)}
+                {formatPrice(tool.current_price || tool.price)}
               </span>
             </div>
             

@@ -100,24 +100,26 @@ const LandingPageNew = () => {
   return (
     <div className="bg-stone-50">
       {/* Hero Section with Dual CTA */}
-      <section className="relative min-h-[680px] py-40 bg-stone-900">
+      <section className="relative min-h-[680px] py-40 bg-stone-800">
         {/* Hero background image with overlay */}
         <div className="absolute inset-0 z-0">
           <div 
-            className="w-full h-full bg-cover bg-center opacity-90"
-            style={{ backgroundImage: `url('/images/hero-background.jpg')` }}
+            className="w-full h-full bg-cover bg-center opacity-100"
+            style={{ 
+              backgroundImage: `url('/images/hero-plaidplaning.jpg')`
+            }}
           ></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/70 via-stone-800/50 to-stone-800/40"></div>
+          {/* Removed gradient overlay for cleaner look */}
         </div>
         
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col items-start justify-center max-w-[875px]">
             {/* Hero text */}
             <div className="w-full text-left mb-8">
-              <h1 className="text-4xl md:text-6xl font-serif font-medium mb-6 text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              <h1 className="text-4xl md:text-6xl font-serif font-medium mb-6 text-white" style={{ textShadow: '0 3px 6px rgba(0,0,0,0.8)' }}>
                 Buy and sell woodworking tools with confidence
               </h1>
-              <p className="text-xl text-white mb-8" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              <p className="text-xl text-white mb-8" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
                 The premier marketplace connecting woodworkers with quality tools and trusted sellers.
               </p>
             </div>
