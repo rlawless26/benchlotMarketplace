@@ -29,12 +29,15 @@ import { useMessages } from '../firebase/hooks/useMessages';
 // Import components
 import CartIcon from './CartIcon';
 import NotificationBadge from './NotificationBadge';
+import AuthModal from './AuthModal';
 
 const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('signin');
   
   // Use hooks to access user data, wishlist, and notifications
   const { user, isAuthenticated, signOut } = useAuth();
@@ -79,6 +82,21 @@ const Header = () => {
     if (searchQuery.trim()) {
       navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+  
+  // Auth modal handlers
+  const openSignIn = () => {
+    setAuthMode('signin');
+    setAuthModalOpen(true);
+  };
+  
+  const openSignUp = () => {
+    setAuthMode('signup');
+    setAuthModalOpen(true);
+  };
+  
+  const closeAuthModal = () => {
+    setAuthModalOpen(false);
   };
 
   const categories = [
@@ -329,20 +347,20 @@ const Header = () => {
                 <CartIcon />
                 
                 {/* Login link - text only */}
-                <Link 
-                  to="/login" 
+                <button 
+                  onClick={openSignIn}
                   className="text-stone-700 hover:text-benchlot-primary text-sm font-medium whitespace-nowrap hidden md:block"
                 >
                   Log In
-                </Link>
+                </button>
                 
                 {/* Sign Up link - text only */}
-                <Link
-                  to="/login?signup=true"
+                <button
+                  onClick={openSignUp}
                   className="hidden md:block text-benchlot-primary hover:text-benchlot-secondary text-sm font-medium whitespace-nowrap"
                 >
                   Sign Up
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -650,22 +668,26 @@ const Header = () => {
                     <ShoppingCart className="h-5 w-5" />
                     Cart
                   </Link>
-                  <Link 
-                    to="/login" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      openSignIn();
+                    }}
+                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
                   >
                     <User className="h-5 w-5" />
                     Log In
-                  </Link>
-                  <Link 
-                    to="/login?signup=true" 
-                    className="flex items-center gap-3 py-3 px-3 bg-benchlot-primary text-white rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      openSignUp();
+                    }}
+                    className="flex items-center gap-3 py-3 px-3 bg-benchlot-primary text-white rounded-md w-full text-left"
                   >
                     <Plus className="h-5 w-5" />
                     Sign Up
-                  </Link>
+                  </button>
                 </>
               )}
             </div>
@@ -699,6 +721,14 @@ const Header = () => {
           </div>
         </div>
       )}
+      
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={closeAuthModal}
+        initialMode={authMode}
+        title={authMode === 'signin' ? 'Sign In to Your Account' : 'Create Your Account'}
+      />
     </header>
   );
 };

@@ -4,7 +4,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  sendPasswordResetEmail as firebaseSendPasswordResetEmail
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  OAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config';
@@ -203,6 +207,157 @@ export function AuthProvider({ children }) {
       return { success: false, error: err.message };
     }
   };
+  
+  // Social Sign In with Google
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check if this is a new user (first time sign-in with Google)
+      const isNewUser = result._tokenResponse.isNewUser;
+      
+      if (isNewUser) {
+        // Create a new user record in Firestore
+        const userProfile = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
+          photoURL: result.user.photoURL,
+          createdAt: new Date().toISOString(),
+          role: 'user',
+          profile: {
+            fullName: result.user.displayName || '',
+            firstName: result.user.displayName?.split(' ')[0] || '',
+            lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+            bio: '',
+            location: ''
+          }
+        };
+        
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, userProfile);
+        
+        // Send welcome email for new users
+        try {
+          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
+        } catch (emailError) {
+          console.error("Error sending welcome email:", emailError);
+        }
+      }
+      
+      return { user: result.user, error: null };
+    } catch (err) {
+      console.error("Google sign in error:", err.message);
+      setError(err.message);
+      return { user: null, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Social Sign In with Facebook
+  const signInWithFacebook = async () => {
+    setLoading(true);
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Similar pattern as Google sign-in
+      const isNewUser = result._tokenResponse.isNewUser;
+      
+      if (isNewUser) {
+        // Create user profile in Firestore
+        const userProfile = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
+          photoURL: result.user.photoURL,
+          createdAt: new Date().toISOString(),
+          role: 'user',
+          profile: {
+            fullName: result.user.displayName || '',
+            firstName: result.user.displayName?.split(' ')[0] || '',
+            lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+            bio: '',
+            location: ''
+          }
+        };
+        
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, userProfile);
+        
+        // Send welcome email
+        try {
+          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
+        } catch (emailError) {
+          console.error("Error sending welcome email:", emailError);
+        }
+      }
+      
+      return { user: result.user, error: null };
+    } catch (err) {
+      console.error("Facebook sign in error:", err.message);
+      setError(err.message);
+      return { user: null, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Social Sign In with Apple
+  const signInWithApple = async () => {
+    setLoading(true);
+    try {
+      const provider = new OAuthProvider('apple.com');
+      provider.addScope('email');
+      provider.addScope('name');
+      
+      const result = await signInWithPopup(auth, provider);
+      
+      // Similar pattern as other providers
+      const isNewUser = result._tokenResponse.isNewUser;
+      
+      if (isNewUser) {
+        // Create user profile in Firestore
+        // Note: Apple may not provide displayName, so handle that case
+        const userProfile = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
+          photoURL: result.user.photoURL,
+          createdAt: new Date().toISOString(),
+          role: 'user',
+          profile: {
+            fullName: result.user.displayName || '',
+            firstName: result.user.displayName?.split(' ')[0] || '',
+            lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+            bio: '',
+            location: ''
+          }
+        };
+        
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, userProfile);
+        
+        // Send welcome email
+        try {
+          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
+        } catch (emailError) {
+          console.error("Error sending welcome email:", emailError);
+        }
+      }
+      
+      return { user: result.user, error: null };
+    } catch (err) {
+      console.error("Apple sign in error:", err.message);
+      setError(err.message);
+      return { user: null, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Helper method to check if user is authenticated
   const isAuthenticated = () => {
@@ -219,7 +374,10 @@ export function AuthProvider({ children }) {
     signIn,
     signUp,
     signOut,
-    resetPassword
+    resetPassword,
+    signInWithGoogle,
+    signInWithFacebook,
+    signInWithApple
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -38,10 +38,12 @@ import SellerLandingPage from './components/SellerLandingPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import TestOrderButton from './components/TestOrderButton';
+import AuthModalExample from './components/AuthModalExample';
 // Note: TestNotificationButton and UserIdDisplay removed
 
 // Styles
 import './styles/design-system.css';
+import './styles/auth.css';
 import './App.css';
 
 function App() {
@@ -103,8 +105,9 @@ function App() {
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/categories" element={<CategoriesPage />} />
                   
-                  {/* Demo Auth Page */}
+                  {/* Demo Pages */}
                   <Route path="/demo" element={<AuthPage />} />
+                  <Route path="/demo/auth-modal" element={<AuthModalExample />} />
                 </Routes>
               </main>
               
