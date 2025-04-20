@@ -134,55 +134,55 @@ const MakeOfferModal = ({
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
         
-        <div className="relative bg-white rounded-lg max-w-md w-full mx-auto shadow-xl">
+        <div className="relative bg-white rounded-xl max-w-lg w-full mx-auto shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="flex justify-between items-center p-5 border-b">
-            <h3 className="text-xl font-medium text-stone-900">Make an Offer</h3>
+          <div className="flex justify-between items-center p-6 border-b border-stone-200 bg-stone-50">
+            <h3 className="text-2xl font-serif font-semibold text-stone-900">Make an Offer</h3>
             <button 
               onClick={onClose}
-              className="text-stone-400 hover:text-stone-500 focus:outline-none"
+              className="text-stone-400 hover:text-stone-500 focus:outline-none p-1 rounded-full hover:bg-stone-200 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
           
           {/* Content */}
-          <div className="p-5 space-y-4">
+          <div className="p-6 space-y-4">
             {!success ? (
               <form onSubmit={handleSubmit}>
                 {/* Tool info */}
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-stone-100 rounded flex-shrink-0 flex items-center justify-center mr-3">
+                <div className="flex items-center mb-6 p-4 bg-stone-50 rounded-lg border border-stone-100">
+                  <div className="w-20 h-20 bg-stone-100 rounded overflow-hidden flex-shrink-0 flex items-center justify-center mr-4">
                     {tool?.images?.[0] ? (
                       <img 
                         src={tool.images[0]} 
                         alt={tool.title} 
-                        className="w-full h-full object-cover rounded"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="text-stone-400 text-sm">No img</div>
+                      <div className="text-stone-400 text-sm">No image</div>
                     )}
                   </div>
                   <div>
-                    <h4 className="font-medium">{tool?.title}</h4>
-                    <div className="text-stone-600">Asking: {formatPrice(tool?.price)}</div>
+                    <h4 className="font-medium text-lg text-stone-800 mb-1">{tool?.title || tool?.name}</h4>
+                    <div className="text-benchlot-primary text-lg font-medium">Asking: {formatPrice(tool?.price)}</div>
                   </div>
                 </div>
                 
                 {/* Offer amount */}
-                <div className="mb-4">
-                  <label htmlFor="offerAmount" className="block text-sm font-medium text-stone-700 mb-1">
+                <div className="mb-6">
+                  <label htmlFor="offerAmount" className="block text-base font-medium text-stone-800 mb-2">
                     Your Offer
                   </label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <DollarSign className="h-5 w-5 text-stone-400" />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-stone-600 text-lg font-medium">$</span>
                     </div>
                     <input
                       type="text"
                       name="offerAmount"
                       id="offerAmount"
-                      className="focus:ring-benchlot-primary focus:border-benchlot-primary block w-full pl-10 pr-12 sm:text-sm border-stone-300 rounded-md"
+                      className="focus:ring-benchlot-primary focus:border-benchlot-primary block w-full pl-10 py-3 text-lg font-medium border border-stone-300 rounded-md shadow-sm"
                       placeholder="0"
                       autoFocus
                       value={offerAmount}
@@ -193,25 +193,37 @@ const MakeOfferModal = ({
                       }}
                       required
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-stone-500 sm:text-sm">.00</span>
+                    <div className="absolute right-0 top-0 bottom-0 bg-stone-50 px-4 flex items-center font-medium text-stone-600 border-l border-stone-300 rounded-r-md">
+                      + Shipping
                     </div>
+                  </div>
+                  
+                  {/* Price guidance - similar to Reverb's estimated value */}
+                  <div className="mt-2 bg-stone-50 border-l-4 border-benchlot-primary p-3 rounded-md">
+                    <p className="text-stone-700">
+                      <span className="font-medium">Suggested offer:</span> {formatPrice(tool?.price * 0.85)} - {formatPrice(tool?.price * 0.95)}
+                    </p>
                   </div>
                 </div>
                 
                 {/* Message */}
-                <div className="mb-4">
-                  <label htmlFor="message" className="block text-sm font-medium text-stone-700 mb-1">
-                    Message to Seller (Optional)
-                  </label>
+                <div className="mb-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <label htmlFor="message" className="block text-base font-medium text-stone-800">
+                      Share a message with the seller
+                    </label>
+                    <span className="text-stone-500 text-sm">OPTIONAL</span>
+                  </div>
                   <textarea
                     id="message"
-                    rows="3"
-                    className="shadow-sm focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm border-stone-300 rounded-md"
-                    placeholder="Add a note to the seller..."
+                    rows="4"
+                    className="shadow-sm focus:ring-benchlot-primary focus:border-benchlot-primary block w-full text-base border border-stone-300 rounded-md"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                   />
+                  <p className="mt-1 text-stone-500 text-sm">
+                    Tips: Share why you're interested or how you'll use it. Sellers are more likely to accept offers with personalized messages.
+                  </p>
                 </div>
                 
                 {/* Error Message */}
@@ -223,10 +235,10 @@ const MakeOfferModal = ({
                 )}
                 
                 {/* Buttons */}
-                <div className="flex justify-end gap-3 mt-6">
+                <div className="flex justify-between gap-4 mt-8 border-t border-stone-200 pt-6">
                   <button
                     type="button"
-                    className="px-4 py-2 border border-stone-300 rounded-md shadow-sm text-sm font-medium text-stone-700 bg-white hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-accent"
+                    className="flex-1 py-3 px-6 font-medium text-base border border-stone-300 rounded-md bg-white text-stone-700 hover:bg-stone-50 transition-colors"
                     onClick={onClose}
                     disabled={loading}
                   >
@@ -234,12 +246,12 @@ const MakeOfferModal = ({
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary disabled:bg-benchlot-primary/70"
+                    className="flex-1 py-3 px-6 font-medium text-base border border-transparent rounded-md text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex justify-center items-center"
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <Loader className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                        <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
                         Submitting...
                       </>
                     ) : (
@@ -249,22 +261,28 @@ const MakeOfferModal = ({
                 </div>
               </form>
             ) : (
-              <div className="text-center py-6">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="py-8">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                  <CheckCircle className="h-10 w-10 text-green-600" />
                 </div>
-                <h3 className="text-lg font-medium text-stone-900 mb-2">Offer Submitted!</h3>
-                <p className="text-stone-600">
-                  Your offer of {formatPrice(parseFloat(offerAmount))} for {tool?.title} has been sent to the seller. 
-                  They'll be notified right away.
-                </p>
-                <button
-                  type="button"
-                  className="mt-6 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
-                  onClick={onClose}
-                >
-                  Close
-                </button>
+                <h3 className="text-2xl font-medium text-stone-900 mb-3 text-center">Offer Submitted!</h3>
+                <div className="bg-stone-50 border border-stone-200 rounded-md p-4 mb-6">
+                  <p className="text-stone-600 mb-2">
+                    Your offer of <span className="font-medium text-stone-800">{formatPrice(parseFloat(offerAmount))}</span> for {tool?.title} has been sent to the seller.
+                  </p>
+                  <p className="text-stone-600">
+                    They'll be notified right away. You can view and manage this offer in your messages.
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    className="py-3 px-8 border border-transparent rounded-md text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors font-medium text-base"
+                    onClick={onClose}
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             )}
           </div>

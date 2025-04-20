@@ -36,8 +36,6 @@ const MessagesPage = () => {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const { 
     activeOffers, 
-    buyerOffers, 
-    sellerOffers, 
     loading: offersLoading,
     error: offersError,
     OfferStatus
@@ -48,10 +46,9 @@ const MessagesPage = () => {
   
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState('all');
-  const [messageType, setMessageType] = useState('offers'); // 'offers' or 'direct'
+  const [filterType, setFilterType] = useState('all'); // 'all', 'unread', 'read'
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredOffers, setFilteredOffers] = useState([]);
+  const [filteredMessages, setFilteredMessages] = useState([]);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [selectedConversationId, setSelectedConversationId] = useState(conversationId || null);
@@ -70,7 +67,7 @@ const MessagesPage = () => {
   } = useMessages(selectedConversationId);
   
   // Track both loading states
-  const isLoading = authLoading || (offersLoading && messagesLoading && !filteredOffers.length && !conversations.length);
+  const isLoading = authLoading || (offersLoading && messagesLoading && !filteredMessages.length && !conversations.length);
   
   // Check if user is authenticated
   useEffect(() => {
@@ -83,7 +80,6 @@ const MessagesPage = () => {
   useEffect(() => {
     if (conversationId) {
       setSelectedConversationId(conversationId);
-      setMessageType('direct');
       setSelectedOfferId(null);
       setSelectedOffer(null);
     }
@@ -102,46 +98,93 @@ const MessagesPage = () => {
     };
   }, []);
   
-  // Apply filters based on tabs and search
+  // Combine offers and direct messages into a single list and apply filters
   useEffect(() => {
-    let filtered = [];
+    // First, prepare offer items
+    let offerItems = activeOffers.map(offer => {
+      const isBuyer = user?.uid === offer.buyerId;
+      const hasUnreadMessages = isBuyer 
+        ? offer.hasUnreadMessagesBuyer 
+        : offer.hasUnreadMessagesSeller;
+      
+      return {
+        id: offer.id,
+        type: 'offer',
+        title: offer.toolTitle,
+        price: offer.currentPrice,
+        originalPrice: offer.originalPrice,
+        status: offer.status,
+        timestamp: offer.updatedAt,
+        hasUnread: hasUnreadMessages,
+        data: offer,
+        otherPartyName: isBuyer ? (offer.sellerName || 'Seller') : (offer.buyerName || 'Buyer'),
+        isBuyer: isBuyer,
+        previewText: `${isBuyer ? 'Your' : 'Their'} offer: ${formatPrice(offer.currentPrice)}`
+      };
+    });
     
-    switch (activeTab) {
-      case 'all':
-        filtered = activeOffers;
-        break;
-      case 'buying':
-        filtered = buyerOffers;
-        break;
-      case 'selling':
-        filtered = sellerOffers;
-        break;
-      default:
-        filtered = activeOffers;
-    }
+    // Then, prepare conversation items
+    let conversationItems = conversations.map(convo => {
+      const otherParticipant = convo.participants.find(id => id !== user?.uid);
+      
+      return {
+        id: convo.id,
+        type: 'conversation',
+        title: convo.participantNames?.[otherParticipant] || "User",
+        timestamp: convo.lastMessageAt?.toDate?.() || convo.lastMessageAt,
+        hasUnread: convo.hasUnread,
+        data: convo,
+        otherPartyName: convo.participantNames?.[otherParticipant] || "User",
+        previewText: convo.lastMessageText || "No messages yet"
+      };
+    });
+    
+    // Combine both lists
+    let combined = [...offerItems, ...conversationItems];
     
     // Apply search filter
-    if (searchQuery.trim() && messageType === 'offers') {
+    if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(offer => 
-        offer.toolTitle?.toLowerCase().includes(query)
+      combined = combined.filter(item => 
+        item.title?.toLowerCase().includes(query) || 
+        item.otherPartyName?.toLowerCase().includes(query) ||
+        item.previewText?.toLowerCase().includes(query)
       );
     }
     
-    setFilteredOffers(filtered);
+    // Apply read/unread filter
+    if (filterType === 'unread') {
+      combined = combined.filter(item => item.hasUnread);
+    } else if (filterType === 'read') {
+      combined = combined.filter(item => !item.hasUnread);
+    }
+    
+    // Sort by most recent first
+    combined.sort((a, b) => {
+      const timeA = a.timestamp?.seconds ? a.timestamp.seconds * 1000 : (a.timestamp?.getTime ? a.timestamp.getTime() : 0);
+      const timeB = b.timestamp?.seconds ? b.timestamp.seconds * 1000 : (b.timestamp?.getTime ? b.timestamp.getTime() : 0);
+      return timeB - timeA; // Descending order (newest first)
+    });
+    
+    setFilteredMessages(combined);
     
     // If selected offer is not in filtered list, deselect it
-    if (selectedOfferId && !filtered.some(o => o.id === selectedOfferId)) {
+    if (selectedOfferId && !offerItems.some(o => o.id === selectedOfferId)) {
       setSelectedOfferId(null);
       setSelectedOffer(null);
     }
-  }, [activeTab, activeOffers, buyerOffers, sellerOffers, searchQuery, selectedOfferId, messageType]);
+    
+    // If selected conversation is not in filtered list, deselect it
+    if (selectedConversationId && !conversationItems.some(c => c.id === selectedConversationId)) {
+      setSelectedConversationId(null);
+    }
+  }, [activeOffers, conversations, searchQuery, filterType, selectedOfferId, selectedConversationId, user?.uid]);
   
   // Update selected offer when ID changes
   useEffect(() => {
     if (selectedOfferId) {
-      const offer = filteredOffers.find(o => o.id === selectedOfferId);
-      setSelectedOffer(offer || null);
+      const offerItem = filteredMessages.find(item => item.type === 'offer' && item.id === selectedOfferId);
+      setSelectedOffer(offerItem?.data || null);
       
       if (isMobile) {
         setShowConversation(true);
@@ -153,7 +196,7 @@ const MessagesPage = () => {
         setShowConversation(false);
       }
     }
-  }, [selectedOfferId, filteredOffers, isMobile, selectedConversationId]);
+  }, [selectedOfferId, filteredMessages, isMobile, selectedConversationId]);
   
   // Format price for display
   const formatPrice = (price) => {
@@ -234,34 +277,36 @@ const MessagesPage = () => {
     }
   };
   
-  // Handle selecting a direct conversation
-  const handleSelectConversation = (conversation) => {
-    setSelectedConversationId(conversation.id);
-    setSelectedOfferId(null);
-    setSelectedOffer(null);
-    setMessageType('direct');
-    
-    if (isMobile) {
-      setShowConversation(true);
+  // Handle selecting any message item (offer or conversation)
+  const handleSelectMessage = (item) => {
+    if (item.type === 'conversation') {
+      setSelectedConversationId(item.id);
+      setSelectedOfferId(null);
+      setSelectedOffer(null);
+      
+      if (isMobile) {
+        setShowConversation(true);
+      }
+      
+      // Update URL without reloading
+      navigate(`/messages/conversation/${item.id}`, { replace: true });
+      
+      // Mark as read when selected
+      if (item.hasUnread) {
+        markAsRead(item.id);
+      }
+    } else if (item.type === 'offer') {
+      setSelectedOfferId(item.id);
+      setSelectedConversationId(null);
+      setSelectedOffer(item.data);
+      
+      if (isMobile) {
+        setShowConversation(true);
+      }
+      
+      // Update URL without reloading
+      navigate('/messages', { replace: true });
     }
-    
-    // Update URL without reloading
-    navigate(`/messages/conversation/${conversation.id}`, { replace: true });
-    
-    // Mark as read when selected
-    if (conversation.hasUnread) {
-      markAsRead(conversation.id);
-    }
-  };
-  
-  // Handle selecting an offer
-  const handleSelectOffer = (offerId) => {
-    setSelectedOfferId(offerId);
-    setSelectedConversationId(null);
-    setMessageType('offers');
-    
-    // Update URL without reloading
-    navigate('/messages', { replace: true });
   };
   
   // Handle back button in mobile view
@@ -330,87 +375,35 @@ const MessagesPage = () => {
         <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">Messages</h1>
         <p className="text-stone-600 mb-6">View and manage your offers and messages</p>
         
-        {/* Type selector */}
-        <div className="bg-white rounded-t-lg shadow-md overflow-hidden mb-0.5">
-          <div className="flex border-b">
-            <button
-              className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                messageType === 'offers' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
-              }`}
-              onClick={() => {
-                setMessageType('offers');
-                setSelectedConversationId(null);
-                // Update URL without reloading
-                navigate('/messages', { replace: true });
-              }}
-            >
-              <span className="flex items-center justify-center">
-                <DollarSign className="h-4 w-4 mr-1.5" />
-                Offers
-              </span>
-            </button>
-            <button
-              className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                messageType === 'direct' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
-              }`}
-              onClick={() => {
-                setMessageType('direct');
-                setSelectedOfferId(null);
-                setSelectedOffer(null);
-              }}
-            >
-              <span className="flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 mr-1.5" />
-                Direct Messages
-                {unreadCount > 0 && (
-                  <span className="ml-1.5 bg-benchlot-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </span>
-            </button>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-b-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="grid md:grid-cols-3 h-[600px]">
-            {/* Left sidebar with conversation list */}
+            {/* Left sidebar with unified message list */}
             <div className="md:col-span-1 border-r">
-              {/* Tabs and search bar */}
+              {/* Filter and search bar */}
               <div className="border-b">
-                {messageType === 'offers' && (
-                  <div className="flex border-b">
-                    <button
-                      className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                        activeTab === 'all' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
-                      }`}
-                      onClick={() => setActiveTab('all')}
-                    >
-                      All
-                    </button>
-                    <button
-                      className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                        activeTab === 'buying' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
-                      }`}
-                      onClick={() => setActiveTab('buying')}
-                    >
-                      Buying
-                    </button>
-                    <button
-                      className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                        activeTab === 'selling' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
-                      }`}
-                      onClick={() => setActiveTab('selling')}
-                    >
-                      Selling
-                    </button>
-                  </div>
-                )}
+                <div className="flex border-b">
+                  <button
+                    className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
+                      filterType === 'all' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                    onClick={() => setFilterType('all')}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
+                      filterType === 'unread' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                    onClick={() => setFilterType('unread')}
+                  >
+                    Unread
+                  </button>
+                </div>
                 <div className="p-3">
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder={`Search ${messageType === 'offers' ? 'offers' : 'messages'}...`}
+                      placeholder="Search messages..."
                       className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary text-sm"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -428,165 +421,105 @@ const MessagesPage = () => {
                 </div>
               </div>
               
-              {/* Message list */}
+              {/* Unified Message list */}
               <div className="overflow-y-auto h-[calc(600px-106px)]">
                 {/* Error states */}
-                {messageType === 'offers' && offersError && (
+                {(offersError || messagesError) && (
                   <div className="p-4 text-red-800 bg-red-50">
-                    {offersError}
-                  </div>
-                )}
-                {messageType === 'direct' && messagesError && (
-                  <div className="p-4 text-red-800 bg-red-50">
-                    {messagesError}
+                    {offersError || messagesError}
                   </div>
                 )}
                 
-                {/* Offers empty state */}
-                {messageType === 'offers' && filteredOffers.length === 0 && (
+                {/* Empty state */}
+                {filteredMessages.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <MessageSquare className="h-12 w-12 text-stone-300 mb-3" />
-                    <h3 className="text-lg font-medium text-stone-700 mb-1">No offers</h3>
-                    <p className="text-stone-500 text-sm max-w-xs">
-                      {searchQuery 
-                        ? 'No offers match your search. Try different keywords.' 
-                        : activeTab === 'all'
-                          ? 'You don\'t have any offers yet.'
-                          : activeTab === 'buying'
-                            ? 'You haven\'t made any offers yet.'
-                            : 'You haven\'t received any offers yet.'
-                      }
-                    </p>
-                    <div className="mt-6">
-                      <Link to="/marketplace" className="px-4 py-2 bg-benchlot-primary text-white rounded-md">
-                        Browse Tools
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Direct messages empty state */}
-                {messageType === 'direct' && conversations.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <MessageCircle className="h-12 w-12 text-stone-300 mb-3" />
-                    <h3 className="text-lg font-medium text-stone-700 mb-1">No messages</h3>
+                    <h3 className="text-lg font-medium text-stone-700 mb-1">No messages found</h3>
                     <p className="text-stone-500 text-sm max-w-xs">
                       {searchQuery 
                         ? 'No messages match your search. Try different keywords.' 
-                        : 'You don\'t have any direct messages yet.'
+                        : filterType === 'unread'
+                          ? 'You don\'t have any unread messages.'
+                          : 'You don\'t have any messages yet.'
                       }
                     </p>
                     <div className="mt-6">
                       <Link to="/marketplace" className="px-4 py-2 bg-benchlot-primary text-white rounded-md">
-                        Find Users to Message
+                        Browse Marketplace
                       </Link>
                     </div>
                   </div>
                 )}
                 
-                {/* Offers list */}
-                {messageType === 'offers' && filteredOffers.length > 0 && (
+                {/* Unified message list */}
+                {filteredMessages.length > 0 && (
                   <ul className="divide-y divide-stone-200">
-                    {filteredOffers.map((offer) => {
-                      const isBuyer = user?.uid === offer.buyerId;
-                      const hasUnreadMessages = isBuyer 
-                        ? offer.hasUnreadMessagesBuyer 
-                        : offer.hasUnreadMessagesSeller;
-                      
+                    {filteredMessages.map((item) => {
+                      const isOffer = item.type === 'offer';
+                      const isSelected = isOffer 
+                        ? selectedOfferId === item.id
+                        : selectedConversationId === item.id;
+                        
                       return (
                         <li 
-                          key={offer.id}
+                          key={item.id}
                           className={`hover:bg-stone-50 cursor-pointer ${
-                            selectedOfferId === offer.id ? 'bg-benchlot-accent-light' : ''
-                          } ${hasUnreadMessages ? 'border-l-4 border-benchlot-primary' : ''}`}
-                          onClick={() => handleSelectOffer(offer.id)}
+                            isSelected ? 'bg-benchlot-accent-light' : ''
+                          } ${item.hasUnread ? 'border-l-4 border-benchlot-primary' : 'border-l-4 border-transparent'}`}
+                          onClick={() => handleSelectMessage(item)}
                         >
                           <div className="p-4">
                             <div className="flex justify-between items-start mb-1">
                               <div className="flex items-center">
-                                {isBuyer ? (
-                                  <ShoppingBag className="h-5 w-5 text-benchlot-primary mr-2" />
+                                {isOffer ? (
+                                  item.isBuyer ? (
+                                    <ShoppingBag className="h-5 w-5 text-benchlot-primary mr-2" />
+                                  ) : (
+                                    <Package className="h-5 w-5 text-benchlot-accent-dark mr-2" />
+                                  )
                                 ) : (
-                                  <Package className="h-5 w-5 text-benchlot-accent-dark mr-2" />
+                                  <User className="h-5 w-5 text-benchlot-primary mr-2" />
                                 )}
-                                <span className="font-medium truncate max-w-[140px]">
-                                  {offer.toolTitle}
-                                </span>
+                                <div>
+                                  <span className="font-medium truncate max-w-[140px] flex items-center">
+                                    {item.title}
+                                    {isOffer && (
+                                      <span className="ml-2 text-xs px-1.5 py-0.5 rounded-sm font-normal bg-amber-100 text-amber-800">
+                                        Offer
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                               <span className="text-xs text-stone-500">
-                                {formatDate(offer.updatedAt)}
-                              </span>
-                            </div>
-                            
-                            <div className="flex justify-between items-center mb-1">
-                              <div className="text-sm text-stone-600">
-                                {isBuyer ? 'Your offer:' : 'Their offer:'}
-                              </div>
-                              <div className="font-medium">
-                                {formatPrice(offer.currentPrice)}
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                              <div className="text-xs text-stone-500">
-                                {isBuyer ? 'To Seller' : 'From Buyer'}
-                              </div>
-                              {getStatusBadge(offer.status)}
-                            </div>
-                            
-                            {hasUnreadMessages && (
-                              <div className="mt-2 flex justify-end">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-benchlot-primary text-white">
-                                  <Bell className="h-3 w-3 mr-1" />
-                                  New message
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                
-                {/* Direct messages list */}
-                {messageType === 'direct' && conversations.length > 0 && (
-                  <ul className="divide-y divide-stone-200">
-                    {conversations.map((conversation) => {
-                      // Find the other user in the conversation
-                      const otherParticipant = conversation.participants.find(id => id !== user?.uid);
-                      const hasUnread = conversation.hasUnread;
-                      
-                      return (
-                        <li 
-                          key={conversation.id}
-                          className={`hover:bg-stone-50 cursor-pointer ${
-                            selectedConversationId === conversation.id ? 'bg-benchlot-accent-light' : ''
-                          } ${hasUnread ? 'border-l-4 border-benchlot-primary' : ''}`}
-                          onClick={() => handleSelectConversation(conversation)}
-                        >
-                          <div className="p-4">
-                            <div className="flex justify-between items-start mb-1">
-                              <div className="flex items-center">
-                                <User className="h-5 w-5 text-benchlot-primary mr-2" />
-                                <span className="font-medium truncate max-w-[140px]">
-                                  {conversation.participantNames?.[otherParticipant] || "User"}
-                                </span>
-                              </div>
-                              <span className="text-xs text-stone-500">
-                                {formatDate(conversation.lastMessageAt?.toDate?.() || conversation.lastMessageAt)}
+                                {formatDate(item.timestamp)}
                               </span>
                             </div>
                             
                             <div className="text-sm text-stone-600 line-clamp-1 mb-1">
-                              {conversation.lastMessageText || "No messages yet"}
+                              {/* With who or what */}
+                              <span className="mr-1 text-xs text-stone-500">
+                                {isOffer 
+                                  ? (item.isBuyer ? 'To: ' : 'From: ') 
+                                  : ''}
+                              </span>
+                              {item.otherPartyName}
+                              {isOffer && (
+                                <span className="inline-block ml-2">
+                                  {getStatusBadge(item.status)}
+                                </span>
+                              )}
                             </div>
                             
-                            {hasUnread && (
+                            <div className="text-sm text-stone-600 line-clamp-1">
+                              {item.previewText}
+                            </div>
+                            
+                            {item.hasUnread && (
                               <div className="mt-2 flex justify-end">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-benchlot-primary text-white">
-                                  <MailOpen className="h-3 w-3 mr-1" />
-                                  Unread
+                                  <Bell className="h-3 w-3 mr-1" />
+                                  {isOffer ? 'New message' : 'Unread'}
                                 </span>
                               </div>
                             )}

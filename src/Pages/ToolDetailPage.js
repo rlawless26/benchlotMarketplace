@@ -6,14 +6,11 @@ import {
   ChevronRight, 
   ArrowLeft, 
   Heart, 
-  Share, 
-  MessageSquare, 
   MapPin, 
   Star, 
   Check, 
   Loader, 
-  AlertCircle,
-  DollarSign
+  AlertCircle
 } from 'lucide-react';
 import { getToolById } from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
@@ -35,19 +32,54 @@ const ToolDetailPage = () => {
   const [showOfferModal, setShowOfferModal] = useState(false);
   
   // Contact seller
-  const contactSeller = () => {
-    if (!isAuthenticated) {
+  const contactSeller = async () => {
+    if (!isAuthenticated()) {
       navigate('/login', { state: { from: `/tools/${id}` } });
       return;
     }
     
-    // Redirect to messages page
-    navigate('/messages');
+    // Check if seller ID exists
+    if (!tool?.sellerId) {
+      console.error("Seller ID not found");
+      return;
+    }
+    
+    try {
+      // Import useMessages hook functionality directly to avoid React hooks rules
+      const { getOrCreateConversation, findConversationBetweenUsers } = await import('../firebase/models/messageModel');
+      
+      // Create conversation metadata with context about this tool
+      const metadata = {
+        topic: `About: ${tool.name}`,
+        toolId: tool.id,
+        toolName: tool.name,
+        toolImage: tool.images?.[0]?.url || null,
+        participantNames: {
+          [user.uid]: user.displayName || 'You',
+          [tool.sellerId]: tool.seller?.displayName || tool.seller?.username || 'Seller'
+        }
+      };
+      
+      // Check if conversation already exists
+      let conversation = await findConversationBetweenUsers(user.uid, tool.sellerId);
+      
+      // If no conversation exists, create one
+      if (!conversation) {
+        conversation = await getOrCreateConversation(user.uid, tool.sellerId, metadata);
+      }
+      
+      // Redirect to the conversation
+      navigate(`/messages/conversation/${conversation.id}`);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      // Fallback to standard messages page
+      navigate('/messages');
+    }
   };
   
   // Make an offer
   const openOfferModal = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated()) {
       navigate('/login', { state: { from: `/tools/${id}` } });
       return;
     }
@@ -104,52 +136,6 @@ const ToolDetailPage = () => {
     // In a real implementation, you might want to use a toast notification library
     alert(added ? 'Added to wishlist' : 'Removed from wishlist');
   };
-
-  // Share tool listing
-  const handleShare = async () => {
-    if (!tool) return;
-    
-    const shareUrl = window.location.href;
-    const shareTitle = `Check out this ${tool.name} on Benchlot`;
-    const shareText = `${tool.name} - ${formatPrice(tool.current_price)} - Available on Benchlot`;
-
-    // Try to use the Web Share API first
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // Fall back to clipboard if sharing was cancelled or failed
-        copyToClipboard(shareUrl);
-      }
-    } else {
-      // Fall back to clipboard for browsers that don't support Web Share API
-      copyToClipboard(shareUrl);
-    }
-  };
-
-  // Helper function to copy text to clipboard
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-      .then(() => alert("Link copied to clipboard!"))
-      .catch(() => {
-        // Fallback for older browsers
-        const input = document.createElement('input');
-        input.style.position = 'fixed';
-        input.style.opacity = 0;
-        input.value = text;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        alert("Link copied to clipboard!");
-      });
-  };
-
-  // We already have a contactSeller function defined above
 
   // Navigate to previous image
   const prevImage = () => {
@@ -252,10 +238,10 @@ const ToolDetailPage = () => {
           </button>
         </div>
 
-        {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left column - Images */}
-          <div className="lg:col-span-2 space-y-4">
+        {/* Main content grid - Updated proportions to match Reverb.com */}
+        <div className="grid grid-cols-1 lg:grid-cols-9 gap-8">
+          {/* Left column - Images (6/9 width on desktop) always first on mobile */}
+          <div className="lg:col-span-6 space-y-4 order-1">
             {/* Main image */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md relative aspect-square">
               {tool.images && tool.images.length > 0 ? (
@@ -329,75 +315,10 @@ const ToolDetailPage = () => {
                 ))}
               </div>
             )}
-
-            {/* Tool description */}
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <h2 className="text-lg font-medium text-stone-800 mb-4">Description</h2>
-              <p className="text-stone-600 whitespace-pre-line">{tool.description || "No description provided."}</p>
             </div>
 
-            {/* Specifications */}
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <h2 className="text-lg font-medium text-stone-800 mb-4">Specifications</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {tool.brand && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Brand</dt>
-                    <dd className="text-stone-800">{tool.brand}</dd>
-                  </div>
-                )}
-                {tool.model && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Model</dt>
-                    <dd className="text-stone-800">{tool.model}</dd>
-                  </div>
-                )}
-                {tool.condition && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Condition</dt>
-                    <dd className="text-stone-800">{tool.condition}</dd>
-                  </div>
-                )}
-                {tool.age && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Age</dt>
-                    <dd className="text-stone-800">{tool.age}</dd>
-                  </div>
-                )}
-                {tool.material && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Material</dt>
-                    <dd className="text-stone-800">{tool.material}</dd>
-                  </div>
-                )}
-                {tool.dimensions && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Dimensions</dt>
-                    <dd className="text-stone-800">{tool.dimensions}</dd>
-                  </div>
-                )}
-                {tool.category && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Category</dt>
-                    <dd className="text-stone-800">{tool.category}</dd>
-                  </div>
-                )}
-                {tool.created_at && (
-                  <div>
-                    <dt className="text-sm text-stone-500">Listed</dt>
-                    <dd className="text-stone-800">
-                      {tool.created_at.seconds ? 
-                        new Date(tool.created_at.seconds * 1000).toLocaleDateString() :
-                        new Date(tool.created_at).toLocaleDateString()}
-                    </dd>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right column - Pricing, seller info, actions */}
-          <div className="space-y-4">
+          {/* Right column - Pricing, seller info, actions (3/9 width on desktop) - second on mobile */}
+          <div className="space-y-4 order-2 lg:col-span-3">
             {/* Main info card */}
             <div className="bg-white rounded-lg p-6 shadow-md">
               <h1 className="text-2xl font-medium text-stone-800 mb-2">{tool.name}</h1>
@@ -478,60 +399,169 @@ const ToolDetailPage = () => {
                   </>
                 ) : (
                   <>
-                    {/* Add to Cart button */}
-                    <AddToCartButton 
-                      tool={tool}
-                      extraClasses="btn-primary inline-flex items-center"
-                    />
-                    
-                    {/* Make offer button - for demo, always show it */}
-                    {/* In production, we would check tool.acceptsOffers */}
+                    {/* Add to Cart button - with increased visibility */}
                     <button
-                      className="w-full py-3 bg-benchlot-accent text-benchlot-primary rounded-md hover:bg-benchlot-accent-light flex items-center justify-center font-medium"
+                      onClick={() => {
+                        const addToCartBtn = document.querySelector('[aria-label="Add this item to your cart"]');
+                        if (addToCartBtn) addToCartBtn.click();
+                      }}
+                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex"
+                    >
+                      <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                      </svg>
+                      Add to Cart
+                    </button>
+                    <div className="hidden">
+                      <AddToCartButton 
+                        tool={tool}
+                        extraClasses="btn-primary w-full justify-center text-lg py-3"
+                      />
+                    </div>
+                    
+                    {/* Make offer button with consistent styling */}
+                    <button
+                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200"
                       onClick={openOfferModal}
                     >
-                      <DollarSign className="h-5 w-5 mr-2" />
                       Make an Offer
                     </button>
                     
-                    {/* Contact seller button */}
-                    <button
-                      className="w-full py-3 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 flex items-center justify-center font-medium"
-                      onClick={contactSeller}
-                    >
-                      <MessageSquare className="h-5 w-5 mr-2" />
-                      Contact Seller
-                    </button>
-                    
-                    {/* Wishlist button */}
-                    <SaveToolButton
-                      toolId={tool.id}
-                      variant="outline"
-                      showText={true}
-                      size="large" 
-                      className="w-full py-3 justify-center font-medium"
-                      onSaveSuccess={(isInWishlist) => handleWishlistAction(isInWishlist)}
-                      onSaveError={(error) => alert(`Error: ${error}`)}
-                    />
-                    
-                    {/* Share button */}
-                    <button
-                      className="w-full py-3 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 flex items-center justify-center font-medium"
-                      onClick={handleShare}
-                    >
-                      <Share className="h-5 w-5 mr-2" />
-                      Share
-                    </button>
+                    <div className="flex w-full gap-3">
+                      {/* Contact seller button - same style as Make Offer */}
+                      <button
+                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200"
+                        onClick={contactSeller}
+                      >
+                        Contact Seller
+                      </button>
+                      
+                      {/* Wishlist button - with consistent styling */}
+                      <button
+                        onClick={(e) => {
+                          const wishlistBtn = document.querySelector('[aria-label="Watch this item"]');
+                          if (wishlistBtn) wishlistBtn.click();
+                        }}
+                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200 items-center"
+                      >
+                        <Heart className="h-4 w-4 mr-1.5" />
+                        Watch
+                      </button>
+                      <div className="hidden">
+                        <SaveToolButton
+                          toolId={tool.id}
+                          variant="outline"
+                          showText={true}
+                          size="small"
+                          className="flex-1 py-3 rounded-md font-semibold transition-colors"
+                          onSaveSuccess={(isInWishlist) => handleWishlistAction(isInWishlist)}
+                          onSaveError={(error) => alert(`Error: ${error}`)}
+                        />
+                      </div>
+                    </div>
                   </>
                 )}
               </div>
             </div>
+            
+            {/* "Sell one like this" CTA - desktop only */}
+            {!isOwner() && (
+              <div className="bg-emerald-800/80 rounded-lg p-5 shadow-md hidden lg:block">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 mr-4">
+                    <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-md font-medium text-white">Want to sell yours?</h3>
+                    <p className="text-sm text-white text-opacity-90 mb-3">List a tool like this one and start earning.</p>
+                    <button 
+                      onClick={() => navigate('/sell')}
+                      className="inline-flex items-center py-2 px-4 bg-white rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
+                    >
+                      Sell one like this
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Description section - will appear after image and info/button sections on mobile */}
+          <div className="lg:col-span-9 order-3">
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h2 className="text-lg font-medium text-stone-800 mb-4">Description</h2>
+              <p className="text-stone-600 whitespace-pre-line">{tool.description || "No description provided."}</p>
+            </div>
+          </div>
 
-            {/* Seller info card */}
-            {tool.seller && (
+          {/* Specifications section - will appear fourth on mobile */}
+          <div className="lg:col-span-9 order-4">
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h2 className="text-lg font-medium text-stone-800 mb-4">Specifications</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {tool.brand && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Brand</dt>
+                    <dd className="text-stone-800">{tool.brand}</dd>
+                  </div>
+                )}
+                {tool.model && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Model</dt>
+                    <dd className="text-stone-800">{tool.model}</dd>
+                  </div>
+                )}
+                {tool.condition && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Condition</dt>
+                    <dd className="text-stone-800">{tool.condition}</dd>
+                  </div>
+                )}
+                {tool.age && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Age</dt>
+                    <dd className="text-stone-800">{tool.age}</dd>
+                  </div>
+                )}
+                {tool.material && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Material</dt>
+                    <dd className="text-stone-800">{tool.material}</dd>
+                  </div>
+                )}
+                {tool.dimensions && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Dimensions</dt>
+                    <dd className="text-stone-800">{tool.dimensions}</dd>
+                  </div>
+                )}
+                {tool.category && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Category</dt>
+                    <dd className="text-stone-800">{tool.category}</dd>
+                  </div>
+                )}
+                {tool.created_at && (
+                  <div>
+                    <dt className="text-sm text-stone-500">Listed</dt>
+                    <dd className="text-stone-800">
+                      {tool.created_at.seconds ? 
+                        new Date(tool.created_at.seconds * 1000).toLocaleDateString() :
+                        new Date(tool.created_at).toLocaleDateString()}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Seller info - moved to the end */}
+          {tool.seller && (
+            <div className="lg:col-span-9 order-5">
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h2 className="text-lg font-medium text-stone-800 mb-4">About the Seller</h2>
-
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-stone-200 rounded-full overflow-hidden mr-3 flex items-center justify-center">
                     {tool.seller.avatar_url ? (
@@ -551,12 +581,10 @@ const ToolDetailPage = () => {
                       </div>
                     )}
                   </div>
-
                   <div>
                     <h3 className="font-medium text-stone-800">
                       {tool.seller.username || tool.seller.displayName || 'Anonymous Seller'}
                     </h3>
-
                     {tool.seller.rating && (
                       <div className="flex items-center">
                         <Star className="h-3 w-3 text-yellow-500 mr-1" fill="#EAB308" />
@@ -567,14 +595,12 @@ const ToolDetailPage = () => {
                     )}
                   </div>
                 </div>
-
                 {tool.seller.location && (
                   <div className="flex items-center text-sm text-stone-600 mb-4">
                     <MapPin className="h-4 w-4 text-stone-400 mr-2" />
                     <span>{tool.seller.location}</span>
                   </div>
                 )}
-
                 <button
                   className="w-full py-2 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 text-sm"
                   onClick={() => navigate(`/profile/${tool.seller.id}`)}
@@ -582,8 +608,33 @@ const ToolDetailPage = () => {
                   View Profile
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          
+          {/* "Sell one like this" CTA - mobile only, at the very bottom */}
+          {!isOwner() && (
+            <div className="lg:hidden lg:col-span-9 order-6 mt-4">
+              <div className="bg-emerald-800/80 rounded-lg p-5 shadow-md">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 mr-4">
+                    <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-md font-medium text-white">Want to sell yours?</h3>
+                    <p className="text-sm text-white text-opacity-90 mb-3">List a tool like this one and start earning.</p>
+                    <button 
+                      onClick={() => navigate('/sell')}
+                      className="inline-flex items-center py-2 px-4 bg-white rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
+                    >
+                      Sell one like this
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
       

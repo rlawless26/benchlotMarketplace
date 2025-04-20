@@ -80,15 +80,18 @@ const LandingPage = () => {
   return (
     <div className="bg-stone-50">
       {/* Hero Section with Form */}
-      <section className="py-20 bg-stone-50">
-        <div className="max-w-7xl mx-auto px-4">
+      <section className="py-24 bg-cover bg-center relative" style={{ backgroundImage: 'url("/images/shop_tools_bg.jpg")' }}>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-stone-800">
+            <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-white">
               Buy and sell new and used woodworking tools
             </h1>
-            <p className="text-xl text-stone-600 mb-8">
+            <p className="text-xl text-white text-opacity-90 mb-8">
               The marketplace for woodworkers to buy and sell new, used, and vintage woodworking tools.</p>
-            <div className="bg-white rounded-lg shadow-md p-8 max-w-xl mx-auto">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-xl mx-auto">
               <div className="mb-6">
                 <h3 className="text-2xl font-serif font-medium mb-2">Join Benchlot Today</h3>
                 <p className="text-stone-600 text-sm">We're building the new standard for buying and selling tools</p>
@@ -212,11 +215,14 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-stone-50">
-        <div className="max-w-7xl mx-auto px-4">
+      <section className="py-24 bg-cover bg-center relative" style={{ backgroundImage: 'url("/images/shop_tools_bg.jpg")' }}>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-serif font-medium mb-4 text-stone-800">Ready to join the community?</h2>
-            <p className="text-stone-600 mb-8">Be among the first to access our marketplace when we launch</p>
+            <h2 className="text-3xl font-serif font-medium mb-4 text-white">Ready to join the community?</h2>
+            <p className="text-white text-opacity-90 mb-8">Be among the first to access our marketplace when we launch</p>
 
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 max-w-xl mx-auto">
               <div className="flex flex-col md:flex-row gap-4">

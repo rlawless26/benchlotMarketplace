@@ -106,10 +106,11 @@ const LandingPageNew = () => {
           <div 
             className="w-full h-full bg-cover bg-center opacity-100"
             style={{ 
-              backgroundImage: `url('/images/hero-plaidplaning.jpg')`
+              backgroundImage: `url('/images/shop_tools_bg.jpg')`
             }}
           ></div>
-          {/* Removed gradient overlay for cleaner look */}
+          {/* Dark overlay for better text readability */}
+          <div className="absolute inset-0 bg-black bg-opacity-25"></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -151,7 +152,7 @@ const LandingPageNew = () => {
               {/* Browse Tools Button - Primary buyer journey */}
               <Link 
                 to="/marketplace" 
-                className="px-6 py-3 bg-[#17613F] backdrop-blur-sm border border-[#17613F]/30 rounded-md text-white font-medium hover:bg-[#17613F]/90 transition-colors flex items-center justify-center text-lg"
+                className="px-6 py-3 bg-[#17613F] backdrop-blur-sm border border-[#17613F]/30 rounded-md text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center text-base"
               >
                 <ShoppingBag className="h-5 w-5 mr-2" /> Browse Tools
               </Link>
@@ -159,7 +160,7 @@ const LandingPageNew = () => {
               {/* Sell Tools Button - Secondary seller journey */}
               <Link 
                 to={isSeller() ? "/tools/new" : "/sell"} 
-                className="px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/40 rounded-md text-white font-medium hover:bg-black/30 transition-colors flex items-center justify-center text-lg"
+                className="px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/40 rounded-md text-white font-semibold hover:bg-black/30 transition-colors flex items-center justify-center text-base"
               >
                 <Hammer className="h-5 w-5 mr-2" /> Start Selling
               </Link>

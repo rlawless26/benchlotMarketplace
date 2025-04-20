@@ -115,8 +115,8 @@ const SaveToolButton = ({
       onClick={handleToggleWishlist}
       className={getButtonClasses()}
       disabled={isProcessing}
-      title={isInWishlist ? 'Remove from saved tools' : 'Save to wishlist'}
-      aria-label={isInWishlist ? 'Remove from saved tools' : 'Save to wishlist'}
+      title={isInWishlist ? 'Stop watching this item' : 'Watch this item'}
+      aria-label={isInWishlist ? 'Stop watching this item' : 'Watch this item'}
     >
       <Heart 
         className={`${getIconSize()} ${isInWishlist ? 'fill-current' : ''}`} 
@@ -124,7 +124,7 @@ const SaveToolButton = ({
       
       {showText && !iconOnly && (
         <span className="ml-1">
-          {isInWishlist ? 'Saved' : 'Save'}
+          {isInWishlist ? 'Watching' : 'Watch'}
         </span>
       )}
     </button>

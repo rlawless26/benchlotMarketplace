@@ -159,7 +159,7 @@ const Header = () => {
           </div>
 
           {/* Right side - key actions section */}
-          <div className="ml-6 flex items-center gap-6">
+          <div className="ml-auto flex items-center gap-6">
             {isAuthenticated() ? (
               // Authenticated user options
               <>
@@ -195,8 +195,8 @@ const Header = () => {
                   )}
                 </Link>
                 
-                {/* User Profile Dropdown */}
-                <div className="relative">
+                {/* User Profile Dropdown - Hide on mobile */}
+                <div className="relative hidden md:block">
                   <button
                     className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary"
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
@@ -343,7 +343,7 @@ const Header = () => {
                   Sell Your Tools
                 </Link>
                 
-                {/* Cart Icon */}
+                {/* Cart Icon - right aligned */}
                 <CartIcon />
                 
                 {/* Login link - text only */}
@@ -367,12 +367,12 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Secondary Header - Categories and utility links */}
-      <div className="bg-white">
+      {/* Secondary Header - Categories and utility links (hidden on mobile) */}
+      <div className="bg-white hidden lg:block">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-10 items-center">
             {/* Left side - Category links */}
-            <nav className="hidden lg:flex items-center gap-6 text-sm">
+            <nav className="flex items-center gap-6 text-sm">
               <Link
                 to="/marketplace"
                 className="text-stone-700 hover:text-benchlot-primary whitespace-nowrap font-medium"
@@ -411,7 +411,7 @@ const Header = () => {
             </nav>
 
             {/* Right side - Utility links */}
-            <div className="hidden lg:flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-6 text-sm">
               <Link to="/help" className="text-stone-700 hover:text-benchlot-primary">Help</Link>
               <Link to="/about" className="text-stone-700 hover:text-benchlot-primary">About</Link>
               <a 

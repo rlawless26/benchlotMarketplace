@@ -60,7 +60,7 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
     if (extraClasses) {
       return extraClasses;  // Use provided classes if available
     }
-    // Explicitly include background color in default case
+    // Explicitly include background color in default case - ensure button is visible
     return 'bg-benchlot-primary text-white hover:bg-benchlot-secondary';
   };
 
