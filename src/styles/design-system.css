@@ -13,12 +13,13 @@
   /* Base element styling */
   html {
     @apply text-benchlot-text-primary;
-    font-size: 16px;
+    font-size: 17px;
     scroll-behavior: smooth;
   }
   
   body {
     @apply font-sans bg-benchlot-base;
+    letter-spacing: 0.015em;
   }
 
   h1, h2, h3 {
@@ -128,10 +129,12 @@
   /* Form elements */
   .form-input {
     @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary placeholder-benchlot-text-secondary focus:outline-none focus:border-benchlot-primary transition duration-200;
+    font-size: 1.05rem;
   }
 
   .form-select {
     @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary focus:outline-none focus:border-benchlot-primary transition duration-200;
+    font-size: 1.05rem;
   }
 
   .form-checkbox {

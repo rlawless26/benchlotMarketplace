@@ -5,6 +5,8 @@ body {
   background-color: #F0EEE6;
   font-family: 'Mulish', sans-serif;
   color: #44403C;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
 h1, h2, h3 {

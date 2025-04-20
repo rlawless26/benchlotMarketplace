@@ -130,9 +130,10 @@ const LandingPageNew = () => {
                 <input
                   type="text"
                   placeholder="What tool are you looking for?"
-                  className="w-full pl-12 pr-4 py-4 border border-stone-200 bg-white text-stone-800 rounded-md focus:outline-none focus:border-benchlot-accent shadow-md text-lg placeholder-stone-500"
+                  className="w-full pl-12 pr-4 py-4 border border-stone-200 bg-white text-stone-800 rounded-md focus:outline-none focus:border-benchlot-accent shadow-md text-xl placeholder-stone-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ fontSize: "1.2rem" }}
                 />
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-500" />
                 <button 
@@ -150,17 +151,17 @@ const LandingPageNew = () => {
               {/* Browse Tools Button - Primary buyer journey */}
               <Link 
                 to="/marketplace" 
-                className="px-6 py-3 bg-[#17613F] backdrop-blur-sm border border-[#17613F]/30 rounded-md text-white font-medium hover:bg-[#17613F]/90 transition-colors flex items-center justify-center"
+                className="px-6 py-3 bg-[#17613F] backdrop-blur-sm border border-[#17613F]/30 rounded-md text-white font-medium hover:bg-[#17613F]/90 transition-colors flex items-center justify-center text-lg"
               >
-                <ShoppingBag className="h-4 w-4 mr-2" /> Browse Tools
+                <ShoppingBag className="h-5 w-5 mr-2" /> Browse Tools
               </Link>
               
               {/* Sell Tools Button - Secondary seller journey */}
               <Link 
                 to={isSeller() ? "/tools/new" : "/sell"} 
-                className="px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/40 rounded-md text-white font-medium hover:bg-black/30 transition-colors flex items-center justify-center"
+                className="px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/40 rounded-md text-white font-medium hover:bg-black/30 transition-colors flex items-center justify-center text-lg"
               >
-                <Hammer className="h-4 w-4 mr-2" /> Start Selling
+                <Hammer className="h-5 w-5 mr-2" /> Start Selling
               </Link>
             </div>
           </div>
