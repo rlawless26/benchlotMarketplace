@@ -166,7 +166,7 @@ const Header = () => {
                 {/* Sell your tools button */}
                 <Link 
                   to={user?.isSeller || user?.profile?.isSeller ? "/seller/dashboard" : "/sell"}
-                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
+                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap ml-4"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
                   Sell Your Tools

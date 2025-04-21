@@ -1,0 +1,29 @@
+Sheet Overview
+- Task Name: Specific action to test
+- URL/Location: Where the action takes place
+- Expected Result: What should happen
+- Test Result: Pass, Fail, or Needs Work
+- Notes: Observations, bugs, or improvement suggestions
+
+Testing Priority
+When conducting tests, focus on the following priorities:
+1. **Functional Correctness**: Does each step complete successfully?
+2. **Data Persistence**: Is information saved correctly between steps?
+3. **Critical Errors**: Are there any blockers that prevent completion?
+4. **Notifications**: Do emails and in-app notifications work properly?
+5. **Security**: Are there any obvious security concerns?
+
+Test User Setup
+Use your own email and PW or use Google Login Method
+
+Use Stripe's test card numbers for payment testing:
+- Success: 4242 4242 4242 4242
+- Authentication Required: 4000 0025 0000 3155
+- Any future expiration date, any 3-digit CVC, and any ZIP code
+
+## Reporting Issues
+When documenting issues:
+1. Be specific about the steps that led to the problem
+2. Note the browser/device/OS used
+3. Include screenshots when possible
+4. Note workarounds if discovered
