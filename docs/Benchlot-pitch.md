@@ -83,6 +83,7 @@ Leadership:
 * Head of Community: [Name] - Makerspace founder
 
 Advisors:
+
 * [Name] - Tool industry veteran
 * [Name] - Marketplace founder
 * [Name] - Community building expert

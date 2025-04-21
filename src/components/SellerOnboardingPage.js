@@ -40,9 +40,18 @@ const SellerOnboardingPage = () => {
         const status = await getConnectAccountStatus(user.uid);
         setAccountStatus(status);
         
-        // If completed onboarding or account is active, redirect to dashboard with newSeller flag
+        // Check if there's a pending tool listing to create
+        const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
+        
+        // If completed onboarding or account is active, handle accordingly
         if (isComplete || (status.detailsSubmitted && status.payoutsEnabled)) {
-          navigate('/seller/dashboard?newSeller=true');
+          if (pendingToolListingJSON) {
+            // There's a pending tool listing - redirect to create it
+            navigate('/seller/create-pending-listing');
+          } else {
+            // No pending listing - redirect to dashboard
+            navigate('/seller/dashboard?newSeller=true');
+          }
           return;
         }
         

@@ -15,16 +15,23 @@ import { useAuth } from '../firebase/hooks/useAuth';
 const SellerLandingPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [email, setEmail] = useState('');
+  const [toolName, setToolName] = useState('');
   
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Store the tool name in localStorage for retrieval later
+    if (toolName.trim()) {
+      localStorage.setItem('draftToolName', toolName.trim());
+    }
+    
     if (isAuthenticated()) {
-      // User is already logged in, send them to seller sign up
-      navigate('/seller/signup');
+      // User is already logged in, send them to the combined onboarding/listing form
+      navigate('/seller/onboard-and-list');
     } else {
-      // User is not logged in, send them to login with a redirect
-      navigate('/login', { state: { from: '/seller/signup' } });
+      // User is not logged in, show auth modal with a redirect to combined form
+      // For now, we'll navigate to login page with the redirect
+      navigate('/login', { state: { from: '/seller/onboard-and-list' } });
     }
   };
   
@@ -44,20 +51,23 @@ const SellerLandingPage = () => {
                 community of makers ready to buy your tools.
               </p>
               <form onSubmit={handleSubmit} className="max-w-md">
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="space-y-3">
+                  <label className="block text-lg font-medium text-gray-700">
+                    What tool are you selling today?
+                  </label>
                   <input 
-                    type="email" 
-                    placeholder="Enter your email to get started" 
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text" 
+                    placeholder="e.g., Milwaukee M18 Drill" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
+                    value={toolName}
+                    onChange={(e) => setToolName(e.target.value)}
                     required
                   />
                   <button 
                     type="submit"
-                    className="bg-benchlot-primary text-white px-6 py-3 rounded-md hover:bg-benchlot-secondary transition-colors flex items-center justify-center"
+                    className="w-full bg-benchlot-primary text-white px-6 py-3 rounded-md hover:bg-benchlot-secondary transition-colors flex items-center justify-center"
                   >
-                    Get Started
+                    Start Selling
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </button>
                 </div>
@@ -297,7 +307,7 @@ const SellerLandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               className="bg-white text-benchlot-primary px-8 py-4 rounded-md hover:bg-benchlot-accent-light transition-colors text-lg font-medium"
-              onClick={() => navigate(isAuthenticated() ? '/seller/signup' : '/login', { state: { from: '/seller/signup' } })}
+              onClick={() => navigate(isAuthenticated() ? '/seller/onboard-and-list' : '/login', { state: { from: '/seller/onboard-and-list' } })}
             >
               Start Selling
             </button>

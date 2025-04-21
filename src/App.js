@@ -35,6 +35,8 @@ import SellerSignupPage from './components/SellerSignupPage';
 import SellerOnboardingPage from './components/SellerOnboardingPage';
 import SellerDashboardPage from './components/SellerDashboardPage';
 import SellerLandingPage from './components/SellerLandingPage';
+import SellerOnboardAndListPage from './components/SellerOnboardAndListPage';
+import CreatePendingListingPage from './components/CreatePendingListingPage';
 
 // Component imports
 import Header from './components/Header';
@@ -101,6 +103,10 @@ function App() {
                   <Route path="/seller/onboarding/refresh" element={<SellerOnboardingPage />} />
                   <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
                   <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+                  
+                  {/* New Tool-First Seller Flow */}
+                  <Route path="/seller/onboard-and-list" element={<SellerOnboardAndListPage />} />
+                  <Route path="/seller/create-pending-listing" element={<CreatePendingListingPage />} />
                   
                   {/* About, Help, Legal and Categories */}
                   <Route path="/about" element={<AboutPage />} />

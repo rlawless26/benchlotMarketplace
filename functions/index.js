@@ -374,7 +374,7 @@ app.post('/create-connected-account', async (req, res) => {
         sellerName
       },
       capabilities: {
-        card_payments: { requested: true },
+        // No card_payments needed - sellers only receive transfers from the platform
         transfers: { requested: true }
       }
     });

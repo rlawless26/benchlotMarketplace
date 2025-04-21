@@ -513,7 +513,7 @@ const Header = () => {
             {/* Mobile Sell link */}
             <div className="mt-6 mb-6 pt-4 border-t border-stone-200">
               <Link 
-                to={isAuthenticated() ? "/seller/tools/new" : "/sell"}
+                to="/sell"
                 className="flex items-center gap-3 px-4 py-3 bg-benchlot-accent text-benchlot-primary rounded-md font-medium mb-4"
                 onClick={() => setIsMenuOpen(false)}
               >
