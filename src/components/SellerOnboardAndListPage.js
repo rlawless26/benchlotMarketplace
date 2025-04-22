@@ -60,6 +60,11 @@ const SellerOnboardAndListPage = () => {
   });
   
   // Load draft tool name and populate user data
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (user) {
       // Pre-populate with user data

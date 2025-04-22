@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { createTool, uploadToolImage } from '../firebase/models/toolModel';
+import { openAuthModal } from '../utils/featureFlags';
 
 /**
  * CreatePendingListingPage
@@ -16,10 +17,15 @@ const CreatePendingListingPage = () => {
   const [success, setSuccess] = useState(false);
   const [toolId, setToolId] = useState(null);
   
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     // Check if user is authenticated
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: '/seller/create-pending-listing' } });
+      openAuthModal('signin', '/seller/create-pending-listing');
       return;
     }
     
@@ -111,22 +117,28 @@ const CreatePendingListingPage = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-medium text-gray-800 mb-2">Listing Created Successfully!</h2>
-            <p className="text-gray-600 text-center mb-6">
-              Your tool listing has been created and is now live on Benchlot.
+            <h2 className="text-2xl font-medium text-gray-800 mb-2">Listing Created!</h2>
+            <p className="text-gray-600 text-center mb-2">
+              Your tool listing has been created but needs photos to be visible to buyers.
+            </p>
+            <p className="text-blue-600 text-center font-medium mb-6">
+              Listings with photos get 5X more views and sell 3X faster!
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button 
-                onClick={() => navigate(`/tools/${toolId}`)}
-                className="px-6 py-2 bg-green-700 text-white rounded-md hover:bg-green-800"
+                onClick={() => navigate(`/tools/${toolId}?action=add-photos`)}
+                className="px-6 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 flex items-center justify-center"
               >
-                View Listing
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+                Add Photos Now
               </button>
               <button 
                 onClick={() => navigate('/seller/dashboard')}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
-                Go to Dashboard
+                Finish Later
               </button>
             </div>
           </div>

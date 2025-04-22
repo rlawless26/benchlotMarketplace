@@ -42,6 +42,7 @@ import BankDetailsPage from './components/BankDetailsPage';
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import TestOrderButton from './components/TestOrderButton';
 import AuthModalExample from './components/AuthModalExample';
 // Note: TestNotificationButton and UserIdDisplay removed
@@ -59,7 +60,8 @@ function App() {
           <NotificationProvider>
             <Router>
               <div className="App min-h-screen flex flex-col bg-stone-50">
-                <Header />
+                <ScrollToTop />
+              <Header />
               
               <main className="flex-grow">
                 <Routes>

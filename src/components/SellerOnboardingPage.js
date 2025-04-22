@@ -23,6 +23,11 @@ const SellerOnboardingPage = () => {
   // Check if this is a refresh from Stripe
   const isRefresh = new URLSearchParams(location.search).get('refresh') === 'true';
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Get current user and check their Stripe account status
   useEffect(() => {
     const checkUserAndStatus = async () => {

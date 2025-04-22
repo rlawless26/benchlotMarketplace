@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
@@ -11,11 +11,17 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
+import { openAuthModal } from '../utils/featureFlags';
 
 const SellerLandingPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [toolName, setToolName] = useState('');
+  
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,8 +36,7 @@ const SellerLandingPage = () => {
       navigate('/seller/onboard-and-list');
     } else {
       // User is not logged in, show auth modal with a redirect to combined form
-      // For now, we'll navigate to login page with the redirect
-      navigate('/login', { state: { from: '/seller/onboard-and-list' } });
+      openAuthModal('signup', '/seller/onboard-and-list');
     }
   };
   
@@ -307,7 +312,7 @@ const SellerLandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               className="bg-white text-benchlot-primary px-8 py-4 rounded-md hover:bg-benchlot-accent-light transition-colors text-lg font-medium"
-              onClick={() => navigate(isAuthenticated() ? '/seller/onboard-and-list' : '/login', { state: { from: '/seller/onboard-and-list' } })}
+              onClick={() => isAuthenticated() ? navigate('/seller/onboard-and-list') : openAuthModal('signup', '/seller/onboard-and-list')}
             >
               Start Selling
             </button>
