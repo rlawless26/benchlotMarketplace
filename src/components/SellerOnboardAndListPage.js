@@ -3,13 +3,20 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowRight, 
   CheckCircle, 
-  Mail,
   Camera,
-  ChevronRight
+  ChevronRight,
+  Check,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useSeller } from '../firebase/hooks/useSeller';
 import { toolCategories, toolConditions } from '../firebase/models/toolModel';
+import { 
+  ENABLE_DIRECT_BANK_ACCOUNT, 
+  USE_CUSTOM_ACCOUNTS,
+  openAuthModal
+} from '../utils/featureFlags';
 
 /**
  * SellerOnboardAndListPage Component
@@ -23,7 +30,7 @@ const SellerOnboardAndListPage = () => {
   const { user, isAuthenticated } = useAuth();
   const { createSellerAccount } = useSeller();
   const [loading, setLoading] = useState(true);
-  const [formStep, setFormStep] = useState(1); // 1 = seller info, 2 = tool details, 3 = review
+  const [formStep, setFormStep] = useState(1); // 1 = seller info, 2 = tool details, 3 = payout details, 4 = review & publish
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -66,11 +73,11 @@ const SellerOnboardAndListPage = () => {
     } else {
       // Check if authentication is still in progress
       if (!loading) {
-        // If not loading and no user, redirect to login
-        navigate('/login', { state: { from: '/seller/onboard-and-list' } });
+        // If not loading and no user, open auth modal instead of redirecting to login page
+        openAuthModal('signup', '/seller/onboard-and-list');
       }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,36 +99,40 @@ const SellerOnboardAndListPage = () => {
     setFormStep(2);
   };
   
-  // Handle tool listing form submission (step 2)
-  const handleToolListingSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate tool listing form
+  // Handle tool listing form validation
+  const validateToolListing = () => {
     const requiredFields = ['toolName', 'description', 'category', 'condition', 'current_price'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {
       setError(`Please fill out all required fields: ${missingFields.join(', ')}`);
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Handle final submission (directly from Step 2)
+  const handleFinalSubmit = async () => {
+    // First validate the tool listing data
+    if (!validateToolListing()) {
       return;
     }
     
-    // Proceed to review step
-    setError(null);
-    setFormStep(3);
-  };
-  
-  // Handle final submission (step 3)
-  const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
     
     try {
-      // Check if email is verified
-      if (user && !user.emailVerified) {
-        setShowEmailVerification(true);
-        setIsSubmitting(false);
-        return;
-      }
+      // We don't block progression based on email verification status
+      // Users can proceed regardless, but we show them the status in the UI
+      
+      console.log("Creating seller account with data:", {
+        sellerName: formData.sellerName,
+        sellerType: formData.sellerType,
+        location: formData.location,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone
+      });
       
       // Create Stripe Connect account
       const sellerAccountResult = await createSellerAccount({
@@ -132,8 +143,31 @@ const SellerOnboardAndListPage = () => {
         contactPhone: formData.contactPhone
       });
       
+      console.log("Seller account creation result:", sellerAccountResult);
+      
+      // TEMPORARY: Manually override redirect URL if it points to Stripe
+      // This lets us test our local BankDetailsPage without deploying to Firebase
+      if (sellerAccountResult.success && sellerAccountResult.url) {
+        const currentUrl = window.location.origin;
+        const accountId = sellerAccountResult.accountId;
+        
+        // Check if the URL is a Stripe URL
+        if (sellerAccountResult.url.includes('stripe.com')) {
+          console.log("INTERCEPTED STRIPE REDIRECT! Using local bank details page instead");
+          // Override with our local bank details page
+          sellerAccountResult.url = `${currentUrl}/seller/bank-details?accountId=${accountId}`;
+        }
+      }
+      
       if (!sellerAccountResult.success) {
-        throw new Error(sellerAccountResult.error || 'Failed to create seller account');
+        console.error('Seller account creation failed:', sellerAccountResult.error);
+        // If the error includes "NOT_FOUND", it's likely a missing document error
+        if (sellerAccountResult.error && sellerAccountResult.error.includes("NOT_FOUND")) {
+          setError("There was a problem with your account setup. Please try again.");
+        } else {
+          throw new Error(sellerAccountResult.error || 'Failed to create seller account');
+        }
+        return; // Exit early to prevent further processing
       }
       
       // Store tool data in localStorage for creation after Stripe onboarding
@@ -153,8 +187,26 @@ const SellerOnboardAndListPage = () => {
       
       localStorage.setItem('pendingToolListing', JSON.stringify(toolData));
       
-      // Redirect to Stripe onboarding
-      window.location.href = sellerAccountResult.url;
+      // Check if we received a URL
+      if (!sellerAccountResult.url) {
+        throw new Error('No Stripe URL received. Please try again.');
+      }
+      
+      console.log("Redirecting to URL:", sellerAccountResult.url);
+      
+      // Fix URL for local development - intercept benchlot.com URLs and redirect to localhost
+      let redirectUrl = sellerAccountResult.url;
+      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('benchlot.com')) {
+        // Extract the path and query params
+        const urlObj = new URL(redirectUrl);
+        const pathWithQuery = urlObj.pathname + urlObj.search;
+        // Replace with localhost URL
+        redirectUrl = `${window.location.origin}${pathWithQuery}`;
+        console.log("Redirecting to local version instead:", redirectUrl);
+      }
+      
+      // Redirect to bank details page
+      window.location.href = redirectUrl;
       
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -183,12 +235,17 @@ const SellerOnboardAndListPage = () => {
   
   // Handle checking email verification status
   const handleCheckVerification = () => {
-    // Reload user to check verification status
-    // In a real implementation, this would refresh the user's token
-    
-    // For now, we'll just proceed with the flow
+    // Hide email verification overlay and proceed with onboarding
     setShowEmailVerification(false);
+    
+    // Since we have a placeholder text to verify email,
+    // for now we'll just proceed directly to Stripe onboarding
     handleFinalSubmit();
+    
+    // In a production environment, you would want to:
+    // 1. Refresh the user's auth token to check verification status
+    // 2. Only proceed if email is verified
+    // 3. Show an error if not verified
   };
   
   // Render loading state
@@ -213,20 +270,15 @@ const SellerOnboardAndListPage = () => {
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
             {formStep === 1 ? 'Start Selling on Benchlot' : 
              formStep === 2 ? 'Tell us about your tool' : 
+             formStep === 3 ? 'Set up your payment details' :
              'Review your listing'}
           </h1>
           <p className="text-gray-600 mb-6">
             {formStep === 1 ? 'Complete your seller profile to begin listing tools.' :
              formStep === 2 ? 'Provide details about the tool you want to sell.' :
-             'Review your information before submitting.'}
+             formStep === 3 ? 'Set up how you\'ll get paid when your tool sells.' :
+             'Review your listing before publishing.'}
           </p>
-          
-          {/* Error message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-              {error}
-            </div>
-          )}
           
           {/* Success message */}
           {successMessage && (
@@ -240,31 +292,40 @@ const SellerOnboardAndListPage = () => {
           <div className="mb-8">
             <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 1 ? 'bg-green-500 text-white' : 'bg-gray-200'
+                formStep >= 1 ? 'bg-green-700 text-white' : 'bg-gray-200'
               }`}>
                 1
               </div>
               <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 2 ? 'bg-green-500' : 'bg-gray-200'
+                formStep >= 2 ? 'bg-green-700' : 'bg-gray-200'
               }`}></div>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 2 ? 'bg-green-500 text-white' : 'bg-gray-200'
+                formStep >= 2 ? 'bg-green-700 text-white' : 'bg-gray-200'
               }`}>
                 2
               </div>
               <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 3 ? 'bg-green-500' : 'bg-gray-200'
+                formStep >= 3 ? 'bg-green-700' : 'bg-gray-200'
               }`}></div>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 3 ? 'bg-green-500 text-white' : 'bg-gray-200'
+                formStep >= 3 ? 'bg-green-700 text-white' : 'bg-gray-200'
               }`}>
                 3
+              </div>
+              <div className={`flex-1 h-1 mx-2 ${
+                formStep >= 4 ? 'bg-green-700' : 'bg-gray-200'
+              }`}></div>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                formStep >= 4 ? 'bg-green-700 text-white' : 'bg-gray-200'
+              }`}>
+                4
               </div>
             </div>
             <div className="flex justify-between mt-2 text-sm text-gray-600">
               <span>Seller Profile</span>
               <span>Tool Details</span>
-              <span>Review & Submit</span>
+              <span>Payout Details</span>
+              <span>Review & Publish</span>
             </div>
           </div>
           
@@ -399,6 +460,14 @@ const SellerOnboardAndListPage = () => {
                     <p className="text-sm text-gray-500 mt-1">Optional, but helps with local pickup</p>
                   </div>
                   
+                  {/* Error message */}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
+                      <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+                  
                   <div className="pt-4">
                     <button
                       type="submit"
@@ -413,7 +482,7 @@ const SellerOnboardAndListPage = () => {
               
               {/* Step 2: Tool Listing Form */}
               {formStep === 2 && (
-                <form onSubmit={handleToolListingSubmit} className="space-y-6">
+                <div className="space-y-6">
                   {/* Tool Information Section */}
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h3 className="text-lg font-medium text-gray-800 mb-4">Tool Information</h3>
@@ -430,7 +499,7 @@ const SellerOnboardAndListPage = () => {
                           name="toolName"
                           value={formData.toolName}
                           onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
                           placeholder="e.g., Milwaukee M18 Drill"
                           required
                         />
@@ -446,7 +515,7 @@ const SellerOnboardAndListPage = () => {
                           name="category"
                           value={formData.category}
                           onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
                           required
                         >
                           <option value="">Select a category</option>
@@ -468,7 +537,7 @@ const SellerOnboardAndListPage = () => {
                           name="condition"
                           value={formData.condition}
                           onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
                           required
                         >
                           <option value="">Select condition</option>
@@ -491,7 +560,7 @@ const SellerOnboardAndListPage = () => {
                           name="brand"
                           value={formData.brand}
                           onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
                           placeholder="e.g., Milwaukee, DeWalt, Makita"
                         />
                       </div>
@@ -507,7 +576,7 @@ const SellerOnboardAndListPage = () => {
                           name="model"
                           value={formData.model}
                           onChange={handleChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
                           placeholder="e.g., M18 FUEL"
                         />
                       </div>
@@ -524,7 +593,7 @@ const SellerOnboardAndListPage = () => {
                         value={formData.description}
                         onChange={handleChange}
                         rows={4}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
                         placeholder="Provide details about your tool..."
                         required
                       />
@@ -553,7 +622,7 @@ const SellerOnboardAndListPage = () => {
                             onChange={handleChange}
                             min="0"
                             step="1"
-                            className="w-full border border-gray-300 rounded-md pl-7 pr-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
                             placeholder="0"
                             required
                           />
@@ -577,13 +646,89 @@ const SellerOnboardAndListPage = () => {
                             onChange={handleChange}
                             min="0"
                             step="1"
-                            className="w-full border border-gray-300 rounded-md pl-7 pr-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
                             placeholder="0"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Next Steps Information */}
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-6">
+                    <div className="mb-4">
+                      <div>
+                        <h3 className="font-medium text-blue-700">Here's what comes next:</h3>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <div className="flex">
+                          {/* Status Icons Column */}
+                          <div className="flex flex-col mr-2 space-y-4">
+                            <div>
+                              {user?.emailVerified ? (
+                                <div className="bg-green-100 text-green-700 rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
+                                  <Check className="h-3.5 w-3.5" />
+                                </div>
+                              ) : (
+                                <div className="bg-red-100 text-red-500 rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
+                                  <X className="h-3.5 w-3.5" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="h-5 w-5"></div>
+                            <div className="h-5 w-5"></div>
+                          </div>
+                          
+                          {/* Numbers Column */}
+                          <div className="flex flex-col items-center mr-2 space-y-4">
+                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
+                              <span className="text-xs font-medium">1</span>
+                            </div>
+                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
+                              <span className="text-xs font-medium">2</span>
+                            </div>
+                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
+                              <span className="text-xs font-medium">3</span>
+                            </div>
+                          </div>
+                          
+                          {/* Text Column */}
+                          <div className="flex flex-col space-y-4">
+                            <div className="text-sm">
+                              {user?.emailVerified ? (
+                                <span className="text-green-700 font-medium">Email verified</span>
+                              ) : (
+                                <div>
+                                  <span className="text-blue-700">Verify your email address</span>{" "}
+                                  <button 
+                                    onClick={handleSendVerificationEmail}
+                                    className="text-blue-800 underline hover:text-blue-900 focus:outline-none"
+                                  >
+                                    Resend verification email
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-sm text-blue-700">
+                              Set up your seller account and provide your payout details so you can get paid when your tool sells
+                            </div>
+                            <div className="text-sm text-blue-700">
+                              Add photos, review your new listing and go live!
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Error message */}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
+                      <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
                   
                   {/* Navigation Buttons */}
                   <div className="flex justify-between pt-4">
@@ -595,141 +740,23 @@ const SellerOnboardAndListPage = () => {
                       Back
                     </button>
                     <button
-                      type="submit"
-                      className="px-6 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium"
+                      type="button"
+                      onClick={handleFinalSubmit}
+                      disabled={isSubmitting}
+                      className="px-6 py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium flex items-center"
                     >
-                      Preview Listing
-                    </button>
-                  </div>
-                </form>
-              )}
-              
-              {/* Step 3: Review */}
-              {formStep === 3 && (
-                <div className="space-y-6">
-                  {/* Seller Info Review */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg font-medium text-gray-800">Seller Information</h3>
-                      <button 
-                        onClick={() => setFormStep(1)} 
-                        className="text-sm text-green-700 hover:text-green-800"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                      <div>
-                        <span className="text-sm text-gray-500">Name:</span>
-                        <p className="font-medium">{formData.sellerName}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Type:</span>
-                        <p className="font-medium capitalize">{formData.sellerType}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Location:</span>
-                        <p className="font-medium">{formData.location}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Email:</span>
-                        <p className="font-medium">{formData.contactEmail}</p>
-                      </div>
-                      {formData.contactPhone && (
-                        <div>
-                          <span className="text-sm text-gray-500">Phone:</span>
-                          <p className="font-medium">{formData.contactPhone}</p>
-                        </div>
+                      {isSubmitting ? (
+                        <>
+                          <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <span>Payout Details</span>
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
                       )}
-                    </div>
-                  </div>
-                  
-                  {/* Tool Info Review */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg font-medium text-gray-800">Tool Information</h3>
-                      <button 
-                        onClick={() => setFormStep(2)} 
-                        className="text-sm text-green-700 hover:text-green-800"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium text-lg">{formData.toolName}</h4>
-                        <div className="flex gap-2 text-sm text-gray-500 mb-2">
-                          <span>{formData.category}</span>
-                          {formData.brand && <span>• {formData.brand}</span>}
-                          {formData.model && <span>• {formData.model}</span>}
-                        </div>
-                        <p className="text-green-700 font-medium mb-2">${parseFloat(formData.current_price).toFixed(2)}</p>
-                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                          {formData.condition}
-                        </span>
-                      </div>
-                      
-                      <p className="text-gray-700">{formData.description}</p>
-                      
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start">
-                        <Camera className="h-5 w-5 text-yellow-700 mr-2 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-yellow-700">
-                          You'll be able to add photos after completing setup.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Final Submit */}
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                    <div className="flex items-start mb-4">
-                      <Mail className="h-5 w-5 text-blue-700 mr-2 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium text-blue-700">Next steps after submitting:</h3>
-                        <p className="text-sm text-blue-700 mt-1">
-                          {!user?.emailVerified && 
-                            "1. Verify your email address (we'll send you a verification link)"}
-                        </p>
-                        <p className="text-sm text-blue-700 mt-1">
-                          {!user?.emailVerified ? "2. " : "1. "}
-                          Set up your seller account through Stripe, our payment processor
-                        </p>
-                        <p className="text-sm text-blue-700 mt-1">
-                          {!user?.emailVerified ? "3. " : "2. "}
-                          Your listing will go live after these steps are completed
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setFormStep(2)}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleFinalSubmit}
-                        disabled={isSubmitting}
-                        className="px-6 py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium flex items-center"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            Submit Listing
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    </button>
                   </div>
                 </div>
               )}

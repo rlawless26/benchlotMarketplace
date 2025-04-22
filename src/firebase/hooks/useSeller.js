@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, createContext } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config';
 import { useAuth } from './useAuth';
 
@@ -43,22 +43,74 @@ export function SellerProvider({ children }) {
         throw new Error('You must be logged in to become a seller');
       }
       
+      // Show which API we're using
+      console.log(`Using API URL: ${API_URL}`);
+      
+      // First, ensure the user document exists in Firestore
+      // This prevents the "No document to update" error
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        console.log("User document doesn't exist in Firestore, creating it first");
+        
+        // Create a basic user document with the provided seller data
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || sellerData.sellerName || user.email.split('@')[0],
+          createdAt: new Date().toISOString(),
+          profile: {
+            fullName: sellerData.sellerName || user.displayName || '',
+            location: sellerData.location || '',
+          },
+          // Add seller-specific fields that will be updated by the API
+          sellerName: sellerData.sellerName || user.displayName || user.email.split('@')[0],
+          sellerType: sellerData.sellerType || 'individual',
+          contactEmail: sellerData.contactEmail || user.email,
+          contactPhone: sellerData.contactPhone || '',
+          sellerBio: sellerData.sellerBio || '',
+          // We'll set this to true once the Stripe account is created
+          isSeller: false
+        };
+        
+        // Create the user document
+        await setDoc(userRef, userData);
+        console.log("Created user document in Firestore");
+      } else {
+        console.log("User document exists in Firestore, updating with seller data");
+        
+        // Update existing user document with seller data
+        await updateDoc(userRef, {
+          sellerName: sellerData.sellerName || user.displayName || user.email.split('@')[0],
+          sellerType: sellerData.sellerType || 'individual',
+          location: sellerData.location || '',
+          contactEmail: sellerData.contactEmail || user.email,
+          contactPhone: sellerData.contactPhone || '',
+          sellerBio: sellerData.sellerBio || ''
+        });
+      }
+      
+      const requestData = {
+        userId: user.uid,
+        email: user.email,
+        sellerName: sellerData.sellerName || user.profile?.displayName || user.email.split('@')[0],
+        sellerType: sellerData.sellerType || 'individual',
+        location: sellerData.location || '',
+        contactEmail: sellerData.contactEmail || user.email,
+        contactPhone: sellerData.contactPhone || '',
+        sellerBio: sellerData.sellerBio || ''
+      };
+      
+      console.log("Making API request to create-connected-account:", requestData);
+      
       // Create a connected account with Stripe
       const response = await fetch(`${API_URL}/create-connected-account`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: user.uid,
-          email: user.email,
-          sellerName: sellerData.sellerName || user.profile?.displayName || user.email.split('@')[0],
-          sellerType: sellerData.sellerType || 'individual',
-          location: sellerData.location || '',
-          contactEmail: sellerData.contactEmail || user.email,
-          contactPhone: sellerData.contactPhone || '',
-          sellerBio: sellerData.sellerBio || ''
-        }),
+        body: JSON.stringify(requestData),
       });
       
       if (!response.ok) {
@@ -67,11 +119,16 @@ export function SellerProvider({ children }) {
       }
       
       const data = await response.json();
+      console.log("Response from create-connected-account:", data);
+      
+      // Extract the URL from the response and log it
+      const redirectUrl = data.url;
+      console.log("Redirect URL:", redirectUrl);
       
       // Return the URL for the Stripe onboarding flow
       return { 
         success: true, 
-        url: data.url,
+        url: redirectUrl,
         accountId: data.accountId,
         exists: data.exists
       };
@@ -193,7 +250,7 @@ export function SellerProvider({ children }) {
   
   // Check if the current user is a seller
   const isSeller = () => {
-    const result = !!(user?.profile?.isSeller || user?.isSeller);
+    const result = !!(user?.profile?.isSeller || user?.isSeller || user?.stripeStatus === 'active');
     console.log('isSeller check:', { result, user: !!user });
     return result;
   };
@@ -207,8 +264,8 @@ export function SellerProvider({ children }) {
   
   // Context value
   const value = {
-    isSeller: user?.profile?.isSeller || user?.isSeller || false,
-    isOnboardingComplete: !!(sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled),
+    isSeller: user?.profile?.isSeller || user?.isSeller || user?.stripeStatus === 'active' || false,
+    isOnboardingComplete: !!(sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled) || user?.stripeStatus === 'active',
     sellerStatus,
     isLoading,
     error,
