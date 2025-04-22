@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, refreshConnectAccountLink } from '../utils/stripeService';
+import { ENABLE_DIRECT_BANK_ACCOUNT, USE_CUSTOM_ACCOUNTS, openAuthModal } from '../utils/featureFlags';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * Seller Onboarding Page
@@ -15,6 +18,7 @@ const SellerOnboardingPage = () => {
   const [loading, setLoading] = useState(true);
   const [accountStatus, setAccountStatus] = useState(null);
   const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
   
   // Check if this is a refresh from Stripe
   const isRefresh = new URLSearchParams(location.search).get('refresh') === 'true';
@@ -29,22 +33,79 @@ const SellerOnboardingPage = () => {
         }
         
         if (!user) {
-          navigate('/login', { state: { from: '/seller/onboarding' } });
+          // Use auth modal instead of redirect to login page
+          openAuthModal('signin', '/seller/onboarding' + location.search);
           return;
+        }
+        
+        // Get user data from Firestore to check for needsBankDetails flag
+        try {
+          // Get user data from Firestore using Firebase v9 syntax
+          const userRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userRef);
+          if (userDocSnap.exists()) {
+            const userDataFromFirestore = userDocSnap.data();
+            setUserData(userDataFromFirestore);
+            
+            // Check if this user needs to add bank details
+            if (ENABLE_DIRECT_BANK_ACCOUNT && userDataFromFirestore.needsBankDetails) {
+              navigate(`/seller/bank-details?accountId=${userDataFromFirestore.stripeAccountId}`);
+              return;
+            }
+          }
+        } catch (userDataError) {
+          console.error('Error fetching user data:', userDataError);
+          // Continue with account status check even if user data fetch fails
         }
         
         // Check if this is a return from Stripe onboarding complete
         const isComplete = location.pathname.includes('/complete');
         
         // Check account status
-        const status = await getConnectAccountStatus(user.uid);
-        setAccountStatus(status);
+        try {
+          const status = await getConnectAccountStatus(user.uid);
+          setAccountStatus(status);
+        } catch (statusError) {
+          console.error('Error fetching account status:', statusError);
+          
+          // If we're coming back from the Stripe redirect and getting an error
+          // It might mean we need to wait for the webhook to update the user data
+          if (isComplete) {
+            console.log('Coming back from Stripe redirect - handling potential timing issue');
+            
+            // Check if there's a pending tool listing to create
+            const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
+            
+            if (pendingToolListingJSON) {
+              // There's a pending tool listing - redirect to create it
+              navigate('/seller/create-pending-listing');
+              return;
+            } else {
+              // No pending listing - redirect to dashboard 
+              navigate('/seller/dashboard?newSeller=true');
+              return;
+            }
+          }
+          
+          // If not from Stripe redirect, check for bank account redirect
+          if (ENABLE_DIRECT_BANK_ACCOUNT && userData && userData.needsBankDetails) {
+            // User needs to enter bank details directly
+            console.log('User needs to enter bank details directly');
+            navigate(`/seller/bank-details?accountId=${userData.stripeAccountId}`);
+            return;
+          }
+          
+          // Otherwise show the error
+          setError(statusError.message || 'Failed to get account status');
+          setLoading(false);
+          return;
+        }
         
         // Check if there's a pending tool listing to create
         const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
         
         // If completed onboarding or account is active, handle accordingly
-        if (isComplete || (status.detailsSubmitted && status.payoutsEnabled)) {
+        if (isComplete || (accountStatus && accountStatus.detailsSubmitted && accountStatus.payoutsEnabled)) {
           if (pendingToolListingJSON) {
             // There's a pending tool listing - redirect to create it
             navigate('/seller/create-pending-listing');
@@ -130,7 +191,8 @@ const SellerOnboardingPage = () => {
               you to receive payments securely when your tools sell.
             </p>
             
-            {accountStatus && !accountStatus.detailsSubmitted && (
+            {/* Default state when no account status is available or details not submitted */}
+            {(!accountStatus || !accountStatus.detailsSubmitted) && (
               <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
                 <h2 className="text-lg font-medium text-gray-800 mb-4">Complete Stripe Onboarding</h2>
                 <p className="mb-4">You'll need to complete the following steps:</p>
@@ -144,7 +206,10 @@ const SellerOnboardingPage = () => {
                   onClick={handleRefreshLink}
                   className="w-full py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium"
                 >
-                  Continue Onboarding
+                  {USE_CUSTOM_ACCOUNTS 
+                    ? "Enter Payout Details"
+                    : "Continue Onboarding"
+                  }
                 </button>
               </div>
             )}

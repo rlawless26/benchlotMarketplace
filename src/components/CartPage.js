@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
 import { ShieldCheck, ArrowLeft, Trash2, Lock } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 
 const CartPage = () => {
   const { cart, loading, error, updateItemQuantity, removeItem, emptyCart } = useCart();
@@ -17,9 +18,10 @@ const CartPage = () => {
   // Redirect to login if not authenticated - using useEffect to avoid setState during render
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { redirect: '/cart' } });
+      // Use auth modal instead of redirect to login page
+      openAuthModal('signin', '/cart');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated]);
   
   // Format price as USD
   const formatPrice = (price) => {

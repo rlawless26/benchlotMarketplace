@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, getConnectDashboardLink } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
+import { openAuthModal } from '../utils/featureFlags';
 
 /**
  * Seller Dashboard Page
@@ -33,7 +34,7 @@ const SellerDashboardPage = () => {
         }
         
         if (!user) {
-          navigate('/login', { state: { from: '/seller/dashboard' } });
+          openAuthModal('signin', '/seller/dashboard');
           return;
         }
         
@@ -43,14 +44,53 @@ const SellerDashboardPage = () => {
           return;
         }
         
-        // Get account status
-        const status = await getConnectAccountStatus(user.uid);
-        setAccountStatus(status);
-        
-        // If account is not fully onboarded, redirect to onboarding
-        if (!status.detailsSubmitted && !location.search.includes('newSeller=true')) {
-          navigate('/seller/onboarding');
-          return;
+        // Try to get account status from Stripe API but handle errors gracefully
+        try {
+          const status = await getConnectAccountStatus(user.uid);
+          
+          if (status) {
+            setAccountStatus(status);
+            
+            // If account is not fully onboarded, redirect to onboarding
+            if (!status.detailsSubmitted && !location.search.includes('newSeller=true')) {
+              navigate('/seller/onboarding');
+              return;
+            }
+          } else {
+            console.log('No account status returned from Stripe, checking user record');
+            // Handle null status by checking user record
+            if (user.hasBankAccount === true && user.verified === true) {
+              console.log('User has bank account verified in Firestore, creating default account status');
+              setAccountStatus({
+                accountId: user.stripeAccountId || 'direct_account',
+                status: 'active',
+                detailsSubmitted: true,
+                payoutsEnabled: true
+              });
+            } else if (!location.search.includes('newSeller=true')) {
+              // If no direct bank details and no newSeller param, redirect to onboarding
+              navigate('/seller/onboarding');
+              return;
+            }
+          }
+        } catch (statusError) {
+          console.error('Error fetching Stripe account status:', statusError);
+          
+          // Check user record directly for bank account status
+          // If user has added bank account details directly in app, consider them verified
+          if (user.hasBankAccount === true && user.verified === true) {
+            console.log('User has bank account verified in Firestore, overriding Stripe status check');
+            setAccountStatus({
+              accountId: user.stripeAccountId || 'direct_account',
+              status: 'active',
+              detailsSubmitted: true,
+              payoutsEnabled: true
+            });
+          } else if (!location.search.includes('newSeller=true')) {
+            // If no direct bank details and no newSeller param, redirect to onboarding
+            navigate('/seller/onboarding');
+            return;
+          }
         }
         
         // Check if this is a new seller (from the query parameter)
@@ -86,6 +126,10 @@ const SellerDashboardPage = () => {
     try {
       if (!user) {
         throw new Error('User information is missing');
+      }
+      
+      if (!user.stripeAccountId) {
+        throw new Error('No Stripe account associated with this seller account');
       }
       
       // Get a dashboard link
@@ -155,19 +199,26 @@ const SellerDashboardPage = () => {
               <div className="border-t border-gray-200 pt-4 mb-4">
                 <h3 className="text-sm font-medium text-gray-500 mb-2">ACCOUNT STATUS</h3>
                 <div className="flex items-center">
-                  <div className={`h-3 w-3 rounded-full ${accountStatus?.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'} mr-2`}></div>
-                  <span className="font-medium">{accountStatus?.status === 'active' ? 'Active' : 'Restricted'}</span>
+                  <div className={`h-3 w-3 rounded-full ${
+                    accountStatus?.status === 'active' ? 'bg-green-500' : 
+                    !accountStatus ? 'bg-gray-500' : 'bg-yellow-500'
+                  } mr-2`}></div>
+                  <span className="font-medium">
+                    {accountStatus?.status === 'active' ? 'Active' : 
+                     !accountStatus ? 'Unknown' : 'Restricted'}
+                  </span>
                 </div>
                 
-                {accountStatus?.status !== 'active' && (
+                {accountStatus && accountStatus.status !== 'active' && accountStatus.requirementsDisabledReason && (
                   <div className="mt-2 text-sm text-red-600">
-                    <p>Reason: {accountStatus?.requirementsDisabledReason}</p>
+                    <p>Reason: {accountStatus.requirementsDisabledReason}</p>
                   </div>
                 )}
                 
                 <button 
                   onClick={handleAccessStripeDashboard}
                   className="mt-3 w-full py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 font-medium text-sm flex items-center justify-center"
+                  disabled={!user?.stripeAccountId}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

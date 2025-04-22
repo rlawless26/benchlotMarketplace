@@ -37,6 +37,7 @@ import SellerDashboardPage from './components/SellerDashboardPage';
 import SellerLandingPage from './components/SellerLandingPage';
 import SellerOnboardAndListPage from './components/SellerOnboardAndListPage';
 import CreatePendingListingPage from './components/CreatePendingListingPage';
+import BankDetailsPage from './components/BankDetailsPage';
 
 // Component imports
 import Header from './components/Header';
@@ -80,6 +81,7 @@ function App() {
                   
                   {/* User Routes */}
                   <Route path="/my-listings" element={<MyListingsPage />} />
+                  {/* Preserved for backward compatibility but not used by new flows */}
                   <Route path="/login" element={<AuthPage />} />
                   <Route path="/wishlist" element={<WishlistPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
@@ -107,6 +109,7 @@ function App() {
                   {/* New Tool-First Seller Flow */}
                   <Route path="/seller/onboard-and-list" element={<SellerOnboardAndListPage />} />
                   <Route path="/seller/create-pending-listing" element={<CreatePendingListingPage />} />
+                  <Route path="/seller/bank-details" element={<BankDetailsPage />} />
                   
                   {/* About, Help, Legal and Categories */}
                   <Route path="/about" element={<AboutPage />} />
