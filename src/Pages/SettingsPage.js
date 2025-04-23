@@ -16,6 +16,7 @@ import {
   ChevronRight, 
   Loader
 } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 import { useAuth } from '../firebase/hooks/useAuth';
 
 // Profile Tabs
@@ -54,12 +55,12 @@ const SettingsPage = () => {
     navigate(`/settings?tab=${tab}`, { replace: true });
   };
   
-  // Redirect to login if not authenticated
+  // Open auth modal if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated()) {
-      navigate('/login', { state: { from: location.pathname + location.search } });
+      openAuthModal('signin', location.pathname + location.search);
     }
-  }, [isAuthenticated, loading, navigate, location]);
+  }, [isAuthenticated, loading, location]);
   
   // Loading state
   if (loading) {

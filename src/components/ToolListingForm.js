@@ -14,6 +14,7 @@ import {
   toolCategories,
   toolConditions
 } from '../firebase/models/toolModel';
+import { openAuthModal } from '../utils/featureFlags';
 
 const ToolListingForm = ({ hideTitle = false }) => {
   const { user, isAuthenticated } = useAuth();
@@ -78,8 +79,8 @@ const ToolListingForm = ({ hideTitle = false }) => {
     if (isAuthenticated()) {
       loadTool();
     } else {
-      // Redirect to login if not authenticated
-      navigate('/login', { state: { redirect: `/tools/${isEditMode ? 'edit/' + id : 'new'}` } });
+      // Open auth modal if not authenticated
+      openAuthModal('signin', `/tools/${isEditMode ? 'edit/' + id : 'new'}`);
     }
   }, [isEditMode, id, isAuthenticated, navigate]);
 
@@ -124,6 +125,16 @@ const ToolListingForm = ({ hideTitle = false }) => {
     const newPreviews = validFiles.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
     
+    // Show success message
+    if (validFiles.length > 0) {
+      setSuccess(`${validFiles.length} image${validFiles.length > 1 ? 's' : ''} added. Your changes will be saved when you submit the form.`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    }
+    
     // Clear error if successful
     setError(null);
   };
@@ -136,6 +147,14 @@ const ToolListingForm = ({ hideTitle = false }) => {
     // Remove the file and preview
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    
+    // Show feedback message
+    setSuccess("Image removed. Changes will be saved when you submit the form.");
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
   };
 
   // Mark an existing image for deletion
@@ -143,6 +162,14 @@ const ToolListingForm = ({ hideTitle = false }) => {
     const imageToDelete = existingImages[index];
     setImagesToDelete(prev => [...prev, imageToDelete]);
     setExistingImages(prev => prev.filter((_, i) => i !== index));
+    
+    // Show feedback message
+    setSuccess("Image marked for removal. Changes will be saved when you submit the form.");
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
   };
 
   // Handle form submission
@@ -233,8 +260,11 @@ const ToolListingForm = ({ hideTitle = false }) => {
       )}
       
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
+        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-100 text-green-700 px-4 py-3 rounded-md shadow-lg max-w-md animate-fade-in-out flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>{success}</span>
         </div>
       )}
       

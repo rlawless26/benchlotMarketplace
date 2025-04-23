@@ -16,6 +16,7 @@ import {
   Loader,
   AlertCircle
 } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 
 import { useAuth } from '../firebase/hooks/useAuth';
 import { getOrderById, updateOrderStatus } from '../firebase/models/orderModel';
@@ -207,7 +208,7 @@ const OrderDetailPage = () => {
       if (isAuthenticated()) {
         loadOrder();
       } else {
-        navigate('/login', { state: { from: `/orders/${id}` } });
+        openAuthModal('signin', `/orders/${id}`);
       }
     }
   }, [id, user, authLoading, isAuthenticated, navigate]);

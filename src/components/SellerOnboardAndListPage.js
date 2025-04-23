@@ -139,13 +139,16 @@ const SellerOnboardAndListPage = () => {
         contactPhone: formData.contactPhone
       });
       
-      // Create Stripe Connect account
+      // Create Stripe Connect account with seller data
       const sellerAccountResult = await createSellerAccount({
         sellerName: formData.sellerName,
         sellerType: formData.sellerType,
         location: formData.location,
         contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone
+        contactPhone: formData.contactPhone,
+        // Explicitly add seller status flags to ensure they're set correctly
+        isSeller: true,
+        'profile.isSeller': true
       });
       
       console.log("Seller account creation result:", sellerAccountResult);

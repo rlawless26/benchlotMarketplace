@@ -25,6 +25,8 @@ service cloud.firestore {
       return isSignedIn() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSeller == true ||
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.seller != null && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.seller.isSeller == true) ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller');
     }
     
@@ -38,8 +40,8 @@ service cloud.firestore {
       let incomingData = request.resource.data;
       return incomingData.name is string && 
              incomingData.name.size() > 0 &&
-             incomingData.price is number &&
-             incomingData.price >= 0 &&
+             ((incomingData.price is number && incomingData.price >= 0) || 
+              (incomingData.current_price is number && incomingData.current_price >= 0)) &&
              incomingData.description is string;
     }
     
@@ -54,13 +56,23 @@ service cloud.firestore {
       // Anyone can see basic user profiles
       allow read;
       
-      // Users can create their own profiles
+      // Users can create their own profiles, including seller profiles
       allow create: if isOwner(userId) && 
-                   request.resource.data.role != 'admin'; // Prevent self-assignment of admin
+                   (request.resource.data.role == null || 
+                    request.resource.data.role == 'user' || 
+                    request.resource.data.role == 'seller' || 
+                    request.resource.data.role != 'admin'); // Prevent self-assignment of admin
       
       // Users can update their own profiles, admins can update any profile
       allow update: if (isOwner(userId) && 
-                     request.resource.data.role == resource.data.role) || // Users can't change their own role
+                     // Users can't change their role but can become a seller
+                     (request.resource.data.role == resource.data.role || 
+                      !("role" in resource.data) || 
+                      request.resource.data.role == 'seller') && 
+                     // Allow users to update seller-related fields
+                     ((!("isSeller" in resource.data) || 
+                       resource.data.isSeller == request.resource.data.isSeller || 
+                       request.resource.data.isSeller == true))) || 
                      isAdmin();
       
       // Only admins can delete user profiles

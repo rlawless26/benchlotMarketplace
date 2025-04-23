@@ -38,8 +38,23 @@ const SellerDashboardPage = () => {
           return;
         }
         
-        // Check if user is a seller - check both locations where seller flag might be stored
-        if (!(user.profile?.isSeller || user.isSeller)) {
+        // Check if user is a seller - check all possible locations using new seller object structure
+        const userIsSeller = user.seller?.isSeller === true || 
+                           user.isSeller === true || 
+                           user.seller?.stripeStatus === 'active' ||
+                           (user.seller?.hasBankAccount === true && user.seller?.verified === true);
+        
+        console.log('SellerDashboardPage - Checking if user is a seller:', {
+          userIsSeller,
+          sellerIsSeller: user.seller?.isSeller,
+          topLevelIsSeller: user.isSeller,
+          sellerStripeStatus: user.seller?.stripeStatus,
+          sellerHasBankAccount: user.seller?.hasBankAccount,
+          sellerVerified: user.seller?.verified
+        });
+                           
+        if (!userIsSeller) {
+          console.log('User is not a seller, redirecting to seller signup');
           navigate('/seller/signup');
           return;
         }
@@ -51,18 +66,70 @@ const SellerDashboardPage = () => {
           if (status) {
             setAccountStatus(status);
             
-            // If account is not fully onboarded, redirect to onboarding
-            if (!status.detailsSubmitted && !location.search.includes('newSeller=true')) {
+            // Check if the account is in a restricted state 
+            // We'll be more forgiving to allow access to the dashboard
+            const onlyNonCriticalRequirements = status.status === 'restricted' && 
+              status.requirements?.currently_due?.every(req => 
+                req === 'individual.last_name' || req === 'individual.first_name' || req === 'business_profile.url'
+              );
+              
+            const isRestrictedButComplete = status.status === 'restricted' && 
+              (!status.requirements || !status.requirements.currently_due || status.requirements.currently_due.length === 0);
+                
+            console.log('SellerDashboardPage - Account status check:', {
+              detailsSubmitted: status.detailsSubmitted,
+              isRestrictedButComplete,
+              onlyNonCriticalRequirements,
+              requirements: status.requirements?.currently_due,
+              hasBankAccount: !!user.seller?.hasBankAccount,
+              verified: !!user.seller?.verified,
+              topLevelVerified: !!user.verified,
+              topLevelBankAccount: !!user.hasBankAccount
+            });
+              
+            // Check both new and old data locations for bank account verification
+            const hasVerifiedBankAccount = 
+              (user.seller?.hasBankAccount === true && user.seller?.verified === true) ||
+              (user.hasBankAccount === true && user.verified === true);
+              
+            // Only redirect to onboarding if we're in a truly problematic state
+            // If we only have non-critical requirements or have verified bank details, allow dashboard access
+            if (!status.detailsSubmitted && 
+                !isRestrictedButComplete && 
+                !onlyNonCriticalRequirements && 
+                !hasVerifiedBankAccount && 
+                !location.search.includes('newSeller=true')) {
+              
+              console.log('Redirecting to onboarding - account not ready:', { 
+                detailsSubmitted: status.detailsSubmitted,
+                isRestrictedButComplete,
+                onlyNonCriticalRequirements,
+                hasVerifiedBankAccount
+              });
+              
               navigate('/seller/onboarding');
               return;
             }
           } else {
             console.log('No account status returned from Stripe, checking user record');
             // Handle null status by checking user record
-            if (user.hasBankAccount === true && user.verified === true) {
+            // Check both new and old data locations for bank account verification
+            const hasVerifiedBankAccount = 
+              (user.seller?.hasBankAccount === true && user.seller?.verified === true) ||
+              (user.hasBankAccount === true && user.verified === true);
+              
+            console.log('Checking for verified bank account with null status:', {
+              sellerHasBankAccount: !!user.seller?.hasBankAccount,
+              sellerVerified: !!user.seller?.verified,
+              topLevelHasBankAccount: !!user.hasBankAccount,
+              topLevelVerified: !!user.verified,
+              hasVerifiedBankAccount
+            });
+              
+            if (hasVerifiedBankAccount) {
               console.log('User has bank account verified in Firestore, creating default account status');
               setAccountStatus({
-                accountId: user.stripeAccountId || 'direct_account',
+                accountId: user.seller?.stripeAccountId || user.stripeAccountId || 'direct_account',
                 status: 'active',
                 detailsSubmitted: true,
                 payoutsEnabled: true
@@ -76,12 +143,24 @@ const SellerDashboardPage = () => {
         } catch (statusError) {
           console.error('Error fetching Stripe account status:', statusError);
           
-          // Check user record directly for bank account status
+          // Check user record directly for bank account status - checking both new and old data locations
           // If user has added bank account details directly in app, consider them verified
-          if (user.hasBankAccount === true && user.verified === true) {
+          const hasVerifiedBankAccount = 
+            (user.seller?.hasBankAccount === true && user.seller?.verified === true) ||
+            (user.hasBankAccount === true && user.verified === true);
+            
+          console.log('Checking for verified bank account after status error:', {
+            sellerHasBankAccount: !!user.seller?.hasBankAccount,
+            sellerVerified: !!user.seller?.verified,
+            topLevelHasBankAccount: !!user.hasBankAccount,
+            topLevelVerified: !!user.verified,
+            hasVerifiedBankAccount
+          });
+            
+          if (hasVerifiedBankAccount) {
             console.log('User has bank account verified in Firestore, overriding Stripe status check');
             setAccountStatus({
-              accountId: user.stripeAccountId || 'direct_account',
+              accountId: user.seller?.stripeAccountId || user.stripeAccountId || 'direct_account',
               status: 'active',
               detailsSubmitted: true,
               payoutsEnabled: true
@@ -128,7 +207,9 @@ const SellerDashboardPage = () => {
         throw new Error('User information is missing');
       }
       
-      if (!user.stripeAccountId) {
+      const stripeAccountId = user.seller?.stripeAccountId || user.stripeAccountId;
+      
+      if (!stripeAccountId) {
         throw new Error('No Stripe account associated with this seller account');
       }
       
@@ -201,30 +282,27 @@ const SellerDashboardPage = () => {
                 <div className="flex items-center">
                   <div className={`h-3 w-3 rounded-full ${
                     accountStatus?.status === 'active' ? 'bg-green-500' : 
-                    !accountStatus ? 'bg-gray-500' : 'bg-yellow-500'
+                    !accountStatus ? 'bg-gray-500' : 'bg-blue-500'
                   } mr-2`}></div>
                   <span className="font-medium">
                     {accountStatus?.status === 'active' ? 'Active' : 
-                     !accountStatus ? 'Unknown' : 'Restricted'}
+                     !accountStatus ? 'Setting up...' : 'Processing...'}
                   </span>
                 </div>
                 
-                {accountStatus && accountStatus.status !== 'active' && accountStatus.requirementsDisabledReason && (
-                  <div className="mt-2 text-sm text-red-600">
-                    <p>Reason: {accountStatus.requirementsDisabledReason}</p>
+                {accountStatus && accountStatus.status !== 'active' && (
+                  <div className="mt-2 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                    <p>Your seller account is being activated. This usually takes a few minutes. Feel free to continue exploring your dashboard.</p>
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="mt-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-1 px-2 rounded"
+                    >
+                      Refresh Status
+                    </button>
                   </div>
                 )}
                 
-                <button 
-                  onClick={handleAccessStripeDashboard}
-                  className="mt-3 w-full py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 font-medium text-sm flex items-center justify-center"
-                  disabled={!user?.stripeAccountId}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Access Stripe Dashboard
-                </button>
+                {/* Stripe Dashboard access button removed since we're using controller.stripe_dashboard.type = 'none' */}
               </div>
               
               <div className="border-t border-gray-200 pt-4 mb-2">

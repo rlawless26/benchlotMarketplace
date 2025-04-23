@@ -1,6 +1,6 @@
 // src/Pages/ToolDetailPage.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -12,17 +12,19 @@ import {
   Loader, 
   AlertCircle
 } from 'lucide-react';
-import { getToolById } from '../firebase/models/toolModel';
+import { getToolById, toolStatus, uploadToolImage } from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
 import ImageComponent from '../components/ImageComponent';
 import AddToCartButton from '../components/AddToCartButton';
 import SaveToolButton from '../components/SaveToolButton';
 import MakeOfferModal from '../components/MakeOfferModal';
+import { openAuthModal } from '../utils/featureFlags';
 
 const ToolDetailPage = () => {
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // State variables
   const [tool, setTool] = useState(null);
@@ -31,10 +33,20 @@ const ToolDetailPage = () => {
   const [error, setError] = useState(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   
+  // Photo upload state
+  const [showPhotoUploader, setShowPhotoUploader] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
+  const [photoSuccess, setPhotoSuccess] = useState(false);
+  
+  // Get action from URL params (e.g., ?action=add-photos)
+  const params = new URLSearchParams(location.search);
+  const action = params.get('action');
+  
   // Contact seller
   const contactSeller = async () => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: `/tools/${id}` } });
+      openAuthModal('signin', `/tools/${id}`);
       return;
     }
     
@@ -80,7 +92,7 @@ const ToolDetailPage = () => {
   // Make an offer
   const openOfferModal = () => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: `/tools/${id}` } });
+      openAuthModal('signin', `/tools/${id}`);
       return;
     }
     
@@ -97,6 +109,59 @@ const ToolDetailPage = () => {
   };
   
   // Fetch tool data
+  // Handle photo upload
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type is image
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Please select an image file (jpg, png, etc)');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Image file size must be under 5MB');
+      return;
+    }
+    
+    setUploadingPhoto(true);
+    setPhotoError(null);
+    
+    try {
+      // Upload the image
+      await uploadToolImage(file, id);
+      
+      // Refresh the tool data to show the new image
+      const updatedTool = await getToolById(id);
+      setTool(updatedTool);
+      
+      // Show success message
+      setPhotoSuccess(true);
+      setTimeout(() => setPhotoSuccess(false), 3000);
+      
+      // Clear the file input
+      e.target.value = '';
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      setPhotoError('Failed to upload photo. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // Show photo uploader if action=add-photos or the tool needs images
+  useEffect(() => {
+    if (action === 'add-photos') {
+      setShowPhotoUploader(true);
+    } else if (tool && tool.status === toolStatus.PENDING_IMAGES && isOwner()) {
+      // Also show for owner of a listing that needs images
+      setShowPhotoUploader(true);
+    }
+  }, [action, tool, user]);
+  
+  // Load tool data
   useEffect(() => {
     const loadTool = async () => {
       try {
@@ -128,7 +193,7 @@ const ToolDetailPage = () => {
 
   // Check if user is the owner of this tool
   const isOwner = () => {
-    return isAuthenticated && user && tool && user.uid === tool.user_id;
+    return isAuthenticated() && user && tool && user.uid === tool.user_id;
   };
 
   // Toast notification for wishlist actions
@@ -227,6 +292,79 @@ const ToolDetailPage = () => {
   return (
     <div className={`${isOwner() ? 'bg-gray-100' : 'bg-stone-50'} min-h-screen`}>
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Photo uploader banner for listing that needs images */}
+        {showPhotoUploader && isOwner() && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between">
+              <div className="mb-4 md:mb-0">
+                <h3 className="text-blue-800 font-medium text-lg mb-1">
+                  {tool.images && tool.images.length > 0 
+                    ? 'Add more photos to increase visibility' 
+                    : 'Your listing needs photos to be visible to buyers'}
+                </h3>
+                <p className="text-blue-600">
+                  {tool.images && tool.images.length > 0 
+                    ? 'Tools with multiple photos sell 3X faster!' 
+                    : 'Upload at least one photo to activate your listing'}
+                </p>
+                
+                {/* Status indicator */}
+                <div className="mt-2 text-sm">
+                  <span className="font-medium">Status: </span>
+                  {tool.status === toolStatus.PENDING_IMAGES ? (
+                    <span className="text-amber-600 font-medium">Draft - Needs photos</span>
+                  ) : (
+                    <span className="text-green-600 font-medium">Active - Visible to buyers</span>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block">
+                  <span className="sr-only">Choose photos</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    disabled={uploadingPhoto}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-medium
+                      file:bg-blue-600 file:text-white
+                      hover:file:bg-blue-700
+                      file:cursor-pointer file:shadow"
+                  />
+                </label>
+                
+                {/* Success message */}
+                {photoSuccess && (
+                  <p className="mt-2 text-green-600 text-sm flex items-center">
+                    <Check className="h-4 w-4 mr-1" />
+                    Photo uploaded successfully!
+                  </p>
+                )}
+                
+                {/* Error message */}
+                {photoError && (
+                  <p className="mt-2 text-red-600 text-sm flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {photoError}
+                  </p>
+                )}
+                
+                {/* Loading indicator */}
+                {uploadingPhoto && (
+                  <p className="mt-2 text-blue-600 text-sm flex items-center">
+                    <Loader className="h-4 w-4 mr-1 animate-spin" />
+                    Uploading photo...
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Breadcrumb navigation */}
         <div className="mb-6">
           <button

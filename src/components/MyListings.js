@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase';
 import { getToolsByUserId, deleteTool } from '../firebase/models/toolModel';
 import ToolImage from './ToolImage';
+import { openAuthModal } from '../utils/featureFlags';
 
 const MyListings = () => {
   const { user, isAuthenticated } = useAuth();
@@ -22,7 +23,7 @@ const MyListings = () => {
   useEffect(() => {
     const loadListings = async () => {
       if (!isAuthenticated() || !user) {
-        navigate('/login', { state: { redirect: '/my-listings' } });
+        openAuthModal('signin', '/my-listings');
         return;
       }
       

@@ -17,6 +17,7 @@ import {
   ChevronUp,
   Loader
 } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 
 import { useAuth } from '../firebase/hooks/useAuth';
 import { getUserOrders } from '../firebase/models/orderModel';
@@ -163,7 +164,7 @@ const OrdersPage = () => {
       if (isAuthenticated()) {
         loadOrders();
       } else {
-        navigate('/login', { state: { from: '/orders' } });
+        openAuthModal('signin', '/orders');
       }
     }
   }, [user, authLoading, isAuthenticated, navigate]);

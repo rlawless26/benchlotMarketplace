@@ -8,6 +8,7 @@ import { useAuth } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { mockOrders, getMockOrderById } from '../utils/mockData';
+import { openAuthModal } from '../utils/featureFlags';
 
 const OrderConfirmation = () => {
   const { id } = useParams();
@@ -210,8 +211,8 @@ const OrderConfirmation = () => {
     if (id && user) {
       loadOrder();
     } else if (!user) {
-      // Redirect to login if not authenticated
-      navigate('/login', { state: { redirect: `/order-confirmation/${id}` } });
+      // Open auth modal if not authenticated
+      openAuthModal('signin', `/order-confirmation/${id}`);
     }
   }, [id, user, navigate]);
   

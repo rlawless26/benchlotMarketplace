@@ -31,10 +31,29 @@ const AuthModal = ({
     }
   }, [isOpen]);
 
-  // Close modal when user is authenticated
+  // Close modal when user is authenticated and handle redirects
   useEffect(() => {
     if (user && isOpen) {
       handleClose();
+      
+      // Handle redirect after successful authentication
+      try {
+        const redirectPath = sessionStorage.getItem('authRedirectPath');
+        if (redirectPath) {
+          // Clear the redirect path
+          sessionStorage.removeItem('authRedirectPath');
+          
+          // Use window.location.href for complete redirect including to separate origins
+          if (redirectPath.startsWith('http')) {
+            window.location.href = redirectPath;
+          } else {
+            // Use relative path for same-origin redirects
+            window.location.href = redirectPath;
+          }
+        }
+      } catch (error) {
+        console.error('Error handling auth redirect:', error);
+      }
     }
   }, [user, isOpen]);
 

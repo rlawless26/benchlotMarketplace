@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
+import { openAuthModal } from '../utils/featureFlags';
 
 const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1 }) => {
   const { isAuthenticated } = useAuth();
@@ -18,7 +19,7 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
 
   const handleAddToCart = async () => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { redirect: `/tools/${tool.id}` } });
+      openAuthModal('signin', `/tools/${tool.id}`);
       return;
     }
 

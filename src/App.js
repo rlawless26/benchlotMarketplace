@@ -1,9 +1,11 @@
 // src/App.js - Firebase Implementation
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
+import { useAuth } from './firebase/hooks/useAuth';
 import { NotificationProvider } from './context/NotificationContext';
+import { fixSellerStatus } from './utils/fixSellerStatus';
 import EnvironmentDisplay from './components/EnvironmentDisplay';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -52,6 +54,30 @@ import './styles/design-system.css';
 import './styles/auth.css';
 import './App.css';
 
+// Component to fix seller status when user is authenticated
+function SellerStatusFix() {
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user?.uid) {
+      console.log('Checking if seller status needs fixing for:', user.uid);
+      fixSellerStatus(user.uid)
+        .then(fixed => {
+          if (fixed) {
+            console.log('Fixed seller status for user:', user.uid);
+          } else {
+            console.log('No fixes needed for user:', user.uid);
+          }
+        })
+        .catch(error => {
+          console.error('Error fixing seller status:', error);
+        });
+    }
+  }, [user?.uid]);
+  
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -61,6 +87,7 @@ function App() {
             <Router>
               <div className="App min-h-screen flex flex-col bg-stone-50">
                 <ScrollToTop />
+                <SellerStatusFix />
               <Header />
               
               <main className="flex-grow">

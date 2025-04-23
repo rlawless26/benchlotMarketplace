@@ -42,10 +42,19 @@ export const createTool = async (toolData, userId) => {
       user_id: userId,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
-      status: 'active',
+      status: 'pending_images', // New detailed status system
+      statusDetails: {
+        missingImages: true,
+        lastUpdated: new Date().toISOString(),
+        note: 'Listing created without images'
+      },
       verified: false,
       featured: false,
       images: [],
+      // Make sure all required fields exist to pass isValidTool() security rule
+      name: toolData.name || '',
+      description: toolData.description || '',
+      price: parseFloat(toolData.current_price) || 0
     };
 
     const docRef = await addDoc(toolsCollection, toolWithMeta);
@@ -177,15 +186,26 @@ export const getToolById = async (toolId) => {
 /**
  * Get tools by user ID
  * @param {string} userId - The ID of the user
+ * @param {Object} options - Query options
+ * @param {string} options.status - Filter by status (active, pending_images, draft, paused, sold, deleted)
  * @returns {Promise<Array>} - Array of tool objects
  */
-export const getToolsByUserId = async (userId) => {
+export const getToolsByUserId = async (userId, options = {}) => {
   try {
-    const q = query(
-      toolsCollection, 
-      where('user_id', '==', userId),
-      orderBy('created_at', 'desc')
-    );
+    // Start with base constraints
+    let constraints = [
+      where('user_id', '==', userId)
+    ];
+    
+    // Add status filter if provided
+    if (options.status) {
+      constraints.push(where('status', '==', options.status));
+    }
+    
+    // Always sort by creation date, newest first
+    constraints.push(orderBy('created_at', 'desc'));
+    
+    const q = query(toolsCollection, ...constraints);
     
     const querySnapshot = await getDocs(q);
     const tools = [];
@@ -217,7 +237,8 @@ export const getActiveTools = async (options = {}) => {
     // Default limit to 20 items for better performance
     const itemLimit = options.limitCount || 20;
     
-    // Build query constraints - filter by active status
+    // Build query constraints - Only show tools with 'active' status
+    // This excludes pending_images, draft, deleted, sold, or paused
     let queryConstraints = [where('status', '==', 'active')];
     
     // Add category filter if provided
@@ -336,11 +357,24 @@ export const uploadToolImage = async (file, toolId) => {
       added_at: new Date().toISOString()
     };
     
-    // Update the tool with the new image
-    await updateDoc(toolRef, {
+    // Prepare update data
+    const updateData = {
       images: [...images, imageData],
       updated_at: serverTimestamp()
-    });
+    };
+    
+    // If this is the first image, update the status to active
+    if (images.length === 0) {
+      updateData.status = 'active';
+      updateData.statusDetails = {
+        missingImages: false,
+        lastUpdated: new Date().toISOString(),
+        note: 'Listing activated with images'
+      };
+    }
+    
+    // Update the tool with the new image and status
+    await updateDoc(toolRef, updateData);
     
     // If this is the first image and we now have it, send an email with the image
     if (images.length === 0) {
@@ -483,6 +517,32 @@ export const toolConditions = [
   'Poor'
 ];
 
+/**
+ * Tool status options
+ */
+export const toolStatus = {
+  // Draft: Initial state, listing creation started but not complete
+  DRAFT: 'draft',
+  
+  // Pending Images: Basic info complete but no images yet
+  PENDING_IMAGES: 'pending_images',
+  
+  // Pending Review: Complete with images but awaiting admin review (if needed)
+  PENDING_REVIEW: 'pending_review',
+  
+  // Active: Fully published and visible to buyers
+  ACTIVE: 'active',
+  
+  // Paused: Temporarily hidden by seller
+  PAUSED: 'paused',
+  
+  // Sold: Item has been sold
+  SOLD: 'sold',
+  
+  // Deleted: Soft-deleted but retained in database
+  DELETED: 'deleted'
+};
+
 export default {
   createTool,
   updateTool,
@@ -495,5 +555,6 @@ export default {
   deleteToolImage,
   searchTools,
   toolCategories,
-  toolConditions
+  toolConditions,
+  toolStatus
 };

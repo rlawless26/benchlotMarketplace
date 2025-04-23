@@ -70,6 +70,45 @@ const SellerOnboardingPage = () => {
         try {
           const status = await getConnectAccountStatus(user.uid);
           setAccountStatus(status);
+          
+          // If account is restricted and has pending requirements that match our known fixable ones
+          // (first_name, last_name, business_profile.url), attempt to fix it automatically
+          if (status && (status.status === 'restricted' || !status.detailsSubmitted) && status.requirements) {
+            const needsFirstName = status.requirements.currently_due?.includes('individual.first_name');
+            const needsLastName = status.requirements.currently_due?.includes('individual.last_name');
+            const needsUrl = status.requirements.currently_due?.includes('business_profile.url');
+            
+            if (needsFirstName || needsLastName || needsUrl) {
+              console.log('Detected fixable restrictions, attempting to update account:', {
+                needsFirstName, needsLastName, needsUrl
+              });
+              
+              try {
+                const { updateConnectAccount } = await import('../utils/stripeService');
+                
+                // Get first/last name from the user data
+                const firstName = user.firstName || (user.displayName ? user.displayName.split(' ')[0] : '');
+                const lastName = user.lastName || (user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '');
+                
+                // Update the account with missing information
+                const updateResult = await updateConnectAccount(user.uid, {
+                  firstName,
+                  lastName,
+                  // We'll provide a dummy URL that points to the seller's profile on Benchlot
+                  websiteUrl: `https://benchlot.com/sellers/${user.uid}`
+                });
+                
+                console.log('Successfully updated Stripe account with missing information:', updateResult);
+                
+                // Get a fresh status
+                const updatedStatus = await getConnectAccountStatus(user.uid);
+                setAccountStatus(updatedStatus);
+              } catch (updateError) {
+                console.error('Error fixing restricted account:', updateError);
+                // Continue with the flow, don't block on this error
+              }
+            }
+          }
         } catch (statusError) {
           console.error('Error fetching account status:', statusError);
           
@@ -109,8 +148,58 @@ const SellerOnboardingPage = () => {
         // Check if there's a pending tool listing to create
         const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
         
-        // If completed onboarding or account is active, handle accordingly
-        if (isComplete || (accountStatus && accountStatus.detailsSubmitted && accountStatus.payoutsEnabled)) {
+        // If completed onboarding or account is active, update user document and redirect
+        if (isComplete || 
+            (accountStatus && accountStatus.detailsSubmitted && accountStatus.payoutsEnabled) ||
+            // Also consider the account complete if it was restricted but we've addressed all requirements
+            (accountStatus && accountStatus.status === 'restricted' && 
+             (!accountStatus.requirements || 
+              !accountStatus.requirements.currently_due || 
+              accountStatus.requirements.currently_due.length === 0)
+            )) {
+          // Update the user document to explicitly mark them as a seller
+          try {
+            // Import necessary functions from firebase/firestore
+            const { updateDoc } = await import('firebase/firestore');
+            
+            // Reference to the user document
+            const userRef = doc(db, 'users', user.uid);
+            
+            // First check current user data to handle structure safely
+            const userSnapshot = await getDoc(userRef);
+            const userData = userSnapshot.data() || {};
+            
+            // Prepare update data with consistent structure
+            const updateData = {
+              // Keep top-level isSeller for backward compatibility
+              isSeller: true,
+              
+              // Create a structured seller object
+              seller: {
+                isSeller: true,
+                stripeStatus: 'active',
+                verified: true,
+                sellerSince: new Date().toISOString()
+              }
+            };
+            
+            // If we already have seller info, merge it rather than overwrite
+            if (userData.seller) {
+              updateData.seller = {
+                ...userData.seller,
+                ...updateData.seller
+              };
+            }
+            
+            // Update the document with the structured data
+            await updateDoc(userRef, updateData);
+            
+            console.log('User document updated with seller status after onboarding completion');
+          } catch (updateError) {
+            console.error('Error updating user seller status:', updateError);
+            // Continue with redirect even if update fails
+          }
+          
           if (pendingToolListingJSON) {
             // There's a pending tool listing - redirect to create it
             navigate('/seller/create-pending-listing');

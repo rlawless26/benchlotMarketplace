@@ -25,6 +25,7 @@ import {
   Tag,
   MessageCircle
 } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useOffers } from '../firebase/hooks/useOffers';
@@ -72,9 +73,9 @@ const MessagesPage = () => {
   // Check if user is authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated()) {
-      navigate('/login', { state: { from: '/messages' } });
+      openAuthModal('signin', '/messages');
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
   
   // Set conversation ID from URL params
   useEffect(() => {

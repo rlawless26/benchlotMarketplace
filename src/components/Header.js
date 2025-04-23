@@ -1,6 +1,6 @@
 // src/components/Header.js
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart,
   Search, 
@@ -31,8 +31,12 @@ import CartIcon from './CartIcon';
 import NotificationBadge from './NotificationBadge';
 import AuthModal from './AuthModal';
 
+// Import auth utils
+import { onAuthModalRequested, getAuthRedirectPath, clearAuthRedirectPath } from '../utils/featureFlags';
+
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,6 +48,18 @@ const Header = () => {
   const { count: wishlistCount } = useWishlist();
   const { totalCount: notificationCount } = useNotifications();
   const { hasUnreadMessages, unreadCount: messageCount } = useMessages();
+  
+  // Listen for auth modal events
+  useEffect(() => {
+    // Register for auth modal events
+    const unsubscribe = onAuthModalRequested(({ mode, redirectPath }) => {
+      // Open the auth modal with the requested mode
+      setAuthMode(mode || 'signin');
+      setAuthModalOpen(true);
+    });
+    
+    return unsubscribe; // Cleanup on unmount
+  }, []);
   
   // Create a ref for the profile menu
   const profileMenuRef = useRef(null);

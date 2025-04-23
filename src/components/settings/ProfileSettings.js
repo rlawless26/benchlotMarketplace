@@ -10,7 +10,8 @@ const ProfileSettings = ({ user }) => {
   // State
   const [profileData, setProfileData] = useState({
     displayName: '',
-    fullName: '',
+    firstName: '',
+    lastName: '',
     bio: '',
     location: '',
     email: ''
@@ -27,7 +28,8 @@ const ProfileSettings = ({ user }) => {
       console.log('User data in ProfileSettings:', JSON.stringify(user, null, 2));
       setProfileData({
         displayName: user.displayName || '',
-        fullName: user.profile?.fullName || '',
+        firstName: user.profile?.firstName || user.firstName || '',
+        lastName: user.profile?.lastName || user.lastName || '',
         bio: user.profile?.bio || '',
         location: user.profile?.location || '',
         email: user.email || ''
@@ -93,7 +95,8 @@ const ProfileSettings = ({ user }) => {
         // Always preserve the role field from the user object
         role: user.profile?.role || 'user',
         profile: {
-          fullName: profileData.fullName,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
           bio: profileData.bio,
           location: profileData.location
         }
@@ -213,22 +216,40 @@ const ProfileSettings = ({ user }) => {
           />
         </div>
         
-        {/* Full Name */}
-        <div className="mb-6">
-          <label
-            htmlFor="fullName"
-            className="block text-sm font-medium text-stone-700 mb-1"
-          >
-            Full Name
-          </label>
-          <input
-            type="text"
-            id="fullName"
-            name="fullName"
-            value={profileData.fullName}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
-          />
+        {/* First and Last Name */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-stone-700 mb-1"
+            >
+              First Name
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={profileData.firstName}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-stone-700 mb-1"
+            >
+              Last Name
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              value={profileData.lastName}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            />
+          </div>
         </div>
         
         {/* Location */}

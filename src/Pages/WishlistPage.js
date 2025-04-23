@@ -8,6 +8,7 @@ import { Heart, Loader, AlertCircle, ShoppingBag, Search } from 'lucide-react';
 import { useWishlist } from '../firebase/hooks/useWishlist';
 import { useAuth } from '../firebase/hooks/useAuth';
 import WishlistToolCard from '../components/WishlistToolCard';
+import { openAuthModal } from '../utils/featureFlags';
 
 const WishlistPage = () => {
   const { wishlistItems, loading, error, removeFromWishlist } = useWishlist();
@@ -21,9 +22,9 @@ const WishlistPage = () => {
   // Check authentication on mount
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: '/wishlist' } });
+      openAuthModal('signin', '/wishlist');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated]);
 
   // Filter and sort wishlist items
   const filteredItems = wishlistItems

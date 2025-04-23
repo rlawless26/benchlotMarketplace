@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { createConnectAccount } from '../utils/stripeService';
+import { openAuthModal } from '../utils/featureFlags';
 
 /**
  * Seller Signup Page
@@ -13,6 +14,8 @@ const SellerSignupPage = () => {
   const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     sellerName: '',
     sellerBio: '',
     location: 'Boston, MA',
@@ -36,16 +39,31 @@ const SellerSignupPage = () => {
     }
     
     if (!user) {
-      console.log('SellerSignupPage - No user, redirecting to login');
-      navigate('/login', { state: { from: '/seller/signup' } });
+      console.log('SellerSignupPage - No user, opening auth modal');
+      openAuthModal('signin', '/seller/signup');
       return;
     }
     
     console.log('SellerSignupPage - User authenticated:', user.uid);
     
     // Pre-fill form with user data if available
+    // If user has a displayName, try to split it into firstName and lastName
+    let firstName = '';
+    let lastName = '';
+    
+    if (user.profile?.firstName && user.profile?.lastName) {
+      firstName = user.profile.firstName;
+      lastName = user.profile.lastName;
+    } else if (user.displayName) {
+      const nameParts = user.displayName.split(' ');
+      firstName = nameParts[0] || '';
+      lastName = nameParts.slice(1).join(' ') || '';
+    }
+    
     setFormData(prev => ({
       ...prev,
+      firstName,
+      lastName,
       sellerName: user.profile?.displayName || user.displayName || '',
       contactEmail: user.email || '',
     }));
@@ -111,6 +129,38 @@ const SellerSignupPage = () => {
           
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
+              {/* First and Last Name Fields - Required for Stripe */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1" htmlFor="firstName">
+                    First Name*
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1" htmlFor="lastName">
+                    Last Name*
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                    required
+                  />
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-gray-700 font-medium mb-1" htmlFor="sellerName">
                   Seller Name*

@@ -13,6 +13,7 @@ import {
   getWishlistWithDetails,
   subscribeToWishlist
 } from '../models/wishlistModel';
+import { openAuthModal } from '../../utils/featureFlags';
 
 export const useWishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -71,7 +72,7 @@ export const useWishlist = () => {
   // Add a tool to the wishlist
   const addToWishlistHandler = useCallback(async (toolId) => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: `/tools/${toolId}` } });
+      openAuthModal('signin', `/tools/${toolId}`);
       return { success: false, error: 'Please login to save tools' };
     }
     
@@ -106,7 +107,7 @@ export const useWishlist = () => {
   // Toggle a tool in the wishlist (add if not present, remove if present)
   const toggleWishlistHandler = useCallback(async (toolId) => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { from: `/tools/${toolId}` } });
+      openAuthModal('signin', `/tools/${toolId}`);
       return { success: false, error: 'Please login to save tools' };
     }
     

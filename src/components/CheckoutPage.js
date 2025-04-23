@@ -8,18 +8,19 @@ import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
 import StripeCheckout from './StripeCheckout';
 import { ShieldCheck, Lock, CreditCard, ArrowLeft } from 'lucide-react';
+import { openAuthModal } from '../utils/featureFlags';
 
 const CheckoutPage = () => {
   const { cart, loading, error } = useCart();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   
-  // Redirect to login if not authenticated - using useEffect to avoid setState during render
+  // Open auth modal if not authenticated - using useEffect to avoid setState during render
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login', { state: { redirect: '/checkout' } });
+      openAuthModal('signin', '/checkout');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated]);
   
   // Redirect to cart if cart is empty
   useEffect(() => {

@@ -21,12 +21,42 @@ export function SellerProvider({ children }) {
     console.log('SellerProvider - User state changed:', { 
       hasUser: !!user, 
       isAuthenticated: !!user,
-      isSeller: user?.profile?.isSeller
+      profileIsSeller: user?.profile?.isSeller,
+      topLevelIsSeller: user?.isSeller,
+      hasBankAccount: user?.hasBankAccount,
+      verified: user?.verified
     });
     
-    if (user && user.profile && user.profile.isSeller) {
+    // Check for seller status in multiple possible locations
+    const userIsSeller = user?.isSeller === true || 
+                         user?.seller?.isSeller === true || 
+                         (user?.seller?.hasBankAccount === true && user?.seller?.verified === true);
+    
+    if (user && userIsSeller) {
       console.log('SellerProvider - User is a seller, fetching status');
       getSellerStatus();
+      
+      // If seller object is missing but isSeller is true at top level, update the document
+      if (user.isSeller === true && !user.seller?.isSeller) {
+        console.log('SellerProvider - Fixing missing seller object structure');
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          updateDoc(userRef, {
+            'seller': {
+              isSeller: true,
+              stripeStatus: user.stripeStatus || 'active',
+              verified: user.verified || true,
+              sellerSince: user.sellerSince || new Date().toISOString()
+            }
+          }).then(() => {
+            console.log('SellerProvider - Updated seller object structure successfully');
+          }).catch(err => {
+            console.error('SellerProvider - Error updating seller object structure:', err);
+          });
+        } catch (err) {
+          console.error('SellerProvider - Error preparing to update seller object structure:', err);
+        }
+      }
     } else {
       console.log('SellerProvider - User is not a seller or no user, clearing status');
       setSellerStatus(null);
@@ -60,18 +90,32 @@ export function SellerProvider({ children }) {
           email: user.email,
           displayName: user.displayName || sellerData.sellerName || user.email.split('@')[0],
           createdAt: new Date().toISOString(),
-          profile: {
-            fullName: sellerData.sellerName || user.displayName || '',
-            location: sellerData.location || '',
-          },
           // Add seller-specific fields that will be updated by the API
           sellerName: sellerData.sellerName || user.displayName || user.email.split('@')[0],
           sellerType: sellerData.sellerType || 'individual',
           contactEmail: sellerData.contactEmail || user.email,
           contactPhone: sellerData.contactPhone || '',
           sellerBio: sellerData.sellerBio || '',
-          // We'll set this to true once the Stripe account is created
-          isSeller: false
+          // Allow caller to explicitly set seller status flags, otherwise start as false
+          isSeller: sellerData.isSeller === true || false,
+          // Set role explicitly to satisfy security rules
+          role: 'seller',
+          // Create the profile object with seller status
+          profile: {
+            fullName: sellerData.sellerName || user.displayName || '',
+            location: sellerData.location || '',
+            // Add first and last name fields to profile
+            firstName: sellerData.firstName || user.displayName?.split(' ')[0] || '',
+            lastName: sellerData.lastName || (user.displayName?.split(' ').slice(1).join(' ')) || '',
+            // Include seller status in profile for newer code
+            isSeller: sellerData['profile.isSeller'] === true || sellerData.isSeller === true || false
+          },
+          // Create the seller object with the new structure
+          seller: {
+            isSeller: sellerData.isSeller === true || false,
+            sellerType: sellerData.sellerType || 'individual',
+            sellerSince: new Date().toISOString()
+          }
         };
         
         // Create the user document
@@ -87,7 +131,25 @@ export function SellerProvider({ children }) {
           location: sellerData.location || '',
           contactEmail: sellerData.contactEmail || user.email,
           contactPhone: sellerData.contactPhone || '',
-          sellerBio: sellerData.sellerBio || ''
+          sellerBio: sellerData.sellerBio || '',
+          // Set seller status flags if provided
+          ...(sellerData.isSeller === true ? { isSeller: true } : {}),
+          // Update profile fields
+          ...(sellerData.firstName || sellerData.lastName ? {
+            'profile.firstName': sellerData.firstName || user.displayName?.split(' ')[0] || '',
+            'profile.lastName': sellerData.lastName || (user.displayName?.split(' ').slice(1).join(' ')) || '',
+          } : {}),
+          // Update profile.isSeller if provided
+          ...(sellerData['profile.isSeller'] === true || sellerData.isSeller === true ? 
+              { 'profile.isSeller': true } : {}),
+          // Update the role to seller
+          role: 'seller',
+          // Create or update the seller object with the new structure
+          seller: {
+            isSeller: true,
+            sellerType: sellerData.sellerType || 'individual',
+            sellerSince: new Date().toISOString()
+          }
         });
       }
       
@@ -250,22 +312,60 @@ export function SellerProvider({ children }) {
   
   // Check if the current user is a seller
   const isSeller = () => {
-    const result = !!(user?.profile?.isSeller || user?.isSeller || user?.stripeStatus === 'active');
-    console.log('isSeller check:', { result, user: !!user });
+    const result = !!(
+      user?.seller?.isSeller === true || 
+      user?.isSeller === true || 
+      user?.seller?.stripeStatus === 'active' ||
+      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true)
+    );
+    console.log('isSeller check:', { 
+      result, 
+      user: !!user,
+      sellerIsSeller: user?.seller?.isSeller,
+      topLevelIsSeller: user?.isSeller,
+      sellerStripeStatus: user?.seller?.stripeStatus,
+      hasBankAccount: user?.seller?.hasBankAccount,
+      verified: user?.seller?.verified
+    });
     return result;
   };
   
   // Check if the seller has completed onboarding
   const isOnboardingComplete = () => {
-    const result = !!(sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled);
-    console.log('isOnboardingComplete check:', { result, sellerStatus: !!sellerStatus });
+    // Consider onboarding complete if either:
+    // 1. Stripe sellerStatus shows details submitted and payouts enabled
+    // 2. User has verified bank account and is marked as verified in Firestore
+    // 3. User has active stripeStatus
+    const result = !!(
+      (sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled) ||
+      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true) ||
+      user?.seller?.stripeStatus === 'active'
+    );
+    console.log('isOnboardingComplete check:', { 
+      result, 
+      sellerStatus: !!sellerStatus,
+      detailsSubmitted: sellerStatus?.detailsSubmitted,
+      payoutsEnabled: sellerStatus?.payoutsEnabled,
+      hasBankAccount: user?.seller?.hasBankAccount,
+      verified: user?.seller?.verified,
+      stripeStatus: user?.seller?.stripeStatus
+    });
     return result;
   };
   
   // Context value
   const value = {
-    isSeller: user?.profile?.isSeller || user?.isSeller || user?.stripeStatus === 'active' || false,
-    isOnboardingComplete: !!(sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled) || user?.stripeStatus === 'active',
+    isSeller: !!(
+      user?.seller?.isSeller === true || 
+      user?.isSeller === true || 
+      user?.seller?.stripeStatus === 'active' ||
+      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true)
+    ),
+    isOnboardingComplete: !!(
+      (sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled) ||
+      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true) ||
+      user?.seller?.stripeStatus === 'active'
+    ),
     sellerStatus,
     isLoading,
     error,
