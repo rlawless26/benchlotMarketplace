@@ -815,22 +815,43 @@ app.post('/stripe-webhook', async (req, res) => {
   console.log('Received webhook from Stripe');
   
   try {
-    // Verify the webhook signature
-    const endpointSecret = getConfig(
+    // Get both webhook secrets
+    const paymentWebhookSecret = getConfig(
       'stripe.webhook_secret',
       'STRIPE_WEBHOOK_SECRET',
       'whsec_test' // Fallback for local testing only
     );
     
+    const connectWebhookSecret = getConfig(
+      'stripe.connect_webhook_secret',
+      'STRIPE_CONNECT_WEBHOOK_SECRET',
+      'whsec_test' // Fallback for local testing only
+    );
+    
+    // Try verifying with payment webhook secret first
     try {
       event = stripe.webhooks.constructEvent(
         req.rawBody || req.body,
         signature,
-        endpointSecret
+        paymentWebhookSecret
       );
-    } catch (signatureError) {
-      console.error('Webhook signature verification failed:', signatureError.message);
-      return res.status(400).send(`Webhook signature verification failed: ${signatureError.message}`);
+      console.log('✅ Webhook verified with payment webhook secret');
+    } catch (paymentError) {
+      // If that fails, try with connected account webhook secret
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.rawBody || req.body,
+          signature,
+          connectWebhookSecret
+        );
+        console.log('✅ Webhook verified with connect webhook secret');
+      } catch (connectError) {
+        // If both fail, return error
+        console.error('❌ Webhook signature verification failed for both secrets');
+        console.error('Payment webhook error:', paymentError.message);
+        console.error('Connect webhook error:', connectError.message);
+        return res.status(400).send(`Webhook Error: ${paymentError.message}`);
+      }
     }
     
     console.log(`Webhook event type: ${event.type}`);
