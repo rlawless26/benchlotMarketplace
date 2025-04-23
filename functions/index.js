@@ -58,16 +58,33 @@ const db = admin.firestore();
 // Initialize Stripe with error handling
 let stripe;
 try {
-  // Get Stripe secret key from config or environment
-  const stripeSecret = getConfig(
-    'stripe.secret', 
-    'STRIPE_SECRET_KEY',
-    'sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS'
-  );
+  // For Firebase Functions v2, we need to use environment variables
+  // These should be automatically populated from the Firebase config
+  const stripeKey = process.env.STRIPE_SECRET || process.env.STRIPE_SECRET_KEY;
   
-  stripe = require('stripe')(stripeSecret);
+  if (stripeKey) {
+    console.log('Using Stripe key from environment variable:', 
+      process.env.STRIPE_SECRET ? 'STRIPE_SECRET' : 'STRIPE_SECRET_KEY');
+    
+    console.log('Key type:', stripeKey.startsWith('sk_live') ? 'LIVE MODE' : 'TEST MODE');
+    console.log('Key prefix:', stripeKey.substring(0, 10) + '...');
+    
+    // Force live key for production
+    if (process.env.NODE_ENV === 'production' && !stripeKey.startsWith('sk_live')) {
+      console.warn('⚠️ WARNING: Not using a live key in production!');
+    }
+    
+    stripe = require('stripe')(stripeKey);
+  } 
+  // Last resort fallback - this should only happen in development
+  else {
+    console.warn('⚠️ No Stripe key found in environment, falling back to hardcoded test key');
+    console.warn('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
+    stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
+  }
 } catch (error) {
   console.error('Error initializing Stripe:', error);
+  console.warn('⚠️ FALLING BACK TO TEST MODE - THIS SHOULD NOT HAPPEN IN PRODUCTION');
   stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
 }
 
@@ -815,18 +832,13 @@ app.post('/stripe-webhook', async (req, res) => {
   console.log('Received webhook from Stripe');
   
   try {
-    // Get both webhook secrets
-    const paymentWebhookSecret = getConfig(
-      'stripe.webhook_secret',
-      'STRIPE_WEBHOOK_SECRET',
-      'whsec_test' // Fallback for local testing only
-    );
+    // Get both webhook secrets from environment variables
+    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
+    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 'whsec_test';
     
-    const connectWebhookSecret = getConfig(
-      'stripe.connect_webhook_secret',
-      'STRIPE_CONNECT_WEBHOOK_SECRET',
-      'whsec_test' // Fallback for local testing only
-    );
+    console.log('Webhook secrets available:', 
+      paymentWebhookSecret !== 'whsec_test' ? 'Payment webhook ✓' : 'Payment webhook ✘',
+      connectWebhookSecret !== 'whsec_test' ? 'Connect webhook ✓' : 'Connect webhook ✘');
     
     // Try verifying with payment webhook secret first
     try {
