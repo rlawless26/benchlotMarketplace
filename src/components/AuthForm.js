@@ -296,16 +296,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
             >
               Sign Up
             </button>
-            <button 
-              onClick={() => setAuthMode('reset')}
-              className={`px-4 py-2 font-medium transition-colors duration-200 ${
-                authMode === 'reset' 
-                  ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                  : 'text-gray-500 hover:text-benchlot-primary'
-              }`}
-            >
-              Reset Password
-            </button>
           </div>
           
           {/* Divider below tabs */}
@@ -459,7 +449,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                     />
                   </div>
                 </div>
-                
                 <div className="form-group">
                   <label htmlFor="signup-email" className="form-label">
                     Email
@@ -473,7 +462,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                     required
                   />
                 </div>
-                
                 <div className="form-group">
                   <label htmlFor="signup-password" className="form-label">
                     Password
@@ -488,7 +476,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                     minLength="8"
                   />
                 </div>
-                
                 <div className="form-group">
                   <label htmlFor="password-confirm" className="form-label">
                     Confirm Password
@@ -502,7 +489,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                     required
                   />
                 </div>
-                
                 <div className="form-group">
                   <div className="flex items-start">
                     <input
