@@ -1,16 +1,18 @@
 /**
  * Add To Cart Button Component
- * Button for adding tools to the cart
+ * Button for adding tools to the cart for both authenticated and guest users
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
 import { openAuthModal } from '../utils/featureFlags';
+import { useNotificationContext } from '../context/NotificationContext';
 
 const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1 }) => {
   const { isAuthenticated } = useAuth();
   const { addToCart, isItemInCart } = useCart();
+  const { showNotification } = useNotificationContext();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -18,11 +20,7 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
   const inCart = isItemInCart(tool.id);
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated()) {
-      openAuthModal('signin', `/tools/${tool.id}`);
-      return;
-    }
-
+    // If item is already in cart, navigate to cart page
     if (inCart) {
       navigate('/cart');
       return;
@@ -38,6 +36,16 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
         imageUrl: tool.images && tool.images.length > 0 ? tool.images[0].url : null
       });
       setSuccess(true);
+      
+      // Show mini-cart notification
+      showNotification({
+        title: "Added to Cart",
+        message: `${tool.name} has been added to your cart`,
+        type: "cart",
+        link: "/cart",
+        image: tool.images && tool.images.length > 0 ? tool.images[0].url : null,
+        price: tool.current_price || tool.price
+      });
       
       // Reset success state after 2 seconds
       setTimeout(() => {

@@ -1,6 +1,6 @@
 /**
  * Firebase Cart Model
- * Handles shopping cart operations with Firestore
+ * Handles shopping cart operations with Firestore and LocalStorage for guest users
  */
 import { 
   collection, 
@@ -22,12 +22,20 @@ import { db } from '../config';
 // Collection references
 const cartsCollection = collection(db, 'carts');
 
+// Local storage key for guest cart
+const GUEST_CART_KEY = 'benchlot_guest_cart';
+
 /**
- * Get or create a cart for a user
- * @param {string} userId - The user ID
+ * Get or create a cart for a user (authenticated or guest)
+ * @param {string|null} userId - The user ID (null for guest users)
  * @returns {Promise<Object>} - The cart object
  */
 export const getOrCreateCart = async (userId) => {
+  // If no userId is provided, use localStorage-based guest cart
+  if (!userId) {
+    return getOrCreateGuestCart();
+  }
+
   try {
     // Check if the user has an active cart
     const q = query(
@@ -122,12 +130,60 @@ export const getOrCreateCart = async (userId) => {
 };
 
 /**
- * Add an item to the cart
+ * Get or create a guest cart from localStorage
+ * @returns {Object} - The guest cart object
+ */
+export const getOrCreateGuestCart = () => {
+  try {
+    // Check if a guest cart exists in localStorage
+    const existingCart = localStorage.getItem(GUEST_CART_KEY);
+    
+    if (existingCart) {
+      return JSON.parse(existingCart);
+    }
+    
+    // Create a new guest cart if none exists
+    const guestCart = {
+      id: 'guest-cart',
+      status: 'active',
+      itemCount: 0,
+      totalAmount: 0,
+      items: [],
+      isGuestCart: true, // Important flag to identify guest carts
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Save to localStorage
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(guestCart));
+    
+    return guestCart;
+  } catch (error) {
+    console.error('Error accessing localStorage for guest cart:', error);
+    // Return an in-memory cart if localStorage fails
+    return {
+      id: 'guest-cart',
+      status: 'active',
+      itemCount: 0,
+      totalAmount: 0,
+      items: [],
+      isGuestCart: true
+    };
+  }
+};
+
+/**
+ * Add an item to the cart (works for both authenticated and guest users)
  * @param {string} cartId - The cart ID
  * @param {Object} item - The item to add (must include toolId, price, name)
  * @returns {Promise<Object>} - The updated cart
  */
 export const addItemToCart = async (cartId, item) => {
+  // Handle guest cart case
+  if (cartId === 'guest-cart' || item.isGuestCart) {
+    return addItemToGuestCart(item);
+  }
+
   try {
     const itemsCollection = collection(db, 'carts', cartId, 'items');
     
@@ -171,13 +227,64 @@ export const addItemToCart = async (cartId, item) => {
 };
 
 /**
- * Update item quantity in the cart
+ * Add an item to the guest cart
+ * @param {Object} item - The item to add
+ * @returns {Object} - The updated guest cart
+ */
+export const addItemToGuestCart = (item) => {
+  try {
+    // Get current guest cart
+    const cart = getOrCreateGuestCart();
+    
+    // Check if the item is already in the cart
+    const existingItemIndex = cart.items.findIndex(i => i.toolId === item.toolId);
+    
+    if (existingItemIndex !== -1) {
+      // Item exists, update quantity
+      cart.items[existingItemIndex].quantity += (item.quantity || 1);
+    } else {
+      // Add new item with a unique ID
+      const newItem = {
+        id: `guest-item-${Date.now()}`,
+        toolId: item.toolId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity || 1,
+        imageUrl: item.imageUrl || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      cart.items.push(newItem);
+    }
+    
+    // Update cart totals
+    updateGuestCartTotals(cart);
+    
+    // Save updated cart to localStorage
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+    
+    return cart;
+  } catch (error) {
+    console.error('Error adding item to guest cart:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update item quantity in the cart (works for both authenticated and guest users)
  * @param {string} cartId - The cart ID
  * @param {string} itemId - The item ID
  * @param {number} quantity - The new quantity
+ * @param {string|null} userId - The user ID (null for guest users)
  * @returns {Promise<Object>} - The updated cart
  */
 export const updateCartItemQuantity = async (cartId, itemId, quantity, userId) => {
+  // Handle guest cart case
+  if (cartId === 'guest-cart' || !userId) {
+    return updateGuestCartItemQuantity(itemId, quantity);
+  }
+
   try {
     const itemRef = doc(db, 'carts', cartId, 'items', itemId);
     
@@ -204,12 +311,59 @@ export const updateCartItemQuantity = async (cartId, itemId, quantity, userId) =
 };
 
 /**
- * Remove item from cart
+ * Update item quantity in the guest cart
+ * @param {string} itemId - The item ID
+ * @param {number} quantity - The new quantity
+ * @returns {Object} - The updated guest cart
+ */
+export const updateGuestCartItemQuantity = (itemId, quantity) => {
+  try {
+    // Get current guest cart
+    const cart = getOrCreateGuestCart();
+    
+    // Find the item to update
+    const itemIndex = cart.items.findIndex(item => item.id === itemId);
+    
+    if (itemIndex === -1) {
+      console.error(`Item ${itemId} not found in guest cart`);
+      return cart;
+    }
+    
+    if (quantity <= 0) {
+      // Remove the item if quantity is 0 or negative
+      cart.items.splice(itemIndex, 1);
+    } else {
+      // Update the quantity
+      cart.items[itemIndex].quantity = quantity;
+      cart.items[itemIndex].updatedAt = new Date().toISOString();
+    }
+    
+    // Update cart totals
+    updateGuestCartTotals(cart);
+    
+    // Save updated cart to localStorage
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+    
+    return cart;
+  } catch (error) {
+    console.error('Error updating guest cart item quantity:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove item from cart (works for both authenticated and guest users)
  * @param {string} cartId - The cart ID
  * @param {string} itemId - The item ID to remove
+ * @param {string|null} userId - The user ID (null for guest users)
  * @returns {Promise<Object>} - The updated cart
  */
 export const removeCartItem = async (cartId, itemId, userId) => {
+  // Handle guest cart case
+  if (cartId === 'guest-cart' || !userId) {
+    return removeGuestCartItem(itemId);
+  }
+
   try {
     const itemRef = doc(db, 'carts', cartId, 'items', itemId);
     await deleteDoc(itemRef);
@@ -226,11 +380,47 @@ export const removeCartItem = async (cartId, itemId, userId) => {
 };
 
 /**
- * Clear all items from the cart
+ * Remove item from guest cart
+ * @param {string} itemId - The item ID to remove
+ * @returns {Object} - The updated guest cart
+ */
+export const removeGuestCartItem = (itemId) => {
+  try {
+    // Get current guest cart
+    const cart = getOrCreateGuestCart();
+    
+    // Find and remove the item
+    const itemIndex = cart.items.findIndex(item => item.id === itemId);
+    
+    if (itemIndex !== -1) {
+      cart.items.splice(itemIndex, 1);
+      
+      // Update cart totals
+      updateGuestCartTotals(cart);
+      
+      // Save updated cart to localStorage
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+    }
+    
+    return cart;
+  } catch (error) {
+    console.error('Error removing guest cart item:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clear all items from the cart (works for both authenticated and guest users)
  * @param {string} cartId - The cart ID
+ * @param {string|null} userId - The user ID (null for guest users)
  * @returns {Promise<Object>} - The updated cart
  */
 export const clearCart = async (cartId, userId) => {
+  // Handle guest cart case
+  if (cartId === 'guest-cart' || !userId) {
+    return clearGuestCart();
+  }
+
   try {
     const itemsCollection = collection(db, 'carts', cartId, 'items');
     const itemsSnapshot = await getDocs(itemsCollection);
@@ -261,11 +451,44 @@ export const clearCart = async (cartId, userId) => {
 };
 
 /**
- * Get a cart by ID
+ * Clear all items from the guest cart
+ * @returns {Object} - The updated guest cart
+ */
+export const clearGuestCart = () => {
+  try {
+    // Create an empty guest cart
+    const emptyCart = {
+      id: 'guest-cart',
+      status: 'active',
+      itemCount: 0,
+      totalAmount: 0,
+      items: [],
+      isGuestCart: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Save to localStorage
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(emptyCart));
+    
+    return emptyCart;
+  } catch (error) {
+    console.error('Error clearing guest cart:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a cart by ID (works for both authenticated and guest carts)
  * @param {string} cartId - The cart ID
  * @returns {Promise<Object>} - The cart object with items
  */
 export const getCartById = async (cartId) => {
+  // Handle guest cart case
+  if (cartId === 'guest-cart') {
+    return getOrCreateGuestCart();
+  }
+
   try {
     const cartRef = doc(db, 'carts', cartId);
     const cartDoc = await getDoc(cartRef);
@@ -355,12 +578,74 @@ export const updateCartTotals = async (cartId) => {
   }
 };
 
+/**
+ * Calculate and update guest cart totals
+ * @param {Object} cart - The guest cart object to update
+ * @returns {Object} - The updated guest cart
+ */
+export const updateGuestCartTotals = (cart) => {
+  let totalAmount = 0;
+  let itemCount = 0;
+  
+  cart.items.forEach(item => {
+    if (item.price && item.quantity) {
+      totalAmount += item.price * item.quantity;
+      itemCount += item.quantity;
+    }
+  });
+  
+  cart.totalAmount = totalAmount;
+  cart.itemCount = itemCount;
+  cart.updatedAt = new Date().toISOString();
+  
+  return cart;
+};
+
+/**
+ * Migrate a guest cart to a user's cart after login/registration
+ * @param {string} userId - The user ID
+ * @returns {Promise<Object|null>} - The migrated cart or null if no migration needed
+ */
+export const migrateGuestCart = async (userId) => {
+  try {
+    // Get the guest cart from localStorage
+    const guestCart = getOrCreateGuestCart();
+    
+    // If the guest cart is empty, no need to migrate
+    if (!guestCart.items || guestCart.items.length === 0) {
+      return null;
+    }
+    
+    // Get or create the user's cart
+    const userCart = await getOrCreateCart(userId);
+    
+    // Add each item from the guest cart to the user's cart
+    for (const item of guestCart.items) {
+      await addItemToCart(userCart.id, {
+        ...item,
+        userId
+      });
+    }
+    
+    // Clear the guest cart after migration
+    clearGuestCart();
+    
+    // Return the updated user cart
+    return getOrCreateCart(userId);
+  } catch (error) {
+    console.error('Error migrating guest cart:', error);
+    return null;
+  }
+};
+
 export default {
   getOrCreateCart,
+  getOrCreateGuestCart,
   addItemToCart,
   updateCartItemQuantity,
   removeCartItem,
   clearCart,
   getCartById,
-  updateCartTotals
+  updateCartTotals,
+  migrateGuestCart
 };

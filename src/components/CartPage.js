@@ -1,12 +1,13 @@
 /**
  * Cart Page Component
  * Displays the user's shopping cart with improved UX and trust signals
+ * Supports both authenticated and guest users
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
-import { ShieldCheck, ArrowLeft, Trash2, Lock } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Trash2, Lock, UserPlus, LogIn } from 'lucide-react';
 import { openAuthModal } from '../utils/featureFlags';
 
 const CartPage = () => {
@@ -14,14 +15,6 @@ const CartPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  
-  // Redirect to login if not authenticated - using useEffect to avoid setState during render
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      // Use auth modal instead of redirect to login page
-      openAuthModal('signin', '/cart');
-    }
-  }, [isAuthenticated]);
   
   // Format price as USD
   const formatPrice = (price) => {
@@ -50,13 +43,29 @@ const CartPage = () => {
     return subtotal * 0.0825;
   };
   
-  // Navigate to checkout
+  // Handle different checkout paths
   const handleCheckout = () => {
     setCheckoutLoading(true);
-    setTimeout(() => {
+    
+    if (isAuthenticated()) {
+      // Authenticated user - proceed to checkout
       navigate('/checkout');
-      setCheckoutLoading(false);
-    }, 300);
+    } else {
+      // Guest user - proceed to guest checkout
+      navigate('/checkout');
+    }
+    
+    setCheckoutLoading(false);
+  };
+  
+  // Handle login for checkout
+  const handleLoginForCheckout = () => {
+    openAuthModal('signin', '/checkout');
+  };
+  
+  // Handle signup for checkout
+  const handleSignupForCheckout = () => {
+    openAuthModal('signup', '/checkout');
   };
   
   if (loading && !cart) {
@@ -243,26 +252,80 @@ const CartPage = () => {
             </div>
             
             <div className="p-6">
-              <button
-                onClick={handleCheckout}
-                disabled={checkoutLoading}
-                className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex items-center whitespace-nowrap"
-              >
-                {checkoutLoading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  <>
-                    Proceed to Checkout
-                    <Lock className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </button>
+              {/* Different options based on authentication status */}
+              {isAuthenticated() ? (
+                /* Authenticated User - Regular checkout button */
+                <button
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex items-center whitespace-nowrap"
+                >
+                  {checkoutLoading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    <>
+                      Proceed to Checkout
+                      <Lock className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              ) : (
+                /* Guest User - Multiple checkout options */
+                <div className="space-y-4">
+                  {/* Guest Checkout Button */}
+                  <button
+                    onClick={handleCheckout}
+                    disabled={checkoutLoading}
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex items-center whitespace-nowrap"
+                  >
+                    {checkoutLoading ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : (
+                      <>
+                        Continue as Guest
+                        <Lock className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                  
+                  {/* Or Divider */}
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-stone-300"></div>
+                    <span className="flex-shrink mx-4 text-stone-500 text-sm">or</span>
+                    <div className="flex-grow border-t border-stone-300"></div>
+                  </div>
+                  
+                  {/* Sign In Button */}
+                  <button
+                    onClick={handleLoginForCheckout}
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-white border border-benchlot-primary text-benchlot-primary hover:bg-benchlot-accent-light justify-center flex items-center whitespace-nowrap"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In to Checkout
+                  </button>
+                  
+                  {/* Create Account Button */}
+                  <button
+                    onClick={handleSignupForCheckout}
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 justify-center flex items-center whitespace-nowrap"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create an Account
+                  </button>
+                </div>
+              )}
               
               {/* Trust Signals */}
               <div className="mt-6 pt-6 border-t border-stone-200">

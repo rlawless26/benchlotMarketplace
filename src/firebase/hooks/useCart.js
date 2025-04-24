@@ -1,6 +1,6 @@
 /**
  * Cart Hook for Firebase
- * Provides cart functionality throughout the app
+ * Provides cart functionality throughout the app for both authenticated and guest users
  */
 import { useState, useEffect, useContext, createContext } from 'react';
 import { useAuth } from './useAuth';
@@ -9,7 +9,8 @@ import {
   addItemToCart, 
   updateCartItemQuantity, 
   removeCartItem, 
-  clearCart 
+  clearCart,
+  migrateGuestCart
 } from '../models/cartModel';
 
 // Create context
@@ -24,29 +25,37 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load or create cart when user authenticates
+  // Load or create cart when user authenticates or as a guest
   useEffect(() => {
     const loadCart = async () => {
-      // Debug logging
-      console.log("useCart - Auth check:", { isAuthenticated: isAuthenticated(), userId: user?.uid });
-      
-      if (!isAuthenticated() || !user) {
-        console.log("useCart - User not authenticated, setting cart to null");
-        setCart(null);
-        setLoading(false);
-        return;
-      }
-
       try {
-        console.log("useCart - Loading cart for user:", user.uid);
         setLoading(true);
-        const userCart = await getOrCreateCart(user.uid);
-        console.log("useCart - Cart loaded:", userCart);
-        setCart(userCart);
+        
+        if (isAuthenticated() && user) {
+          console.log("useCart - Loading cart for authenticated user:", user.uid);
+          
+          // Check if we need to migrate a guest cart to the user's cart
+          const migratedCart = await migrateGuestCart(user.uid);
+          
+          if (migratedCart) {
+            console.log("useCart - Migrated guest cart to user cart");
+            setCart(migratedCart);
+          } else {
+            // No migration needed, just get the user's cart
+            const userCart = await getOrCreateCart(user.uid);
+            console.log("useCart - Cart loaded:", userCart);
+            setCart(userCart);
+          }
+        } else {
+          // Use guest cart for unauthenticated users
+          console.log("useCart - Loading guest cart");
+          const guestCart = await getOrCreateCart(null);
+          setCart(guestCart);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error loading cart:', err);
-        console.log("useCart - Error details:", { message: err.message, code: err.code });
         setError('Failed to load your cart. Please try again.');
       } finally {
         setLoading(false);
@@ -57,22 +66,29 @@ export function CartProvider({ children }) {
   }, [user, isAuthenticated]);
 
   /**
-   * Add an item to the cart
+   * Add an item to the cart (works for both authenticated and guest users)
    * @param {Object} item - The item to add
    */
   const addToCart = async (item) => {
-    if (!isAuthenticated() || !user || !cart) {
-      setError('You must be logged in to add items to your cart');
-      return;
-    }
-
     try {
       setLoading(true);
-      const updatedCart = await addItemToCart(cart.id, {
-        ...item,
-        userId: user.uid
-      });
-      setCart(updatedCart);
+      
+      if (isAuthenticated() && user) {
+        // Authenticated user - use Firebase
+        const updatedCart = await addItemToCart(cart.id, {
+          ...item,
+          userId: user.uid
+        });
+        setCart(updatedCart);
+      } else {
+        // Guest user - use localStorage
+        const updatedCart = await addItemToCart('guest-cart', {
+          ...item,
+          isGuestCart: true
+        });
+        setCart(updatedCart);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error adding item to cart:', err);
@@ -88,15 +104,19 @@ export function CartProvider({ children }) {
    * @param {number} quantity - The new quantity
    */
   const updateItemQuantity = async (itemId, quantity) => {
-    if (!isAuthenticated() || !user || !cart) {
-      setError('You must be logged in to update your cart');
-      return;
-    }
-
     try {
       setLoading(true);
-      const updatedCart = await updateCartItemQuantity(cart.id, itemId, quantity, user.uid);
-      setCart(updatedCart);
+      
+      if (isAuthenticated() && user && !cart.isGuestCart) {
+        // Authenticated user - use Firebase
+        const updatedCart = await updateCartItemQuantity(cart.id, itemId, quantity, user.uid);
+        setCart(updatedCart);
+      } else {
+        // Guest user - use localStorage
+        const updatedCart = await updateCartItemQuantity('guest-cart', itemId, quantity, null);
+        setCart(updatedCart);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error updating cart item:', err);
@@ -111,15 +131,19 @@ export function CartProvider({ children }) {
    * @param {string} itemId - The item ID to remove
    */
   const removeItem = async (itemId) => {
-    if (!isAuthenticated() || !user || !cart) {
-      setError('You must be logged in to update your cart');
-      return;
-    }
-
     try {
       setLoading(true);
-      const updatedCart = await removeCartItem(cart.id, itemId, user.uid);
-      setCart(updatedCart);
+      
+      if (isAuthenticated() && user && !cart.isGuestCart) {
+        // Authenticated user - use Firebase
+        const updatedCart = await removeCartItem(cart.id, itemId, user.uid);
+        setCart(updatedCart);
+      } else {
+        // Guest user - use localStorage
+        const updatedCart = await removeCartItem('guest-cart', itemId, null);
+        setCart(updatedCart);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error removing cart item:', err);
@@ -133,15 +157,19 @@ export function CartProvider({ children }) {
    * Empty the cart
    */
   const emptyCart = async () => {
-    if (!isAuthenticated() || !user || !cart) {
-      setError('You must be logged in to update your cart');
-      return;
-    }
-
     try {
       setLoading(true);
-      const updatedCart = await clearCart(cart.id, user.uid);
-      setCart(updatedCart);
+      
+      if (isAuthenticated() && user && !cart.isGuestCart) {
+        // Authenticated user - use Firebase
+        const updatedCart = await clearCart(cart.id, user.uid);
+        setCart(updatedCart);
+      } else {
+        // Guest user - use localStorage
+        const updatedCart = await clearCart('guest-cart', null);
+        setCart(updatedCart);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error clearing cart:', err);
