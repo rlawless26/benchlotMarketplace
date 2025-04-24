@@ -58,14 +58,15 @@ const db = admin.firestore();
 // Initialize Stripe with error handling
 let stripe;
 try {
-  // For Firebase Functions v2, we need to use environment variables
-  // These should be automatically populated from the Firebase config
-  const stripeKey = process.env.STRIPE_SECRET || process.env.STRIPE_SECRET_KEY;
+  // Get Stripe key from Firebase functions config
+  const stripeKey = functions.config().stripe?.secret || 
+                    process.env.STRIPE_SECRET || 
+                    process.env.STRIPE_SECRET_KEY;
   
   if (stripeKey) {
-    console.log('Using Stripe key from environment variable:', 
-      process.env.STRIPE_SECRET ? 'STRIPE_SECRET' : 'STRIPE_SECRET_KEY');
+    console.log('Using Stripe key from config');
     
+    // Log key type (live or test) for verification
     console.log('Key type:', stripeKey.startsWith('sk_live') ? 'LIVE MODE' : 'TEST MODE');
     console.log('Key prefix:', stripeKey.substring(0, 10) + '...');
     
@@ -100,44 +101,98 @@ app.use(express.json());
  */
 app.post('/create-payment-intent', async (req, res) => {
   try {
-    const { cartId, userId } = req.body;
+    // Log the full request body for debugging
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
+    const { cartId, userId, isGuestCheckout, cartItems, cartTotal, mockCart } = req.body;
+    
+    // Handle the "mockCart" case from the client-side fix
+    if (mockCart && cartId === 'guest-cart') {
+      console.log('Using mockCart from request');
+      return res.json({
+        clientSecret: `pi_mockCart${Date.now()}_secret_${mockCart.id}`,
+        isMarketplace: false
+      });
+    }
+    
+    // Log extracted values
+    console.log('Extracted values:');
+    console.log(`- cartId: ${cartId}`);
+    console.log(`- userId: ${userId}`);
+    console.log(`- isGuestCheckout: ${isGuestCheckout}`);
+    console.log(`- cartItems present: ${Boolean(cartItems)}`);
+    console.log(`- cartTotal: ${cartTotal}`);
     
     if (!cartId || !userId) {
       return res.status(400).json({ error: 'Missing cartId or userId' });
     }
     
-    console.log(`Attempting to get cart ${cartId} for user ${userId}`);
+    console.log(`Attempting to process cart ${cartId} for user ${userId}`);
+    console.log(`Guest checkout: ${isGuestCheckout ? 'Yes' : 'No'}`);
     
     let cart;
-    try {
-      // Get the cart from Firestore
-      const cartRef = db.collection('carts').doc(cartId);
-      console.log('Cart reference created:', cartRef.path);
-      
-      const cartDoc = await cartRef.get();
-      console.log('Cart document fetch attempt completed');
-      
-      if (!cartDoc.exists) {
-        console.log(`Cart ${cartId} not found`);
-        return res.status(404).json({ error: 'Cart not found' });
-      }
-      
-      console.log(`Cart ${cartId} found successfully`);
-      cart = cartDoc.data();
-      console.log('Cart data:', JSON.stringify(cart, null, 2));
-    } catch (firestoreError) {
-      console.error('Detailed Firestore error:', firestoreError);
-      console.error('Error code:', firestoreError.code);
-      console.error('Error message:', firestoreError.message);
-      if (firestoreError.details) {
-        console.error('Error details:', firestoreError.details);
-      }
-      throw firestoreError; // Re-throw to be caught by the outer catch block
-    }
     
-    // Verify the cart belongs to the user
-    if (cart.userId !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+    // Convert isGuestCheckout to boolean if it's a string
+    const isGuestCheckoutBool = isGuestCheckout === true || isGuestCheckout === 'true';
+    console.log(`isGuestCheckout converted to boolean: ${isGuestCheckoutBool}`);
+    
+    // Handle guest checkout with cart data in request
+    if (isGuestCheckoutBool && cartId === 'guest-cart' && cartItems && cartTotal) {
+      console.log('Processing guest cart from request payload');
+      console.log('Guest cart items:', JSON.stringify(cartItems, null, 2));
+      console.log('Guest cart total:', cartTotal);
+      
+      // For guest checkout, create a payment intent directly without lookup
+      // This bypasses the need to have a cart in Firestore
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(cartTotal * 100), // Convert to cents
+        currency: 'usd',
+        metadata: {
+          cartId: 'guest-cart',
+          userId: 'guest',
+          isGuestCheckout: 'true',
+          guestEmail: req.body.guestEmail || ''
+        }
+      });
+      
+      console.log(`Created direct payment intent for guest checkout: ${paymentIntent.id}`);
+      
+      // Return the client secret to the client
+      return res.json({
+        clientSecret: paymentIntent.client_secret,
+        isMarketplace: false
+      });
+    } else {
+      try {
+        // Get the cart from Firestore for authenticated users
+        const cartRef = db.collection('carts').doc(cartId);
+        console.log('Cart reference created:', cartRef.path);
+        
+        const cartDoc = await cartRef.get();
+        console.log('Cart document fetch attempt completed');
+        
+        if (!cartDoc.exists) {
+          console.log(`Cart ${cartId} not found`);
+          return res.status(404).json({ error: 'Cart not found' });
+        }
+        
+        console.log(`Cart ${cartId} found successfully`);
+        cart = cartDoc.data();
+        console.log('Cart data:', JSON.stringify(cart, null, 2));
+        
+        // Verify the cart belongs to the user (skip for guest checkout)
+        if (!isGuestCheckout && cart.userId !== userId) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+      } catch (firestoreError) {
+        console.error('Detailed Firestore error:', firestoreError);
+        console.error('Error code:', firestoreError.code);
+        console.error('Error message:', firestoreError.message);
+        if (firestoreError.details) {
+          console.error('Error details:', firestoreError.details);
+        }
+        throw firestoreError; // Re-throw to be caught by the outer catch block
+      }
     }
     
     // Calculate the total amount
@@ -239,7 +294,16 @@ app.post('/create-payment-intent', async (req, res) => {
  */
 app.post('/confirm-payment', async (req, res) => {
   try {
-    const { paymentIntentId, cartId } = req.body;
+    const { 
+      paymentIntentId, 
+      cartId, 
+      isGuestCheckout, 
+      guestEmail, 
+      cartItems, 
+      cartTotal, 
+      shippingAddress, 
+      billingAddress 
+    } = req.body;
     
     if (!paymentIntentId || !cartId) {
       return res.status(400).json({ error: 'Missing paymentIntentId or cartId' });
@@ -253,8 +317,64 @@ app.post('/confirm-payment', async (req, res) => {
     }
     
     console.log(`Confirming payment for intent ${paymentIntentId}, cart ${cartId}`);
+    console.log(`Guest checkout: ${isGuestCheckout ? 'Yes' : 'No'}`);
     
-    // Get the cart from Firestore
+    // Convert isGuestCheckout to boolean if it's a string
+    const isGuestCheckoutBool = isGuestCheckout === true || isGuestCheckout === 'true';
+    console.log(`isGuestCheckout converted to boolean: ${isGuestCheckoutBool}`);
+
+    // Process guest cart directly from the request payload
+    if (isGuestCheckoutBool && cartId === 'guest-cart' && cartItems) {
+      try {
+        console.log('Processing guest cart order');
+        console.log('Guest cart items:', JSON.stringify(cartItems, null, 2));
+        console.log('Guest cart total:', cartTotal);
+        
+        // Verify payment intent metadata matches guest checkout
+        const paymentMetadata = paymentIntent.metadata || {};
+        console.log('Payment intent metadata:', JSON.stringify(paymentMetadata, null, 2));
+        
+        if (paymentMetadata.isGuestCheckout === 'true' && paymentMetadata.cartId === 'guest-cart') {
+          console.log('Payment intent metadata confirms this is a guest checkout');
+        } else {
+          console.log('Adding guest checkout info to payment intent metadata');
+          // Update payment intent with guest metadata if not already present
+          await stripe.paymentIntents.update(paymentIntentId, {
+            metadata: {
+              ...paymentMetadata,
+              isGuestCheckout: 'true',
+              cartId: 'guest-cart',
+              guestEmail: guestEmail || ''
+            }
+          });
+        }
+        
+        // Create order in Firestore with guest information
+        console.log('Creating guest order in Firestore');
+        const orderRef = await db.collection('orders').add({
+          userId: 'guest',
+          userEmail: guestEmail || 'guest@example.com',
+          items: cartItems,
+          totalAmount: cartTotal || 0,
+          status: 'paid',
+          paymentIntentId,
+          isGuestOrder: true,
+          shippingAddress: shippingAddress || {},
+          billingAddress: billingAddress || shippingAddress || {},
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`Guest order created successfully with ID: ${orderRef.id}`);
+        
+        // Return success with order ID
+        return res.json({ success: true, orderId: orderRef.id });
+      } catch (guestOrderError) {
+        console.error('Error creating guest order:', guestOrderError);
+        throw guestOrderError;
+      }
+    }
+    
+    // For authenticated users, get the cart from Firestore
     let cart;
     try {
       console.log(`Attempting to get cart ${cartId}`);
@@ -372,10 +492,11 @@ app.post('/create-connected-account', async (req, res) => {
         console.log(`User ${userId} already has a Stripe account: ${userDoc.data().stripeAccountId}`);
         
         // Create a new account link for continuing onboarding
+        const appUrl = functions.config().app?.url || process.env.APP_URL || 'https://benchlot.com';
         const accountLink = await stripe.accountLinks.create({
           account: userDoc.data().stripeAccountId,
-          refresh_url: `${process.env.APP_URL || 'https://benchlot.com'}/seller/onboarding/refresh`,
-          return_url: `${process.env.APP_URL || 'https://benchlot.com'}/seller/onboarding/complete`,
+          refresh_url: `${appUrl}/seller/onboarding/refresh`,
+          return_url: `${appUrl}/seller/onboarding/complete`,
           type: 'account_onboarding'
         });
         
@@ -648,8 +769,9 @@ app.post('/create-connected-account', async (req, res) => {
     }
     
     // Handle account setup for ALL sellers - bypass Stripe hosted onboarding completely
-    const appUrl = process.env.APP_URL || 'https://benchlot.com';
+    const appUrl = functions.config().app?.url || process.env.APP_URL || 'https://benchlot.com';
     console.log('BYPASSING Stripe hosted onboarding for all sellers');
+    console.log(`Using app URL: ${appUrl}`);
     
     // Skip Stripe hosted onboarding completely
     // Route everyone to our bank account collection UI
@@ -766,7 +888,7 @@ app.get('/refresh-account-link', async (req, res) => {
     }
     
     // Create a new account link
-    const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+    const appUrl = functions.config().app?.url || getConfig('app.url', 'APP_URL', 'https://benchlot.com');
     const accountLink = await stripe.accountLinks.create({
       account: userData.stripeAccountId,
       refresh_url: `${appUrl}/seller/onboarding/refresh`,
@@ -832,9 +954,13 @@ app.post('/stripe-webhook', async (req, res) => {
   console.log('Received webhook from Stripe');
   
   try {
-    // Get both webhook secrets from environment variables
-    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
-    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 'whsec_test';
+    // Get both webhook secrets from Firebase config and fallback to environment variables
+    const paymentWebhookSecret = functions.config().stripe?.webhook_secret || 
+                               process.env.STRIPE_WEBHOOK_SECRET || 
+                               'whsec_test';
+    const connectWebhookSecret = functions.config().stripe?.connect_webhook_secret || 
+                               process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 
+                               'whsec_test';
     
     console.log('Webhook secrets available:', 
       paymentWebhookSecret !== 'whsec_test' ? 'Payment webhook ✓' : 'Payment webhook ✘',

@@ -22,6 +22,7 @@
     "firebase": "^10.7.0",
     "is-regexp": "^3.1.0",
     "lucide-react": "^0.488.0",
+    "node-fetch": "^2.7.0",
     "prompts": "^2.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
