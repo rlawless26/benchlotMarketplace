@@ -79,7 +79,19 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     
     const { error } = await signIn(email, password);
     if (error) {
-      setActionError(error);
+      // Convert Firebase error messages to user-friendly messages
+      if (error.includes('auth/invalid-credential') || error.includes('auth/wrong-password')) {
+        setActionError('Invalid email or password. Please try again.');
+      } else if (error.includes('auth/user-not-found')) {
+        setActionError('No account found with this email address.');
+      } else if (error.includes('auth/too-many-requests')) {
+        setActionError('Too many failed login attempts. Please try again later or reset your password.');
+      } else if (error.includes('auth/user-disabled')) {
+        setActionError('This account has been disabled. Please contact support.');
+      } else {
+        // Generic error for anything else
+        setActionError('Unable to sign in. Please check your credentials and try again.');
+      }
     } else {
       setActionSuccess('Login successful!');
       if (isModal && onClose) {
@@ -125,7 +137,19 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     
     const { error } = await signUp(email, password, userData);
     if (error) {
-      setActionError(error);
+      // Convert Firebase error messages to user-friendly messages
+      if (error.includes('auth/email-already-in-use')) {
+        setActionError('An account with this email already exists. Please log in instead.');
+      } else if (error.includes('auth/invalid-email')) {
+        setActionError('Please enter a valid email address.');
+      } else if (error.includes('auth/weak-password')) {
+        setActionError('Please choose a stronger password. Use a mix of letters, numbers, and symbols.');
+      } else if (error.includes('auth/operation-not-allowed')) {
+        setActionError('Account creation is currently disabled. Please try again later.');
+      } else {
+        // Generic error for anything else
+        setActionError('Unable to create account. Please try again later.');
+      }
     } else {
       setActionSuccess('Account created successfully!');
       if (isModal && onClose) {
@@ -166,7 +190,17 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
         }, 2000);
       }
     } else {
-      setActionError(error);
+      // Convert Firebase error messages to user-friendly messages
+      if (error.includes('auth/user-not-found')) {
+        setActionError('No account found with this email address.');
+      } else if (error.includes('auth/invalid-email')) {
+        setActionError('Please enter a valid email address.');
+      } else if (error.includes('auth/too-many-requests')) {
+        setActionError('Too many password reset attempts. Please try again later.');
+      } else {
+        // Generic error for anything else
+        setActionError('Unable to send password reset email. Please try again later.');
+      }
     }
   };
 
@@ -179,7 +213,16 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     try {
       const { user, error } = await signInWithGoogle();
       if (error) {
-        setActionError(error);
+        // Convert error messages to user-friendly versions
+        if (error.includes('popup-closed-by-user') || error.includes('cancelled-popup-request')) {
+          setActionError('Sign-in was cancelled. Please try again.');
+        } else if (error.includes('account-exists-with-different-credential')) {
+          setActionError('An account already exists with the same email but different sign-in method.');
+        } else if (error.includes('network-request-failed')) {
+          setActionError('Network error. Please check your internet connection and try again.');
+        } else {
+          setActionError('Unable to sign in with Google. Please try again.');
+        }
       } else {
         setActionSuccess('Google login successful!');
         if (isModal && onClose) {
@@ -191,7 +234,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       }
     } catch (error) {
       console.error("Google sign-in error:", error);
-      setActionError(error.message || "Failed to sign in with Google");
+      setActionError('Unable to sign in with Google. Please try again.');
     }
   };
 
@@ -203,7 +246,16 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     try {
       const { user, error } = await signInWithFacebook();
       if (error) {
-        setActionError(error);
+        // Convert error messages to user-friendly versions
+        if (error.includes('popup-closed-by-user') || error.includes('cancelled-popup-request')) {
+          setActionError('Sign-in was cancelled. Please try again.');
+        } else if (error.includes('account-exists-with-different-credential')) {
+          setActionError('An account already exists with the same email but different sign-in method.');
+        } else if (error.includes('network-request-failed')) {
+          setActionError('Network error. Please check your internet connection and try again.');
+        } else {
+          setActionError('Unable to sign in with Facebook. Please try again.');
+        }
       } else {
         setActionSuccess('Facebook login successful!');
         if (isModal && onClose) {
@@ -215,7 +267,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       }
     } catch (error) {
       console.error("Facebook sign-in error:", error);
-      setActionError(error.message || "Failed to sign in with Facebook");
+      setActionError('Unable to sign in with Facebook. Please try again.');
     }
   };
 
@@ -239,12 +291,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
 
   return (
     <div className={containerClasses}>
-      {error && (
-        <div className="alert-error mb-6">
-          <p className="font-medium">Authentication Error:</p>
-          <p>{error}</p>
-        </div>
-      )}
+      {/* We're handling errors through actionError instead */}
       
       {actionError && (
         <div className="bg-red-50 border border-red-200 rounded-md px-4 py-3 mb-6 flex items-start">

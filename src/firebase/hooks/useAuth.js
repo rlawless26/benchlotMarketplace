@@ -119,10 +119,12 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      setError(null); // Clear any previous errors
       return { user: userCredential.user, error: null };
     } catch (err) {
       console.error("Sign in error:", err.message);
-      setError(err.message);
+      // Still return error, but don't set it in the hook state
+      // since we're handling it in the component
       return { user: null, error: err.message };
     } finally {
       setLoading(false);
@@ -157,10 +159,11 @@ export function AuthProvider({ children }) {
         console.error("Error sending welcome email:", emailError);
       }
       
+      setError(null); // Clear any previous errors
       return { user: userCredential.user, error: null };
     } catch (err) {
       console.error("Sign up error:", err.message);
-      setError(err.message);
+      // Still return error, but don't set it in the hook state
       return { user: null, error: err.message };
     } finally {
       setLoading(false);
@@ -171,10 +174,11 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
+      setError(null); // Clear any previous errors
       return { success: true };
     } catch (err) {
       console.error("Sign out error:", err.message);
-      setError(err.message);
+      // Still return error, but don't set it in the hook state
       return { success: false, error: err.message };
     }
   };
@@ -201,9 +205,11 @@ export function AuthProvider({ children }) {
         console.error("Error sending custom password reset email:", emailError);
       }
       
+      setError(null); // Clear any previous errors
       return { success: true };
     } catch (err) {
       console.error("Password reset error:", err.message);
+      // Don't set error in the hook state
       return { success: false, error: err.message };
     }
   };
@@ -247,10 +253,11 @@ export function AuthProvider({ children }) {
         }
       }
       
+      setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
       console.error("Google sign in error:", err.message);
-      setError(err.message);
+      // Don't set error in the hook state
       return { user: null, error: err.message };
     } finally {
       setLoading(false);
@@ -296,10 +303,11 @@ export function AuthProvider({ children }) {
         }
       }
       
+      setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
       console.error("Facebook sign in error:", err.message);
-      setError(err.message);
+      // Don't set error in the hook state
       return { user: null, error: err.message };
     } finally {
       setLoading(false);
@@ -349,10 +357,11 @@ export function AuthProvider({ children }) {
         }
       }
       
+      setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
       console.error("Apple sign in error:", err.message);
-      setError(err.message);
+      // Don't set error in the hook state
       return { user: null, error: err.message };
     } finally {
       setLoading(false);
