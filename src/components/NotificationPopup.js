@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Bell, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { X, Bell, MessageSquare, ShoppingCart, Check } from 'lucide-react';
 
 /**
  * NotificationPopup Component
@@ -9,12 +8,13 @@ import { useNavigate } from 'react-router-dom';
 const NotificationPopup = ({ 
   title, 
   message, 
-  type = 'message', // message, offer, system
+  type = 'message', // message, offer, system, cart
   link = '/messages',
   duration = 8000, // Longer duration to give users more time
+  image = null, // For cart notifications
+  price = null, // For cart notifications
   onClose 
 }) => {
-  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -29,11 +29,22 @@ const NotificationPopup = ({
 
   if (!isVisible) return null;
 
+  const formatPrice = (amount) => {
+    if (!amount && amount !== 0) return '$0';
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   const getIcon = () => {
     switch (type) {
       case 'message':
       case 'offer':
         return <MessageSquare className="h-5 w-5 text-benchlot-primary" />;
+      case 'cart':
+        return <ShoppingCart className="h-5 w-5 text-benchlot-primary" />;
       default:
         return <Bell className="h-5 w-5 text-benchlot-primary" />;
     }
@@ -44,49 +55,122 @@ const NotificationPopup = ({
       {/* Attention-grabbing pulse effect */}
       <div className="absolute inset-0 bg-benchlot-accent-light opacity-0 animate-pulse"></div>
       
-      <div className="px-4 py-4 flex items-start relative">
-        <div className="mr-3 mt-0.5 bg-benchlot-accent-light p-1.5 rounded-full">
-          {getIcon()}
-        </div>
-        <div className="flex-1 pr-6">
-          <h4 className="text-sm font-medium text-stone-800">{title}</h4>
-          <p className="text-xs text-stone-500 mt-1">{message}</p>
+      {type === 'cart' ? (
+        // Cart notification layout
+        <div className="px-4 py-4 flex items-start relative">
+          {/* Product image if available */}
+          {image && (
+            <div className="mr-3 w-14 h-14 rounded-md overflow-hidden flex-shrink-0 border border-stone-200">
+              <img 
+                src={image} 
+                alt="" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
           
-          <div className="mt-3 flex gap-2">
-            {/* View button - primary action */}
-            <button 
-              onClick={() => {
-                setIsVisible(false);
-                if (onClose) onClose();
-                navigate(link);
-              }} 
-              className="text-xs bg-benchlot-primary text-white px-3 py-1.5 rounded-md font-medium hover:bg-benchlot-secondary transition-colors flex-1"
-            >
-              View Message
-            </button>
+          {/* If no image, show the icon */}
+          {!image && (
+            <div className="mr-3 mt-0.5 bg-benchlot-accent-light p-1.5 rounded-full">
+              <Check className="h-5 w-5 text-green-600" />
+            </div>
+          )}
+          
+          <div className="flex-1 pr-6">
+            <h4 className="text-sm font-medium text-green-600">{title}</h4>
+            <p className="text-xs text-stone-500 mt-1">{message}</p>
             
-            {/* Dismiss button - secondary action */}
-            <button 
-              onClick={() => {
-                setIsVisible(false);
-                if (onClose) onClose();
-              }} 
-              className="text-xs text-stone-500 px-3 py-1.5 rounded-md hover:bg-stone-100 transition-colors"
-            >
-              Dismiss
-            </button>
+            {price && (
+              <div className="mt-1 text-sm font-medium text-benchlot-primary">
+                {formatPrice(price)}
+              </div>
+            )}
+            
+            <div className="mt-3 flex gap-2">
+              {/* View Cart button - primary action */}
+              <a 
+                href="/cart"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsVisible(false);
+                  if (onClose) onClose();
+                  window.location.href = '/cart';
+                }} 
+                className="text-xs bg-benchlot-primary text-white px-3 py-1.5 rounded-md font-medium hover:bg-benchlot-secondary transition-colors flex-1 text-center"
+              >
+                View Cart
+              </a>
+              
+              {/* Continue Shopping button - secondary action */}
+              <button 
+                onClick={() => {
+                  setIsVisible(false);
+                  if (onClose) onClose();
+                }} 
+                className="text-xs text-stone-500 px-3 py-1.5 rounded-md hover:bg-stone-100 transition-colors"
+              >
+                Continue Shopping
+              </button>
+            </div>
           </div>
+          <button 
+            className="absolute top-3 right-3 text-stone-400 hover:text-stone-600"
+            onClick={() => {
+              setIsVisible(false);
+              if (onClose) onClose();
+            }}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button 
-          className="absolute top-3 right-3 text-stone-400 hover:text-stone-600"
-          onClick={() => {
-            setIsVisible(false);
-            if (onClose) onClose();
-          }}
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+      ) : (
+        // Default notification layout
+        <div className="px-4 py-4 flex items-start relative">
+          <div className="mr-3 mt-0.5 bg-benchlot-accent-light p-1.5 rounded-full">
+            {getIcon()}
+          </div>
+          <div className="flex-1 pr-6">
+            <h4 className="text-sm font-medium text-stone-800">{title}</h4>
+            <p className="text-xs text-stone-500 mt-1">{message}</p>
+            
+            <div className="mt-3 flex gap-2">
+              {/* View button - primary action */}
+              <a 
+                href={link}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsVisible(false);
+                  if (onClose) onClose();
+                  window.location.href = link;
+                }} 
+                className="text-xs bg-benchlot-primary text-white px-3 py-1.5 rounded-md font-medium hover:bg-benchlot-secondary transition-colors flex-1 text-center"
+              >
+                View Message
+              </a>
+              
+              {/* Dismiss button - secondary action */}
+              <button 
+                onClick={() => {
+                  setIsVisible(false);
+                  if (onClose) onClose();
+                }} 
+                className="text-xs text-stone-500 px-3 py-1.5 rounded-md hover:bg-stone-100 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+          <button 
+            className="absolute top-3 right-3 text-stone-400 hover:text-stone-600"
+            onClick={() => {
+              setIsVisible(false);
+              if (onClose) onClose();
+            }}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       
       {/* Time indicator with slower animation and more visible styling */}
       <div className="h-1.5 bg-stone-200">

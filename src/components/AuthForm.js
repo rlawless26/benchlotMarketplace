@@ -26,8 +26,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     signOut, 
     resetPassword,
     signInWithGoogle,
-    signInWithFacebook,
-    signInWithApple
+    signInWithFacebook
   } = useAuth();
   
   // Form state
@@ -81,8 +80,14 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     const { error } = await signIn(email, password);
     if (error) {
       setActionError(error);
-    } else if (isModal && onClose) {
-      onClose();
+    } else {
+      setActionSuccess('Login successful!');
+      if (isModal && onClose) {
+        // Wait 2 seconds before closing the modal
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      }
     }
   };
   
@@ -124,7 +129,10 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     } else {
       setActionSuccess('Account created successfully!');
       if (isModal && onClose) {
-        onClose();
+        // Wait 2 seconds before closing the modal
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       }
     }
   };
@@ -151,6 +159,12 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     const { success, error } = await resetPassword(email);
     if (success) {
       setActionSuccess('Password reset email sent. Check your inbox.');
+      if (isModal && onClose) {
+        // Wait 2 seconds before closing the modal
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      }
     } else {
       setActionError(error);
     }
@@ -166,8 +180,14 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       const { user, error } = await signInWithGoogle();
       if (error) {
         setActionError(error);
-      } else if (isModal && onClose) {
-        onClose();
+      } else {
+        setActionSuccess('Google login successful!');
+        if (isModal && onClose) {
+          // Wait 2 seconds before closing the modal
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error("Google sign-in error:", error);
@@ -184,8 +204,14 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       const { user, error } = await signInWithFacebook();
       if (error) {
         setActionError(error);
-      } else if (isModal && onClose) {
-        onClose();
+      } else {
+        setActionSuccess('Facebook login successful!');
+        if (isModal && onClose) {
+          // Wait 2 seconds before closing the modal
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error("Facebook sign-in error:", error);
@@ -193,23 +219,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     }
   };
 
-  const handleAppleSignIn = async (e) => {
-    e.preventDefault();
-    setActionError(null);
-    setActionSuccess(null);
-    
-    try {
-      const { user, error } = await signInWithApple();
-      if (error) {
-        setActionError(error);
-      } else if (isModal && onClose) {
-        onClose();
-      }
-    } catch (error) {
-      console.error("Apple sign-in error:", error);
-      setActionError(error.message || "Failed to sign in with Apple");
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -245,9 +254,11 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       )}
       
       {actionSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-md px-4 py-3 mb-6 flex items-start">
-          <CheckCircle className="text-green-500 h-5 w-5 mt-0.5 mr-2 flex-shrink-0" />
-          <p className="text-green-700 text-sm">{actionSuccess}</p>
+        <div className="bg-green-50 border border-green-200 rounded-md px-4 py-3 mb-6 flex items-center">
+          <CheckCircle className="text-green-500 h-6 w-6 mr-3 flex-shrink-0" />
+          <div>
+            <p className="text-green-700 font-medium">{actionSuccess}</p>
+          </div>
         </div>
       )}
       
@@ -353,7 +364,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                     Forgot password?
                   </button>
                 </div>
-                <button type="submit" className="btn-primary w-full flex justify-center items-center gap-2 bg-benchlot-primary">
+                <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
                   <span>Login</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -393,15 +404,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   <span>Continue with Facebook</span>
                 </button>
                 
-                <button 
-                  onClick={handleAppleSignIn}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-1">
-                    <path fill="#000000" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
-                  </svg>
-                  <span>Continue with Apple</span>
-                </button>
               </div>
               
               <p className="text-center text-sm text-gray-600 mt-6">
@@ -511,7 +513,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   </div>
                 </div>
                 
-                <button type="submit" className="btn-primary w-full flex justify-center items-center gap-2 bg-benchlot-primary">
+                <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
                   <span>Create Account</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -551,15 +553,6 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   <span>Sign up with Facebook</span>
                 </button>
                 
-                <button 
-                  onClick={handleAppleSignIn}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-1">
-                    <path fill="#000000" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
-                  </svg>
-                  <span>Sign up with Apple</span>
-                </button>
               </div>
               
               <p className="text-center text-sm text-gray-600 mt-6">
@@ -592,7 +585,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   required
                 />
               </div>
-              <button type="submit" className="btn-primary w-full flex justify-center items-center gap-2 bg-benchlot-primary">
+              <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
                 <span>Send Reset Link</span>
                 <ArrowRight className="h-4 w-4" />
               </button>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import AuthForm from './AuthForm';
 import { useAuth } from '../firebase';
 
@@ -16,6 +17,7 @@ const AuthModal = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const modalRef = useRef(null);
 
   // Handle modal visibility with animation
@@ -31,6 +33,7 @@ const AuthModal = ({
     }
   }, [isOpen]);
 
+  
   // Close modal when user is authenticated and handle redirects
   useEffect(() => {
     if (user && isOpen) {
@@ -43,19 +46,24 @@ const AuthModal = ({
           // Clear the redirect path
           sessionStorage.removeItem('authRedirectPath');
           
-          // Use window.location.href for complete redirect including to separate origins
-          if (redirectPath.startsWith('http')) {
+          // Use window.location.href only for external URLs
+          if (redirectPath.startsWith('http') && !redirectPath.includes(window.location.hostname)) {
             window.location.href = redirectPath;
           } else {
-            // Use relative path for same-origin redirects
-            window.location.href = redirectPath;
+            // Use React Router's navigate for internal paths to avoid page refresh
+            const cleanPath = redirectPath.replace(window.location.origin, '');
+            
+            // Small delay to ensure modal closes first
+            setTimeout(() => {
+              navigate(cleanPath);
+            }, 100);
           }
         }
       } catch (error) {
         console.error('Error handling auth redirect:', error);
       }
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, navigate]);
 
   // Handle clicks outside modal to close
   useEffect(() => {
