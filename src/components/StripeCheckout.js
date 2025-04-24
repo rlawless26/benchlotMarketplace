@@ -134,9 +134,12 @@ const CheckoutForm = ({
         payload.cartTotal = guestCartData.totalAmount || 0;
         payload.shippingAddress = shippingAddress;
         payload.billingAddress = billingIsSameAsShipping ? shippingAddress : billingAddress;
+        
+        // Log full payload for debugging
+        console.log("Guest confirm payment payload:", JSON.stringify(payload, null, 2));
+      } else {
+        console.log("Standard confirm payment payload:", payload);
       }
-      
-      console.log("Sending confirm payment payload:", payload);
       
       const response = await fetch(`${FIREBASE_API_URL}/confirm-payment`, {
         method: 'POST',
@@ -145,8 +148,23 @@ const CheckoutForm = ({
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error confirming payment');
+        let errorMessage = 'Error confirming payment';
+        try {
+          const errorData = await response.json();
+          console.error('Payment confirmation error response:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+          // Try to get the response text if JSON parsing fails
+          try {
+            const errorText = await response.text();
+            console.error('Error response text:', errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error('Error getting response text:', textError);
+          }
+        }
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
@@ -272,7 +290,24 @@ const CheckoutForm = ({
     }
     
     if (result.error) {
-      setError(`Payment failed: ${result.error.message}`);
+      console.error('Stripe payment error:', result.error);
+      
+      // Convert technical Stripe error messages to user-friendly ones
+      let friendlyMessage = 'Your payment could not be processed. Please check your card details and try again.';
+      
+      if (result.error.message.includes('card was declined')) {
+        friendlyMessage = 'Your card was declined. Please try another payment method.';
+      } else if (result.error.message.includes('expired')) {
+        friendlyMessage = 'Your card has expired. Please try another card.';
+      } else if (result.error.message.includes('insufficient funds')) {
+        friendlyMessage = 'Your card has insufficient funds. Please try another payment method.';
+      } else if (result.error.message.includes('incorrect number')) {
+        friendlyMessage = 'Your card number is incorrect. Please check and try again.';
+      } else if (result.error.message.includes('invalid cvc')) {
+        friendlyMessage = 'Your card security code (CVC) is invalid. Please check and try again.';
+      }
+      
+      setError(friendlyMessage);
       setProcessing(false);
     } else {
       if (result.paymentIntent.status === 'succeeded') {
@@ -351,7 +386,21 @@ const CheckoutForm = ({
         if (confirmError) {
           // Report to the browser that the payment failed
           e.complete('fail');
-          setError(`Payment failed: ${confirmError.message}`);
+          
+          console.error('Apple Pay confirmation error:', confirmError);
+          
+          // Convert technical Stripe error messages to user-friendly ones
+          let friendlyMessage = 'Your payment could not be processed. Please check your card details and try again.';
+          
+          if (confirmError.message.includes('card was declined')) {
+            friendlyMessage = 'Your card was declined. Please try another payment method.';
+          } else if (confirmError.message.includes('expired')) {
+            friendlyMessage = 'Your card has expired. Please try another card.';
+          } else if (confirmError.message.includes('insufficient funds')) {
+            friendlyMessage = 'Your card has insufficient funds. Please try another payment method.';
+          }
+          
+          setError(friendlyMessage);
           setProcessing(false);
           return;
         }
@@ -607,35 +656,55 @@ const StripeCheckout = ({
         }
         
         console.log("Sending request to:", `${FIREBASE_API_URL}/create-payment-intent`);
-        console.log("Request payload:", { 
-          cartId, 
-          userId: user?.uid || 'guest',
-          isGuestCheckout,
-          guestEmail: guestEmail || ''
-        });
         
-        // For guest checkout, we need to include cart data since it's only in localStorage
-        const payload = {
+        // Create a regular payload structure
+        let payload = {
           cartId,
-          userId: user?.uid || 'guest',
-          isGuestCheckout: isGuestCheckout,
-          guestEmail: guestEmail || '',
+          userId: user?.uid || 'guest'
         };
         
-        // If it's a guest cart, include the cart items from localStorage
+        // If this is a guest checkout, we need to pass actual cart information
         if (isGuestCheckout && cartId === 'guest-cart') {
           try {
-            const guestCartData = localStorage.getItem('benchlot_guest_cart');
-            if (guestCartData) {
-              const parsedCart = JSON.parse(guestCartData);
-              // Include the cart items so backend can process them even without DB access
-              payload.cartItems = parsedCart.items || [];
-              payload.cartTotal = parsedCart.totalAmount || 0;
+            const rawGuestCart = localStorage.getItem('benchlot_guest_cart');
+            if (rawGuestCart) {
+              console.log('Raw guest cart data:', rawGuestCart);
+              
+              // Extract cart data from localStorage
+              const parsedCart = JSON.parse(rawGuestCart);
+              
+              // Create a Firestore-like cart structure
+              const cart = {
+                id: 'guest-cart',
+                userId: 'guest',
+                status: 'active',
+                items: parsedCart.items || [],
+                totalAmount: parsedCart.totalAmount || 0,
+                itemCount: parsedCart.itemCount || 0
+              };
+              
+              // Save the cart to Firebase so the server can find it
+              console.log('Creating Firebase cart for guest checkout:', cart);
+              payload.useRealCart = true;
+              
+              // Log the payload for debugging
+              console.log('Guest checkout payload:', JSON.stringify(payload, null, 2));
+            } else {
+              console.error('No guest cart data found in localStorage');
+              throw new Error('Guest cart data missing from localStorage');
             }
           } catch (error) {
-            console.error('Error parsing guest cart from localStorage:', error);
+            console.error('Error with guest cart:', error);
+            throw new Error(`Error with guest cart: ${error.message}`);
           }
         }
+        
+        // Log the final payload that will be sent
+        console.log("Final request payload:", payload);
+        
+        // Get actual payload JSON for request
+        const payloadJSON = JSON.stringify(payload);
+        console.log("Stringified payload:", payloadJSON);
         
         // Call our deployed Firebase Function to create a payment intent
         const response = await fetch(`${FIREBASE_API_URL}/create-payment-intent`, {
@@ -643,7 +712,7 @@ const StripeCheckout = ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload),
+          body: payloadJSON,
         });
         
         console.log("Response status:", response.status);

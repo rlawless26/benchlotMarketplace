@@ -309,11 +309,27 @@ app.post('/confirm-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing paymentIntentId or cartId' });
     }
     
+    console.log(`Retrieving payment intent from Stripe: ${paymentIntentId}`);
+    
     // Verify the payment intent with Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    let paymentIntent;
+    try {
+      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      console.log(`Retrieved payment intent with status: ${paymentIntent.status}`);
+    } catch (stripeError) {
+      console.error(`Stripe error retrieving payment intent ${paymentIntentId}:`, stripeError);
+      return res.status(400).json({ 
+        error: `Payment verification failed: ${stripeError.message}`,
+        code: stripeError.code || 'unknown_error'
+      });
+    }
     
     if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ error: 'Payment has not succeeded' });
+      console.log(`Payment intent ${paymentIntentId} has status ${paymentIntent.status}, not succeeded`);
+      return res.status(400).json({ 
+        error: `Payment has not succeeded. Current status: ${paymentIntent.status}`,
+        code: 'payment_not_succeeded'
+      });
     }
     
     console.log(`Confirming payment for intent ${paymentIntentId}, cart ${cartId}`);
