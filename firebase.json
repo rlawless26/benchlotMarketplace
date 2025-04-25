@@ -17,11 +17,7 @@
         "npm --prefix \"$RESOURCE_DIR\" install"
       ],
       "environment": {
-        "STRIPE_SECRET": "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",
-        "STRIPE_WEBHOOK_SECRET": "whsec_Bkz4lfFMXvGjn5acQpgE0iLvaWWnaNZL",
-        "STRIPE_CONNECT_WEBHOOK_SECRET": "whsec_pdWLuH2qcsh0rCxZ2AwAEPshoUU1NGfq",
-        "APP_URL": "https://benchlot.com",
-        "SENDGRID_API_KEY": "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"
+        "APP_URL": "https://benchlot.com"
       }
     }
   ],
