@@ -10,24 +10,12 @@ const emailService = require('./emailService');
 
 /**
  * Utility function to get config values with fallbacks
- * First tries Firebase config, then environment variables, then default value
+ * Uses environment variables or falls back to default values
+ * 
+ * Note: Firebase Functions v2 no longer supports functions.config()
+ * All configuration is set using environment variables in firebase.json
  */
 const getConfig = (key, envVarName, defaultValue) => {
-  try {
-    // Convert key like 'stripe.secret' to an object path for functions.config()
-    const keyParts = key.split('.');
-    let configValue = functions.config();
-    for (const part of keyParts) {
-      configValue = configValue[part];
-    }
-    if (configValue) {
-      console.log(`Using ${key} from Firebase config`);
-      return configValue;
-    }
-  } catch (e) {
-    // Config not found in Firebase, continue to environment variable
-  }
-  
   // Try environment variable
   if (process.env[envVarName]) {
     console.log(`Using ${envVarName} from environment variables`);
@@ -58,9 +46,8 @@ const db = admin.firestore();
 // Initialize Stripe with error handling
 let stripe;
 try {
-  // Get Stripe key from Firebase functions config
-  const stripeKey = functions.config().stripe?.secret || 
-                    process.env.STRIPE_SECRET || 
+  // Get Stripe key from environment variables
+  const stripeKey = process.env.STRIPE_SECRET || 
                     process.env.STRIPE_SECRET_KEY;
   
   if (stripeKey) {
@@ -508,7 +495,7 @@ app.post('/create-connected-account', async (req, res) => {
         console.log(`User ${userId} already has a Stripe account: ${userDoc.data().stripeAccountId}`);
         
         // Create a new account link for continuing onboarding
-        const appUrl = functions.config().app?.url || process.env.APP_URL || 'https://benchlot.com';
+        const appUrl = process.env.APP_URL || 'https://benchlot.com';
         const accountLink = await stripe.accountLinks.create({
           account: userDoc.data().stripeAccountId,
           refresh_url: `${appUrl}/seller/onboarding/refresh`,
@@ -785,7 +772,7 @@ app.post('/create-connected-account', async (req, res) => {
     }
     
     // Handle account setup for ALL sellers - bypass Stripe hosted onboarding completely
-    const appUrl = functions.config().app?.url || process.env.APP_URL || 'https://benchlot.com';
+    const appUrl = process.env.APP_URL || 'https://benchlot.com';
     console.log('BYPASSING Stripe hosted onboarding for all sellers');
     console.log(`Using app URL: ${appUrl}`);
     
@@ -904,7 +891,7 @@ app.get('/refresh-account-link', async (req, res) => {
     }
     
     // Create a new account link
-    const appUrl = functions.config().app?.url || getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+    const appUrl = process.env.APP_URL || 'https://benchlot.com';
     const accountLink = await stripe.accountLinks.create({
       account: userData.stripeAccountId,
       refresh_url: `${appUrl}/seller/onboarding/refresh`,
@@ -970,13 +957,9 @@ app.post('/stripe-webhook', async (req, res) => {
   console.log('Received webhook from Stripe');
   
   try {
-    // Get both webhook secrets from Firebase config and fallback to environment variables
-    const paymentWebhookSecret = functions.config().stripe?.webhook_secret || 
-                               process.env.STRIPE_WEBHOOK_SECRET || 
-                               'whsec_test';
-    const connectWebhookSecret = functions.config().stripe?.connect_webhook_secret || 
-                               process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 
-                               'whsec_test';
+    // Get both webhook secrets from environment variables
+    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
+    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 'whsec_test';
     
     console.log('Webhook secrets available:', 
       paymentWebhookSecret !== 'whsec_test' ? 'Payment webhook ✓' : 'Payment webhook ✘',

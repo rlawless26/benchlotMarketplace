@@ -111,3 +111,4 @@ Screenshot*.png
 # Keep these useful development files
 !/src/components/TestOrderButton.js
 !/src/utils/mockData.js
+functions/.env
