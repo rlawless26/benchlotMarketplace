@@ -395,13 +395,6 @@ const Header = () => {
               >
                 Browse All
               </Link>
-
-              <Link
-                to="/categories"
-                className="text-stone-700 hover:text-benchlot-primary whitespace-nowrap font-medium"
-              >
-                All Categories
-              </Link>
               
               {categories.map((category) => (
                 <div key={category.name} className="relative group">
@@ -491,14 +484,6 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Browse All Tools
-              </Link>
-              
-              <Link 
-                to="/categories"
-                className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                All Categories
               </Link>
               
               {categories.map((category) => (
