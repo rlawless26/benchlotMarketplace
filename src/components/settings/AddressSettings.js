@@ -140,17 +140,36 @@ const AddressSettings = ({ user }) => {
         addressForm.id = `addr_${Date.now()}`;
       }
       
-      // If this is set as the default address, unset other defaults
-      if (addressForm.isDefault) {
-        updatedAddresses = updatedAddresses.map(addr => ({
-          ...addr,
-          isDefault: addr.id === addressForm.id
-        }));
-      }
+      // Check if this is the user's first address
+      const isFirstAddress = updatedAddresses.length === 0;
       
-      // If no addresses exist yet, make this one the default
-      if (updatedAddresses.length === 0) {
-        addressForm.isDefault = true;
+      // If this is the first address or it's being set as default, 
+      // we need to handle the other defaults according to type
+      if (addressForm.isDefault || isFirstAddress) {
+        // Always make the first address default
+        if (isFirstAddress) {
+          addressForm.isDefault = true;
+        }
+        
+        // If setting a shipping or both type as default, unset other shipping/both defaults
+        if (addressForm.type === 'shipping' || addressForm.type === 'both') {
+          updatedAddresses = updatedAddresses.map(addr => {
+            if ((addr.type === 'shipping' || addr.type === 'both') && addr.id !== addressForm.id) {
+              return { ...addr, isDefault: false };
+            }
+            return addr;
+          });
+        }
+        
+        // If setting a billing or both type as default, unset other billing/both defaults
+        if (addressForm.type === 'billing' || addressForm.type === 'both') {
+          updatedAddresses = updatedAddresses.map(addr => {
+            if ((addr.type === 'billing' || addr.type === 'both') && addr.id !== addressForm.id) {
+              return { ...addr, isDefault: false };
+            }
+            return addr;
+          });
+        }
       }
       
       // Update or add the address
@@ -160,6 +179,39 @@ const AddressSettings = ({ user }) => {
         updatedAddresses[existingIndex] = addressForm;
       } else {
         updatedAddresses.push(addressForm);
+      }
+      
+      // Check if there's at least one default shipping and one default billing address
+      const hasDefaultShipping = updatedAddresses.some(addr => 
+        addr.isDefault && (addr.type === 'shipping' || addr.type === 'both')
+      );
+      
+      const hasDefaultBilling = updatedAddresses.some(addr => 
+        addr.isDefault && (addr.type === 'billing' || addr.type === 'both')
+      );
+      
+      // If no default shipping address exists, set the first shipping or both address as default
+      if (!hasDefaultShipping) {
+        const shippingAddress = updatedAddresses.find(addr => 
+          addr.type === 'shipping' || addr.type === 'both'
+        );
+        
+        if (shippingAddress) {
+          const index = updatedAddresses.findIndex(addr => addr.id === shippingAddress.id);
+          updatedAddresses[index] = { ...shippingAddress, isDefault: true };
+        }
+      }
+      
+      // If no default billing address exists, set the first billing or both address as default
+      if (!hasDefaultBilling) {
+        const billingAddress = updatedAddresses.find(addr => 
+          addr.type === 'billing' || addr.type === 'both'
+        );
+        
+        if (billingAddress) {
+          const index = updatedAddresses.findIndex(addr => addr.id === billingAddress.id);
+          updatedAddresses[index] = { ...billingAddress, isDefault: true };
+        }
       }
       
       // Save to Firebase
