@@ -1491,6 +1491,244 @@ app.post('/update-connect-account', async (req, res) => {
   }
 });
 
+/**
+ * Payment Method Management Endpoints
+ * 
+ * These endpoints handle customer creation, payment method management,
+ * and the SetupIntent API for saving payment methods without making a payment.
+ */
+
+/**
+ * Create a new Stripe customer or return an existing one
+ */
+app.post('/create-customer', async (req, res) => {
+  try {
+    const { userId, email, name } = req.body;
+    
+    if (!userId || !email) {
+      return res.status(400).json({ error: 'Missing userId or email' });
+    }
+    
+    console.log(`Creating/retrieving customer for user ${userId} with email ${email}`);
+    
+    // First, check if the user already has a Stripe customer ID in Firestore
+    try {
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (userDoc.exists && userDoc.data().stripeCustomerId) {
+        console.log(`User ${userId} already has a Stripe customer: ${userDoc.data().stripeCustomerId}`);
+        
+        // Check if the customer still exists in Stripe
+        try {
+          const customer = await stripe.customers.retrieve(userDoc.data().stripeCustomerId);
+          
+          if (customer && !customer.deleted) {
+            console.log(`Found existing Stripe customer: ${customer.id}`);
+            return res.json({ customerId: customer.id });
+          }
+        } catch (stripeError) {
+          console.error(`Error retrieving customer from Stripe: ${stripeError.message}`);
+          // If the customer doesn't exist in Stripe, we'll create a new one below
+        }
+      }
+    } catch (firestoreError) {
+      console.error(`Error checking user in Firestore: ${firestoreError.message}`);
+      // Continue with creating a new customer
+    }
+    
+    // Create a new customer in Stripe
+    const customer = await stripe.customers.create({
+      email,
+      name: name || email.split('@')[0],
+      metadata: {
+        userId,
+        firestoreId: userId
+      }
+    });
+    
+    console.log(`Created new Stripe customer: ${customer.id}`);
+    
+    // Update the user record in Firestore with the Stripe customer ID
+    await db.collection('users').doc(userId).update({
+      stripeCustomerId: customer.id,
+      lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    res.json({ customerId: customer.id });
+  } catch (error) {
+    console.error('Error creating/retrieving customer:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Create a SetupIntent for saving a payment method
+ */
+app.post('/create-setup-intent', async (req, res) => {
+  try {
+    const { customerId } = req.body;
+    
+    if (!customerId) {
+      return res.status(400).json({ error: 'Missing customerId' });
+    }
+    
+    console.log(`Creating SetupIntent for customer ${customerId}`);
+    
+    // Create a SetupIntent
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      usage: 'off_session' // Allow the payment method to be used for future off-session payments
+    });
+    
+    console.log(`Created SetupIntent: ${setupIntent.id}`);
+    
+    res.json({ clientSecret: setupIntent.client_secret });
+  } catch (error) {
+    console.error('Error creating SetupIntent:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get all payment methods for a customer
+ */
+app.post('/get-payment-methods', async (req, res) => {
+  try {
+    const { customerId } = req.body;
+    
+    if (!customerId) {
+      return res.status(400).json({ error: 'Missing customerId' });
+    }
+    
+    console.log(`Getting payment methods for customer ${customerId}`);
+    
+    // Get all payment methods for the customer
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customerId,
+      type: 'card'
+    });
+    
+    console.log(`Found ${paymentMethods.data.length} payment methods`);
+    
+    // Get the customer to check for default payment method
+    const customer = await stripe.customers.retrieve(customerId);
+    const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method;
+    
+    // Mark default payment method
+    const formattedPaymentMethods = paymentMethods.data.map(method => ({
+      ...method,
+      isDefault: method.id === defaultPaymentMethodId
+    }));
+    
+    res.json({ paymentMethods: formattedPaymentMethods });
+  } catch (error) {
+    console.error('Error getting payment methods:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Update a payment method (set as default or update metadata)
+ */
+app.post('/update-payment-method', async (req, res) => {
+  try {
+    const { customerId, paymentMethodId, isDefault, nickname } = req.body;
+    
+    if (!customerId || !paymentMethodId) {
+      return res.status(400).json({ error: 'Missing customerId or paymentMethodId' });
+    }
+    
+    console.log(`Updating payment method ${paymentMethodId} for customer ${customerId}`);
+    console.log(`isDefault: ${isDefault}, nickname: ${nickname}`);
+    
+    // Update payment method metadata if a nickname is provided
+    if (nickname) {
+      await stripe.paymentMethods.update(paymentMethodId, {
+        metadata: {
+          nickname
+        }
+      });
+      console.log(`Updated payment method metadata with nickname: ${nickname}`);
+    }
+    
+    // Set as default payment method if requested
+    if (isDefault) {
+      await stripe.customers.update(customerId, {
+        invoice_settings: {
+          default_payment_method: paymentMethodId
+        }
+      });
+      console.log(`Set payment method ${paymentMethodId} as default for customer ${customerId}`);
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating payment method:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Detach a payment method from a customer
+ */
+app.post('/detach-payment-method', async (req, res) => {
+  try {
+    const { paymentMethodId } = req.body;
+    
+    if (!paymentMethodId) {
+      return res.status(400).json({ error: 'Missing paymentMethodId' });
+    }
+    
+    console.log(`Detaching payment method ${paymentMethodId}`);
+    
+    // Retrieve the payment method to get the customer ID
+    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const customerId = paymentMethod.customer;
+    
+    // Detach the payment method
+    const detachedPaymentMethod = await stripe.paymentMethods.detach(paymentMethodId);
+    console.log(`Detached payment method ${detachedPaymentMethod.id}`);
+    
+    // Check if this was the default payment method
+    if (customerId) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        
+        // If this was the default payment method, try to set a new default
+        if (customer.invoice_settings?.default_payment_method === paymentMethodId) {
+          console.log(`Detached payment method was the default, finding a new default...`);
+          
+          // Get remaining payment methods
+          const paymentMethods = await stripe.paymentMethods.list({
+            customer: customerId,
+            type: 'card'
+          });
+          
+          if (paymentMethods.data.length > 0) {
+            // Set the first remaining payment method as default
+            await stripe.customers.update(customerId, {
+              invoice_settings: {
+                default_payment_method: paymentMethods.data[0].id
+              }
+            });
+            console.log(`Set new default payment method: ${paymentMethods.data[0].id}`);
+          } else {
+            console.log(`No remaining payment methods to set as default`);
+          }
+        }
+      } catch (customerError) {
+        console.error(`Error updating customer after detaching payment method: ${customerError.message}`);
+        // Continue with the response even if this fails
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error detaching payment method:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Export the API as a Firebase Function with public access
 exports.api = functions.https.onRequest((req, res) => {
     // Enable CORS for all origins
