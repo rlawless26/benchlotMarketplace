@@ -19,7 +19,7 @@ Our code has been updated to use environment variables (`process.env`) instead.
 
 2. **Navigate to Functions**
    - Click on "Functions" in the left sidebar
-   - Go to the "1st gen functions" tab if you're still using both v1 and v2
+   - Go to the "Functions" tab if you're still using both v1 and v2
 
 3. **Edit Environment Variables**
    - Look for your function name (likely "api" and "stripeApi")
@@ -39,7 +39,7 @@ Our code has been updated to use environment variables (`process.env`) instead.
 
 1. **Create a .env File**
    - Create a file named `.env` in your functions directory
-   - Add the following content:
+   - Add the following content (with your actual values):
      ```
      STRIPE_SECRET=your_stripe_secret_key
      STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
@@ -65,6 +65,14 @@ Our code has been updated to use environment variables (`process.env`) instead.
 For the most secure approach with CLI:
 
 1. **Set Secrets**
+   ```bash
+   firebase functions:secrets:set STRIPE_SECRET
+   firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+   firebase functions:secrets:set STRIPE_CONNECT_WEBHOOK_SECRET
+   firebase functions:secrets:set SENDGRID_API_KEY
+   ```
+   
+   Or with a data file:
    ```bash
    firebase functions:secrets:set --data-file functions/.env
    ```
@@ -94,7 +102,7 @@ For local development, you can use a `.env` file that won't be committed to git:
 2. Run functions locally with:
    ```bash
    cd functions
-   npm run serve
+   npm run serve -- --env-file=.env
    ```
 
 ## Configuration Values Reference

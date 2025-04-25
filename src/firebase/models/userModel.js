@@ -474,3 +474,60 @@ export const updateSellerSettings = async (userId, sellerSettings) => {
     throw error;
   }
 };
+
+/**
+ * Get user payment methods from Firestore
+ * @param {string} userId - The user ID
+ * @returns {Promise<Array>} Array of payment methods
+ */
+export const getUserPaymentMethods = async (userId) => {
+  try {
+    const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('User not found');
+    }
+    
+    const userData = userSnap.data();
+    return userData.profile?.paymentMethods || [];
+  } catch (error) {
+    console.error('Error getting user payment methods:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user payment methods in Firestore
+ * @param {string} userId - The user ID
+ * @param {Array} paymentMethods - Array of payment methods
+ * @returns {Promise<Array>} Updated array of payment methods
+ */
+export const updateUserPaymentMethods = async (userId, paymentMethods) => {
+  try {
+    const userRef = doc(usersCollection, userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('User not found');
+    }
+    
+    // Create update data with dot notation for nested fields
+    const dataToUpdate = {
+      'profile.paymentMethods': paymentMethods,
+      updated_at: serverTimestamp()
+    };
+    
+    // Preserve the role field if it exists
+    if (userSnap.data().role) {
+      dataToUpdate.role = userSnap.data().role;
+    }
+    
+    await updateDoc(userRef, dataToUpdate);
+    
+    return paymentMethods;
+  } catch (error) {
+    console.error('Error updating user payment methods:', error);
+    throw error;
+  }
+};

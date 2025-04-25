@@ -683,9 +683,12 @@ const StripeCheckout = ({
                 itemCount: parsedCart.itemCount || 0
               };
               
-              // Save the cart to Firebase so the server can find it
+              // Add cart data to the payload for guest checkout
               console.log('Creating Firebase cart for guest checkout:', cart);
-              payload.useRealCart = true;
+              payload.cartItems = parsedCart.items || [];
+              payload.cartTotal = parsedCart.totalAmount || 0;
+              payload.isGuestCheckout = true;
+              payload.guestEmail = guestEmail || '';
               
               // Log the payload for debugging
               console.log('Guest checkout payload:', JSON.stringify(payload, null, 2));

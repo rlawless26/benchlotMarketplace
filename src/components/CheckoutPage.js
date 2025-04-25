@@ -95,24 +95,56 @@ const CheckoutPage = () => {
       const userAddresses = user.profile.addresses || [];
       setSavedAddresses(userAddresses);
       
-      // Find default or first shipping address
-      const defaultShippingAddress = userAddresses.find(addr => 
+      // Find default shipping address
+      let defaultShippingAddress = userAddresses.find(addr => 
         addr.isDefault && (addr.type === 'shipping' || addr.type === 'both')
-      ) || userAddresses.find(addr => 
-        addr.type === 'shipping' || addr.type === 'both'
       );
       
-      // Find default or first billing address
-      const defaultBillingAddress = userAddresses.find(addr => 
+      // If no default shipping address, look for any shipping address
+      if (!defaultShippingAddress) {
+        defaultShippingAddress = userAddresses.find(addr => 
+          addr.type === 'shipping' || addr.type === 'both'
+        );
+      }
+      
+      // Find default billing address
+      let defaultBillingAddress = userAddresses.find(addr => 
         addr.isDefault && (addr.type === 'billing' || addr.type === 'both')
-      ) || userAddresses.find(addr => 
-        addr.type === 'billing' || addr.type === 'both'
       );
+      
+      // If no default billing address, look for any billing address
+      if (!defaultBillingAddress) {
+        defaultBillingAddress = userAddresses.find(addr => 
+          addr.type === 'billing' || addr.type === 'both'
+        );
+      }
+      
+      // If we have a default address that is 'both', use it for both shipping and billing
+      const defaultBothAddress = userAddresses.find(addr => 
+        addr.isDefault && addr.type === 'both'
+      );
+      
+      if (defaultBothAddress) {
+        defaultShippingAddress = defaultBothAddress;
+        defaultBillingAddress = defaultBothAddress;
+      }
       
       // Set shipping address if available
       if (defaultShippingAddress) {
+        // Check if fullName needs to be split into firstName/lastName
+        let firstName = '', lastName = '';
+        if (defaultShippingAddress.fullName) {
+          const nameParts = defaultShippingAddress.fullName.split(' ');
+          firstName = nameParts[0] || '';
+          lastName = nameParts.slice(1).join(' ') || '';
+        } else {
+          firstName = defaultShippingAddress.firstName || '';
+          lastName = defaultShippingAddress.lastName || '';
+        }
+        
         setShippingAddress(prev => ({
-          fullName: defaultShippingAddress.fullName || prev.fullName,
+          firstName: firstName || prev.firstName,
+          lastName: lastName || prev.lastName,
           addressLine1: defaultShippingAddress.street || prev.addressLine1,
           addressLine2: defaultShippingAddress.apt || prev.addressLine2,
           city: defaultShippingAddress.city || prev.city,
@@ -122,12 +154,29 @@ const CheckoutPage = () => {
           email: user.email || prev.email,
           phone: defaultShippingAddress.phone || prev.phone
         }));
+        
+        // If this is a default address, note it was used
+        if (defaultShippingAddress.isDefault) {
+          setSelectedSavedAddress(defaultShippingAddress.id);
+        }
       }
       
-      // Set billing address if available and not using shipping address
-      if (defaultBillingAddress && !billingIsSameAsShipping) {
+      // Set billing address if available
+      if (defaultBillingAddress) {
+        // Check if fullName needs to be split into firstName/lastName
+        let firstName = '', lastName = '';
+        if (defaultBillingAddress.fullName) {
+          const nameParts = defaultBillingAddress.fullName.split(' ');
+          firstName = nameParts[0] || '';
+          lastName = nameParts.slice(1).join(' ') || '';
+        } else {
+          firstName = defaultBillingAddress.firstName || '';
+          lastName = defaultBillingAddress.lastName || '';
+        }
+        
         setBillingAddress(prev => ({
-          fullName: defaultBillingAddress.fullName || prev.fullName,
+          firstName: firstName || prev.firstName,
+          lastName: lastName || prev.lastName,
           addressLine1: defaultBillingAddress.street || prev.addressLine1,
           addressLine2: defaultBillingAddress.apt || prev.addressLine2,
           city: defaultBillingAddress.city || prev.city,
@@ -137,6 +186,15 @@ const CheckoutPage = () => {
           email: user.email || prev.email,
           phone: defaultBillingAddress.phone || prev.phone
         }));
+        
+        // Set billing same as shipping if the same address is default for both
+        if (defaultShippingAddress && defaultBillingAddress && 
+            defaultShippingAddress.id === defaultBillingAddress.id) {
+          setBillingIsSameAsShipping(true);
+        } else {
+          // Only show different billing address if default billing exists
+          setBillingIsSameAsShipping(defaultBillingAddress ? false : true);
+        }
       }
     }
   }, [user, billingIsSameAsShipping]);
@@ -409,10 +467,9 @@ const CheckoutPage = () => {
       const shippingAddressToSave = {
         id: `addr_${Date.now()}_ship`,
         type: billingIsSameAsShipping ? 'both' : 'shipping',
-        isDefault: false, // Don't automatically set as default
+        // If this is the first address saved, make it the default
+        isDefault: newAddresses.length === 0 ? true : false,
         fullName: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
-        firstName: shippingAddress.firstName,
-        lastName: shippingAddress.lastName,
         street: shippingAddress.addressLine1,
         apt: shippingAddress.addressLine2,
         city: shippingAddress.city,
@@ -422,17 +479,32 @@ const CheckoutPage = () => {
         phone: shippingAddress.phone
       };
       
-      // See if this is a duplicate of an existing address
-      const isShippingDuplicate = newAddresses.some(addr => 
-        addr.street === shippingAddressToSave.street && 
-        addr.city === shippingAddressToSave.city &&
-        addr.state === shippingAddressToSave.state &&
-        addr.zipCode === shippingAddressToSave.zipCode
-      );
+      // See if this is a duplicate of an existing address - with better matching
+      const isShippingDuplicate = newAddresses.some(addr => {
+        // Create normalized versions of addresses for comparison
+        const normalizedNew = `${shippingAddressToSave.street}|${shippingAddressToSave.city}|${shippingAddressToSave.state}|${shippingAddressToSave.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+        const normalizedExisting = `${addr.street}|${addr.city}|${addr.state}|${addr.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+        return normalizedNew === normalizedExisting;
+      });
       
       // Add shipping address if it's not a duplicate
       if (!isShippingDuplicate) {
         newAddresses.push(shippingAddressToSave);
+        console.log('Saved new shipping address to profile:', shippingAddressToSave);
+      } else {
+        console.log('Shipping address is a duplicate of an existing address - not saving');
+        // If it's a duplicate, we should check if the existing address should have its type updated
+        const existingAddress = newAddresses.find(addr => {
+          const normalizedNew = `${shippingAddressToSave.street}|${shippingAddressToSave.city}|${shippingAddressToSave.state}|${shippingAddressToSave.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+          const normalizedExisting = `${addr.street}|${addr.city}|${addr.state}|${addr.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+          return normalizedNew === normalizedExisting;
+        });
+        
+        // If the existing address is billing only and we're using it for shipping, update it to 'both'
+        if (existingAddress && existingAddress.type === 'billing' && !billingIsSameAsShipping) {
+          existingAddress.type = 'both';
+          console.log('Updated existing address type to "both":', existingAddress);
+        }
       }
       
       // Check if billing address should be saved (if different from shipping)
@@ -440,10 +512,9 @@ const CheckoutPage = () => {
         const billingAddressToSave = {
           id: `addr_${Date.now()}_bill`,
           type: 'billing',
-          isDefault: false, // Don't automatically set as default
+          // Make default billing address if no other billing addresses exist
+          isDefault: !newAddresses.some(addr => (addr.type === 'billing' || addr.type === 'both') && addr.isDefault),
           fullName: `${billingAddress.firstName} ${billingAddress.lastName}`.trim(),
-          firstName: billingAddress.firstName,
-          lastName: billingAddress.lastName,
           street: billingAddress.addressLine1,
           apt: billingAddress.addressLine2,
           city: billingAddress.city,
@@ -454,24 +525,39 @@ const CheckoutPage = () => {
         };
         
         // See if this is a duplicate of an existing address
-        const isBillingDuplicate = newAddresses.some(addr => 
-          addr.street === billingAddressToSave.street && 
-          addr.city === billingAddressToSave.city &&
-          addr.state === billingAddressToSave.state &&
-          addr.zipCode === billingAddressToSave.zipCode
-        );
+        const isBillingDuplicate = newAddresses.some(addr => {
+          // Create normalized versions of addresses for comparison
+          const normalizedNew = `${billingAddressToSave.street}|${billingAddressToSave.city}|${billingAddressToSave.state}|${billingAddressToSave.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+          const normalizedExisting = `${addr.street}|${addr.city}|${addr.state}|${addr.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+          return normalizedNew === normalizedExisting;
+        });
         
         // Add billing address if it's not a duplicate
         if (!isBillingDuplicate) {
           newAddresses.push(billingAddressToSave);
+          console.log('Saved new billing address to profile:', billingAddressToSave);
+        } else {
+          console.log('Billing address is a duplicate of an existing address - not saving');
+          // If it's a duplicate, we should check if the existing address should have its type updated
+          const existingAddress = newAddresses.find(addr => {
+            const normalizedNew = `${billingAddressToSave.street}|${billingAddressToSave.city}|${billingAddressToSave.state}|${billingAddressToSave.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+            const normalizedExisting = `${addr.street}|${addr.city}|${addr.state}|${addr.zipCode}`.toLowerCase().replace(/\s+/g, ' ');
+            return normalizedNew === normalizedExisting;
+          });
+          
+          // If the existing address is shipping only and we're using it for billing, update it to 'both'
+          if (existingAddress && existingAddress.type === 'shipping') {
+            existingAddress.type = 'both';
+            console.log('Updated existing address type to "both":', existingAddress);
+          }
         }
       }
       
-      // If there are new addresses to save
-      if (newAddresses.length > (user.profile?.addresses?.length || 0)) {
-        await updateUserAddress(user.uid, { addresses: newAddresses });
-        setSavedAddresses(newAddresses);
-      }
+      // If there are new addresses to save or we updated existing ones
+      await updateUserAddress(user.uid, { addresses: newAddresses });
+      setSavedAddresses(newAddresses);
+      console.log('Updated addresses in user profile:', newAddresses);
+      
     } catch (error) {
       console.error('Error saving addresses to profile:', error);
       // We don't block checkout if address saving fails
@@ -1089,9 +1175,43 @@ const CheckoutPage = () => {
                     </div>
                   </div>
                   
-                  {/* Saved addresses dropdown */}
+                  {/* Saved addresses section */}
                   {savedAddresses.length > 0 && (
                     <div className="mb-6">
+                      {/* Currently using saved address indicator */}
+                      {selectedSavedAddress && (
+                        <div className="mb-3 p-3 bg-stone-50 border border-stone-200 rounded-md">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center">
+                              <Check className="h-4 w-4 text-green-600 mr-2" />
+                              <span className="text-sm font-medium text-stone-800">Using saved address</span>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => setSelectedSavedAddress(null)}
+                              className="text-xs text-stone-500 hover:text-benchlot-primary"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          
+                          {(() => {
+                            const address = savedAddresses.find(addr => addr.id === selectedSavedAddress);
+                            if (address) {
+                              return (
+                                <div className="text-xs text-stone-600">
+                                  <p className="font-medium">{address.fullName}</p>
+                                  <p>{address.street}{address.apt ? `, ${address.apt}` : ''}</p>
+                                  <p>{address.city}, {address.state} {address.zipCode}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                      
+                      {/* Saved addresses dropdown */}
                       <div className="relative">
                         <button
                           type="button"
@@ -1113,20 +1233,34 @@ const CheckoutPage = () => {
                                 .map(address => (
                                   <li 
                                     key={address.id}
-                                    className="px-4 py-2 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-b-0"
+                                    className={`px-4 py-2 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-b-0 ${
+                                      selectedSavedAddress === address.id ? 'bg-stone-100' : ''
+                                    }`}
                                     onClick={() => handleSelectShippingAddress(address.id)}
                                   >
                                     <div className="flex justify-between">
                                       <span className="font-medium">{address.fullName}</span>
-                                      {address.isDefault && (
-                                        <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-1 rounded-full">
-                                          Default
-                                        </span>
-                                      )}
+                                      <div className="flex items-center">
+                                        {selectedSavedAddress === address.id && (
+                                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full mr-2">
+                                            Selected
+                                          </span>
+                                        )}
+                                        {address.isDefault && (
+                                          <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-0.5 rounded-full">
+                                            Default
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                    <p className="text-sm text-stone-600 truncate">
-                                      {address.street}{address.apt ? `, ${address.apt}` : ''}, {address.city}, {address.state} {address.zipCode}
-                                    </p>
+                                    <div className="flex items-start mt-1">
+                                      <span className="text-xs bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded mr-2">
+                                        {address.type === 'both' ? 'Shipping & Billing' : address.type}
+                                      </span>
+                                      <p className="text-sm text-stone-600 truncate">
+                                        {address.street}{address.apt ? `, ${address.apt}` : ''}, {address.city}, {address.state} {address.zipCode}
+                                      </p>
+                                    </div>
                                   </li>
                                 ))}
                             </ul>
@@ -1176,9 +1310,43 @@ const CheckoutPage = () => {
                     {/* Billing address form (show only if different from shipping) */}
                     {!billingIsSameAsShipping && (
                       <>
-                        {/* Saved billing addresses dropdown */}
+                        {/* Saved billing addresses section */}
                         {savedAddresses.length > 0 && (
                           <div className="mb-6">
+                            {/* Currently using saved billing address indicator */}
+                            {!billingIsSameAsShipping && selectedSavedAddress && (
+                              <div className="mb-3 p-3 bg-stone-50 border border-stone-200 rounded-md">
+                                <div className="flex justify-between items-center mb-2">
+                                  <div className="flex items-center">
+                                    <Check className="h-4 w-4 text-green-600 mr-2" />
+                                    <span className="text-sm font-medium text-stone-800">Using saved billing address</span>
+                                  </div>
+                                  <button 
+                                    type="button"
+                                    onClick={() => setSelectedSavedAddress(null)}
+                                    className="text-xs text-stone-500 hover:text-benchlot-primary"
+                                  >
+                                    Clear
+                                  </button>
+                                </div>
+                                
+                                {(() => {
+                                  const address = savedAddresses.find(addr => addr.id === selectedSavedAddress);
+                                  if (address) {
+                                    return (
+                                      <div className="text-xs text-stone-600">
+                                        <p className="font-medium">{address.fullName}</p>
+                                        <p>{address.street}{address.apt ? `, ${address.apt}` : ''}</p>
+                                        <p>{address.city}, {address.state} {address.zipCode}</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            )}
+                            
+                            {/* Saved billing addresses dropdown */}
                             <div className="relative">
                               <button
                                 type="button"
@@ -1200,20 +1368,34 @@ const CheckoutPage = () => {
                                       .map(address => (
                                         <li 
                                           key={address.id}
-                                          className="px-4 py-2 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-b-0"
+                                          className={`px-4 py-2 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-b-0 ${
+                                            selectedSavedAddress === address.id ? 'bg-stone-100' : ''
+                                          }`}
                                           onClick={() => handleSelectBillingAddress(address.id)}
                                         >
                                           <div className="flex justify-between">
                                             <span className="font-medium">{address.fullName}</span>
-                                            {address.isDefault && (
-                                              <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-1 rounded-full">
-                                                Default
-                                              </span>
-                                            )}
+                                            <div className="flex items-center">
+                                              {selectedSavedAddress === address.id && !billingIsSameAsShipping && (
+                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full mr-2">
+                                                  Selected
+                                                </span>
+                                              )}
+                                              {address.isDefault && (
+                                                <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-0.5 rounded-full">
+                                                  Default
+                                                </span>
+                                              )}
+                                            </div>
                                           </div>
-                                          <p className="text-sm text-stone-600 truncate">
-                                            {address.street}{address.apt ? `, ${address.apt}` : ''}, {address.city}, {address.state} {address.zipCode}
-                                          </p>
+                                          <div className="flex items-start mt-1">
+                                            <span className="text-xs bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded mr-2">
+                                              {address.type === 'both' ? 'Shipping & Billing' : address.type}
+                                            </span>
+                                            <p className="text-sm text-stone-600 truncate">
+                                              {address.street}{address.apt ? `, ${address.apt}` : ''}, {address.city}, {address.state} {address.zipCode}
+                                            </p>
+                                          </div>
                                         </li>
                                       ))}
                                   </ul>
