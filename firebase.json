@@ -15,7 +15,10 @@
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" install"
-      ]
+      ],
+      "environment": {
+        "APP_URL": "https://benchlot.com"
+      }
     }
   ],
   "storage": {

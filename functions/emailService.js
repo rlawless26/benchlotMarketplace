@@ -40,20 +40,6 @@ exports.TEMPLATE_IDS = TEMPLATE_IDS;
  */
 // Helper function to get config with fallbacks
 const getConfig = (key, envVarName, defaultValue) => {
-  try {
-    // Convert key like 'stripe.secret' to an object path for functions.config()
-    const keyParts = key.split('.');
-    let configValue = functions.config();
-    for (const part of keyParts) {
-      configValue = configValue[part];
-    }
-    if (configValue) {
-      return configValue;
-    }
-  } catch (e) {
-    // Config not found in Firebase, continue to environment variable
-  }
-  
   // Try environment variable
   if (process.env[envVarName]) {
     return process.env[envVarName];
