@@ -369,6 +369,89 @@ app.post('/confirm-payment', async (req, res) => {
         
         console.log(`Guest order created successfully with ID: ${orderRef.id}`);
         
+        // Send order confirmation email to guest buyer
+        try {
+          if (guestEmail) {
+            console.log(`Sending order confirmation email to guest: ${guestEmail}`);
+            const purchaseDetails = {
+              orderId: orderRef.id,
+              totalAmount: cartTotal || 0,
+              items: cartItems,
+              isGuestOrder: true,
+              shippingAddress: shippingAddress || {},
+              billingAddress: billingAddress || shippingAddress || {},
+              paymentMethod: 'Credit Card'
+            };
+            
+            const emailResult = await emailService.sendOrderConfirmationEmail(
+              guestEmail,
+              purchaseDetails
+            );
+            
+            console.log(`Order confirmation email sent to guest (${guestEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
+            
+            // Also send payment receipt email
+            try {
+              const paymentDetails = {
+                orderId: orderRef.id,
+                totalAmount: cartTotal || 0,
+                isGuestOrder: true,
+                buyerName: guestEmail.split('@')[0],
+                paymentIntentId: paymentIntentId,
+                paymentMethod: 'Credit Card'
+              };
+              
+              await emailService.sendPaymentReceiptEmail(
+                guestEmail,
+                paymentDetails
+              );
+              
+              console.log(`Payment receipt email sent to guest (${guestEmail})`);
+            } catch (paymentEmailError) {
+              console.error('Error sending payment receipt email to guest:', paymentEmailError);
+            }
+            
+            // Send notifications to sellers for each item in the order
+            for (const item of cartItems) {
+              if (item.sellerId) {
+                try {
+                  const sellerDoc = await db.collection('users').doc(item.sellerId).get();
+                  
+                  if (sellerDoc.exists) {
+                    const sellerEmail = sellerDoc.data().email || sellerDoc.data().contactEmail;
+                    
+                    if (sellerEmail) {
+                      const orderDetails = {
+                        orderId: orderRef.id,
+                        sellerId: item.sellerId,
+                        amount: item.price * (item.quantity || 1),
+                        buyerName: guestEmail.split('@')[0] || 'Guest Customer',
+                        toolName: item.name || item.title,
+                        items: [item],
+                        shippingAddress: shippingAddress || {}
+                      };
+                      
+                      await emailService.sendOrderReceivedEmail(
+                        sellerEmail,
+                        orderDetails
+                      );
+                      
+                      console.log(`Order notification email sent to seller ${item.sellerId} (${sellerEmail})`);
+                    }
+                  }
+                } catch (sellerEmailError) {
+                  console.error(`Error sending order notification to seller ${item.sellerId}:`, sellerEmailError);
+                }
+              }
+            }
+          } else {
+            console.log('No guest email provided, skipping order confirmation email');
+          }
+        } catch (emailError) {
+          console.error('Error sending order confirmation email to guest:', emailError);
+          // Don't fail the API call if email fails
+        }
+        
         // Return success with order ID
         return res.json({ success: true, orderId: orderRef.id });
       } catch (guestOrderError) {
@@ -414,10 +497,107 @@ app.post('/confirm-payment', async (req, res) => {
         totalAmount: cart.totalAmount,
         status: 'paid',
         paymentIntentId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        shippingAddress: shippingAddress || {},
+        billingAddress: billingAddress || shippingAddress || {}
       });
       
       console.log(`Order created successfully with ID: ${orderRef.id}`);
+      
+      // Send order confirmation and payment receipt emails to buyer
+      try {
+        // Get user email from Firestore
+        const userDoc = await db.collection('users').doc(cart.userId).get();
+        if (userDoc.exists) {
+          const userEmail = userDoc.data().email;
+          const userName = userDoc.data().displayName || userDoc.data().firstName || userDoc.data().lastName;
+          
+          if (userEmail) {
+            console.log(`Sending order confirmation email to user: ${userEmail}`);
+            const purchaseDetails = {
+              orderId: orderRef.id,
+              userId: cart.userId,
+              totalAmount: cart.totalAmount,
+              items: cart.items,
+              isGuestOrder: false,
+              buyerName: userName,
+              shippingAddress: shippingAddress || {},
+              billingAddress: billingAddress || shippingAddress || {},
+              paymentMethod: 'Credit Card'
+            };
+            
+            const emailResult = await emailService.sendOrderConfirmationEmail(
+              userEmail,
+              purchaseDetails
+            );
+            
+            console.log(`Order confirmation email sent to user (${userEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
+            
+            // Also send payment receipt email
+            try {
+              const paymentDetails = {
+                orderId: orderRef.id,
+                userId: cart.userId,
+                totalAmount: cart.totalAmount,
+                isGuestOrder: false,
+                buyerName: userName,
+                paymentIntentId: paymentIntentId,
+                paymentMethod: 'Credit Card'
+              };
+              
+              await emailService.sendPaymentReceiptEmail(
+                userEmail,
+                paymentDetails
+              );
+              
+              console.log(`Payment receipt email sent to user (${userEmail})`);
+            } catch (paymentEmailError) {
+              console.error('Error sending payment receipt email to user:', paymentEmailError);
+            }
+            
+            // Send notifications to sellers for each item in the order
+            for (const item of cart.items) {
+              if (item.sellerId) {
+                try {
+                  const sellerDoc = await db.collection('users').doc(item.sellerId).get();
+                  
+                  if (sellerDoc.exists) {
+                    const sellerEmail = sellerDoc.data().email || sellerDoc.data().contactEmail;
+                    
+                    if (sellerEmail) {
+                      const orderDetails = {
+                        orderId: orderRef.id,
+                        sellerId: item.sellerId,
+                        amount: item.price * (item.quantity || 1),
+                        buyerName: userName || 'Customer',
+                        toolName: item.name || item.title,
+                        items: [item],
+                        shippingAddress: shippingAddress || {}
+                      };
+                      
+                      await emailService.sendOrderReceivedEmail(
+                        sellerEmail,
+                        orderDetails
+                      );
+                      
+                      console.log(`Order notification email sent to seller ${item.sellerId} (${sellerEmail})`);
+                    }
+                  }
+                } catch (sellerEmailError) {
+                  console.error(`Error sending order notification to seller ${item.sellerId}:`, sellerEmailError);
+                }
+              }
+            }
+          } else {
+            console.log(`No email found for user ${cart.userId}, skipping order confirmation email`);
+          }
+        } else {
+          console.log(`User ${cart.userId} not found, skipping order confirmation email`);
+        }
+      } catch (emailError) {
+        console.error('Error sending emails to user:', emailError);
+        // Don't fail the API call if email fails
+      }
       
       // Update the cart status and clear its contents
       console.log(`Updating cart ${cartId} status to completed and clearing items`);
@@ -1405,6 +1585,850 @@ app.post('/send-test-email', async (req, res) => {
   }
 });
 
+// Send order confirmation email (can be triggered manually)
+app.post('/send-order-confirmation', async (req, res) => {
+  try {
+    const { email, purchaseDetails, orderId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If orderId is provided but not purchaseDetails, fetch the order from Firestore
+    if (orderId && !purchaseDetails) {
+      console.log(`Fetching order ${orderId} for order confirmation email`);
+      const orderDoc = await db.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      const order = orderDoc.data();
+      
+      let buyerName = '';
+      // Get buyer name if not a guest order
+      if (!order.isGuestOrder && order.userId) {
+        const userDoc = await db.collection('users').doc(order.userId).get();
+        if (userDoc.exists) {
+          buyerName = userDoc.data().displayName || userDoc.data().firstName || 
+                      userDoc.data().lastName || email.split('@')[0];
+        }
+      }
+      
+      const details = {
+        orderId,
+        userId: order.userId || 'guest',
+        totalAmount: order.totalAmount || 0,
+        items: order.items || [],
+        isGuestOrder: order.isGuestOrder || false,
+        buyerName,
+        shippingAddress: order.shippingAddress || {},
+        billingAddress: order.billingAddress || order.shippingAddress || {},
+        paymentMethod: order.paymentMethod || 'Credit Card'
+      };
+      
+      console.log(`Sending order confirmation email for order ${orderId} to ${email}`);
+      const result = await emailService.sendOrderConfirmationEmail(email, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending order confirmation email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If purchase details were provided directly
+    else if (purchaseDetails) {
+      console.log(`Sending order confirmation email to ${email} with provided details`);
+      const result = await emailService.sendOrderConfirmationEmail(email, purchaseDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending order confirmation email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing purchaseDetails or orderId' });
+    }
+  } catch (error) {
+    console.error('Error in order confirmation email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send payment receipt email
+app.post('/send-payment-receipt', async (req, res) => {
+  try {
+    const { email, paymentDetails, orderId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If orderId is provided but not payment details, fetch the order from Firestore
+    if (orderId && !paymentDetails) {
+      console.log(`Fetching order ${orderId} for payment receipt email`);
+      const orderDoc = await db.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      const order = orderDoc.data();
+      
+      let buyerName = '';
+      // Get buyer name if not a guest order
+      if (!order.isGuestOrder && order.userId) {
+        const userDoc = await db.collection('users').doc(order.userId).get();
+        if (userDoc.exists) {
+          buyerName = userDoc.data().displayName || userDoc.data().firstName || 
+                      userDoc.data().lastName || email.split('@')[0];
+        }
+      }
+      
+      const details = {
+        orderId,
+        userId: order.userId || 'guest',
+        totalAmount: order.totalAmount || 0,
+        isGuestOrder: order.isGuestOrder || false,
+        buyerName,
+        paymentIntentId: order.paymentIntentId,
+        paymentMethod: order.paymentMethod || 'Credit Card',
+        last4: order.last4 || '****'
+      };
+      
+      console.log(`Sending payment receipt email for order ${orderId} to ${email}`);
+      const result = await emailService.sendPaymentReceiptEmail(email, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending payment receipt email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If payment details were provided directly
+    else if (paymentDetails) {
+      console.log(`Sending payment receipt email to ${email} with provided details`);
+      const result = await emailService.sendPaymentReceiptEmail(email, paymentDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending payment receipt email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing paymentDetails or orderId' });
+    }
+  } catch (error) {
+    console.error('Error in payment receipt email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send shipping notification email
+app.post('/send-shipping-notification', async (req, res) => {
+  try {
+    const { email, shippingDetails, orderId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If orderId is provided but not shipping details, fetch the order from Firestore
+    if (orderId && !shippingDetails) {
+      console.log(`Fetching order ${orderId} for shipping notification email`);
+      const orderDoc = await db.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      const order = orderDoc.data();
+      
+      let buyerName = '';
+      // Get buyer name if not a guest order
+      if (!order.isGuestOrder && order.userId) {
+        const userDoc = await db.collection('users').doc(order.userId).get();
+        if (userDoc.exists) {
+          buyerName = userDoc.data().displayName || userDoc.data().firstName || 
+                      userDoc.data().lastName || email.split('@')[0];
+        }
+      }
+      
+      const details = {
+        orderId,
+        userId: order.userId || 'guest',
+        isGuestOrder: order.isGuestOrder || false,
+        buyerName,
+        shippingAddress: order.shippingAddress || {},
+        items: order.items || [],
+        carrier: req.body.carrier,
+        trackingNumber: req.body.trackingNumber,
+        trackingUrl: req.body.trackingUrl,
+        estimatedDelivery: req.body.estimatedDelivery
+      };
+      
+      console.log(`Sending shipping notification email for order ${orderId} to ${email}`);
+      const result = await emailService.sendShippingNotificationEmail(email, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending shipping notification email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If shipping details were provided directly
+    else if (shippingDetails) {
+      console.log(`Sending shipping notification email to ${email} with provided details`);
+      const result = await emailService.sendShippingNotificationEmail(email, shippingDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending shipping notification email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing shippingDetails or orderId' });
+    }
+  } catch (error) {
+    console.error('Error in shipping notification email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send offer status update email
+app.post('/send-offer-status-update', async (req, res) => {
+  try {
+    const { email, offerDetails, offerId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If offerId is provided but not offer details, fetch the offer from Firestore
+    if (offerId && !offerDetails) {
+      console.log(`Fetching offer ${offerId} for status update email`);
+      const offerDoc = await db.collection('offers').doc(offerId).get();
+      
+      if (!offerDoc.exists) {
+        return res.status(404).json({ error: 'Offer not found' });
+      }
+      
+      const offer = offerDoc.data();
+      
+      // Get buyer details
+      let buyerName = '';
+      if (offer.buyerId) {
+        const buyerDoc = await db.collection('users').doc(offer.buyerId).get();
+        if (buyerDoc.exists) {
+          buyerName = buyerDoc.data().displayName || buyerDoc.data().firstName || 
+                      buyerDoc.data().lastName || email.split('@')[0];
+        }
+      }
+      
+      // Get seller details
+      let sellerName = 'Seller';
+      if (offer.sellerId) {
+        const sellerDoc = await db.collection('users').doc(offer.sellerId).get();
+        if (sellerDoc.exists) {
+          sellerName = sellerDoc.data().displayName || sellerDoc.data().firstName || 
+                      sellerDoc.data().lastName || sellerDoc.data().sellerName || 'Seller';
+        }
+      }
+      
+      // Get listing details
+      let listingTitle = 'the item';
+      let listingImage = '';
+      if (offer.listingId) {
+        const listingDoc = await db.collection('tools').doc(offer.listingId).get();
+        if (listingDoc.exists) {
+          const listing = listingDoc.data();
+          listingTitle = listing.name || listing.title || 'the item';
+          listingImage = listing.images?.[0]?.url || listing.image;
+        }
+      }
+      
+      const details = {
+        offerId,
+        buyerId: offer.buyerId,
+        buyerName,
+        sellerName,
+        listingId: offer.listingId,
+        listingTitle,
+        listingImage,
+        offerAmount: offer.amount || offer.offerAmount,
+        listingPrice: offer.listingPrice || offer.originalPrice,
+        status: offer.status || req.body.status,
+        message: req.body.message || offer.sellerMessage
+      };
+      
+      console.log(`Sending offer status update email for offer ${offerId} to ${email}`);
+      const result = await emailService.sendOfferStatusUpdateEmail(email, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending offer status update email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If offer details were provided directly
+    else if (offerDetails) {
+      console.log(`Sending offer status update email to ${email} with provided details`);
+      const result = await emailService.sendOfferStatusUpdateEmail(email, offerDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending offer status update email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing offerDetails or offerId' });
+    }
+  } catch (error) {
+    console.error('Error in offer status update email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send review request email
+app.post('/send-review-request', async (req, res) => {
+  try {
+    const { email, reviewDetails, orderId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If orderId is provided but not review details, fetch the order from Firestore
+    if (orderId && !reviewDetails) {
+      console.log(`Fetching order ${orderId} for review request email`);
+      const orderDoc = await db.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      const order = orderDoc.data();
+      
+      let buyerName = '';
+      // Get buyer name if not a guest order
+      if (!order.isGuestOrder && order.userId) {
+        const buyerDoc = await db.collection('users').doc(order.userId).get();
+        if (buyerDoc.exists) {
+          buyerName = buyerDoc.data().displayName || buyerDoc.data().firstName || 
+                      buyerDoc.data().lastName || email.split('@')[0];
+        }
+      }
+      
+      // Get item details from the order
+      const itemName = order.items && order.items.length > 0 ? 
+        (order.items[0].name || order.items[0].title) : 
+        'your purchase';
+      
+      const itemImage = order.items && order.items.length > 0 ? 
+        (order.items[0].imageUrl || order.items[0].image || order.items[0].images?.[0]?.url) : 
+        null;
+      
+      // Format delivery date if available
+      const deliveryDate = order.deliveredAt ? 
+        new Date(order.deliveredAt.toDate ? order.deliveredAt.toDate() : order.deliveredAt).toLocaleDateString() : 
+        'recently';
+      
+      const details = {
+        orderId,
+        userId: order.userId || 'guest',
+        isGuestOrder: order.userId === 'guest',
+        buyerName,
+        itemName,
+        itemImage,
+        deliveryDate,
+        reviewDaysLeft: 14 // Two weeks to leave a review
+      };
+      
+      console.log(`Sending review request email for order ${orderId} to ${email}`);
+      const result = await emailService.sendReviewRequestEmail(email, details);
+      
+      if (result.success) {
+        // Mark that review request has been sent
+        await db.collection('orders').doc(orderId).update({
+          reviewRequestSent: true,
+          reviewRequestSentAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending review request email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If review details were provided directly
+    else if (reviewDetails) {
+      console.log(`Sending review request email to ${email} with provided details`);
+      const result = await emailService.sendReviewRequestEmail(email, reviewDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending review request email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing reviewDetails or orderId' });
+    }
+  } catch (error) {
+    console.error('Error in review request email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send listing expiration reminder email
+app.post('/send-listing-expiration-reminder', async (req, res) => {
+  try {
+    const { email, listingDetails, listingId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If listingId is provided but not listing details, fetch the listing from Firestore
+    if (listingId && !listingDetails) {
+      console.log(`Fetching listing ${listingId} for expiration reminder email`);
+      const listingDoc = await db.collection('tools').doc(listingId).get();
+      
+      if (!listingDoc.exists) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+      
+      const listing = listingDoc.data();
+      const sellerId = listing.userId || listing.sellerId;
+      
+      // Get seller details
+      let sellerName = '';
+      if (sellerId) {
+        const sellerDoc = await db.collection('users').doc(sellerId).get();
+        if (sellerDoc.exists) {
+          sellerName = sellerDoc.data().displayName || sellerDoc.data().firstName || 
+                      sellerDoc.data().lastName || sellerDoc.data().sellerName || email.split('@')[0];
+        }
+      }
+      
+      // Format expiration date if available
+      const expirationDate = listing.expiresAt ? 
+        new Date(listing.expiresAt.toDate ? listing.expiresAt.toDate() : listing.expiresAt).toLocaleDateString() : 
+        'soon';
+      
+      // Format listing date if available
+      const listingDate = listing.createdAt ? 
+        new Date(listing.createdAt.toDate ? listing.createdAt.toDate() : listing.createdAt).toLocaleDateString() : 
+        'recently';
+      
+      const details = {
+        sellerId,
+        sellerName,
+        listingId,
+        itemName: listing.name || listing.title,
+        expirationDate,
+        price: listing.price,
+        itemImage: listing.images?.[0]?.url || listing.image,
+        listingDate,
+        viewCount: listing.viewCount || 0,
+        watchCount: listing.watchCount || 0,
+        offerCount: listing.offerCount || 0
+      };
+      
+      console.log(`Sending listing expiration reminder email for listing ${listingId} to ${email}`);
+      const result = await emailService.sendListingExpirationReminderEmail(email, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending listing expiration reminder email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If listing details were provided directly
+    else if (listingDetails) {
+      console.log(`Sending listing expiration reminder email to ${email} with provided details`);
+      const result = await emailService.sendListingExpirationReminderEmail(email, listingDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending listing expiration reminder email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing listingDetails or listingId' });
+    }
+  } catch (error) {
+    console.error('Error in listing expiration reminder email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send shipping reminder email
+app.post('/send-shipping-reminder', async (req, res) => {
+  try {
+    const { email, reminderDetails, orderId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If orderId is provided but not reminder details, fetch the order from Firestore
+    if (orderId && !reminderDetails) {
+      console.log(`Fetching order ${orderId} for shipping reminder email`);
+      const orderDoc = await db.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      const order = orderDoc.data();
+      
+      // Determine seller(s) with items in the order
+      const sellerIds = new Set();
+      if (order.items && order.items.length > 0) {
+        for (const item of order.items) {
+          if (item.sellerId) {
+            sellerIds.add(item.sellerId);
+          }
+        }
+      }
+      
+      if (sellerIds.size === 0) {
+        return res.status(400).json({ error: 'No sellers found for this order' });
+      }
+      
+      // For simplicity, we'll only support sending to a single seller at a time
+      const sellerId = email ? email : Array.from(sellerIds)[0];
+      
+      // Get seller details if email is a seller ID
+      let sellerEmail = email;
+      let sellerName = '';
+      
+      if (email.includes('@')) {
+        // Email is provided directly
+        sellerEmail = email;
+      } else {
+        // Email is a seller ID, get their email
+        const sellerDoc = await db.collection('users').doc(email).get();
+        
+        if (!sellerDoc.exists) {
+          return res.status(404).json({ error: 'Seller not found' });
+        }
+        
+        sellerEmail = sellerDoc.data().email || sellerDoc.data().contactEmail;
+        sellerName = sellerDoc.data().displayName || sellerDoc.data().firstName || 
+                    sellerDoc.data().lastName || sellerDoc.data().sellerName;
+        
+        if (!sellerEmail) {
+          return res.status(400).json({ error: 'Seller has no email address' });
+        }
+      }
+      
+      // Get buyer details
+      let buyerName = 'Customer';
+      if (order.userId && order.userId !== 'guest') {
+        const buyerDoc = await db.collection('users').doc(order.userId).get();
+        if (buyerDoc.exists) {
+          buyerName = buyerDoc.data().displayName || buyerDoc.data().firstName || 
+                      order.userEmail?.split('@')[0] || 'Customer';
+        }
+      } else if (order.userEmail) {
+        buyerName = order.userEmail.split('@')[0];
+      }
+      
+      // Format order date
+      const orderDate = order.createdAt ? 
+        new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 
+        'recently';
+      
+      // Calculate days since order
+      const now = new Date();
+      const orderCreatedAt = order.createdAt ? 
+        new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt) : 
+        new Date(now - 86400000 * 2); // Default to 2 days ago
+      
+      const daysSinceOrder = Math.floor((now - orderCreatedAt) / (1000 * 60 * 60 * 24));
+      
+      // Find an item from this seller
+      let itemName = 'ordered item';
+      if (order.items && order.items.length > 0) {
+        const sellerItem = order.items.find(item => item.sellerId === sellerId);
+        if (sellerItem) {
+          itemName = sellerItem.name || sellerItem.title || 'ordered item';
+        }
+      }
+      
+      const details = {
+        sellerId,
+        sellerName,
+        orderId,
+        orderDate,
+        daysSinceOrder,
+        buyerName,
+        itemName,
+        shippingCutOff: '3 days'
+      };
+      
+      console.log(`Sending shipping reminder email for order ${orderId} to ${sellerEmail}`);
+      const result = await emailService.sendShippingReminderEmail(sellerEmail, details);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending shipping reminder email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } 
+    // If reminder details were provided directly
+    else if (reminderDetails) {
+      console.log(`Sending shipping reminder email to ${email} with provided details`);
+      const result = await emailService.sendShippingReminderEmail(email, reminderDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending shipping reminder email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing reminderDetails or orderId' });
+    }
+  } catch (error) {
+    console.error('Error in shipping reminder email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send payout notification email
+app.post('/send-payout-notification', async (req, res) => {
+  try {
+    const { email, payoutDetails, payoutId } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If payoutId is provided but not payout details, fetch the payout from Stripe
+    if (payoutId && !payoutDetails) {
+      console.log(`Fetching payout ${payoutId} from Stripe`);
+      try {
+        const payout = await stripe.payouts.retrieve(payoutId);
+        
+        if (!payout) {
+          return res.status(404).json({ error: 'Payout not found' });
+        }
+        
+        // Get seller details if available
+        let sellerId = '';
+        let sellerName = '';
+        
+        if (payout.metadata && payout.metadata.sellerId) {
+          sellerId = payout.metadata.sellerId;
+          
+          const sellerDoc = await db.collection('users').doc(sellerId).get();
+          if (sellerDoc.exists) {
+            sellerName = sellerDoc.data().displayName || sellerDoc.data().firstName || 
+                          sellerDoc.data().lastName || sellerDoc.data().sellerName || email.split('@')[0];
+          }
+        }
+        
+        const details = {
+          sellerId,
+          sellerName,
+          amount: payout.amount / 100, // Convert from cents to dollars
+          created: payout.created,
+          arrival_date: payout.arrival_date,
+          bankLast4: payout.destination ? payout.destination.slice(-4) : '****',
+          orderCount: payout.metadata?.orderCount || 1,
+          transactionId: payout.id
+        };
+        
+        console.log(`Sending payout notification email for payout ${payoutId} to ${email}`);
+        const result = await emailService.sendPayoutNotificationEmail(email, details);
+        
+        if (result.success) {
+          return res.json({ success: true });
+        } else {
+          console.error('Error sending payout notification email:', result.error);
+          return res.status(500).json({ error: result.error });
+        }
+      } catch (stripeError) {
+        console.error('Error retrieving payout from Stripe:', stripeError);
+        return res.status(500).json({ error: stripeError.message });
+      }
+    } 
+    // If payout details were provided directly
+    else if (payoutDetails) {
+      console.log(`Sending payout notification email to ${email} with provided details`);
+      const result = await emailService.sendPayoutNotificationEmail(email, payoutDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending payout notification email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing payoutDetails or payoutId' });
+    }
+  } catch (error) {
+    console.error('Error in payout notification email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Send monthly sales summary email
+app.post('/send-monthly-sales-summary', async (req, res) => {
+  try {
+    const { email, summaryDetails, sellerId, month, year } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    // If sellerId, month, and year are provided but not summary details, 
+    // generate the summary data
+    if (sellerId && month && year && !summaryDetails) {
+      console.log(`Generating sales summary for seller ${sellerId} for ${month}/${year}`);
+      try {
+        // Get seller details
+        const sellerDoc = await db.collection('users').doc(sellerId).get();
+        
+        if (!sellerDoc.exists) {
+          return res.status(404).json({ error: 'Seller not found' });
+        }
+        
+        const seller = sellerDoc.data();
+        const sellerName = seller.displayName || seller.firstName || 
+                          seller.lastName || seller.sellerName || email.split('@')[0];
+        
+        // Set date range for the specified month
+        const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in JS Date
+        const endDate = new Date(year, month, 0, 23, 59, 59, 999); // Last day of month
+        
+        // Get month name
+        const monthName = startDate.toLocaleString('default', { month: 'long' });
+        
+        // Get orders for this seller in the specified month
+        const ordersSnapshot = await db.collection('orders')
+          .where('items', 'array-contains', { sellerId: sellerId })
+          .where('createdAt', '>=', startDate)
+          .where('createdAt', '<=', endDate)
+          .where('status', 'in', ['paid', 'shipped', 'delivered', 'completed'])
+          .get();
+        
+        console.log(`Found ${ordersSnapshot.docs.length} orders for seller ${sellerId} in ${monthName}`);
+        
+        // Calculate sales metrics
+        let totalSales = 0;
+        let totalFees = 0;
+        const soldItems = [];
+        const itemSalesCount = {};
+        
+        for (const orderDoc of ordersSnapshot.docs) {
+          const order = orderDoc.data();
+          
+          // Find this seller's items in the order
+          for (const item of order.items) {
+            if (item.sellerId === sellerId) {
+              const itemTotal = (item.price * (item.quantity || 1));
+              totalSales += itemTotal;
+              totalFees += (itemTotal * 0.05); // 5% platform fee
+              
+              soldItems.push(item);
+              
+              // Track item sales for finding top performing item
+              const itemId = item.id || item.itemId;
+              if (itemId) {
+                if (!itemSalesCount[itemId]) {
+                  itemSalesCount[itemId] = {
+                    count: 0,
+                    revenue: 0,
+                    name: item.name || item.title
+                  };
+                }
+                
+                itemSalesCount[itemId].count += (item.quantity || 1);
+                itemSalesCount[itemId].revenue += itemTotal;
+              }
+            }
+          }
+        }
+        
+        // Calculate net earnings
+        const netEarnings = totalSales - totalFees;
+        
+        // Determine top performing item
+        let topPerformingItem = 'None';
+        let maxRevenue = 0;
+        
+        for (const itemId in itemSalesCount) {
+          if (itemSalesCount[itemId].revenue > maxRevenue) {
+            maxRevenue = itemSalesCount[itemId].revenue;
+            topPerformingItem = itemSalesCount[itemId].name;
+          }
+        }
+        
+        // Get view statistics (placeholder method)
+        const viewsCount = await getViewsCount(sellerId, startDate, endDate);
+        
+        const details = {
+          sellerId,
+          sellerName,
+          monthName,
+          year,
+          totalSales,
+          totalFees,
+          netEarnings,
+          orderCount: ordersSnapshot.docs.length,
+          viewsCount,
+          topPerformingItem
+        };
+        
+        console.log(`Sending monthly sales summary email for ${monthName} ${year} to ${email}`);
+        const result = await emailService.sendMonthlySalesSummaryEmail(email, details);
+        
+        if (result.success) {
+          return res.json({ success: true });
+        } else {
+          console.error('Error sending monthly sales summary email:', result.error);
+          return res.status(500).json({ error: result.error });
+        }
+      } catch (error) {
+        console.error('Error generating sales summary:', error);
+        return res.status(500).json({ error: error.message });
+      }
+    } 
+    // If summary details were provided directly
+    else if (summaryDetails) {
+      console.log(`Sending monthly sales summary email to ${email} with provided details`);
+      const result = await emailService.sendMonthlySalesSummaryEmail(email, summaryDetails);
+      
+      if (result.success) {
+        return res.json({ success: true });
+      } else {
+        console.error('Error sending monthly sales summary email:', result.error);
+        return res.status(500).json({ error: result.error });
+      }
+    } else {
+      return res.status(400).json({ error: 'Missing summaryDetails or sellerId/month/year' });
+    }
+  } catch (error) {
+    console.error('Error in monthly sales summary email endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 /**
  * Update a Stripe Connect account with required information
  * This helps fix restricted accounts that are missing required fields
@@ -1751,3 +2775,505 @@ exports.api = functions.https.onRequest((req, res) => {
 exports.stripeApi = exports.api;
 
 // Note: Email test functions have been removed after successful testing
+
+/**
+ * Scheduled Functions for email notifications
+ */
+
+// Send listing expiration reminders (Daily at 9 AM)
+exports.sendListingExpirationReminders = functions.pubsub
+  .schedule('0 9 * * *')
+  .onRun(async (context) => {
+    console.log('Running scheduled listing expiration reminders');
+    
+    try {
+      // Get listings expiring in 3 days
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+      
+      // Format date to end of day
+      threeDaysFromNow.setHours(23, 59, 59, 999);
+      
+      // Get listings that expire within the next 3 days
+      const listingsSnapshot = await db.collection('tools')
+        .where('status', '==', 'active')
+        .where('expiresAt', '<=', threeDaysFromNow)
+        .limit(100) // Process in batches
+        .get();
+      
+      console.log(`Found ${listingsSnapshot.docs.length} listings expiring soon`);
+      
+      // Send notifications for each listing
+      for (const doc of listingsSnapshot.docs) {
+        const listing = doc.data();
+        const sellerId = listing.userId || listing.sellerId;
+        
+        if (!sellerId) {
+          console.log(`Listing ${doc.id} has no seller ID, skipping`);
+          continue;
+        }
+        
+        try {
+          // Get seller details
+          const sellerDoc = await db.collection('users').doc(sellerId).get();
+          
+          if (!sellerDoc.exists) {
+            console.log(`Seller ${sellerId} not found, skipping`);
+            continue;
+          }
+          
+          const seller = sellerDoc.data();
+          const sellerEmail = seller.email || seller.contactEmail;
+          
+          if (!sellerEmail) {
+            console.log(`Seller ${sellerId} has no email, skipping`);
+            continue;
+          }
+          
+          // Format expiration date
+          const expirationDate = listing.expiresAt ? 
+            new Date(listing.expiresAt.toDate ? listing.expiresAt.toDate() : listing.expiresAt).toLocaleDateString() : 
+            'soon';
+          
+          // Format listing date
+          const listingDate = listing.createdAt ? 
+            new Date(listing.createdAt.toDate ? listing.createdAt.toDate() : listing.createdAt).toLocaleDateString() : 
+            'recently';
+          
+          // Send email notification
+          const emailResult = await emailService.sendListingExpirationReminderEmail(
+            sellerEmail,
+            {
+              sellerId,
+              sellerName: seller.displayName || seller.firstName || seller.sellerName,
+              listingId: doc.id,
+              itemName: listing.name || listing.title,
+              expirationDate,
+              price: listing.price,
+              itemImage: listing.images?.[0]?.url || listing.image,
+              listingDate,
+              viewCount: listing.viewCount || 0,
+              watchCount: listing.watchCount || 0,
+              offerCount: listing.offerCount || 0
+            }
+          );
+          
+          console.log(`Expiration reminder email for listing ${doc.id} sent to ${sellerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
+          
+          // Add a small delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (sellerError) {
+          console.error(`Error processing seller ${sellerId} for listing ${doc.id}:`, sellerError);
+          continue;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error sending listing expiration reminders:', error);
+      return null;
+    }
+  });
+
+// Send shipping reminders to sellers (Daily at 10 AM)
+exports.sendShippingReminders = functions.pubsub
+  .schedule('0 10 * * *')
+  .onRun(async (context) => {
+    console.log('Running scheduled shipping reminders');
+    
+    try {
+      // Get orders that are 2 days old and not shipped yet
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      
+      // Format date to beginning of day
+      twoDaysAgo.setHours(0, 0, 0, 0);
+      
+      // Get orders that were placed 2 days ago and are still in 'paid' status
+      const ordersSnapshot = await db.collection('orders')
+        .where('status', '==', 'paid')
+        .where('createdAt', '<=', twoDaysAgo)
+        .limit(100) // Process in batches
+        .get();
+      
+      console.log(`Found ${ordersSnapshot.docs.length} unshipped orders from 2+ days ago`);
+      
+      // Send reminders for each order
+      for (const doc of ordersSnapshot.docs) {
+        const order = doc.data();
+        
+        // Skip if no items
+        if (!order.items || order.items.length === 0) {
+          console.log(`Order ${doc.id} has no items, skipping`);
+          continue;
+        }
+        
+        // Process each seller's items in the order
+        const sellerItems = {};
+        
+        // Group items by seller
+        for (const item of order.items) {
+          const sellerId = item.sellerId || item.userId;
+          
+          if (!sellerId) {
+            console.log(`Item ${item.id} in order ${doc.id} has no seller ID, skipping`);
+            continue;
+          }
+          
+          if (!sellerItems[sellerId]) {
+            sellerItems[sellerId] = [];
+          }
+          
+          sellerItems[sellerId].push(item);
+        }
+        
+        // Process each seller
+        for (const sellerId in sellerItems) {
+          try {
+            // Get seller details
+            const sellerDoc = await db.collection('users').doc(sellerId).get();
+            
+            if (!sellerDoc.exists) {
+              console.log(`Seller ${sellerId} not found, skipping`);
+              continue;
+            }
+            
+            const seller = sellerDoc.data();
+            const sellerEmail = seller.email || seller.contactEmail;
+            
+            if (!sellerEmail) {
+              console.log(`Seller ${sellerId} has no email, skipping`);
+              continue;
+            }
+            
+            // Get buyer details
+            let buyerName = 'Customer';
+            if (order.userId && order.userId !== 'guest') {
+              const buyerDoc = await db.collection('users').doc(order.userId).get();
+              if (buyerDoc.exists) {
+                const buyer = buyerDoc.data();
+                buyerName = buyer.displayName || buyer.firstName || order.userEmail?.split('@')[0] || 'Customer';
+              }
+            } else if (order.userEmail) {
+              buyerName = order.userEmail.split('@')[0];
+            }
+            
+            // Format order date
+            const orderDate = order.createdAt ? 
+              new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 
+              'recently';
+            
+            // Calculate days since order
+            const now = new Date();
+            const orderCreatedAt = order.createdAt ? 
+              new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt) : 
+              new Date(now - 86400000 * 2); // Default to 2 days ago
+            
+            const daysSinceOrder = Math.floor((now - orderCreatedAt) / (1000 * 60 * 60 * 24));
+            
+            // Send shipping reminder email
+            const emailResult = await emailService.sendShippingReminderEmail(
+              sellerEmail,
+              {
+                sellerId,
+                sellerName: seller.displayName || seller.firstName || seller.sellerName,
+                orderId: doc.id,
+                orderDate,
+                daysSinceOrder,
+                buyerName,
+                itemName: sellerItems[sellerId][0].name || sellerItems[sellerId][0].title || 'ordered item',
+                shippingCutOff: '3 days'
+              }
+            );
+            
+            console.log(`Shipping reminder email for order ${doc.id} sent to seller ${sellerId} (${sellerEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
+            
+            // Add a small delay to prevent rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+          } catch (sellerError) {
+            console.error(`Error processing seller ${sellerId} for order ${doc.id}:`, sellerError);
+            continue;
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error sending shipping reminders:', error);
+      return null;
+    }
+  });
+
+// Send review request emails (Daily at 11 AM, for items delivered 3 days ago)
+exports.sendReviewRequests = functions.pubsub
+  .schedule('0 11 * * *')
+  .onRun(async (context) => {
+    console.log('Running scheduled review request emails');
+    
+    try {
+      // Get orders that were delivered 3 days ago
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      
+      // Format date to beginning of day
+      threeDaysAgo.setHours(0, 0, 0, 0);
+      
+      const dayAfterThreeDaysAgo = new Date(threeDaysAgo);
+      dayAfterThreeDaysAgo.setDate(dayAfterThreeDaysAgo.getDate() + 1);
+      
+      // Get orders that were marked as delivered around 3 days ago
+      const ordersSnapshot = await db.collection('orders')
+        .where('status', '==', 'delivered')
+        .where('deliveredAt', '>=', threeDaysAgo)
+        .where('deliveredAt', '<', dayAfterThreeDaysAgo)
+        .limit(100) // Process in batches
+        .get();
+      
+      console.log(`Found ${ordersSnapshot.docs.length} orders delivered 3 days ago`);
+      
+      // Send review requests for each order
+      for (const doc of ordersSnapshot.docs) {
+        const order = doc.data();
+        
+        // Skip guest orders if no email
+        if (order.userId === 'guest' && !order.userEmail) {
+          console.log(`Guest order ${doc.id} has no email, skipping`);
+          continue;
+        }
+        
+        try {
+          // Get buyer details and email
+          let buyerEmail = order.userEmail;
+          let buyerName = 'Customer';
+          
+          if (order.userId && order.userId !== 'guest') {
+            const buyerDoc = await db.collection('users').doc(order.userId).get();
+            if (buyerDoc.exists) {
+              const buyer = buyerDoc.data();
+              buyerEmail = buyer.email || order.userEmail;
+              buyerName = buyer.displayName || buyer.firstName || buyerEmail?.split('@')[0] || 'Customer';
+            }
+          } else if (order.userEmail) {
+            buyerName = order.userEmail.split('@')[0];
+          }
+          
+          if (!buyerEmail) {
+            console.log(`Order ${doc.id} has no buyer email, skipping`);
+            continue;
+          }
+          
+          // Get item details
+          const itemName = order.items && order.items.length > 0 ? 
+            (order.items[0].name || order.items[0].title) : 
+            'your purchase';
+          
+          const itemImage = order.items && order.items.length > 0 ? 
+            (order.items[0].imageUrl || order.items[0].image || order.items[0].images?.[0]?.url) : 
+            null;
+          
+          // Format delivery date
+          const deliveryDate = order.deliveredAt ? 
+            new Date(order.deliveredAt.toDate ? order.deliveredAt.toDate() : order.deliveredAt).toLocaleDateString() : 
+            'recently';
+          
+          // Send review request email
+          const emailResult = await emailService.sendReviewRequestEmail(
+            buyerEmail,
+            {
+              userId: order.userId,
+              isGuestOrder: order.userId === 'guest',
+              buyerName,
+              orderId: doc.id,
+              itemName,
+              itemImage,
+              deliveryDate,
+              reviewDaysLeft: 14 // Two weeks to leave a review
+            }
+          );
+          
+          console.log(`Review request email for order ${doc.id} sent to ${buyerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
+          
+          // Mark that review request has been sent
+          await db.collection('orders').doc(doc.id).update({
+            reviewRequestSent: true,
+            reviewRequestSentAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          // Add a small delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (orderError) {
+          console.error(`Error processing review request for order ${doc.id}:`, orderError);
+          continue;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error sending review requests:', error);
+      return null;
+    }
+  });
+
+// Send monthly sales summary to sellers (1st day of each month at 5 AM)
+exports.sendMonthlySalesSummaries = functions.pubsub
+  .schedule('0 5 1 * *')
+  .onRun(async (context) => {
+    console.log('Running scheduled monthly sales summary emails');
+    
+    try {
+      // Get the previous month details
+      const now = new Date();
+      const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      
+      const monthName = previousMonth.toLocaleString('default', { month: 'long' });
+      const year = previousMonth.getFullYear();
+      
+      console.log(`Generating sales summaries for ${monthName} ${year}`);
+      
+      // Get all sellers
+      const sellersSnapshot = await db.collection('users')
+        .where('isSeller', '==', true)
+        .limit(500) // Process in batches
+        .get();
+      
+      console.log(`Found ${sellersSnapshot.docs.length} sellers to process`);
+      
+      // Process each seller
+      for (const sellerDoc of sellersSnapshot.docs) {
+        const sellerId = sellerDoc.id;
+        const seller = sellerDoc.data();
+        
+        try {
+          const sellerEmail = seller.email || seller.contactEmail;
+          
+          if (!sellerEmail) {
+            console.log(`Seller ${sellerId} has no email, skipping`);
+            continue;
+          }
+          
+          // Get completed orders for this seller in the previous month
+          const ordersSnapshot = await db.collection('orders')
+            .where('items', 'array-contains', { sellerId: sellerId })
+            .where('createdAt', '>=', previousMonth)
+            .where('createdAt', '<=', previousMonthEnd)
+            .where('status', 'in', ['paid', 'shipped', 'delivered', 'completed'])
+            .get();
+          
+          console.log(`Found ${ordersSnapshot.docs.length} orders for seller ${sellerId} in ${monthName}`);
+          
+          // Skip if no orders
+          if (ordersSnapshot.docs.length === 0) {
+            console.log(`No orders for seller ${sellerId} in ${monthName}, skipping`);
+            continue;
+          }
+          
+          // Calculate total sales, fees, and other metrics
+          let totalSales = 0;
+          let totalFees = 0;
+          const soldItems = [];
+          const itemSalesCount = {};
+          
+          for (const orderDoc of ordersSnapshot.docs) {
+            const order = orderDoc.data();
+            
+            // Find this seller's items in the order
+            for (const item of order.items) {
+              if (item.sellerId === sellerId) {
+                const itemTotal = (item.price * (item.quantity || 1));
+                totalSales += itemTotal;
+                totalFees += (itemTotal * 0.05); // 5% platform fee
+                
+                soldItems.push(item);
+                
+                // Track item sales for finding top performing item
+                const itemId = item.id || item.itemId;
+                if (itemId) {
+                  if (!itemSalesCount[itemId]) {
+                    itemSalesCount[itemId] = {
+                      count: 0,
+                      revenue: 0,
+                      name: item.name || item.title
+                    };
+                  }
+                  
+                  itemSalesCount[itemId].count += (item.quantity || 1);
+                  itemSalesCount[itemId].revenue += itemTotal;
+                }
+              }
+            }
+          }
+          
+          // Calculate net earnings
+          const netEarnings = totalSales - totalFees;
+          
+          // Determine top performing item
+          let topPerformingItem = 'None';
+          let maxRevenue = 0;
+          
+          for (const itemId in itemSalesCount) {
+            if (itemSalesCount[itemId].revenue > maxRevenue) {
+              maxRevenue = itemSalesCount[itemId].revenue;
+              topPerformingItem = itemSalesCount[itemId].name;
+            }
+          }
+          
+          // Get view statistics (if you track this data)
+          const viewsCount = await getViewsCount(sellerId, previousMonth, previousMonthEnd);
+          
+          // Send monthly sales summary email
+          const emailResult = await emailService.sendMonthlySalesSummaryEmail(
+            sellerEmail,
+            {
+              sellerId,
+              sellerName: seller.displayName || seller.firstName || seller.sellerName,
+              monthName,
+              year,
+              totalSales,
+              totalFees,
+              netEarnings,
+              orderCount: ordersSnapshot.docs.length,
+              viewsCount,
+              topPerformingItem
+            }
+          );
+          
+          console.log(`Monthly sales summary for ${monthName} ${year} sent to ${sellerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
+          
+          // Add a small delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+        } catch (sellerError) {
+          console.error(`Error processing monthly summary for seller ${sellerId}:`, sellerError);
+          continue;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error sending monthly sales summaries:', error);
+      return null;
+    }
+  });
+
+/**
+ * Helper function to get views count for a seller's listings
+ */
+async function getViewsCount(sellerId, startDate, endDate) {
+  try {
+    // Get all listings for this seller
+    const listingsSnapshot = await db.collection('tools')
+      .where('userId', '==', sellerId)
+      .get();
+    
+    // If we track views in a separate collection, we could query it here
+    // For now, return a placeholder count based on number of listings
+    return listingsSnapshot.docs.length * 10; // Placeholder value
+  } catch (error) {
+    console.error(`Error getting views count for seller ${sellerId}:`, error);
+    return 0;
+  }
+}
