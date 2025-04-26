@@ -4,8 +4,9 @@ import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, getConnectDashboardLink } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
-import { Store, Check, Loader, AlertCircle, Briefcase, FileText, Truck, ExternalLink, DollarSign } from 'lucide-react';
+import { Store, Check, Loader, AlertCircle, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
 import { updateSellerSettings } from '../firebase/models/userModel';
+import MyListings from './MyListings';
 
 /**
  * Seller Dashboard Page
@@ -68,6 +69,11 @@ const SellerDashboardPage = () => {
     stripeConnectComplete: false,
     stripeAccountId: ''
   });
+
+  // State for offers
+  const [offers, setOffers] = useState([]);
+  const [totalSales, setTotalSales] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
   
   // Fetch seller status and data on mount
   useEffect(() => {
@@ -260,13 +266,69 @@ const SellerDashboardPage = () => {
           }));
         }
         
-        // TODO: Fetch seller's listings
-        // This would come from a Firebase query
-        setListings([]);
+        // Fetch seller's listings from Firebase
+        // For now, we'll use mock data
+        setListings([
+          {
+            id: 'listing1',
+            name: 'DeWalt Power Drill',
+            price: 149.99,
+            status: 'active',
+            images: ['https://via.placeholder.com/150']
+          },
+          {
+            id: 'listing2',
+            name: 'Makita Circular Saw',
+            price: 219.99,
+            status: 'active',
+            images: ['https://via.placeholder.com/150']
+          }
+        ]);
         
-        // TODO: Fetch recent orders
-        // This would come from a Firebase query
-        setRecentOrders([]);
+        // Fetch recent offers
+        // For now, we'll use mock data
+        setOffers([
+          {
+            id: 'offer1',
+            toolId: 'listing1',
+            toolTitle: 'DeWalt Power Drill',
+            buyerId: 'buyer1',
+            buyerName: 'John Doe',
+            buyerPhoto: null,
+            originalPrice: 149.99,
+            currentPrice: 130.00,
+            status: 'pending',
+            createdAt: { seconds: Date.now() / 1000 - 60 * 60 }
+          },
+          {
+            id: 'offer2',
+            toolId: 'listing2',
+            toolTitle: 'Makita Circular Saw',
+            buyerId: 'buyer2',
+            buyerName: 'Jane Smith',
+            buyerPhoto: null,
+            originalPrice: 219.99,
+            currentPrice: 195.00,
+            status: 'accepted',
+            createdAt: { seconds: Date.now() / 1000 - 2 * 60 * 60 }
+          },
+          {
+            id: 'offer3',
+            toolId: 'listing1',
+            toolTitle: 'DeWalt Power Drill',
+            buyerId: 'buyer3',
+            buyerName: 'Bob Johnson',
+            buyerPhoto: null,
+            originalPrice: 149.99,
+            currentPrice: 120.00,
+            status: 'countered',
+            createdAt: { seconds: Date.now() / 1000 - 5 * 60 * 60 }
+          }
+        ]);
+
+        // Fetch orders count and total sales
+        setOrdersCount(5);
+        setTotalSales(1256.78);
         
         setLoading(false);
       } catch (err) {
@@ -553,30 +615,28 @@ const SellerDashboardPage = () => {
                     </svg>
                     Dashboard
                   </button>
-                  <Link to="/seller/listings" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50">
+                  <button 
+                    onClick={() => setActiveMainTab('listings')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'listings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     My Listings
-                  </Link>
-                  <Link to="/seller/orders" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50">
+                  </button>
+                  <button 
+                    onClick={() => setActiveMainTab('orders')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'orders' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     Orders
-                  </Link>
-                  <Link to="/seller/earnings" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Earnings
-                  </Link>
-                  <Link to="/seller/analytics" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    Analytics
-                  </Link>
+                  </button>
                   <button 
                     onClick={() => setActiveMainTab('settings')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
@@ -615,7 +675,7 @@ const SellerDashboardPage = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-medium">Seller Dashboard</h2>
                   <Link 
-                    to="/seller/tools/new"
+                    to="/tools/new"
                     className="bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-800"
                   >
                     + New Listing
@@ -623,81 +683,140 @@ const SellerDashboardPage = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <button 
+                    onClick={() => setActiveMainTab('listings')}
+                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                  >
                     <h3 className="text-sm font-medium text-gray-500 mb-1">ACTIVE LISTINGS</h3>
                     <p className="text-2xl font-bold">{listings.length || 0}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING ORDERS</h3>
-                    <p className="text-2xl font-bold">{recentOrders.filter(o => o.status === 'pending').length || 0}</p>
-                  </div>
+                  </button>
+                  <button 
+                    onClick={() => setActiveMainTab('orders')}
+                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">ORDERS</h3>
+                    <p className="text-2xl font-bold">{ordersCount || 0}</p>
+                  </button>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL SALES</h3>
-                    <p className="text-2xl font-bold">$0.00</p>
+                    <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
                   </div>
                 </div>
                 
                 <div className="border-t border-gray-200 pt-6 mb-6">
-                  <h3 className="text-lg font-medium mb-4">Recent Orders</h3>
-                  {recentOrders.length === 0 ? (
+                  <h3 className="text-lg font-medium mb-4">Recent Offers</h3>
+                  {offers.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No orders yet.</p>
-                      <p className="text-sm text-gray-400 mt-2">When you receive orders, they will appear here.</p>
+                      <p className="text-gray-500">No offers yet.</p>
+                      <p className="text-sm text-gray-400 mt-2">When you receive offers, they will appear here.</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {recentOrders.map(order => (
-                            <tr key={order.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.date}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customerName}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.amount.toFixed(2)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  order.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {order.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-4">
+                      {offers.map(offer => (
+                        <div key={offer.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
+                              {/* Placeholder for tool image */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            
+                            <div className="flex-grow">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium text-gray-900">{offer.toolTitle}</h4>
+                                  
+                                  <div className="flex items-center mt-1">
+                                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                      {offer.buyerPhoto ? (
+                                        <img src={offer.buyerPhoto} alt="" className="h-8 w-8 rounded-full" />
+                                      ) : (
+                                        <span className="text-xs font-medium text-gray-500">
+                                          {offer.buyerName?.charAt(0)?.toUpperCase() || '?'}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Offer from <span className="font-medium">{offer.buyerName}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="text-right">
+                                  <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                    offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                    offer.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                                    offer.status === 'countered' ? 'bg-blue-100 text-blue-800' : 
+                                    offer.status === 'declined' ? 'bg-red-100 text-red-800' : 
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+                                  </div>
+                                  
+                                  <div className="mt-1 flex space-x-2">
+                                    <div className="text-sm text-gray-500 line-through">${offer.originalPrice.toFixed(2)}</div>
+                                    <div className="text-sm font-medium text-green-700">${offer.currentPrice.toFixed(2)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-2 flex justify-end">
+                                <button className="text-sm text-benchlot-primary hover:text-benchlot-secondary">
+                                  View Details
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {offers.length > 3 && (
+                        <div className="text-center mt-4">
+                          <button className="text-benchlot-primary hover:text-benchlot-secondary font-medium">
+                            View All Offers
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
                 
                 <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-medium mb-4">Your Listings</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">Your Listings</h3>
+                    <button 
+                      onClick={() => setActiveMainTab('listings')}
+                      className="text-benchlot-primary hover:text-benchlot-secondary font-medium text-sm"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  
                   {listings.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
                       <p className="text-gray-500">No listings yet.</p>
-                      <Link to="/seller/tools/new" className="text-green-700 font-medium underline mt-2 inline-block">
+                      <Link to="/tools/new" className="text-green-700 font-medium underline mt-2 inline-block">
                         Create your first listing
                       </Link>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {listings.map(listing => (
+                      {listings.slice(0, 2).map(listing => (
                         <div key={listing.id} className="border border-gray-200 rounded-lg overflow-hidden">
                           <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                            <img src={listing.imageUrl} alt={listing.title} className="object-cover" />
+                            {listing.images?.[0] ? (
+                              <img src={listing.images[0]} alt={listing.name} className="object-cover" />
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
                           </div>
                           <div className="p-4">
-                            <h4 className="font-medium">{listing.title}</h4>
+                            <h4 className="font-medium">{listing.name}</h4>
                             <p className="text-green-700 font-medium mt-1">${listing.price.toFixed(2)}</p>
                             <div className="flex justify-between mt-3">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -706,7 +825,7 @@ const SellerDashboardPage = () => {
                               }`}>
                                 {listing.status}
                               </span>
-                              <Link to={`/seller/listings/${listing.id}`} className="text-green-700 text-sm font-medium">
+                              <Link to={`/tools/edit/${listing.id}`} className="text-green-700 text-sm font-medium">
                                 Edit
                               </Link>
                             </div>
@@ -715,6 +834,124 @@ const SellerDashboardPage = () => {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+            
+            {activeMainTab === 'listings' && (
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-medium text-stone-800">My Listings</h2>
+                    <Link 
+                      to="/tools/new"
+                      className="bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-800"
+                    >
+                      + New Listing
+                    </Link>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <MyListings />
+                </div>
+              </div>
+            )}
+            
+            {activeMainTab === 'orders' && (
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-medium text-stone-800">Orders</h2>
+                  <p className="text-stone-600 text-sm mt-1">Manage and track orders from your customers</p>
+                </div>
+                
+                <div className="p-6">
+                  {/* Filter and search controls */}
+                  <div className="flex flex-col md:flex-row gap-4 mb-6">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="Search orders..." 
+                        className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      
+                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="highest">Highest Price</option>
+                        <option value="lowest">Lowest Price</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {/* Orders list */}
+                  <div className="space-y-4">
+                    {ordersCount === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Package className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-4 text-gray-500 font-medium">No orders yet</p>
+                        <p className="text-sm text-gray-400 mt-2">
+                          When customers place orders for your listings, they will appear here.
+                        </p>
+                      </div>
+                    ) : (
+                      // Mock orders for demonstration
+                      [1, 2, 3].map(i => (
+                        <div key={i} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                            <div>
+                              <div className="flex items-center">
+                                <h3 className="font-medium">Order #{1000 + i}</h3>
+                                <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  i === 1 ? 'bg-yellow-100 text-yellow-800' : 
+                                  i === 2 ? 'bg-green-100 text-green-800' : 
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {i === 1 ? 'Processing' : i === 2 ? 'Shipped' : 'Pending'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-500 mt-1">Placed on {new Date().toLocaleDateString()}</p>
+                              <div className="mt-3 flex items-center">
+                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <span className="text-xs font-medium text-gray-500">
+                                    {String.fromCharCode(64 + i)}
+                                  </span>
+                                </div>
+                                <div className="ml-2 text-sm">
+                                  <p className="font-medium text-gray-900">Customer Name</p>
+                                  <p className="text-gray-500">customer@example.com</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end">
+                              <p className="text-lg font-bold text-gray-900">${(50 * i).toFixed(2)}</p>
+                              <p className="text-sm text-gray-500">{i + 1} items</p>
+                              <button className="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-benchlot-primary hover:bg-benchlot-secondary">
+                                View Details
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
