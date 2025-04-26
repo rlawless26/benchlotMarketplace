@@ -10,9 +10,6 @@ import {
   MapPin, 
   CreditCard, 
   Bell, 
-  Shield, 
-  Truck, 
-  Store,
   ChevronRight, 
   Loader
 } from 'lucide-react';
@@ -25,9 +22,6 @@ const PasswordSettings = React.lazy(() => import('../components/settings/Passwor
 const AddressSettings = React.lazy(() => import('../components/settings/AddressSettings'));
 const PaymentSettings = React.lazy(() => import('../components/settings/PaymentSettings'));
 const NotificationSettings = React.lazy(() => import('../components/settings/NotificationSettings'));
-const PrivacySettings = React.lazy(() => import('../components/settings/PrivacySettings'));
-const ShippingSettings = React.lazy(() => import('../components/settings/ShippingSettings'));
-const SellerSettings = React.lazy(() => import('../components/settings/SellerSettings'));
 const SellerOnboarding = React.lazy(() => import('../components/settings/SellerOnboarding'));
 
 const SettingsPage = () => {
@@ -41,7 +35,7 @@ const SettingsPage = () => {
   
   // Set initial active tab based on URL or default to 'profile'
   const [activeTab, setActiveTab] = useState(
-    tabFromQuery && ['profile', 'password', 'address', 'payment', 'notifications', 'privacy', 'shipping', 'seller'].includes(tabFromQuery)
+    tabFromQuery && ['profile', 'password', 'address', 'payment', 'notifications'].includes(tabFromQuery)
       ? tabFromQuery
       : 'profile'
   );
@@ -146,33 +140,6 @@ const SettingsPage = () => {
                     onClick={handleTabChange} 
                   />
                   
-                  <TabButton 
-                    id="privacy" 
-                    icon={Shield} 
-                    label="Privacy" 
-                    active={activeTab === 'privacy'} 
-                    onClick={handleTabChange} 
-                  />
-                  
-                  {/* Only show shipping tab for sellers */}
-                  {isSeller && (
-                    <TabButton 
-                      id="shipping" 
-                      icon={Truck} 
-                      label="Shipping" 
-                      active={activeTab === 'shipping'} 
-                      onClick={handleTabChange} 
-                    />
-                  )}
-                  
-                  {/* Seller Settings Tab - shown for all users */}
-                  <TabButton 
-                    id="seller" 
-                    icon={Store} 
-                    label="Seller Settings" 
-                    active={activeTab === 'seller'} 
-                    onClick={handleTabChange} 
-                  />
                 </ul>
               </nav>
             </div>
@@ -192,11 +159,6 @@ const SettingsPage = () => {
               {activeTab === 'address' && <AddressSettings user={user} />}
               {activeTab === 'payment' && <PaymentSettings user={user} />}
               {activeTab === 'notifications' && <NotificationSettings user={user} />}
-              {activeTab === 'privacy' && <PrivacySettings user={user} />}
-              {activeTab === 'shipping' && <ShippingSettings user={user} />}
-              {activeTab === 'seller' && (
-                isSeller ? <SellerSettings user={user} /> : <SellerOnboarding />
-              )}
             </React.Suspense>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   toolCategories,
   toolConditions
 } from '../firebase/models/toolModel';
+import { getUserById } from '../firebase/models/userModel';
 import { openAuthModal } from '../utils/featureFlags';
 
 const ToolListingForm = ({ hideTitle = false }) => {
@@ -36,6 +37,20 @@ const ToolListingForm = ({ hideTitle = false }) => {
     dimensions: '',
     material: '',
     age: '',
+    shipping: {
+      useDefault: true,
+      methods: [],
+      price: '',
+      offersFreeShipping: false,
+      freeShippingThreshold: '',
+      offerLocalPickup: false
+    },
+    returns: {
+      useDefault: true,
+      acceptsReturns: false,
+      returnPeriod: 14,
+      conditions: ''
+    }
   });
 
   // UI state
@@ -46,6 +61,62 @@ const ToolListingForm = ({ hideTitle = false }) => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
+  const [sellerDefaults, setSellerDefaults] = useState({
+    shipping: {
+      methods: ['standard'],
+      price: 15,
+      offersFreeShipping: false,
+      freeShippingThreshold: 100,
+      offerLocalPickup: true
+    },
+    returns: {
+      acceptsReturns: true,
+      returnPeriod: 14,
+      conditions: ''
+    }
+  });
+
+  // Load seller's default settings
+  useEffect(() => {
+    const loadSellerDefaults = async () => {
+      if (user && user.uid) {
+        try {
+          const userData = await getUserById(user.uid);
+          if (userData) {
+            const sellerProfile = userData.seller || userData.profile?.seller || {};
+            const policies = sellerProfile.policies || {};
+            
+            if (policies.shipping) {
+              setSellerDefaults(prev => ({
+                ...prev,
+                shipping: {
+                  ...prev.shipping,
+                  ...policies.shipping,
+                  price: policies.shipping.defaultShippingPrice || prev.shipping.price
+                }
+              }));
+            }
+            
+            if (policies.returns) {
+              setSellerDefaults(prev => ({
+                ...prev,
+                returns: {
+                  ...prev.returns,
+                  ...policies.returns
+                }
+              }));
+            }
+          }
+        } catch (err) {
+          console.error("Couldn't load seller defaults:", err);
+        }
+      }
+    };
+    
+    if (isAuthenticated()) {
+      loadSellerDefaults();
+    }
+  }, [user, isAuthenticated]);
 
   // Load existing tool data if in edit mode
   useEffect(() => {
@@ -60,6 +131,22 @@ const ToolListingForm = ({ hideTitle = false }) => {
             ...toolData,
             current_price: toolData.current_price ? toolData.current_price.toString() : '',
             original_price: toolData.original_price ? toolData.original_price.toString() : '',
+            // Ensure shipping and returns data exist
+            shipping: {
+              useDefault: !toolData.shipping || toolData.shipping.useDefault !== false,
+              methods: toolData.shipping?.methods || [],
+              price: toolData.shipping?.price ? toolData.shipping.price.toString() : '',
+              offersFreeShipping: toolData.shipping?.offersFreeShipping || false,
+              freeShippingThreshold: toolData.shipping?.freeShippingThreshold ? 
+                toolData.shipping.freeShippingThreshold.toString() : '',
+              offerLocalPickup: toolData.shipping?.offerLocalPickup || false
+            },
+            returns: {
+              useDefault: !toolData.returns || toolData.returns.useDefault !== false,
+              acceptsReturns: toolData.returns?.acceptsReturns || false,
+              returnPeriod: toolData.returns?.returnPeriod || 14,
+              conditions: toolData.returns?.conditions || ''
+            }
           };
           
           setFormData(formattedToolData);
@@ -88,6 +175,42 @@ const ToolListingForm = ({ hideTitle = false }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle nested form changes
+  const handleNestedChange = (section, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  };
+  
+  // Handle checkbox for shipping methods
+  const handleShippingMethodChange = (method) => {
+    const currentMethods = formData.shipping.methods || [];
+    let updatedMethods;
+    
+    if (currentMethods.includes(method)) {
+      updatedMethods = currentMethods.filter(m => m !== method);
+    } else {
+      updatedMethods = [...currentMethods, method];
+    }
+    
+    handleNestedChange('shipping', 'methods', updatedMethods);
+  };
+  
+  // Toggle using default settings
+  const handleUseDefaultToggle = (section) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        useDefault: !prev[section].useDefault
+      }
+    }));
   };
 
   // Handle image selection
@@ -195,6 +318,24 @@ const ToolListingForm = ({ hideTitle = false }) => {
         ...formData,
         current_price: parseFloat(formData.current_price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        
+        // Handle shipping data
+        shipping: formData.shipping.useDefault ? { useDefault: true } : {
+          useDefault: false,
+          methods: formData.shipping.methods,
+          price: parseFloat(formData.shipping.price) || 0,
+          offersFreeShipping: formData.shipping.offersFreeShipping,
+          freeShippingThreshold: parseFloat(formData.shipping.freeShippingThreshold) || 0,
+          offerLocalPickup: formData.shipping.offerLocalPickup
+        },
+        
+        // Handle returns data
+        returns: formData.returns.useDefault ? { useDefault: true } : {
+          useDefault: false,
+          acceptsReturns: formData.returns.acceptsReturns,
+          returnPeriod: parseInt(formData.returns.returnPeriod) || 14,
+          conditions: formData.returns.conditions
+        }
       };
       
       let toolId;
@@ -522,6 +663,258 @@ const ToolListingForm = ({ hideTitle = false }) => {
               />
             </div>
           </div>
+        </div>
+        
+        {/* Shipping Options */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Shipping Options</h2>
+          
+          <div className="mb-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="useDefaultShipping"
+                checked={formData.shipping.useDefault}
+                onChange={() => handleUseDefaultToggle('shipping')}
+                className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+              />
+              <label htmlFor="useDefaultShipping" className="ml-2 block text-sm text-gray-700">
+                Use my default shipping settings
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              You can configure your default shipping settings in Seller Dashboard &gt; Settings &gt; Shipping & Pickup
+            </p>
+          </div>
+          
+          {!formData.shipping.useDefault && (
+            <div className="mt-4 space-y-4 border-t border-gray-200 pt-4">
+              <div>
+                <h3 className="text-lg font-medium mb-3">Shipping Methods</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <input
+                      id="method-standard"
+                      type="checkbox"
+                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      checked={formData.shipping.methods.includes('standard')}
+                      onChange={() => handleShippingMethodChange('standard')}
+                    />
+                    <label htmlFor="method-standard" className="ml-2 block text-sm">
+                      <span className="font-medium text-gray-700">Standard Shipping</span>
+                      <p className="text-xs text-gray-500">Regular delivery (3-5 business days)</p>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      id="method-express"
+                      type="checkbox"
+                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      checked={formData.shipping.methods.includes('express')}
+                      onChange={() => handleShippingMethodChange('express')}
+                    />
+                    <label htmlFor="method-express" className="ml-2 block text-sm">
+                      <span className="font-medium text-gray-700">Express Shipping</span>
+                      <p className="text-xs text-gray-500">Faster delivery (1-2 business days)</p>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      id="method-economy"
+                      type="checkbox"
+                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      checked={formData.shipping.methods.includes('economy')}
+                      onChange={() => handleShippingMethodChange('economy')}
+                    />
+                    <label htmlFor="method-economy" className="ml-2 block text-sm">
+                      <span className="font-medium text-gray-700">Economy Shipping</span>
+                      <p className="text-xs text-gray-500">Budget-friendly (5-7 business days)</p>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      id="method-freight"
+                      type="checkbox"
+                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      checked={formData.shipping.methods.includes('freight')}
+                      onChange={() => handleShippingMethodChange('freight')}
+                    />
+                    <label htmlFor="method-freight" className="ml-2 block text-sm">
+                      <span className="font-medium text-gray-700">Freight</span>
+                      <p className="text-xs text-gray-500">For large equipment</p>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label 
+                    htmlFor="shippingPrice" 
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Shipping Price ($)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="shippingPrice"
+                      min="0"
+                      step="0.01"
+                      value={formData.shipping.price}
+                      onChange={(e) => handleNestedChange('shipping', 'price', e.target.value)}
+                      className="w-full border border-gray-300 rounded-md pl-7 pr-3 py-2"
+                      placeholder="15.00"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex items-center h-10">
+                    <input
+                      id="offerLocalPickup"
+                      type="checkbox"
+                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      checked={formData.shipping.offerLocalPickup}
+                      onChange={() => handleNestedChange('shipping', 'offerLocalPickup', !formData.shipping.offerLocalPickup)}
+                    />
+                    <label htmlFor="offerLocalPickup" className="ml-2 block text-sm font-medium text-gray-700">
+                      Offer Local Pickup
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center">
+                  <input
+                    id="offersFreeShipping"
+                    type="checkbox"
+                    className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                    checked={formData.shipping.offersFreeShipping}
+                    onChange={() => handleNestedChange('shipping', 'offersFreeShipping', !formData.shipping.offersFreeShipping)}
+                  />
+                  <label htmlFor="offersFreeShipping" className="ml-2 block text-sm font-medium text-gray-700">
+                    Offer Free Shipping
+                  </label>
+                </div>
+                
+                {formData.shipping.offersFreeShipping && (
+                  <div className="ml-6 mt-2">
+                    <label 
+                      htmlFor="freeShippingThreshold" 
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Free Shipping Threshold ($)
+                    </label>
+                    <div className="relative max-w-xs">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        id="freeShippingThreshold"
+                        min="0"
+                        step="1"
+                        value={formData.shipping.freeShippingThreshold}
+                        onChange={(e) => handleNestedChange('shipping', 'freeShippingThreshold', e.target.value)}
+                        className="w-full border border-gray-300 rounded-md pl-7 pr-3 py-2"
+                        placeholder="100"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Orders above this amount qualify for free shipping
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Return Policy */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Return Policy</h2>
+          
+          <div className="mb-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="useDefaultReturns"
+                checked={formData.returns.useDefault}
+                onChange={() => handleUseDefaultToggle('returns')}
+                className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+              />
+              <label htmlFor="useDefaultReturns" className="ml-2 block text-sm text-gray-700">
+                Use my default return policy
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              You can configure your default return policy in Seller Dashboard &gt; Settings &gt; Store Policies
+            </p>
+          </div>
+          
+          {!formData.returns.useDefault && (
+            <div className="mt-4 space-y-4 border-t border-gray-200 pt-4">
+              <div className="flex items-center">
+                <input
+                  id="acceptsReturns"
+                  type="checkbox"
+                  className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                  checked={formData.returns.acceptsReturns}
+                  onChange={() => handleNestedChange('returns', 'acceptsReturns', !formData.returns.acceptsReturns)}
+                />
+                <label htmlFor="acceptsReturns" className="ml-2 block text-sm font-medium text-gray-700">
+                  Accept Returns
+                </label>
+              </div>
+              
+              {formData.returns.acceptsReturns && (
+                <div className="ml-6 space-y-4">
+                  <div>
+                    <label 
+                      htmlFor="returnPeriod" 
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Return Period (days)
+                    </label>
+                    <input
+                      type="number"
+                      id="returnPeriod"
+                      min="1"
+                      max="90"
+                      value={formData.returns.returnPeriod}
+                      onChange={(e) => handleNestedChange('returns', 'returnPeriod', e.target.value)}
+                      className="w-32 border border-gray-300 rounded-md px-3 py-2"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label 
+                      htmlFor="returnConditions" 
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Return Conditions
+                    </label>
+                    <textarea
+                      id="returnConditions"
+                      value={formData.returns.conditions}
+                      onChange={(e) => handleNestedChange('returns', 'conditions', e.target.value)}
+                      rows="3"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Describe any conditions for accepting returns (e.g., item must be unused, original packaging required)"
+                    ></textarea>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Images */}
