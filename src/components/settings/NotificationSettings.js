@@ -1,26 +1,26 @@
 /**
  * NotificationSettings Component
- * Allows users to manage their notification preferences
+ * Allows users to manage their email notification preferences
  */
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Loader, AlertCircle, Mail, MessageSquare, ShoppingBag, Star, Calendar, Wrench } from 'lucide-react';
+import { Check, Loader, AlertCircle, MessageSquare, ShoppingBag, Star, Bell, Tag, Info } from 'lucide-react';
 import { updateNotificationPreferences } from '../../firebase/models/userModel';
 
 const NotificationSettings = ({ user }) => {
   // Default notification settings
   const defaultSettings = {
     email: {
-      orders: true,
-      messages: true,
-      deals: false,
-      wishlist: true,
-      newsletter: false
-    },
-    sms: {
-      orders: false,
-      messages: false
+      transactions: true,     // Critical - Order confirmations, payments, shipping updates
+      messages: true,         // Important - Messages & offer notifications
+      listings: true,         // Important - Listing status updates, expirations
+      reviews: true,          // Optional - Review requests & responses
+      account: true,          // Critical - Account security & policy updates 
+      marketing: false        // Optional - Marketing emails, newsletters, promotions
     }
   };
+  
+  // Critical notifications that cannot be disabled
+  const CRITICAL_NOTIFICATIONS = ['transactions', 'account'];
   
   // State
   const [notificationPrefs, setNotificationPrefs] = useState(defaultSettings);
@@ -32,22 +32,32 @@ const NotificationSettings = ({ user }) => {
   useEffect(() => {
     if (user && user.profile && user.profile.preferences) {
       const { notifications } = user.profile.preferences || {};
-      if (notifications) {
+      if (notifications && notifications.email) {
+        // Ensure critical notifications are always on
+        const emailPrefs = { ...notifications.email };
+        CRITICAL_NOTIFICATIONS.forEach(key => {
+          emailPrefs[key] = true;
+        });
+        
         setNotificationPrefs({
-          email: { ...defaultSettings.email, ...notifications.email },
-          sms: { ...defaultSettings.sms, ...notifications.sms }
+          email: { ...defaultSettings.email, ...emailPrefs }
         });
       }
     }
   }, [user]);
   
   // Handle toggle change
-  const handleToggleChange = (channel, type) => {
+  const handleToggleChange = (type) => {
+    // Prevent toggling critical notifications
+    if (CRITICAL_NOTIFICATIONS.includes(type)) {
+      return;
+    }
+    
     setNotificationPrefs(prev => ({
       ...prev,
-      [channel]: {
-        ...prev[channel],
-        [type]: !prev[channel][type]
+      email: {
+        ...prev.email,
+        [type]: !prev.email[type]
       }
     }));
   };
@@ -58,7 +68,13 @@ const NotificationSettings = ({ user }) => {
     setError(null);
     
     try {
-      await updateNotificationPreferences(user.uid, notificationPrefs);
+      // Ensure critical notifications are always on
+      const prefsToSave = { ...notificationPrefs };
+      CRITICAL_NOTIFICATIONS.forEach(key => {
+        prefsToSave.email[key] = true;
+      });
+      
+      await updateNotificationPreferences(user.uid, prefsToSave);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -80,6 +96,7 @@ const NotificationSettings = ({ user }) => {
         role="switch"
         aria-checked={checked}
         onClick={disabled ? undefined : onChange}
+        disabled={disabled}
       >
         <span 
           className={`inline-block w-5 h-5 transition duration-200 ease-in-out transform bg-white rounded-full shadow pointer-events-none ${
@@ -87,40 +104,43 @@ const NotificationSettings = ({ user }) => {
           }`} 
         />
       </button>
-      <span className="ml-3 text-sm text-stone-700">{label}</span>
+      <span className={`ml-3 text-sm ${disabled ? 'text-stone-500' : 'text-stone-700'}`}>
+        {label}
+        {disabled && <span className="text-xs ml-1 text-benchlot-primary font-medium">(Required)</span>}
+      </span>
     </div>
   );
   
   // Notification category row
-  const NotificationCategory = ({ icon, title, description, emailKey, smsKey }) => {
+  const NotificationCategory = ({ icon, title, description, emailKey, required = false }) => {
     const Icon = icon;
     
     return (
       <div className="py-5 border-b border-stone-200 last:border-b-0">
         <div className="flex items-start mb-4">
-          <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+          <div className={`flex-shrink-0 p-1.5 rounded-full ${required ? 'bg-benchlot-primary bg-opacity-20 text-benchlot-primary' : 'bg-benchlot-accent-light text-benchlot-primary'}`}>
             <Icon className="h-5 w-5" />
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-stone-800">{title}</h3>
+            <h3 className="text-sm font-medium text-stone-800 flex items-center">
+              {title}
+              {required && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-benchlot-primary text-white">
+                  Required
+                </span>
+              )}
+            </h3>
             <p className="text-xs text-stone-500 mt-1">{description}</p>
           </div>
         </div>
         
-        <div className="ml-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="ml-10">
           <ToggleSwitch
             checked={notificationPrefs.email[emailKey]}
-            onChange={() => handleToggleChange('email', emailKey)}
-            label="Email"
+            onChange={() => handleToggleChange(emailKey)}
+            label="Email Notifications"
+            disabled={required}
           />
-          
-          {smsKey && (
-            <ToggleSwitch
-              checked={notificationPrefs.sms[smsKey]}
-              onChange={() => handleToggleChange('sms', smsKey)}
-              label="SMS"
-            />
-          )}
         </div>
       </div>
     );
@@ -129,8 +149,8 @@ const NotificationSettings = ({ user }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-medium text-stone-800">Notification Preferences</h2>
-        <p className="text-stone-600 text-sm mt-1">Manage how you receive updates and alerts</p>
+        <h2 className="text-xl font-medium text-stone-800">Email Notification Settings</h2>
+        <p className="text-stone-600 text-sm mt-1">Choose which email notifications you'd like to receive</p>
       </div>
       
       <div className="p-6">
@@ -149,51 +169,65 @@ const NotificationSettings = ({ user }) => {
           </div>
         )}
         
-        {/* Section headers */}
-        <div className="hidden md:grid md:grid-cols-3 gap-4 mb-2 mt-2">
-          <div></div>
-          <div className="text-xs font-medium text-stone-500">EMAIL</div>
-          <div className="text-xs font-medium text-stone-500">SMS</div>
+        {/* Info message */}
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md mb-6 flex items-start">
+          <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm">Some notifications are required for the marketplace to function properly and cannot be disabled.</p>
+            <p className="text-xs mt-1">These include order confirmations, payment receipts, shipping updates, and account security alerts.</p>
+          </div>
         </div>
         
         {/* Categories */}
         <div className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4">
           <NotificationCategory
             icon={ShoppingBag}
-            title="Order Updates"
-            description="Get notified about order status changes"
-            emailKey="orders"
-            smsKey="orders"
+            title="Transaction Notifications"
+            description="Order confirmations, payment receipts, shipping updates, delivery confirmations"
+            emailKey="transactions"
+            required={true}
           />
           
           <NotificationCategory
             icon={MessageSquare}
             title="Messages & Offers"
-            description="Receive notifications when someone sends you a message or makes an offer"
+            description="Notifications when someone sends you a message or makes an offer on your listings"
             emailKey="messages"
-            smsKey="messages"
+          />
+          
+          <NotificationCategory
+            icon={Tag}
+            title="Listing Notifications"
+            description="Updates about your listings including expiration reminders and status changes"
+            emailKey="listings"
           />
           
           <NotificationCategory
             icon={Star}
-            title="Wishlist"
-            description="Get notified when items in your wishlist change price or availability"
-            emailKey="wishlist"
-            smsKey={null}
+            title="Reviews & Feedback"
+            description="Review requests, feedback on your listings, and responses to your reviews"
+            emailKey="reviews"
           />
           
           <NotificationCategory
-            icon={Mail}
-            title="Deals & Newsletter"
-            description="Special promotions, new features, and community news"
-            emailKey="newsletter"
-            smsKey={null}
+            icon={Bell}
+            title="Account Notifications"
+            description="Important account updates, security alerts, and policy changes"
+            emailKey="account"
+            required={true}
+          />
+          
+          <NotificationCategory
+            icon={Info}
+            title="Marketing & Newsletters"
+            description="Special promotions, new features, and marketplace news and updates"
+            emailKey="marketing"
           />
         </div>
         
         <div className="mt-6">
           <p className="text-sm text-stone-500 mb-6">
-            You can unsubscribe from email notifications at any time by clicking the unsubscribe link in any email. Message & data rates may apply for SMS notifications.
+            All marketing emails include an unsubscribe link at the bottom that you can use at any time.
           </p>
           
           <div className="flex justify-end">
