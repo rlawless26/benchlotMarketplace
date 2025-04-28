@@ -19,6 +19,8 @@ const SellerSettings = ({ user }) => {
     businessName: '',
     businessType: 'individual',
     businessDescription: '',
+    businessCity: '',
+    businessState: '',
     contactEmail: '',
     contactPhone: '',
     preferredContactMethod: 'email',
@@ -321,6 +323,108 @@ const SellerSettings = ({ user }) => {
           className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
           placeholder="Describe your business, expertise, and the types of tools you offer"
         ></textarea>
+      </div>
+      
+      {/* Business Location */}
+      <div className="border-t border-stone-200 pt-4">
+        <h3 className="text-lg font-medium mb-4">Business Location</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* City */}
+          <div>
+            <label 
+              htmlFor="businessCity" 
+              className="block text-sm font-medium text-stone-700 mb-1"
+            >
+              City
+            </label>
+            <input
+              type="text"
+              id="businessCity"
+              name="businessCity"
+              value={sellerData.businessCity || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              placeholder="Your business city"
+            />
+          </div>
+          
+          {/* State */}
+          <div>
+            <label 
+              htmlFor="businessState" 
+              className="block text-sm font-medium text-stone-700 mb-1"
+            >
+              State
+            </label>
+            <select
+              id="businessState"
+              name="businessState"
+              value={sellerData.businessState || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+            >
+              <option value="">Select a state</option>
+              {[
+                { value: "AL", label: "Alabama" },
+                { value: "AK", label: "Alaska" },
+                { value: "AZ", label: "Arizona" },
+                { value: "AR", label: "Arkansas" },
+                { value: "CA", label: "California" },
+                { value: "CO", label: "Colorado" },
+                { value: "CT", label: "Connecticut" },
+                { value: "DE", label: "Delaware" },
+                { value: "FL", label: "Florida" },
+                { value: "GA", label: "Georgia" },
+                { value: "HI", label: "Hawaii" },
+                { value: "ID", label: "Idaho" },
+                { value: "IL", label: "Illinois" },
+                { value: "IN", label: "Indiana" },
+                { value: "IA", label: "Iowa" },
+                { value: "KS", label: "Kansas" },
+                { value: "KY", label: "Kentucky" },
+                { value: "LA", label: "Louisiana" },
+                { value: "ME", label: "Maine" },
+                { value: "MD", label: "Maryland" },
+                { value: "MA", label: "Massachusetts" },
+                { value: "MI", label: "Michigan" },
+                { value: "MN", label: "Minnesota" },
+                { value: "MS", label: "Mississippi" },
+                { value: "MO", label: "Missouri" },
+                { value: "MT", label: "Montana" },
+                { value: "NE", label: "Nebraska" },
+                { value: "NV", label: "Nevada" },
+                { value: "NH", label: "New Hampshire" },
+                { value: "NJ", label: "New Jersey" },
+                { value: "NM", label: "New Mexico" },
+                { value: "NY", label: "New York" },
+                { value: "NC", label: "North Carolina" },
+                { value: "ND", label: "North Dakota" },
+                { value: "OH", label: "Ohio" },
+                { value: "OK", label: "Oklahoma" },
+                { value: "OR", label: "Oregon" },
+                { value: "PA", label: "Pennsylvania" },
+                { value: "RI", label: "Rhode Island" },
+                { value: "SC", label: "South Carolina" },
+                { value: "SD", label: "South Dakota" },
+                { value: "TN", label: "Tennessee" },
+                { value: "TX", label: "Texas" },
+                { value: "UT", label: "Utah" },
+                { value: "VT", label: "Vermont" },
+                { value: "VA", label: "Virginia" },
+                { value: "WA", label: "Washington" },
+                { value: "WV", label: "West Virginia" },
+                { value: "WI", label: "Wisconsin" },
+                { value: "WY", label: "Wyoming" },
+                { value: "DC", label: "District of Columbia" },
+                { value: "PR", label: "Puerto Rico" }
+              ].map(state => (
+                <option key={state.value} value={state.value}>{state.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="text-sm text-stone-500 mt-2">This location will be displayed to buyers and used for shipping calculations.</p>
       </div>
       
       {/* Contact Information */}

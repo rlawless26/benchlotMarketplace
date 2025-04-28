@@ -514,8 +514,21 @@ export const toolConditions = [
   'Like New',
   'Good',
   'Fair',
-  'Poor'
+  'Poor',
+  'Not Functioning'
 ];
+
+/**
+ * Tool condition definitions
+ */
+export const conditionDefinitions = {
+  'New': 'Brand new, unused item with original packaging and tags.',
+  'Like New': 'Used once or twice, flawless condition with all original packaging.',
+  'Good': 'Light signs of use, fully functional, may have minor cosmetic marks.',
+  'Fair': 'Shows signs of regular use, still works properly with some visible wear.',
+  'Poor': 'Heavily used with significant wear, requires maintenance but still functional.',
+  'Not Functioning': 'Item does not work properly or requires major repair, sold as-is.'
+};
 
 /**
  * Tool status options

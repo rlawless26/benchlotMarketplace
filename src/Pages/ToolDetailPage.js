@@ -1,6 +1,6 @@
 // src/Pages/ToolDetailPage.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -10,10 +10,20 @@ import {
   Star, 
   Check, 
   Loader, 
-  AlertCircle
+  AlertCircle,
+  Truck,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
-import { getToolById, toolStatus, uploadToolImage } from '../firebase/models/toolModel';
+import { 
+  getToolById, 
+  toolStatus, 
+  uploadToolImage, 
+  getActiveTools,
+  conditionDefinitions 
+} from '../firebase/models/toolModel';
 import { useAuth } from '../firebase';
+import { getUserById } from '../firebase/models/userModel';
 import ImageComponent from '../components/ImageComponent';
 import AddToCartButton from '../components/AddToCartButton';
 import SaveToolButton from '../components/SaveToolButton';
@@ -32,6 +42,8 @@ const ToolDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [similarTools, setSimilarTools] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   
   // Photo upload state
   const [showPhotoUploader, setShowPhotoUploader] = useState(false);
@@ -108,6 +120,114 @@ const ToolDetailPage = () => {
     }, 1500);
   };
   
+  // Fetch similar tools (same category)
+  const fetchSimilarTools = async () => {
+    if (!tool || !tool.category || !tool.id) {
+      console.log("Tool data not complete for similar tools:", { 
+        toolExists: !!tool, 
+        category: tool?.category, 
+        id: tool?.id 
+      });
+      return;
+    }
+    
+    console.log(`Fetching similar tools for category: ${tool.category}`);
+    
+    try {
+      const { tools } = await getActiveTools({
+        category: tool.category,
+        limitCount: 8  // Get more to account for filtering
+      });
+      
+      console.log(`Found ${tools.length} tools in category ${tool.category}`);
+      
+      // Filter out the current tool
+      const filteredTools = tools.filter(similarTool => similarTool.id !== tool.id);
+      console.log(`After filtering current tool, ${filteredTools.length} similar tools remain`);
+      
+      // Only keep 4 items maximum
+      const limitedTools = filteredTools.slice(0, 4);
+      console.log(`Setting ${limitedTools.length} similar tools`);
+      
+      setSimilarTools(limitedTools);
+    } catch (error) {
+      console.error('Error fetching similar tools:', error);
+    }
+  };
+  
+  // Track recently viewed items
+  useEffect(() => {
+    if (tool?.id) {
+      // Get existing recently viewed items
+      const storedItems = localStorage.getItem('recentlyViewedTools');
+      let recentItems = storedItems ? JSON.parse(storedItems) : [];
+      
+      // Remove the current item if it exists
+      recentItems = recentItems.filter(id => id !== tool.id);
+      
+      // Add current item to the beginning
+      recentItems.unshift(tool.id);
+      
+      // Keep only the last 20 items
+      recentItems = recentItems.slice(0, 20);
+      
+      // Save back to localStorage
+      localStorage.setItem('recentlyViewedTools', JSON.stringify(recentItems));
+    }
+  }, [tool?.id]);
+  
+  // Load recently viewed items
+  const loadRecentlyViewed = async () => {
+    // Return early if tool isn't loaded yet
+    if (!tool || !tool.id) return;
+    
+    console.log("Loading recently viewed items...");
+    const storedItems = localStorage.getItem('recentlyViewedTools');
+    console.log("Stored items from localStorage:", storedItems);
+    
+    if (storedItems) {
+      try {
+        const itemIds = JSON.parse(storedItems);
+        console.log("Parsed item IDs:", itemIds);
+        
+        // Filter out the current tool ID
+        const filteredIds = itemIds.filter(id => id !== tool.id);
+        console.log("Filtered IDs (without current tool):", filteredIds);
+        
+        if (filteredIds.length === 0) {
+          console.log("No other tools have been viewed");
+          return;
+        }
+        
+        const tools = [];
+        
+        // Load tool data for each ID (limited to first 6 that aren't current tool)
+        let count = 0;
+        for (const id of filteredIds) {
+          try {
+            console.log(`Fetching tool with ID: ${id}`);
+            const toolData = await getToolById(id);
+            console.log(`Successfully loaded tool: ${toolData.name}`);
+            tools.push(toolData);
+            count++;
+            if (count >= 6) break; // Limit to 6 items
+          } catch (err) {
+            console.error(`Error loading recently viewed tool with ID ${id}:`, err);
+          }
+        }
+        
+        console.log(`Setting ${tools.length} recently viewed tools`);
+        setRecentlyViewed(tools);
+      } catch (parseError) {
+        console.error("Error parsing stored items:", parseError);
+        // If there's an error parsing, reset the localStorage
+        localStorage.setItem('recentlyViewedTools', JSON.stringify([]));
+      }
+    } else {
+      console.log("No recently viewed tools in localStorage");
+    }
+  };
+  
   // Fetch tool data
   // Handle photo upload
   const handlePhotoUpload = async (e) => {
@@ -167,8 +287,33 @@ const ToolDetailPage = () => {
       try {
         setLoading(true);
         const toolData = await getToolById(id);
+        
+        // If there's no seller data but we have a user_id, fetch the user details
+        if (toolData && !toolData.seller && toolData.user_id) {
+          try {
+            console.log("Fetching seller data using user_id:", toolData.user_id);
+            const userData = await getUserById(toolData.user_id);
+            
+            // Attach seller data to the tool
+            toolData.seller = userData;
+            console.log("Added seller data to tool:", userData);
+          } catch (userErr) {
+            console.error("Error fetching seller data:", userErr);
+          }
+        }
+        
         setTool(toolData);
         setError(null);
+        
+        // After loading tool data successfully, fetch related data
+        if (toolData) {
+          // Fetch similar tools after loading the tool data
+          setTimeout(() => {
+            fetchSimilarTools();
+            // Now that tool data is set, we can safely load recently viewed
+            loadRecentlyViewed();
+          }, 100);
+        }
       } catch (err) {
         console.error('Error loading tool:', err);
         setError('Failed to load this listing. It may have been removed or is unavailable.');
@@ -367,6 +512,21 @@ const ToolDetailPage = () => {
         
         {/* Breadcrumb navigation */}
         <div className="mb-6">
+          <nav className="flex mb-4 text-sm text-stone-600">
+            <Link to="/" className="hover:text-benchlot-primary">Home</Link>
+            <span className="mx-2">/</span>
+            <Link to="/marketplace" className="hover:text-benchlot-primary">Marketplace</Link>
+            <span className="mx-2">/</span>
+            {tool.category && (
+              <>
+                <Link to={`/marketplace?category=${encodeURIComponent(tool.category)}`} className="hover:text-benchlot-primary">
+                  {tool.category}
+                </Link>
+                <span className="mx-2">/</span>
+              </>
+            )}
+            <span className="text-stone-800 font-medium truncate">{tool.name}</span>
+          </nav>
           <button
             className="flex items-center text-stone-600 hover:text-benchlot-primary"
             onClick={() => navigate('/marketplace')}
@@ -480,6 +640,41 @@ const ToolDetailPage = () => {
                   </span>
                 )}
               </div>
+              
+              {/* Shipping Information */}
+              <div className="mt-4 p-3 bg-stone-50 rounded-lg border border-stone-200 mb-4">
+                <div className="flex flex-col space-y-2">
+                  {/* Shipping Price */}
+                  <div className="flex items-center">
+                    {tool.free_shipping ? (
+                      <span className="inline-flex items-center text-green-600 font-medium">
+                        <Truck className="h-4 w-4 mr-1" />
+                        Free Shipping
+                      </span>
+                    ) : (
+                      <>
+                        <Truck className="h-4 w-4 mr-1 text-stone-500" />
+                        <span className="text-stone-700">
+                          Shipping: {formatPrice(tool.shipping_price || 0)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Shipping Location - drawn from seller's city/state or tool shipping_location */}
+                  <div className="flex items-center text-sm text-stone-600">
+                    <MapPin className="h-3.5 w-3.5 mr-1 text-stone-400" />
+                    <span>
+                      Ships from: {
+                        tool.shipping_location || 
+                        (tool.seller && tool.seller.businessCity && tool.seller.businessState ? 
+                          `${tool.seller.businessCity}, ${tool.seller.businessState}` : 
+                          "Location not specified")
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               {/* Location */}
               {tool.location && (
@@ -491,18 +686,28 @@ const ToolDetailPage = () => {
 
               {/* Category & Condition Tags */}
               <div className="mb-6">
+                {/* Category Tags - Blue background */}
                 {tool.category && (
-                  <span className="inline-block bg-stone-100 text-stone-800 text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.category}
                   </span>
                 )}
                 {tool.subcategory && (
-                  <span className="inline-block bg-stone-100 text-stone-800 text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.subcategory}
                   </span>
                 )}
+                {/* Condition Tag - Different color scheme to stand out */}
                 {tool.condition && (
-                  <span className="inline-block bg-stone-100 text-stone-800 text-xs px-2 py-1 rounded mb-2">
+                  <span className={`inline-block text-xs px-2 py-1 rounded mb-2 ${
+                    tool.condition === 'New' ? 'bg-green-50 text-green-700' :
+                    tool.condition === 'Like New' ? 'bg-emerald-50 text-emerald-700' :
+                    tool.condition === 'Good' ? 'bg-yellow-50 text-yellow-700' :
+                    tool.condition === 'Fair' ? 'bg-orange-50 text-orange-700' :
+                    tool.condition === 'Poor' ? 'bg-red-50 text-red-700' :
+                    tool.condition === 'Not Functioning' ? 'bg-gray-50 text-gray-700' :
+                    'bg-stone-100 text-stone-800'
+                  }`}>
                     {tool.condition}
                   </span>
                 )}
@@ -654,7 +859,14 @@ const ToolDetailPage = () => {
                 {tool.condition && (
                   <div>
                     <dt className="text-sm text-stone-500">Condition</dt>
-                    <dd className="text-stone-800">{tool.condition}</dd>
+                    <dd className="text-stone-800">
+                      {tool.condition}
+                      {conditionDefinitions[tool.condition] && (
+                        <p className="mt-1 text-xs text-stone-500 italic">
+                          {conditionDefinitions[tool.condition]}
+                        </p>
+                      )}
+                    </dd>
                   </div>
                 )}
                 {tool.age && (
@@ -685,9 +897,15 @@ const ToolDetailPage = () => {
                   <div>
                     <dt className="text-sm text-stone-500">Listed</dt>
                     <dd className="text-stone-800">
-                      {tool.created_at.seconds ? 
-                        new Date(tool.created_at.seconds * 1000).toLocaleDateString() :
-                        new Date(tool.created_at).toLocaleDateString()}
+                      {(() => {
+                        const createdDate = tool.created_at.seconds 
+                          ? new Date(tool.created_at.seconds * 1000)
+                          : new Date(tool.created_at);
+                        const today = new Date();
+                        const diffTime = Math.abs(today - createdDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+                      })()}
                     </dd>
                   </div>
                 )}
@@ -695,63 +913,250 @@ const ToolDetailPage = () => {
             </div>
           </div>
           
-          {/* Seller info - moved to the end */}
-          {tool.seller && (
-            <div className="lg:col-span-9 order-5">
+          {/* About the Seller section with expanded features */}
+          {/* The condition below was expanded to check for user_id as an alternative */}
+          {(tool.seller || tool.user_id) && (
+            <div className="lg:col-span-9 order-5 mt-6">
               <div className="bg-white rounded-lg p-6 shadow-md">
-                <h2 className="text-lg font-medium text-stone-800 mb-4">About the Seller</h2>
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-stone-200 rounded-full overflow-hidden mr-3 flex items-center justify-center">
-                    {tool.seller.avatar_url ? (
-                      <img
-                        src={tool.seller.avatar_url}
-                        alt={`${tool.seller.username || 'Seller'}'s avatar`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.style.display = 'none';
-                          e.target.parentNode.innerHTML = `<div class="w-full h-full flex items-center justify-center text-stone-500 font-medium">${(tool.seller.username || 'S').charAt(0).toUpperCase()}</div>`;
-                        }}
-                      />
-                    ) : (
-                      <div className="text-stone-500 font-medium text-xl">
-                        {(tool.seller.username || 'S').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-stone-800">
-                      {tool.seller.username || tool.seller.displayName || 'Anonymous Seller'}
-                    </h3>
-                    {tool.seller.rating && (
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-500 mr-1" fill="#EAB308" />
-                        <span className="text-sm text-stone-600">
-                          {tool.seller.rating.toFixed(1)} ({tool.seller.rating_count || 0} reviews)
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {tool.seller.location && (
-                  <div className="flex items-center text-sm text-stone-600 mb-4">
-                    <MapPin className="h-4 w-4 text-stone-400 mr-2" />
-                    <span>{tool.seller.location}</span>
+                <h2 className="text-xl font-medium text-stone-800 mb-4">About the Seller</h2>
+                
+                {/* Debug output to see what seller data we have - set to visible */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mb-4 p-2 bg-gray-100 text-xs overflow-auto max-h-32">
+                    <p>Seller Data: {JSON.stringify(tool.seller || {})}</p>
+                    <p>User ID: {tool.user_id}</p>
+                    <p>Seller ID: {tool.sellerId}</p>
                   </div>
                 )}
-                <button
-                  className="w-full py-2 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 text-sm"
-                  onClick={() => navigate(`/profile/${tool.seller.id}`)}
-                >
-                  View Profile
-                </button>
+                
+                {/* Seller Profile */}
+                {/* Basic seller info section - shown even if seller data is minimal */}
+                <div className="flex flex-wrap md:flex-nowrap border-b border-stone-200 pb-6 mb-6">
+                  <div className="w-full md:w-1/3 mb-4 md:mb-0">
+                    <div className="flex items-center">
+                      {/* Profile Image/Avatar */}
+                      <div className="w-16 h-16 bg-stone-200 rounded-full overflow-hidden mr-4 flex items-center justify-center">
+                        {tool.seller && (tool.seller.photoURL || tool.seller.avatar_url) ? (
+                          <img
+                            src={tool.seller.photoURL || tool.seller.avatar_url}
+                            alt={`${tool.seller && (tool.seller.displayName || tool.seller.username) || 'Seller'}'s profile`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              e.target.parentNode.innerHTML = `<div class="w-full h-full flex items-center justify-center text-stone-500 font-medium">S</div>`;
+                            }}
+                          />
+                        ) : (
+                          <div className="text-stone-500 font-medium text-xl">
+                            S
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Seller Info */}
+                      <div>
+                        <h3 className="font-medium text-stone-800 text-lg">
+                          {tool.seller && (tool.seller.businessName || tool.seller.displayName || tool.seller.username) || "Seller"}
+                        </h3>
+                        
+                        {/* City/State - Always display, even if missing in seller data */}
+                        <div className="flex items-center text-sm text-stone-600 mt-1">
+                          <MapPin className="h-3.5 w-3.5 text-stone-400 mr-1" />
+                          <span>
+                            {tool.seller && tool.seller.businessCity && tool.seller.businessState ? 
+                              `${tool.seller.businessCity}, ${tool.seller.businessState}` :
+                              (tool.shipping_location || "Location not specified")
+                            }
+                          </span>
+                        </div>
+                        
+                        {/* Rating */}
+                        {tool.seller && tool.seller.rating && (
+                          <div className="flex items-center mt-1">
+                            <Star className="h-3.5 w-3.5 text-yellow-500 mr-1" fill="#EAB308" />
+                            <span className="text-sm text-stone-600">
+                              {tool.seller.rating.toFixed(1)} ({tool.seller.rating_count || 0} reviews)
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right side of seller profile with description and actions */}
+                  <div className="w-full md:w-2/3 md:pl-6">
+                    {tool.seller && tool.seller.businessDescription && (
+                      <p className="text-stone-600 text-sm mb-4">{tool.seller.businessDescription}</p>
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={contactSeller}
+                        className="inline-flex items-center px-4 py-2 border border-benchlot-primary text-sm font-medium rounded-md text-benchlot-primary hover:bg-benchlot-accent-light"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Contact Seller
+                      </button>
+                      <Link
+                        to={`/marketplace?seller=${tool.seller_id || tool.user_id}`}
+                        className="inline-flex items-center px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 hover:bg-stone-50"
+                      >
+                        More from this Seller
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Shipping and Returns */}
+                <div className="border-b border-stone-200 pb-6 mb-6">
+                  <h3 className="text-lg font-medium text-stone-800 mb-3">Shipping and Returns</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-stone-700 mb-1">Shipping</h4>
+                      <p className="text-sm text-stone-600">
+                        {tool.free_shipping ? (
+                          "Free shipping included with this purchase!"
+                        ) : (
+                          <>Shipping cost: {formatPrice(tool.shipping_price || 0)}</>
+                        )}
+                        {tool.seller && tool.seller.policies && tool.seller.policies.shipping && tool.seller.policies.shipping.processingTime && (
+                          <> • Ships within {tool.seller.policies.shipping.processingTime} business days</>
+                        )}
+                        {tool.shipping_location && (
+                          <> • Ships from {tool.shipping_location}</>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-stone-700 mb-1">Returns</h4>
+                      <p className="text-sm text-stone-600">
+                        {tool.seller && tool.seller.policies && tool.seller.policies.returns && tool.seller.policies.returns.acceptsReturns ? (
+                          <>
+                            Returns accepted within {tool.seller.policies.returns.returnPeriod || 14} days
+                            {tool.seller.policies.returns.restockingFee > 0 && (
+                              <> • {tool.seller.policies.returns.restockingFee}% restocking fee</>
+                            )}
+                          </>
+                        ) : (
+                          "All sales are final, no returns accepted"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Seller Reviews - Stubbed out for now */}
+                <div>
+                  <h3 className="text-lg font-medium text-stone-800 mb-3">Seller Reviews</h3>
+                  <div className="bg-stone-50 border border-stone-200 rounded-md p-4 text-center">
+                    <p className="text-stone-600 text-sm">
+                      Reviews for this seller will be available soon.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
           
+          {/* More Like This section */}
+          <div className="lg:col-span-9 order-6 mt-6">
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h2 className="text-xl font-medium text-stone-800 mb-4">More Like This</h2>
+              
+              {similarTools.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {similarTools.map(similarTool => (
+                    <div key={similarTool.id} className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                      <Link to={`/tools/${similarTool.id}`} className="block">
+                        <div className="aspect-square overflow-hidden bg-gray-100">
+                          {similarTool.images && similarTool.images.length > 0 ? (
+                            <img
+                              src={similarTool.images[0].url}
+                              alt={similarTool.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h3 className="text-stone-800 font-medium truncate">{similarTool.name}</h3>
+                          <p className="text-benchlot-primary font-medium mt-1">
+                            {formatPrice(similarTool.current_price || similarTool.price || 0)}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-stone-50 border border-stone-200 rounded-md p-4 text-center">
+                  <p className="text-stone-600">
+                    No similar tools found at the moment.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Recently Viewed section */}
+          <div className="lg:col-span-9 order-7 mt-6">
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h2 className="text-xl font-medium text-stone-800 mb-4">Recently Viewed</h2>
+              
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mb-4 p-2 bg-gray-100 text-xs overflow-auto max-h-32">
+                  <p>Recently Viewed Count: {recentlyViewed.length}</p>
+                  <p>Local Storage Key: {localStorage.getItem('recentlyViewedTools') ? 'Exists' : 'Missing'}</p>
+                </div>
+              )}
+              
+              {recentlyViewed.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {recentlyViewed.map(viewedTool => (
+                    <div key={viewedTool.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                      <Link to={`/tools/${viewedTool.id}`} className="block">
+                        <div className="aspect-square overflow-hidden bg-gray-100">
+                          {viewedTool.images && viewedTool.images.length > 0 ? (
+                            <img
+                              src={viewedTool.images[0].url}
+                              alt={viewedTool.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <h3 className="text-stone-800 text-sm truncate">{viewedTool.name}</h3>
+                          <p className="text-benchlot-primary text-sm font-medium mt-0.5">
+                            {formatPrice(viewedTool.current_price || viewedTool.price || 0)}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-stone-50 border border-stone-200 rounded-md p-4 text-center">
+                  <p className="text-stone-600">
+                    No recently viewed items found. Browse more tools to see them here!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          
           {/* "Sell one like this" CTA - mobile only, at the very bottom */}
           {!isOwner() && (
-            <div className="lg:hidden lg:col-span-9 order-6 mt-4">
+            <div className="lg:hidden lg:col-span-9 order-8 mt-4">
               <div className="bg-emerald-800/80 rounded-lg p-5 shadow-md">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 mr-4">

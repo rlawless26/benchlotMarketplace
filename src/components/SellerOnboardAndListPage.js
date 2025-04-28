@@ -18,6 +18,62 @@ import {
   openAuthModal
 } from '../utils/featureFlags';
 
+// US state options for dropdown
+const stateOptions = [
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
+  { value: "DC", label: "District of Columbia" },
+  { value: "PR", label: "Puerto Rico" },
+];
+
 /**
  * SellerOnboardAndListPage Component
  * 
@@ -41,7 +97,9 @@ const SellerOnboardAndListPage = () => {
     // Seller profile
     sellerName: '',
     sellerType: 'individual',
-    location: 'Boston, MA',
+    // Replaced single location with city and state
+    city: '',
+    state: '',
     contactEmail: '',
     contactPhone: '',
     
@@ -57,6 +115,8 @@ const SellerOnboardAndListPage = () => {
     material: '',
     dimensions: '',
     age: '',
+    shipping_price: '',
+    free_shipping: false,
   });
   
   // Load draft tool name and populate user data
@@ -143,7 +203,11 @@ const SellerOnboardAndListPage = () => {
       const sellerAccountResult = await createSellerAccount({
         sellerName: formData.sellerName,
         sellerType: formData.sellerType,
-        location: formData.location,
+        // Create a formatted location string from city and state
+        location: `${formData.city}, ${formData.state}`,
+        // Also pass the individual fields
+        businessCity: formData.city,
+        businessState: formData.state,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
         // Explicitly add seller status flags to ensure they're set correctly
@@ -190,7 +254,10 @@ const SellerOnboardAndListPage = () => {
         original_price: parseFloat(formData.original_price) || null,
         material: formData.material,
         dimensions: formData.dimensions,
-        age: formData.age
+        age: formData.age,
+        shipping_price: parseFloat(formData.shipping_price) || 0,
+        free_shipping: formData.free_shipping || false,
+        shipping_location: `${formData.city}, ${formData.state}`
       };
       
       localStorage.setItem('pendingToolListing', JSON.stringify(toolData));
@@ -418,24 +485,43 @@ const SellerOnboardAndListPage = () => {
                     )}
                   </div>
                   
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1" htmlFor="location">
-                      Location*
-                    </label>
-                    <select
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
-                      required
-                    >
-                      <option value="Boston, MA">Boston, MA</option>
-                      <option value="Cambridge, MA">Cambridge, MA</option>
-                      <option value="Somerville, MA">Somerville, MA</option>
-                      <option value="Medford, MA">Medford, MA</option>
-                      <option value="Brookline, MA">Brookline, MA</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* City */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-1" htmlFor="city">
+                        City*
+                      </label>
+                      <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                        required
+                        placeholder="Enter your city"
+                      />
+                    </div>
+
+                    {/* State */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-1" htmlFor="state">
+                        State*
+                      </label>
+                      <select
+                        id="state"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
+                        required
+                      >
+                        <option value="">Select a state</option>
+                        {stateOptions.map(state => (
+                          <option key={state.value} value={state.value}>{state.label}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   
                   <div>
@@ -660,6 +746,52 @@ const SellerOnboardAndListPage = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Shipping Options */}
+                    <h4 className="text-sm font-medium text-gray-700 mt-4 mb-2">Shipping</h4>
+                    <div className="flex items-center mb-3">
+                      <input
+                        type="checkbox"
+                        id="free_shipping"
+                        name="free_shipping"
+                        checked={formData.free_shipping}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            free_shipping: e.target.checked,
+                            shipping_price: e.target.checked ? '0' : formData.shipping_price
+                          });
+                        }}
+                        className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      />
+                      <label htmlFor="free_shipping" className="ml-2 block text-sm text-gray-700">
+                        Offer free shipping
+                      </label>
+                    </div>
+                    
+                    {!formData.free_shipping && (
+                      <div>
+                        <label htmlFor="shipping_price" className="block text-sm font-medium text-gray-700 mb-1">
+                          Shipping Price
+                        </label>
+                        <div className="relative w-1/2">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500">$</span>
+                          </div>
+                          <input
+                            type="number"
+                            id="shipping_price"
+                            name="shipping_price"
+                            value={formData.shipping_price}
+                            onChange={handleChange}
+                            min="0"
+                            step="1"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Next Steps Information */}
