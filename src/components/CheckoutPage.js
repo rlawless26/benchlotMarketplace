@@ -197,7 +197,7 @@ const CheckoutPage = () => {
         }
       }
     }
-  }, [user, billingIsSameAsShipping]);
+  }, [user]); // Removed billingIsSameAsShipping from dependencies to prevent re-triggering
   
   // Handle shipping form input changes
   const handleInputChange = (e) => {
@@ -235,10 +235,14 @@ const CheckoutPage = () => {
   
   // Toggle billing address same as shipping
   const handleBillingToggle = () => {
-    setBillingIsSameAsShipping(!billingIsSameAsShipping);
+    // Store new value to use in conditional logic
+    const newValue = !billingIsSameAsShipping;
     
-    // If toggling to true, update the billing address to match shipping
-    if (!billingIsSameAsShipping) {
+    // Update state with new value
+    setBillingIsSameAsShipping(newValue);
+    
+    // If toggling to true (same as shipping), update the billing address to match shipping
+    if (newValue) {
       setBillingAddress(shippingAddress);
     }
   };
@@ -266,8 +270,20 @@ const CheckoutPage = () => {
   const handleSelectBillingAddress = (addressId) => {
     const selected = savedAddresses.find(addr => addr.id === addressId);
     if (selected) {
+      // Extract first/last name from fullName if needed
+      let firstName = '', lastName = '';
+      if (selected.fullName) {
+        const nameParts = selected.fullName.split(' ');
+        firstName = nameParts[0] || '';
+        lastName = nameParts.slice(1).join(' ') || '';
+      } else {
+        firstName = selected.firstName || '';
+        lastName = selected.lastName || '';
+      }
+      
       setBillingAddress({
-        fullName: selected.fullName || '',
+        firstName: firstName,
+        lastName: lastName,
         addressLine1: selected.street || '',
         addressLine2: selected.apt || '',
         city: selected.city || '',
@@ -330,9 +346,16 @@ const CheckoutPage = () => {
     
     // Validate billing address if it's different from shipping
     if (!billingIsSameAsShipping) {
-      // Required billing fields
-      requiredFields.forEach(field => {
-        if (!billingAddress[field]?.trim()) {
+      // Output debug info to console to help identify issues
+      console.log("Validating billing address:", billingAddress);
+      
+      // Required billing fields - use the same fields as shipping
+      const billingRequiredFields = ['firstName', 'lastName', 'addressLine1', 'city', 'state', 'postalCode', 'email'];
+      
+      // Check all required fields
+      billingRequiredFields.forEach(field => {
+        // Check if the field exists in the billingAddress object
+        if (!billingAddress[field] || !billingAddress[field].toString().trim()) {
           errors[`billing_${field}`] = 'This field is required';
         }
       });
@@ -469,7 +492,8 @@ const CheckoutPage = () => {
         type: billingIsSameAsShipping ? 'both' : 'shipping',
         // If this is the first address saved, make it the default
         isDefault: newAddresses.length === 0 ? true : false,
-        fullName: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
+        firstName: shippingAddress.firstName,
+        lastName: shippingAddress.lastName,
         street: shippingAddress.addressLine1,
         apt: shippingAddress.addressLine2,
         city: shippingAddress.city,
@@ -514,7 +538,8 @@ const CheckoutPage = () => {
           type: 'billing',
           // Make default billing address if no other billing addresses exist
           isDefault: !newAddresses.some(addr => (addr.type === 'billing' || addr.type === 'both') && addr.isDefault),
-          fullName: `${billingAddress.firstName} ${billingAddress.lastName}`.trim(),
+          firstName: billingAddress.firstName,
+          lastName: billingAddress.lastName,
           street: billingAddress.addressLine1,
           apt: billingAddress.addressLine2,
           city: billingAddress.city,
@@ -1200,7 +1225,7 @@ const CheckoutPage = () => {
                             if (address) {
                               return (
                                 <div className="text-xs text-stone-600">
-                                  <p className="font-medium">{address.fullName}</p>
+                                  <p className="font-medium">{address.firstName && address.lastName ? `${address.firstName} ${address.lastName}` : address.fullName || ''}</p>
                                   <p>{address.street}{address.apt ? `, ${address.apt}` : ''}</p>
                                   <p>{address.city}, {address.state} {address.zipCode}</p>
                                 </div>
@@ -1239,7 +1264,7 @@ const CheckoutPage = () => {
                                     onClick={() => handleSelectShippingAddress(address.id)}
                                   >
                                     <div className="flex justify-between">
-                                      <span className="font-medium">{address.fullName}</span>
+                                      <span className="font-medium">{address.firstName && address.lastName ? `${address.firstName} ${address.lastName}` : address.fullName || ''}</span>
                                       <div className="flex items-center">
                                         {selectedSavedAddress === address.id && (
                                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full mr-2">
@@ -1335,7 +1360,7 @@ const CheckoutPage = () => {
                                   if (address) {
                                     return (
                                       <div className="text-xs text-stone-600">
-                                        <p className="font-medium">{address.fullName}</p>
+                                        <p className="font-medium">{address.firstName && address.lastName ? `${address.firstName} ${address.lastName}` : address.fullName || ''}</p>
                                         <p>{address.street}{address.apt ? `, ${address.apt}` : ''}</p>
                                         <p>{address.city}, {address.state} {address.zipCode}</p>
                                       </div>
@@ -1374,7 +1399,7 @@ const CheckoutPage = () => {
                                           onClick={() => handleSelectBillingAddress(address.id)}
                                         >
                                           <div className="flex justify-between">
-                                            <span className="font-medium">{address.fullName}</span>
+                                            <span className="font-medium">{address.firstName && address.lastName ? `${address.firstName} ${address.lastName}` : address.fullName || ''}</span>
                                             <div className="flex items-center">
                                               {selectedSavedAddress === address.id && !billingIsSameAsShipping && (
                                                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full mr-2">
@@ -1408,22 +1433,41 @@ const CheckoutPage = () => {
                         {/* Billing Contact Information */}
                         <div className="mb-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="col-span-2">
-                              <label htmlFor="billing_fullName" className="block text-sm font-medium text-stone-700 mb-1">
-                                Full Name <span className="text-red-500">*</span>
+                            <div>
+                              <label htmlFor="billing_firstName" className="block text-sm font-medium text-stone-700 mb-1">
+                                First Name <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="text"
-                                id="billing_fullName"
-                                name="fullName"
+                                id="billing_firstName"
+                                name="firstName"
                                 className={`w-full px-3 py-2 border rounded-md text-stone-800 ${
-                                  formErrors.billing_fullName ? 'border-red-300 bg-red-50' : 'border-stone-300'
+                                  formErrors.billing_firstName ? 'border-red-300 bg-red-50' : 'border-stone-300'
                                 }`}
-                                value={billingAddress.fullName}
+                                value={billingAddress.firstName}
                                 onChange={handleBillingInputChange}
                               />
-                              {formErrors.billing_fullName && (
-                                <p className="mt-1 text-sm text-red-600">{formErrors.billing_fullName}</p>
+                              {formErrors.billing_firstName && (
+                                <p className="mt-1 text-sm text-red-600">{formErrors.billing_firstName}</p>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <label htmlFor="billing_lastName" className="block text-sm font-medium text-stone-700 mb-1">
+                                Last Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id="billing_lastName"
+                                name="lastName"
+                                className={`w-full px-3 py-2 border rounded-md text-stone-800 ${
+                                  formErrors.billing_lastName ? 'border-red-300 bg-red-50' : 'border-stone-300'
+                                }`}
+                                value={billingAddress.lastName}
+                                onChange={handleBillingInputChange}
+                              />
+                              {formErrors.billing_lastName && (
+                                <p className="mt-1 text-sm text-red-600">{formErrors.billing_lastName}</p>
                               )}
                             </div>
                             

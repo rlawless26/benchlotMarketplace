@@ -120,3 +120,5 @@ Screenshot*.png
 !/src/components/TestOrderButton.js
 !/src/utils/mockData.js
 functions/.env
+# Firebase config output file
+firebase functions:config:set
