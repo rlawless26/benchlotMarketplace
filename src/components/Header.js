@@ -295,11 +295,11 @@ const Header = () => {
                       {/* Purchase Activity Section */}
                       <div className="border-t my-1 pt-1">
                         <div className="px-4 py-1">
-                          <span className="text-xs font-medium text-stone-500">PURCHASES</span>
+                          <span className="text-xs font-medium text-stone-500">BUYING</span>
                         </div>
                         <Link to="/orders" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
                           <Package className="h-4 w-4" />
-                          My Orders
+                          Purchases
                         </Link>
                       </div>
 
@@ -587,7 +587,7 @@ const Header = () => {
                   {/* Purchase Activity Section */}
                   <div className="mb-4 border-t border-stone-100 pt-2">
                     <div className="px-3 py-1 text-xs font-medium text-stone-500">
-                      PURCHASES
+                      BUYING
                     </div>
                     <Link 
                       to="/orders" 
@@ -595,7 +595,7 @@ const Header = () => {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Package className="h-5 w-5" />
-                      My Orders
+                      Purchases
                     </Link>
                   </div>
 

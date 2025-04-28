@@ -90,6 +90,14 @@ sendgrid.env
 sendgrid.env
 .vercel
 
+# transactional email templates
+transactional-email-templates/
+**/transactional-email-templates/
+
+# testing sheets
+Testing Sheets/
+**/Testing Sheets/
+
 # temporary files and test scripts
 fix-*.js
 test-*.js
