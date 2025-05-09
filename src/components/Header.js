@@ -424,7 +424,7 @@ const Header = () => {
               <Link to="/help" className="text-stone-700 hover:text-benchlot-primary">Help</Link>
               <Link to="/about" className="text-stone-700 hover:text-benchlot-primary">About</Link>
               <a 
-                href="https://blog.benchlot.com" 
+                href="https://blog.benchlot.com/blog" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-stone-700 hover:text-benchlot-primary"
@@ -710,7 +710,7 @@ const Header = () => {
                 About
               </Link>
               <a 
-                href="https://blog.benchlot.com" 
+                href="https://blog.benchlot.com/blog" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="block py-2 text-stone-700 hover:text-benchlot-primary"
