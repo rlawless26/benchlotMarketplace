@@ -439,15 +439,15 @@ const ToolDetailPage = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Photo uploader banner for listing that needs images */}
         {showPhotoUploader && isOwner() && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="mb-6 bg-benchlot-accent-light border border-benchlot-accent rounded-lg p-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
               <div className="mb-4 md:mb-0">
-                <h3 className="text-blue-800 font-medium text-lg mb-1">
+                <h3 className="text-benchlot-primary font-medium text-lg mb-1">
                   {tool.images && tool.images.length > 0 
                     ? 'Add more photos to increase visibility' 
                     : 'Your listing needs photos to be visible to buyers'}
                 </h3>
-                <p className="text-blue-600">
+                <p className="text-benchlot-primary">
                   {tool.images && tool.images.length > 0 
                     ? 'Tools with multiple photos sell 3X faster!' 
                     : 'Upload at least one photo to activate your listing'}
@@ -476,8 +476,8 @@ const ToolDetailPage = () => {
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-md file:border-0
                       file:text-sm file:font-medium
-                      file:bg-blue-600 file:text-white
-                      hover:file:bg-blue-700
+                      file:bg-benchlot-primary file:text-white
+                      hover:file:bg-benchlot-secondary
                       file:cursor-pointer file:shadow"
                   />
                 </label>
@@ -500,7 +500,7 @@ const ToolDetailPage = () => {
                 
                 {/* Loading indicator */}
                 {uploadingPhoto && (
-                  <p className="mt-2 text-blue-600 text-sm flex items-center">
+                  <p className="mt-2 text-benchlot-primary text-sm flex items-center">
                     <Loader className="h-4 w-4 mr-1 animate-spin" />
                     Uploading photo...
                   </p>
@@ -686,14 +686,14 @@ const ToolDetailPage = () => {
 
               {/* Category & Condition Tags */}
               <div className="mb-6">
-                {/* Category Tags - Blue background */}
+                {/* Category Tags - Primary color background */}
                 {tool.category && (
-                  <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-benchlot-accent-light text-benchlot-primary text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.category}
                   </span>
                 )}
                 {tool.subcategory && (
-                  <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-benchlot-accent-light text-benchlot-primary text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.subcategory}
                   </span>
                 )}

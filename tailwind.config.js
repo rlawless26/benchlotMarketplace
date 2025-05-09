@@ -7,33 +7,33 @@ module.exports = {
     extend: {
       colors: {
         benchlot: {
-          primary: '#17613F',    // Forest green primary
-          secondary: '#145535',  // Darker forest green for hover states
-          accent: '#78ab96',     // Accent light forest green
-          'accent-hover': '#114a2e',
-          'accent-light': '#e6f0eb',
+          primary: '#243B53',    // Navy blue primary
+          secondary: '#1A2C40',  // Darker navy for hover states
+          accent: '#C08B7C',     // Light clay/terracotta accent
+          'accent-hover': '#A77A6C',
+          'accent-light': '#F2ECEA',
           'accent-dark': '#d4d4d4',
-          'accent-bg': '#e3dacc',
-          base: '#F0EEE6',       // Base background color
+          'accent-bg': '#EFE9E7',
+          base: '#FAFAFA',       // Base background color
           white: '#FFFFFF',
-          'text-primary': '#44403C',
-          'text-secondary': '#57534E',
-          'footer-bg': '#141413',
-          'ivory-light': '#faf9f5',
-          success: '#047857',
-          error: '#b91c1c',
+          'text-primary': '#121A24',
+          'text-secondary': '#364A63',
+          'footer-bg': '#121A24',
+          'ivory-light': '#FAFAFA',
+          success: '#2E6E7E',
+          error: '#B43C38',
         },
-        forest: {
-          50: '#e6f0eb',
-          100: '#c1d9cf',
-          200: '#9dc2b3',
-          300: '#78ab96',
-          400: '#54947a',
-          500: '#17613f',
-          600: '#145535',
-          700: '#114a2e',
-          800: '#0e3f27',
-          900: '#0a3420',
+        navy: {
+          50: '#EFF3F7',
+          100: '#D0DCE8',
+          200: '#B1C5DA',
+          300: '#92AECC',
+          400: '#6E93BB',
+          500: '#5179A5',
+          600: '#3A5E87',
+          700: '#243B53',
+          800: '#1A2C40',
+          900: '#121A24',
         }
       },
       boxShadow: {

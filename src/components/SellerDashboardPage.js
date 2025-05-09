@@ -587,11 +587,11 @@ const SellerDashboardPage = () => {
                 </div>
                 
                 {accountStatus && accountStatus.status !== 'active' && (
-                  <div className="mt-2 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                  <div className="mt-2 text-sm text-benchlot-primary bg-benchlot-accent-light p-2 rounded">
                     <p>Your seller account is being activated. This usually takes a few minutes. Feel free to continue exploring your dashboard.</p>
                     <button 
                       onClick={() => window.location.reload()} 
-                      className="mt-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-1 px-2 rounded"
+                      className="mt-2 text-xs bg-benchlot-accent-light hover:bg-benchlot-accent-bg text-benchlot-primary font-medium py-1 px-2 rounded"
                     >
                       Refresh Status
                     </button>

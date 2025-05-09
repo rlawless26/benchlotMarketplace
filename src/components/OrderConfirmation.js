@@ -238,10 +238,10 @@ const OrderConfirmation = () => {
           <p>{error}</p>
         </div>
         <div className="flex space-x-4 mt-6">
-          <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          <Link to="/" className="px-4 py-2 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">
             Return to Home
           </Link>
-          <Link to="/orders" className="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
+          <Link to="/orders" className="px-4 py-2 border border-benchlot-primary text-benchlot-primary rounded hover:bg-benchlot-accent-light">
             View Orders
           </Link>
         </div>
@@ -308,7 +308,7 @@ const OrderConfirmation = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/tools/${item.toolId}`} className="text-blue-600 hover:underline font-medium">
+                    <Link to={`/tools/${item.toolId}`} className="text-benchlot-primary hover:underline font-medium">
                       {item.name}
                     </Link>
                     <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
@@ -394,13 +394,13 @@ const OrderConfirmation = () => {
         <div className="space-x-4">
           <Link 
             to="/" 
-            className="px-5 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50"
+            className="px-5 py-2 border border-benchlot-primary text-benchlot-primary rounded-md hover:bg-benchlot-accent-light"
           >
             Continue Shopping
           </Link>
           <Link 
             to="/orders" 
-            className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-5 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
           >
             View All Orders
           </Link>
