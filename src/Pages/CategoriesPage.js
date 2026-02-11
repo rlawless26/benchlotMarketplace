@@ -1,95 +1,16 @@
 // src/Pages/CategoriesPage.js
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { toolCategories, toolSubcategories, toolBrands } from '../firebase/models/toolModel';
 
 const CategoriesPage = () => {
-  // Categories data structure with subcategories
-  const categories = [
-    {
-      title: "Power Tools",
-      subcategories: [
-        "Table Saws", 
-        "Drills", 
-        "Sanders", 
-        "Routers", 
-        "Air Compressors",
-        "Circular Saws",
-        "Jigsaws",
-        "Planers",
-        "Jointers"
-      ]
-    },
-    {
-      title: "Hand Tools",
-      subcategories: [
-        "Planes", 
-        "Chisels", 
-        "Hammers", 
-        "Screwdrivers", 
-        "Wrenches",
-        "Hand Saws",
-        "Measuring Tools",
-        "Clamps",
-        "Files and Rasps"
-      ]
-    },
-    {
-      title: "Workshop Equipment",
-      subcategories: [
-        "Dust Collection", 
-        "Work Benches", 
-        "Tool Storage", 
-        "Safety Equipment",
-        "Lighting",
-        "Shop Vacuums",
-        "Workholding"
-      ]
-    },
-    {
-      title: "Machinery",
-      subcategories: [
-        "Lathes", 
-        "Mills", 
-        "Band Saws", 
-        "Drill Presses", 
-        "CNC Machines",
-        "Scroll Saws",
-        "Thickness Planers"
-      ]
-    },
-    {
-      title: "Accessories",
-      subcategories: [
-        "Tool Accessories",
-        "Router Bits",
-        "Saw Blades",
-        "Drill Bits",
-        "Sanding Supplies",
-        "Tool Maintenance",
-        "Sharpening Supplies"
-      ]
-    },
-    {
-      title: "Woodworking Specialties",
-      subcategories: [
-        "Carving Tools",
-        "Turning Tools",
-        "Joinery Tools",
-        "Woodworking Kits",
-        "Finishing Supplies"
-      ]
-    },
-    {
-      title: "Vintage Tools",
-      subcategories: [
-        "Vintage Hand Planes",
-        "Vintage Saws",
-        "Vintage Power Tools",
-        "Vintage Measuring Tools",
-        "Collectible Tools"
-      ]
-    }
-  ];
+  // Build categories from centralized constants
+  const categories = toolCategories
+    .filter(cat => cat !== 'Other')
+    .map(cat => ({
+      title: cat,
+      subcategories: toolSubcategories[cat] || []
+    }));
 
   // Function to create URL-friendly category/subcategory parameters
   const createMarketplaceLink = (category, subcategory = null) => {
@@ -138,7 +59,7 @@ const CategoriesPage = () => {
           <h2 className="text-2xl font-serif font-medium text-stone-800 mb-6">Popular Brands</h2>
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {['DeWalt', 'Milwaukee', 'Makita', 'Bosch', 'Stanley', 'Festool', 'Lie-Nielsen', 'Veritas', 'Jet', 'Delta', 'Ridgid', 'Ryobi'].map((brand, index) => (
+              {toolBrands.filter(b => b !== 'Other').map((brand, index) => (
                 <div key={index} className="text-center">
                   <Link 
                     to={`/marketplace?brand=${encodeURIComponent(brand)}`}
@@ -156,7 +77,7 @@ const CategoriesPage = () => {
         <div className="mb-12">
           <h2 className="text-2xl font-serif font-medium text-stone-800 mb-6">Shop by Condition</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {['New', 'Like New', 'Excellent', 'Very Good', 'Good', 'Fair'].map((condition, index) => (
+            {['New', 'Like New', 'Good', 'Fair'].map((condition, index) => (
               <Link 
                 key={index}
                 to={`/marketplace?condition=${encodeURIComponent(condition)}`}

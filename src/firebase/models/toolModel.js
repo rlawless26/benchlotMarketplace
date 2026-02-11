@@ -490,19 +490,89 @@ export const searchTools = async (searchQuery) => {
 };
 
 /**
- * Tool categories
+ * Tool categories - focused on hand tool woodworking
  */
 export const toolCategories = [
+  'Hand Planes',
+  'Chisels',
+  'Hand Saws',
+  'Marking & Measuring',
+  'Sharpening',
+  'Workholding',
+  'Carving & Turning',
   'Power Tools',
-  'Hand Tools',
-  'Woodworking',
-  'Electrical',
-  'Plumbing',
-  'Gardening',
-  'Automotive',
-  'Construction',
-  'Painting',
-  'Measuring',
+  'Workshop Equipment',
+  'Other'
+];
+
+/**
+ * Subcategories by category
+ */
+export const toolSubcategories = {
+  'Hand Planes': [
+    'Bench Planes', 'Block Planes', 'Shoulder Planes', 'Router Planes',
+    'Plow & Combination Planes', 'Scrub Planes', 'Joinery Planes', 'Specialty Planes'
+  ],
+  'Chisels': [
+    'Bench Chisels', 'Mortise Chisels', 'Paring Chisels', 'Japanese Chisels',
+    'Carving Chisels', 'Chisel Sets'
+  ],
+  'Hand Saws': [
+    'Dovetail Saws', 'Tenon Saws', 'Panel Saws', 'Frame & Bow Saws',
+    'Japanese Saws', 'Coping & Fret Saws'
+  ],
+  'Marking & Measuring': [
+    'Marking Gauges', 'Squares', 'Bevels', 'Marking Knives',
+    'Dividers & Calipers', 'Rulers & Straightedges'
+  ],
+  'Sharpening': [
+    'Sharpening Stones', 'Honing Guides', 'Strops', 'Lapping Plates',
+    'Diamond Plates', 'Sharpening Systems'
+  ],
+  'Workholding': [
+    'Vises', 'Holdfasts', 'Bench Dogs', 'Clamps',
+    'Workbenches', 'Bench Hooks & Shooting Boards'
+  ],
+  'Carving & Turning': [
+    'Carving Gouges', 'Drawknives', 'Spokeshaves', 'Turning Tools',
+    'Scorps & Inshaves', 'Adzes'
+  ],
+  'Power Tools': [
+    'Table Saws', 'Band Saws', 'Routers', 'Drills',
+    'Sanders', 'Planers & Jointers'
+  ],
+  'Workshop Equipment': [
+    'Dust Collection', 'Tool Storage', 'Safety Equipment',
+    'Shop Accessories', 'Finishing Supplies'
+  ],
+  'Other': []
+};
+
+/**
+ * Popular brands in hand tool woodworking
+ */
+export const toolBrands = [
+  'Lie-Nielsen',
+  'Veritas',
+  'Lee Valley',
+  'Narex',
+  'Stanley',
+  'Record',
+  'Blue Spruce Toolworks',
+  'Knew Concepts',
+  'Woodpeckers',
+  'Bridge City Tool Works',
+  'Hock Tools',
+  'Bad Axe Tool Works',
+  'Gramercy Tools',
+  'Rob Cosman',
+  'Festool',
+  'Shapton',
+  'DMT',
+  'Norton',
+  'King',
+  'Matsumura',
+  'Tsunesaburo',
   'Other'
 ];
 
@@ -568,6 +638,8 @@ export default {
   deleteToolImage,
   searchTools,
   toolCategories,
+  toolSubcategories,
+  toolBrands,
   toolConditions,
   toolStatus
 };

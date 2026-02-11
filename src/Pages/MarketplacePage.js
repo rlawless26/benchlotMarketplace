@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 import ToolListingCard from '../components/ToolListingCard';
-import { getActiveTools, getFeaturedTools, toolCategories, toolConditions } from '../firebase/models/toolModel';
+import { getActiveTools, getFeaturedTools, toolCategories, toolSubcategories, toolConditions } from '../firebase/models/toolModel';
 
 const MarketplacePage = () => {
   // Use search params for URL filtering
@@ -37,13 +37,10 @@ const MarketplacePage = () => {
   // Add state for actual tool listings
   const [toolListings, setToolListings] = useState([]);
   
-  // Filter categories with subcategories
+  // Filter categories with subcategories - sourced from toolModel
   const categoryData = {
     'All Categories': [],
-    'Power Tools': ['Table Saws', 'Drills', 'Sanders', 'Routers', 'Air Compressors'],
-    'Hand Tools': ['Planes', 'Chisels', 'Hammers', 'Screwdrivers', 'Wrenches'],
-    'Workshop Equipment': ['Dust Collection', 'Work Benches', 'Tool Storage', 'Safety Equipment'],
-    'Machinery': ['Lathes', 'Mills', 'Band Saws', 'Drill Presses', 'CNC']
+    ...toolSubcategories
   };
   
   // Categories array for simple iteration
