@@ -1,6 +1,6 @@
 // src/Pages/HelpPage.js
 import React from 'react';
-import { Phone, Mail, HelpCircle, Wrench, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, Wrench, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HelpPage = () => {

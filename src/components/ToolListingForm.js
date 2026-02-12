@@ -65,7 +65,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
-  const [sellerDefaults, setSellerDefaults] = useState({
+  const [, setSellerDefaults] = useState({
     shipping: {
       methods: ['standard'],
       price: 15,
@@ -992,7 +992,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                   <div key={index} className="relative">
                     <img
                       src={image.url}
-                      alt={`Tool image ${index + 1}`}
+                      alt={`Tool ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
                     <button
@@ -1018,7 +1018,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                   <div key={index} className="relative">
                     <img
                       src={preview}
-                      alt={`New tool image ${index + 1}`}
+                      alt={`New tool ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
                     <button

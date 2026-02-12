@@ -3,14 +3,12 @@
  * Handles offer and negotiation operations with Firestore
  */
 import { 
-  collection, 
-  doc, 
-  getDoc, 
+  collection,
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
-  updateDoc, 
+  updateDoc,
   addDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -669,7 +667,7 @@ export const createMockOffer = async (userId) => {
   }
 };
 
-export default {
+const offerModel = {
   createOffer,
   getOfferById,
   getUserBuyerOffers,
@@ -688,3 +686,5 @@ export default {
   createMockOffer,
   OfferStatus
 };
+
+export default offerModel;

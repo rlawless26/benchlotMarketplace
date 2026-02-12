@@ -4,14 +4,10 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Package, 
-  Calendar, 
-  Filter, 
-  CheckCircle, 
-  Clock, 
-  Truck, 
-  XCircle,
+import {
+  Package,
+  Calendar,
+  Filter,
   Search,
   ChevronDown,
   ChevronUp,
@@ -65,32 +61,25 @@ const OrdersPage = () => {
   // Get status badge
   const OrderStatusBadge = ({ status }) => {
     let color = 'bg-gray-100 text-gray-800';
-    let icon = Clock;
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
         color = 'bg-yellow-100 text-yellow-800';
-        icon = Clock;
         break;
       case 'paid':
         color = 'bg-blue-100 text-blue-800';
-        icon = CheckCircle;
         break;
       case 'processing':
         color = 'bg-purple-100 text-purple-800';
-        icon = Package;
         break;
       case 'shipped':
         color = 'bg-indigo-100 text-indigo-800';
-        icon = Truck;
         break;
       case 'delivered':
         color = 'bg-green-100 text-green-800';
-        icon = CheckCircle;
         break;
       case 'cancelled':
         color = 'bg-red-100 text-red-800';
-        icon = XCircle;
         break;
       default:
         break;

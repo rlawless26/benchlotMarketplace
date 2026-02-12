@@ -4,12 +4,11 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { 
-  Package, 
-  ChevronLeft, 
-  Truck, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Package,
+  Truck,
+  CheckCircle,
+  XCircle,
   Clock,
   Printer,
   ArrowLeft,

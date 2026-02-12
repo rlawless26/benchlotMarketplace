@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
-import { createTool, uploadToolImage } from '../firebase/models/toolModel';
+import { createTool } from '../firebase/models/toolModel';
 import { openAuthModal } from '../utils/featureFlags';
 
 /**
@@ -14,7 +14,7 @@ const CreatePendingListingPage = () => {
   const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [, setSuccess] = useState(false);
   const [toolId, setToolId] = useState(null);
   
   // Scroll to top when component mounts

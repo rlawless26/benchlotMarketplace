@@ -15,7 +15,7 @@ import { openAuthModal } from '../utils/featureFlags';
 
 const SellerLandingPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [toolName, setToolName] = useState('');
   
   // Scroll to top when component mounts

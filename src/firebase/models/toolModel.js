@@ -626,7 +626,7 @@ export const toolStatus = {
   DELETED: 'deleted'
 };
 
-export default {
+const toolModel = {
   createTool,
   updateTool,
   deleteTool,
@@ -643,3 +643,5 @@ export default {
   toolConditions,
   toolStatus
 };
+
+export default toolModel;

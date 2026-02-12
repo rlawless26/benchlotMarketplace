@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Check, MapPin, Trash2, ShoppingCart } from 'lucide-react';
+import { Check, MapPin, Trash2, ShoppingCart } from 'lucide-react';
 import { useCart } from '../firebase/hooks/useCart';
 
 const WishlistToolCard = ({ tool, onRemove }) => {

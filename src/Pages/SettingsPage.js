@@ -22,7 +22,6 @@ const PasswordSettings = React.lazy(() => import('../components/settings/Passwor
 const AddressSettings = React.lazy(() => import('../components/settings/AddressSettings'));
 const PaymentSettings = React.lazy(() => import('../components/settings/PaymentSettings'));
 const NotificationSettings = React.lazy(() => import('../components/settings/NotificationSettings'));
-const SellerOnboarding = React.lazy(() => import('../components/settings/SellerOnboarding'));
 
 const SettingsPage = () => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -39,9 +38,6 @@ const SettingsPage = () => {
       ? tabFromQuery
       : 'profile'
   );
-  
-  // Check if user is a seller
-  const isSeller = user?.isSeller || user?.profile?.isSeller || false;
   
   // Update URL when tab changes
   const handleTabChange = (tab) => {

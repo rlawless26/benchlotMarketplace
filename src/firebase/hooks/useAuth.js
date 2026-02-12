@@ -189,12 +189,6 @@ export function AuthProvider({ children }) {
       // First, use Firebase's built-in password reset
       await firebaseSendPasswordResetEmail(auth, email);
       
-      // Get the action code settings to extract the reset URL
-      const actionCodeSettings = {
-        url: `${window.location.origin}/login`,
-        handleCodeInApp: false,
-      };
-      
       // Also send our customized email with more detailed instructions
       try {
         console.log("Sending custom password reset email:", email);

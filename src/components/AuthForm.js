@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../firebase';
-import { 
-  Mail, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  AlertCircle, 
+import {
+  ArrowRight,
+  AlertCircle,
   CheckCircle
 } from 'lucide-react';
 
@@ -15,15 +12,13 @@ import {
  * Supports sign in, sign up, and password reset with social authentication
  */
 const AuthForm = ({ isModal = false, onClose, initialMode }) => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { 
-    user, 
-    loading, 
-    error, 
-    signIn, 
-    signUp, 
-    signOut, 
+  const {
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
     resetPassword,
     signInWithGoogle,
     signInWithFacebook
@@ -211,7 +206,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     setActionSuccess(null);
     
     try {
-      const { user, error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle();
       if (error) {
         // Convert error messages to user-friendly versions
         if (error.includes('popup-closed-by-user') || error.includes('cancelled-popup-request')) {
@@ -244,7 +239,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     setActionSuccess(null);
     
     try {
-      const { user, error } = await signInWithFacebook();
+      const { error } = await signInWithFacebook();
       if (error) {
         // Convert error messages to user-friendly versions
         if (error.includes('popup-closed-by-user') || error.includes('cancelled-popup-request')) {

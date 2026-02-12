@@ -423,8 +423,9 @@ const CheckoutForm = ({
         }
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    stripe, 
+    stripe,
     amount, 
     clientSecret, 
     isGuestCheckout, 

@@ -3,8 +3,8 @@
  * Displays the user's saved/wishlisted tools
  */
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Heart, Loader, AlertCircle, ShoppingBag, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Heart, AlertCircle, ShoppingBag, Search } from 'lucide-react';
 import { useWishlist } from '../firebase/hooks/useWishlist';
 import { useAuth } from '../firebase/hooks/useAuth';
 import WishlistToolCard from '../components/WishlistToolCard';
@@ -17,7 +17,6 @@ const WishlistPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('newest');
   const itemsPerPage = 9;
-  const navigate = useNavigate();
 
   // Check authentication on mount
   useEffect(() => {

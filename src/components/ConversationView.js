@@ -3,16 +3,13 @@
  * Displays direct message conversation between users
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  User, 
-  Clock, 
-  Loader, 
+import {
+  Send,
+  User,
+  Loader,
   ChevronLeft,
   MoreVertical,
   Archive,
-  Trash,
-  Flag,
   MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';

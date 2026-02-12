@@ -3,13 +3,12 @@
  * Handles shopping cart operations with Firestore and LocalStorage for guest users
  */
 import { 
-  collection, 
-  doc, 
-  getDoc, 
+  collection,
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
+  updateDoc,
+  deleteDoc,
   addDoc,
   query,
   where,
@@ -638,7 +637,7 @@ export const migrateGuestCart = async (userId) => {
   }
 };
 
-export default {
+const cartModel = {
   getOrCreateCart,
   getOrCreateGuestCart,
   addItemToCart,
@@ -649,3 +648,5 @@ export default {
   updateCartTotals,
   migrateGuestCart
 };
+
+export default cartModel;

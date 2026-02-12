@@ -6,11 +6,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
-import { openAuthModal } from '../utils/featureFlags';
 import { useNotificationContext } from '../context/NotificationContext';
 
 const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1 }) => {
-  const { isAuthenticated } = useAuth();
+  useAuth();
   const { addToCart, isItemInCart } = useCart();
   const { showNotification } = useNotificationContext();
   const [loading, setLoading] = useState(false);

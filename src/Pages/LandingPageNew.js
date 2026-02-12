@@ -9,7 +9,6 @@ import {
   Check,
   Search,
   ShoppingBag,
-  Wrench,
   ArrowRight,
   Star,
   MapPin,

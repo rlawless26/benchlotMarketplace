@@ -11,7 +11,7 @@ import { openAuthModal } from '../utils/featureFlags';
  */
 const SellerSignupPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,8 +25,7 @@ const SellerSignupPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [stripeUrl, setStripeUrl] = useState(null);
+  const [, setStripeUrl] = useState(null);
 
   // Check if user is logged in
   useEffect(() => {

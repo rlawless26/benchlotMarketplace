@@ -58,10 +58,12 @@ export const getConfig = (development, staging, production) => {
 };
 
 // Export default object for easy importing
-export default {
+const environment = {
   getEnvironment,
   isProduction,
   isStaging,
   isDevelopment,
   getConfig
 };
+
+export default environment;

@@ -8,12 +8,11 @@ import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
 import { updateUserAddress } from '../firebase/models/userModel';
 import StripeCheckout from './StripeCheckout';
-import { 
-  ShieldCheck, 
-  Lock, 
-  CreditCard, 
-  ArrowLeft, 
-  Shield,
+import {
+  ShieldCheck,
+  Lock,
+  CreditCard,
+  ArrowLeft,
   Truck,
   Home,
   User,
@@ -28,7 +27,6 @@ import {
   CreditCard as CreditCardIcon,
   Wallet
 } from 'lucide-react';
-import { openAuthModal } from '../utils/featureFlags';
 
 const CheckoutPage = () => {
   const { cart, loading, error } = useCart();
@@ -74,7 +72,7 @@ const CheckoutPage = () => {
   const [selectedSavedAddress, setSelectedSavedAddress] = useState(null);
   
   // Guest checkout state
-  const [isGuestCheckout, setIsGuestCheckout] = useState(!isAuthenticated());
+  const [isGuestCheckout] = useState(!isAuthenticated());
   const [createAccount, setCreateAccount] = useState(false);
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPassword, setGuestPassword] = useState('');

@@ -4,11 +4,10 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  CheckCircle, 
-  XCircle, 
-  DollarSign, 
-  Send, 
-  ChevronRight, 
+  CheckCircle,
+  XCircle,
+  DollarSign,
+  Send,
   ExternalLink,
   Loader,
   ThumbsUp,

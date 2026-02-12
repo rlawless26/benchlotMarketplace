@@ -15,12 +15,11 @@ import {
   serverTimestamp,
   deleteField
 } from 'firebase/firestore';
-import { 
+import {
   updateProfile,
-  updateEmail as firebaseUpdateEmail,
   updatePassword as firebaseUpdatePassword,
   EmailAuthProvider,
-  reauthenticateWithCredential 
+  reauthenticateWithCredential
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, auth, storage } from '../config';

@@ -4,7 +4,7 @@
  */
 
 // Import environment utilities
-import { getEnvironment, getConfig } from './environment';
+import { getConfig } from './environment';
 
 // API URL for Firebase Functions - environment specific
 const API_URL = process.env.REACT_APP_FIREBASE_API_URL || getConfig(
@@ -205,7 +205,7 @@ export const updateConnectAccount = async (userId, accountData) => {
   }
 };
 
-export default {
+const stripeService = {
   createConnectAccount,
   getConnectAccountStatus,
   refreshConnectAccountLink,
@@ -214,3 +214,5 @@ export default {
   addBankAccount,
   updateConnectAccount
 };
+
+export default stripeService;

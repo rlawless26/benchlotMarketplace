@@ -63,6 +63,7 @@ const AuthModal = ({
         console.error('Error handling auth redirect:', error);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isOpen, navigate]);
 
   // Handle clicks outside modal to close
@@ -80,6 +81,7 @@ const AuthModal = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Handle ESC key to close modal
@@ -97,6 +99,7 @@ const AuthModal = ({
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleClose = () => {
