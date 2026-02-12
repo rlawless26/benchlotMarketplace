@@ -32,6 +32,9 @@ import AuthModal from './AuthModal';
 // Import auth utils
 import { onAuthModalRequested } from '../utils/featureFlags';
 
+// Import centralized category data
+import { toolCategories, toolSubcategories } from '../firebase/models/toolModel';
+
 const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,24 +115,31 @@ const Header = () => {
     setAuthModalOpen(false);
   };
 
-  const categories = [
-    {
-      name: "Power Tools",
-      subcategories: ["Table Saws", "Drills", "Sanders", "Routers", "Air Compressors"]
-    },
-    {
-      name: "Hand Tools",
-      subcategories: ["Planes", "Chisels", "Hammers", "Screwdrivers", "Wrenches"]
-    },
-    {
-      name: "Workshop Equipment",
-      subcategories: ["Dust Collection", "Work Benches", "Tool Storage", "Safety Equipment"]
-    },
-    {
-      name: "Machinery",
-      subcategories: ["Lathes", "Mills", "Band Saws", "Drill Presses", "CNC"]
-    }
-  ];
+  // Featured hand tool categories shown directly in the nav bar
+  const primaryCategoryNames = ['Hand Planes', 'Chisels', 'Hand Saws', 'Sharpening'];
+
+  const primaryCategories = primaryCategoryNames
+    .filter(name => toolCategories.includes(name))
+    .map(name => ({
+      name,
+      subcategories: toolSubcategories[name] || []
+    }));
+
+  // Remaining categories grouped under "More"
+  const moreCategories = toolCategories
+    .filter(name => !primaryCategoryNames.includes(name) && name !== 'Other')
+    .map(name => ({
+      name,
+      subcategories: toolSubcategories[name] || []
+    }));
+
+  // All categories for mobile menu
+  const allCategories = toolCategories
+    .filter(name => name !== 'Other')
+    .map(name => ({
+      name,
+      subcategories: toolSubcategories[name] || []
+    }));
 
   return (
     <header className="border-b shadow-sm">
@@ -393,9 +403,9 @@ const Header = () => {
                 Browse All
               </Link>
               
-              {categories.map((category) => (
+              {primaryCategories.map((category) => (
                 <div key={category.name} className="relative group">
-                  <Link 
+                  <Link
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
                     className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary whitespace-nowrap"
                   >
@@ -414,6 +424,24 @@ const Header = () => {
                   </div>
                 </div>
               ))}
+
+              {/* More categories dropdown */}
+              <div className="relative group">
+                <button className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary whitespace-nowrap">
+                  More <ChevronDown className="h-3 w-3" />
+                </button>
+                <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] hidden group-hover:block z-10">
+                  {moreCategories.map((category) => (
+                    <Link
+                      key={category.name}
+                      to={`/marketplace?category=${encodeURIComponent(category.name)}`}
+                      className="block px-4 py-2 text-sm text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary rounded-md"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </nav>
 
             {/* Right side - Utility links */}
@@ -483,27 +511,29 @@ const Header = () => {
                 Browse All Tools
               </Link>
               
-              {categories.map((category) => (
+              {allCategories.map((category) => (
                 <div key={category.name} className="space-y-2">
-                  <Link 
+                  <Link
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
                     className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {category.name}
                   </Link>
-                  <div className="pl-4 space-y-2">
-                    {category.subcategories.map((sub) => (
-                      <Link
-                        key={sub}
-                        to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
-                        className="block text-stone-700 hover:text-benchlot-primary py-1"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {sub}
-                      </Link>
-                    ))}
-                  </div>
+                  {category.subcategories.length > 0 && (
+                    <div className="pl-4 space-y-2">
+                      {category.subcategories.map((sub) => (
+                        <Link
+                          key={sub}
+                          to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
+                          className="block text-stone-700 hover:text-benchlot-primary py-1"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {sub}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
