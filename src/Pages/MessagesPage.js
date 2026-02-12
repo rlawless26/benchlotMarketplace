@@ -2,28 +2,22 @@
  * MessagesPage Component
  * Main page for offers and messages
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { 
-  MessageSquare, 
-  Search, 
-  X, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
+  MessageSquare,
+  Search,
+  X,
+  CheckCircle,
+  XCircle,
+  Clock,
   DollarSign,
   ShoppingBag,
   Package,
   Loader,
   User,
   ArrowLeft,
-  Bell,
-  Send,
-  Filter,
-  MailOpen,
-  Archive,
-  Tag,
-  MessageCircle
+  Bell
 } from 'lucide-react';
 import { openAuthModal } from '../utils/featureFlags';
 
@@ -57,13 +51,10 @@ const MessagesPage = () => {
   const [showConversation, setShowConversation] = useState(false);
   
   // Use the messages hook for direct messaging
-  const { 
-    conversations, 
-    activeConversation, 
-    messages, 
-    loading: messagesLoading, 
+  const {
+    conversations,
+    loading: messagesLoading,
     error: messagesError,
-    unreadCount,
     markAsRead
   } = useMessages(selectedConversationId);
   

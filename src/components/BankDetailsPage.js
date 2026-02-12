@@ -4,7 +4,7 @@ import { Check, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { addBankAccount } from '../utils/stripeService';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { openAuthModal } from '../utils/featureFlags';
 
 /**
@@ -27,7 +27,7 @@ const BankDetailsPage = () => {
   
   // Get accountId from URL params
   const searchParams = new URLSearchParams(location.search);
-  const accountId = searchParams.get('accountId');
+  searchParams.get('accountId');
   
   // Form state
   const [formData, setFormData] = useState({
@@ -59,6 +59,7 @@ const BankDetailsPage = () => {
     };
     
     loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, navigate]);
   
   const handleChange = (e) => {

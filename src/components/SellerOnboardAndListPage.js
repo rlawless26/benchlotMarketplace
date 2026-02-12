@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  CheckCircle, 
-  Camera,
+// useNavigate, useLocation removed - not currently used
+import {
+  ArrowRight,
+  CheckCircle,
   ChevronRight,
   Check,
   X,
@@ -12,9 +11,7 @@ import {
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useSeller } from '../firebase/hooks/useSeller';
 import { toolCategories, toolConditions } from '../firebase/models/toolModel';
-import { 
-  ENABLE_DIRECT_BANK_ACCOUNT, 
-  USE_CUSTOM_ACCOUNTS,
+import {
   openAuthModal
 } from '../utils/featureFlags';
 
@@ -81,9 +78,7 @@ const stateOptions = [
  * This implements the tool-first flow for seller onboarding
  */
 const SellerOnboardAndListPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { createSellerAccount } = useSeller();
   const [loading, setLoading] = useState(true);
   const [formStep, setFormStep] = useState(1); // 1 = seller info, 2 = tool details, 3 = payout details, 4 = review & publish

@@ -6,10 +6,10 @@ import { Navigate, useParams, useLocation, useNavigate } from 'react-router-dom'
 
 const OrderConfirmationPage = () => {
   const { id } = useParams();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mockOrderId, setMockOrderId] = useState(null);
+  const [, setMockOrderId] = useState(null);
 
   // Handle mock order if needed (for testing)
   useEffect(() => {

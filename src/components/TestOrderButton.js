@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase';
-import { mockOrders } from '../utils/mockData';
 
 const TestOrderButton = () => {
   const navigate = useNavigate();

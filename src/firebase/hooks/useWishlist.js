@@ -85,6 +85,7 @@ export const useWishlist = () => {
       console.error('Error adding to wishlist:', err);
       return { success: false, error: err.message };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate]);
 
   // Remove a tool from the wishlist
@@ -120,6 +121,7 @@ export const useWishlist = () => {
       console.error('Error toggling wishlist item:', err);
       return { success: false, error: err.message };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate]);
 
   // Refresh the wishlist manually (useful for after actions)

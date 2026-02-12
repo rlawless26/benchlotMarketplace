@@ -3,12 +3,11 @@
  * Handles all order operations with Firestore
  */
 import { 
-  collection, 
-  doc, 
-  getDoc, 
+  collection,
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
-  updateDoc, 
+  updateDoc,
   addDoc,
   query,
   where,
@@ -163,9 +162,11 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 };
 
-export default {
+const orderModel = {
   createOrderFromCart,
   getOrderById,
   getUserOrders,
   updateOrderStatus
 };
+
+export default orderModel;

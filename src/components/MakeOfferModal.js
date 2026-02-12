@@ -3,7 +3,7 @@
  * Modal for users to submit offers on tools
  */
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { useOffers } from '../firebase/hooks/useOffers';
 import { useAuth } from '../firebase/hooks/useAuth';
 

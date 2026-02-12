@@ -15,7 +15,7 @@ import { openAuthModal } from '../utils/featureFlags';
 
 const SellerLandingPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [toolName, setToolName] = useState('');
   
   // Scroll to top when component mounts
@@ -48,21 +48,21 @@ const SellerLandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-medium text-gray-800 mb-6">
-                Sell your tools to Boston's woodworking community
+                Sell your hand tools to people who'll use them
               </h1>
               <p className="text-lg text-gray-600 mb-8">
-                Join the trusted marketplace for quality woodworking tools. 
-                Professional photography, secure payments, and a dedicated 
-                community of makers ready to buy your tools.
+                List your planes, chisels, saws, and sharpening gear with woodworkers who
+                understand their value. No lowball offers, no explaining why a Lie-Nielsen
+                costs more than a big-box plane.
               </p>
               <form onSubmit={handleSubmit} className="max-w-md">
                 <div className="space-y-3">
                   <label className="block text-lg font-medium text-gray-700">
-                    What tool are you selling today?
+                    What tool are you selling?
                   </label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g., Milwaukee M18 Drill" 
+                  <input
+                    type="text"
+                    placeholder="e.g., Lie-Nielsen No. 62 Low Angle Jack" 
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
                     value={toolName}
                     onChange={(e) => setToolName(e.target.value)}
@@ -110,8 +110,8 @@ const SellerLandingPage = () => {
                 List your tools
               </h3>
               <p className="text-gray-600">
-                Create detailed listings with our guided process. We offer professional photography 
-                services in the Boston area to help your tools stand out.
+                Create detailed listings with categories built for hand tools.
+                Specify the maker, model, steel type, and condition that buyers care about.
               </p>
             </div>
             
@@ -152,7 +152,7 @@ const SellerLandingPage = () => {
               Why sell on Benchlot?
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Join hundreds of makers who trust Benchlot to sell their quality tools.
+              Your tools deserve buyers who appreciate them.
             </p>
           </div>
           
@@ -166,8 +166,8 @@ const SellerLandingPage = () => {
               <div>
                 <h3 className="font-medium text-lg text-gray-800 mb-2">Reach the right buyers</h3>
                 <p className="text-gray-600">
-                  Connect with a targeted community of woodworkers and makers who understand 
-                  and value quality tools rather than bargain hunters.
+                  Sell to hand tool woodworkers who know what a properly tuned plane is worth,
+                  not bargain hunters looking to flip.
                 </p>
               </div>
             </div>
@@ -179,10 +179,10 @@ const SellerLandingPage = () => {
                 </div>
               </div>
               <div>
-                <h3 className="font-medium text-lg text-gray-800 mb-2">Professional presentation</h3>
+                <h3 className="font-medium text-lg text-gray-800 mb-2">Built for hand tools</h3>
                 <p className="text-gray-600">
-                  We offer photography services and listing assistance to ensure your 
-                  tools look their best and attract serious buyers.
+                  Our listing form speaks the language: bench planes, mortise chisels,
+                  dovetail saws. Buyers find exactly what they're looking for.
                 </p>
               </div>
             </div>
@@ -242,8 +242,8 @@ const SellerLandingPage = () => {
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
               <p className="text-gray-600 mb-4">
-                "I sold my entire workshop in two weeks when I was downsizing. The professional 
-                photos made a huge difference, and I got fair prices for everything."
+                "I sold a set of vintage Record planes and a Lie-Nielsen shoulder plane in under a week.
+                The buyers actually knew what they were getting."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
@@ -263,8 +263,8 @@ const SellerLandingPage = () => {
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
               <p className="text-gray-600 mb-4">
-                "As someone who upgrades my tools regularly, Benchlot has become my go-to 
-                platform. The buyers are serious and knowledgeable, no lowball offers."
+                "Every time I upgrade a plane or pick up a new chisel set, I list the old one here.
+                The buyers are serious woodworkers, not tire kickers."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
@@ -284,8 +284,8 @@ const SellerLandingPage = () => {
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
               <p className="text-gray-600 mb-4">
-                "The secure payment system gives me peace of mind. I've sold over 20 tools on 
-                Benchlot and every transaction has been smooth and professional."
+                "I inherited my grandfather's tool chest full of Stanley Bedrock planes. Benchlot
+                helped me find them homes with people who'd actually put them to work."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
@@ -303,11 +303,11 @@ const SellerLandingPage = () => {
       <section className="py-16 md:py-24 bg-benchlot-primary text-white">
         <div className="max-w-5xl mx-auto px-4 md:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-medium mb-6">
-            Ready to turn your unused tools into cash?
+            Your tools deserve a second life on someone's bench
           </h2>
           <p className="text-lg text-benchlot-accent-light mb-8 max-w-3xl mx-auto">
-            Join the trusted marketplace connecting quality tools with the makers who need them. 
-            Start selling today with just your email and a few photos.
+            Whether you're upgrading, downsizing, or settling an estate, list your hand tools
+            with a community that values craftsmanship.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 

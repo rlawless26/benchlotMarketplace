@@ -369,7 +369,7 @@ export const getMockCartById = (id) => {
   return mockCarts.find(cart => cart.id === id) || null;
 };
 
-export default {
+const mockData = {
   mockUsers,
   mockTools,
   mockOrders,
@@ -379,3 +379,5 @@ export default {
   getMockUserById,
   getMockCartById
 };
+
+export default mockData;

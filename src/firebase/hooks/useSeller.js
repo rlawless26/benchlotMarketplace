@@ -61,6 +61,7 @@ export function SellerProvider({ children }) {
       console.log('SellerProvider - User is not a seller or no user, clearing status');
       setSellerStatus(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Create a Stripe Connect account for the user
@@ -308,49 +309,6 @@ export function SellerProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Check if the current user is a seller
-  const isSeller = () => {
-    const result = !!(
-      user?.seller?.isSeller === true || 
-      user?.isSeller === true || 
-      user?.seller?.stripeStatus === 'active' ||
-      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true)
-    );
-    console.log('isSeller check:', { 
-      result, 
-      user: !!user,
-      sellerIsSeller: user?.seller?.isSeller,
-      topLevelIsSeller: user?.isSeller,
-      sellerStripeStatus: user?.seller?.stripeStatus,
-      hasBankAccount: user?.seller?.hasBankAccount,
-      verified: user?.seller?.verified
-    });
-    return result;
-  };
-  
-  // Check if the seller has completed onboarding
-  const isOnboardingComplete = () => {
-    // Consider onboarding complete if either:
-    // 1. Stripe sellerStatus shows details submitted and payouts enabled
-    // 2. User has verified bank account and is marked as verified in Firestore
-    // 3. User has active stripeStatus
-    const result = !!(
-      (sellerStatus?.detailsSubmitted && sellerStatus?.payoutsEnabled) ||
-      (user?.seller?.hasBankAccount === true && user?.seller?.verified === true) ||
-      user?.seller?.stripeStatus === 'active'
-    );
-    console.log('isOnboardingComplete check:', { 
-      result, 
-      sellerStatus: !!sellerStatus,
-      detailsSubmitted: sellerStatus?.detailsSubmitted,
-      payoutsEnabled: sellerStatus?.payoutsEnabled,
-      hasBankAccount: user?.seller?.hasBankAccount,
-      verified: user?.seller?.verified,
-      stripeStatus: user?.seller?.stripeStatus
-    });
-    return result;
   };
   
   // Context value

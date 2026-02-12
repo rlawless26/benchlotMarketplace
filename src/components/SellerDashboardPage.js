@@ -4,7 +4,7 @@ import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, getConnectDashboardLink } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
-import { Store, Check, Loader, AlertCircle, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
+import { Check, Loader, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
 import { updateSellerSettings } from '../firebase/models/userModel';
 import MyListings from './MyListings';
 
@@ -19,12 +19,11 @@ import MyListings from './MyListings';
 const SellerDashboardPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [accountStatus, setAccountStatus] = useState(null);
   const [error, setError] = useState(null);
   const [listings, setListings] = useState([]);
-  const [recentOrders, setRecentOrders] = useState([]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('dashboard');
   const [activeSettingsTab, setActiveSettingsTab] = useState('business');

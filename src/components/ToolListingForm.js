@@ -5,13 +5,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../firebase';
-import { 
-  createTool, 
-  updateTool, 
+import {
+  createTool,
+  updateTool,
   getToolById,
-  uploadToolImage, 
+  uploadToolImage,
   deleteToolImage,
   toolCategories,
+  toolSubcategories,
+  toolBrands,
   toolConditions
 } from '../firebase/models/toolModel';
 import { getUserById } from '../firebase/models/userModel';
@@ -28,8 +30,10 @@ const ToolListingForm = ({ hideTitle = false }) => {
     name: '',
     description: '',
     category: '',
+    subcategory: '',
     condition: '',
     brand: '',
+    customBrand: '',
     model: '',
     current_price: '',
     original_price: '',
@@ -61,7 +65,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
-  const [sellerDefaults, setSellerDefaults] = useState({
+  const [, setSellerDefaults] = useState({
     shipping: {
       methods: ['standard'],
       price: 15,
@@ -427,7 +431,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="e.g., Milwaukee M18 Drill"
+                placeholder="e.g., Lie-Nielsen No. 4 Smoothing Plane"
               />
             </div>
             
@@ -440,10 +444,13 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 id="category"
                 name="category"
                 value={formData.category}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  setFormData(prev => ({ ...prev, subcategory: '' }));
+                }}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-                style={{ 
-                  height: '42px', 
+                style={{
+                  height: '42px',
                   appearance: 'none',
                   backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
                   backgroundRepeat: 'no-repeat',
@@ -460,7 +467,37 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 ))}
               </select>
             </div>
-            
+
+            {/* Subcategory - only show when category is selected and has subcategories */}
+            {formData.category && toolSubcategories[formData.category]?.length > 0 && (
+              <div>
+                <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-1">
+                  Subcategory
+                </label>
+                <select
+                  id="subcategory"
+                  name="subcategory"
+                  value={formData.subcategory}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                  style={{
+                    height: '42px',
+                    appearance: 'none',
+                    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.7rem top 50%',
+                    backgroundSize: '0.65rem auto',
+                    paddingRight: '2rem'
+                  }}
+                >
+                  <option value="">Select a subcategory</option>
+                  {toolSubcategories[formData.category].map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Condition */}
             <div>
               <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
@@ -472,8 +509,8 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 value={formData.condition}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-                style={{ 
-                  height: '42px', 
+                style={{
+                  height: '42px',
                   appearance: 'none',
                   backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
                   backgroundRepeat: 'no-repeat',
@@ -490,23 +527,45 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 ))}
               </select>
             </div>
-            
+
             {/* Brand */}
             <div>
               <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
                 Brand
               </label>
-              <input
-                type="text"
+              <select
                 id="brand"
                 name="brand"
                 value={formData.brand}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="e.g., Milwaukee, DeWalt, Makita"
-              />
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                style={{
+                  height: '42px',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.7rem top 50%',
+                  backgroundSize: '0.65rem auto',
+                  paddingRight: '2rem'
+                }}
+              >
+                <option value="">Select a brand</option>
+                {toolBrands.map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+              </select>
+              {formData.brand === 'Other' && (
+                <input
+                  type="text"
+                  name="customBrand"
+                  value={formData.customBrand}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 mt-2"
+                  placeholder="Enter brand name"
+                />
+              )}
             </div>
-            
+
             {/* Model */}
             <div>
               <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
@@ -519,7 +578,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 value={formData.model}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="e.g., M18 FUEL"
+                placeholder="e.g., No. 4, PM-V11"
               />
             </div>
             
@@ -535,7 +594,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 value={formData.location}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="e.g., San Francisco, CA"
+                placeholder="e.g., Boston, MA"
               />
             </div>
           </div>
@@ -933,7 +992,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                   <div key={index} className="relative">
                     <img
                       src={image.url}
-                      alt={`Tool image ${index + 1}`}
+                      alt={`Tool ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
                     <button
@@ -959,7 +1018,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                   <div key={index} className="relative">
                     <img
                       src={preview}
-                      alt={`New tool image ${index + 1}`}
+                      alt={`New tool ${index + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
                     <button

@@ -1,11 +1,11 @@
 // src/components/Header.js
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
-  Search, 
-  Heart, 
-  MessageSquare, 
+  Search,
+  Heart,
+  MessageSquare,
   User,
   Menu,
   ChevronDown,
@@ -15,7 +15,6 @@ import {
   Settings,
   Package,
   Hammer,
-  Bell,
   X,
   Store
 } from 'lucide-react';
@@ -28,15 +27,13 @@ import { useMessages } from '../firebase/hooks/useMessages';
 
 // Import components
 import CartIcon from './CartIcon';
-import NotificationBadge from './NotificationBadge';
 import AuthModal from './AuthModal';
 
 // Import auth utils
-import { onAuthModalRequested, getAuthRedirectPath, clearAuthRedirectPath } from '../utils/featureFlags';
+import { onAuthModalRequested } from '../utils/featureFlags';
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,7 +44,7 @@ const Header = () => {
   const { user, isAuthenticated, signOut } = useAuth();
   const { count: wishlistCount } = useWishlist();
   const { totalCount: notificationCount } = useNotifications();
-  const { hasUnreadMessages, unreadCount: messageCount } = useMessages();
+  const { unreadCount: messageCount } = useMessages();
   
   // Listen for auth modal events
   useEffect(() => {

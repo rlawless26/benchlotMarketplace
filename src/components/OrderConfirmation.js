@@ -7,7 +7,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { mockOrders, getMockOrderById } from '../utils/mockData';
+import { getMockOrderById } from '../utils/mockData';
 import { openAuthModal } from '../utils/featureFlags';
 
 const OrderConfirmation = () => {

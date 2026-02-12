@@ -69,14 +69,17 @@ const SellerOnboarding = () => {
         <div className="mt-10 border-t border-stone-200 pt-6">
           <h3 className="font-medium mb-3">Helpful Resources</h3>
           <div className="space-y-3">
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
             <a href="#" className="flex items-center text-benchlot-primary hover:text-benchlot-secondary">
               <ExternalLink className="h-4 w-4 mr-2" />
               Seller Guide: Getting Started
             </a>
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
             <a href="#" className="flex items-center text-benchlot-primary hover:text-benchlot-secondary">
               <ExternalLink className="h-4 w-4 mr-2" />
               Tool Pricing Recommendations
             </a>
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
             <a href="#" className="flex items-center text-benchlot-primary hover:text-benchlot-secondary">
               <ExternalLink className="h-4 w-4 mr-2" />
               Best Practices for Tool Photos

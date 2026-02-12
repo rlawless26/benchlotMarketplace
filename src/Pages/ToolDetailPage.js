@@ -2,17 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ArrowLeft, 
-  Heart, 
-  MapPin, 
-  Star, 
-  Check, 
-  Loader, 
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  Heart,
+  MapPin,
+  Star,
+  Check,
+  Loader,
   AlertCircle,
   Truck,
-  ExternalLink,
   MessageCircle
 } from 'lucide-react';
 import { 
@@ -279,8 +278,9 @@ const ToolDetailPage = () => {
       // Also show for owner of a listing that needs images
       setShowPhotoUploader(true);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action, tool, user]);
-  
+
   // Load tool data
   useEffect(() => {
     const loadTool = async () => {
@@ -323,6 +323,7 @@ const ToolDetailPage = () => {
     };
     
     loadTool();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Format price as USD
@@ -939,7 +940,7 @@ const ToolDetailPage = () => {
                         {tool.seller && (tool.seller.photoURL || tool.seller.avatar_url) ? (
                           <img
                             src={tool.seller.photoURL || tool.seller.avatar_url}
-                            alt={`${tool.seller && (tool.seller.displayName || tool.seller.username) || 'Seller'}'s profile`}
+                            alt={`${(tool.seller && (tool.seller.displayName || tool.seller.username)) || 'Seller'}'s profile`}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.target.onerror = null;
@@ -957,7 +958,7 @@ const ToolDetailPage = () => {
                       {/* Seller Info */}
                       <div>
                         <h3 className="font-medium text-stone-800 text-lg">
-                          {tool.seller && (tool.seller.businessName || tool.seller.displayName || tool.seller.username) || "Seller"}
+                          {(tool.seller && (tool.seller.businessName || tool.seller.displayName || tool.seller.username)) || "Seller"}
                         </h3>
                         
                         {/* City/State - Always display, even if missing in seller data */}

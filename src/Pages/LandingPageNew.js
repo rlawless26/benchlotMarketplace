@@ -9,7 +9,6 @@ import {
   Check,
   Search,
   ShoppingBag,
-  Wrench,
   ArrowRight,
   Star,
   MapPin,
@@ -35,59 +34,59 @@ const LandingPageNew = () => {
     return isAuthenticated && user && (user.isSeller || user?.profile?.isSeller);
   };
 
-  // Mock featured tools - same as original landing page
+  // Featured tools reflecting the hand tool community
   const featuredTools = [
     {
       id: 1,
-      name: 'DeWalt Table Saw',
-      current_price: 499,
-      original_price: 699,
-      location: 'Cambridge, MA',
-      condition: 'Excellent',
-      images: ['/images/dewalt-saw.jpg'],
+      name: 'Lie-Nielsen No. 4 Smoothing Plane',
+      current_price: 295,
+      original_price: 375,
+      location: 'Portland, ME',
+      condition: 'Like New',
+      images: ['/images/handtools.jpg'],
       is_verified: true
     },
     {
       id: 2,
-      name: 'Vintage Stanley Hand Plane',
-      current_price: 85,
-      location: 'Somerville, MA',
+      name: 'Veritas Low-Angle Block Plane',
+      current_price: 135,
+      location: 'Cambridge, MA',
       condition: 'Good',
-      images: ['/images/stanley-plane.jpg']
+      images: ['/images/handtools.jpg']
     },
     {
       id: 3,
-      name: 'Makita Cordless Drill Set',
-      current_price: 199,
-      original_price: 249,
-      location: 'Boston, MA',
+      name: 'Narex Richter Chisel Set',
+      current_price: 89,
+      original_price: 120,
+      location: 'Providence, RI',
       condition: 'Like New',
-      images: ['/images/makita-drill.jpg'],
+      images: ['/images/handtools.jpg'],
       is_verified: true
     }
   ];
 
-  // Categories with high-quality royalty-free images
+  // Categories focused on hand tool woodworking
   const categories = [
-    { 
-      name: "Power Tools", 
-      count: 238,
-      imageUrl: "/images/powertools.webp"
-    },
-    { 
-      name: "Hand Tools", 
-      count: 156,
+    {
+      name: "Hand Planes",
+      count: null,
       imageUrl: "/images/handtools.jpg"
     },
-    { 
-      name: "Workshop Equipment", 
-      count: 94,
-      imageUrl: "/images/workshopequipment.jpg"
+    {
+      name: "Chisels",
+      count: null,
+      imageUrl: "/images/handtools.jpg"
     },
-    { 
-      name: "Machinery", 
-      count: 67,
-      imageUrl: "/images/machinery.jpg"
+    {
+      name: "Hand Saws",
+      count: null,
+      imageUrl: "/images/handtools.jpg"
+    },
+    {
+      name: "Sharpening",
+      count: null,
+      imageUrl: "/images/handtools.jpg"
     }
   ];
 
@@ -118,10 +117,10 @@ const LandingPageNew = () => {
             {/* Hero text */}
             <div className="w-full text-left mb-8">
               <h1 className="text-4xl md:text-6xl font-serif font-medium mb-6 text-white" style={{ textShadow: '0 3px 6px rgba(0,0,0,0.8)' }}>
-                Buy and sell woodworking tools with confidence
+                The marketplace for hand tool woodworkers
               </h1>
               <p className="text-xl text-white mb-8" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
-                The premier marketplace connecting woodworkers with quality tools and trusted sellers.
+                Buy and sell premium hand tools from makers who understand their value. Lie-Nielsen, Veritas, vintage Stanley, and more.
               </p>
             </div>
               
@@ -130,7 +129,7 @@ const LandingPageNew = () => {
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
-                  placeholder="What tool are you looking for?"
+                  placeholder="Search for planes, chisels, saws..."
                   className="w-full pl-12 pr-4 py-4 border border-stone-200 bg-white text-stone-800 rounded-md focus:outline-none focus:border-benchlot-accent shadow-md text-xl placeholder-stone-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,7 +191,7 @@ const LandingPageNew = () => {
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20 flex flex-col items-center justify-end pb-5">
                     <h3 className="text-white text-lg font-medium drop-shadow-lg">{category.name}</h3>
-                    <span className="text-white text-sm mt-1 opacity-80">{category.count} items</span>
+                    {category.count && <span className="text-white text-sm mt-1 opacity-80">{category.count} items</span>}
                   </div>
                 </div>
               </Link>
@@ -263,7 +262,7 @@ const LandingPageNew = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl font-serif font-medium mb-4 text-stone-800">How Benchlot Works</h2>
-            <p className="text-stone-600">The trusted marketplace for woodworkers and makers</p>
+            <p className="text-stone-600">Built for the hand tool community, by the hand tool community</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -271,16 +270,16 @@ const LandingPageNew = () => {
               <div className="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                 <BadgeCheck className="h-8 w-8 text-benchlot-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Verified Tools</h3>
-              <p className="text-stone-600">Every listing is authenticated by our experts to ensure quality and value.</p>
+              <h3 className="text-xl font-medium mb-2">Curated Listings</h3>
+              <p className="text-stone-600">Every listing is reviewed for accuracy. We know the difference between a No. 4 and a No. 4-1/2.</p>
             </div>
 
             <div className="text-center">
               <div className="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Users className="h-8 w-8 text-benchlot-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Local Community</h3>
-              <p className="text-stone-600">Connect with trusted buyers and sellers in your local maker community.</p>
+              <h3 className="text-xl font-medium mb-2">Knowledgeable Community</h3>
+              <p className="text-stone-600">Buy and sell with people who appreciate quality tools, not lowball offers on Facebook.</p>
             </div>
 
             <div className="text-center">
@@ -288,7 +287,7 @@ const LandingPageNew = () => {
                 <ChartBar className="h-8 w-8 text-benchlot-primary" />
               </div>
               <h3 className="text-xl font-medium mb-2">Fair Pricing</h3>
-              <p className="text-stone-600">Market data and transparency ensures you get the best value.</p>
+              <p className="text-stone-600">Price guides based on real transaction data so you know what your tools are worth.</p>
             </div>
           </div>
         </div>
@@ -297,8 +296,8 @@ const LandingPageNew = () => {
       {/* Testimonials Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-serif font-medium mb-12 text-stone-800 text-center">What Our Community Says</h2>
-          
+          <h2 className="text-3xl font-serif font-medium mb-12 text-stone-800 text-center">Built for Woodworkers Like You</h2>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Testimonial 1 */}
             <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm">
@@ -310,7 +309,7 @@ const LandingPageNew = () => {
                 </div>
               </div>
               <p className="text-stone-600 mb-4">
-                "I found a vintage Stanley #4 plane in excellent condition for half the price I'd seen elsewhere. The seller was knowledgeable and shipping was fast."
+                "I upgraded from a WoodRiver to a Lie-Nielsen and was able to sell my old plane to someone who'd actually use it, not a flipper."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center mr-3">
@@ -322,7 +321,7 @@ const LandingPageNew = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Testimonial 2 */}
             <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-2">
@@ -333,7 +332,7 @@ const LandingPageNew = () => {
                 </div>
               </div>
               <p className="text-stone-600 mb-4">
-                "As a professional woodworker, I needed to upgrade my shop. I sold my old equipment quickly and found exactly what I needed all in one place."
+                "Finally a place where people understand that a set of Veritas chisels is worth more than what Home Depot sells. Fair prices, knowledgeable buyers."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center mr-3">
@@ -341,11 +340,11 @@ const LandingPageNew = () => {
                 </div>
                 <div>
                   <h4 className="font-medium">Sarah K.</h4>
-                  <p className="text-sm text-stone-500">Professional Carpenter</p>
+                  <p className="text-sm text-stone-500">Furniture Maker</p>
                 </div>
               </div>
             </div>
-            
+
             {/* Testimonial 3 */}
             <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-2">
@@ -356,7 +355,7 @@ const LandingPageNew = () => {
                 </div>
               </div>
               <p className="text-stone-600 mb-4">
-                "I needed to downsize my workshop and was able to sell several high-end tools quickly. The process was painless and I got fair prices for everything."
+                "My father left behind a shop full of quality hand tools. Benchlot helped me find them good homes instead of selling them for pennies at an estate sale."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center mr-3">
@@ -364,7 +363,7 @@ const LandingPageNew = () => {
                 </div>
                 <div>
                   <h4 className="font-medium">John R.</h4>
-                  <p className="text-sm text-stone-500">Furniture Maker</p>
+                  <p className="text-sm text-stone-500">Woodworker, New England</p>
                 </div>
               </div>
             </div>
@@ -380,7 +379,7 @@ const LandingPageNew = () => {
               <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
                 <h2 className="text-3xl font-serif font-medium mb-4 text-stone-800">Ready to get started?</h2>
                 <p className="text-stone-600 mb-2">
-                  Join the Benchlot community today and connect with woodworkers in your area.
+                  Join the community of hand tool woodworkers who buy and sell with confidence.
                 </p>
               </div>
               <div className="md:w-1/3 flex flex-col gap-3">

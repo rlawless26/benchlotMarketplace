@@ -2,9 +2,8 @@
  * Wishlist Model for Firebase
  * Manages the user's wishlist functionality with Firestore
  */
-import { 
-  doc, 
-  collection,
+import {
+  doc,
   getDoc,
   setDoc,
   updateDoc,
@@ -14,9 +13,6 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../';
 import { getToolById } from './toolModel';
-
-// Collection reference
-const wishlistCollection = collection(db, 'wishlists');
 
 /**
  * Add a tool to the current user's wishlist
@@ -320,7 +316,7 @@ export const subscribeToWishlist = (callback) => {
   return unsubscribe;
 };
 
-export default {
+const wishlistModel = {
   addToWishlist,
   removeFromWishlist,
   isToolInWishlist,
@@ -328,3 +324,5 @@ export default {
   getWishlistWithDetails,
   subscribeToWishlist
 };
+
+export default wishlistModel;

@@ -1,6 +1,6 @@
 // src/Pages/AboutPage.js
 import React from 'react';
-import { Wrench, Hammer, Home, ShoppingBag, Users, Calendar } from 'lucide-react';
+import { Wrench, Hammer, ShoppingBag, Users, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AboutPage = () => {

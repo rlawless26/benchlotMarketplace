@@ -2,7 +2,7 @@
 // This handles all email-related functionality for the Benchlot frontend
 
 // Import environment utilities
-import { getEnvironment, getConfig } from './environment';
+import { getConfig } from './environment';
 
 // Base API URL - environment-specific configuration
 const API_URL = process.env.REACT_APP_API_URL || getConfig(
@@ -201,7 +201,7 @@ export const sendOrderReceivedEmail = (to, orderDetails) => {
 };
 
 // Default export for backward compatibility
-export default {
+const emailService = {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendAccountCreationEmail,
@@ -213,3 +213,5 @@ export default {
   sendPayoutNotificationEmail,
   sendOrderReceivedEmail
 };
+
+export default emailService;

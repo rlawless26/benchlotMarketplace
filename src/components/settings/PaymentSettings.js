@@ -3,11 +3,9 @@
  * Allows users to manage their payment methods using Stripe's SetupIntent API
  */
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Plus, Check, Loader, AlertCircle, Trash2, Edit as EditIcon, DollarSign, Lock } from 'lucide-react';
+import { CreditCard, Plus, Check, Loader, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useAuth } from '../../firebase';
-import { updateUserPaymentMethods, getUserPaymentMethods } from '../../firebase/models/userModel';
 
 // Load Stripe outside of a component's render to avoid recreating the Stripe object
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -206,12 +204,10 @@ const PaymentSettings = ({ user }) => {
   // State
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [isAddingCard, setIsAddingCard] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [clientSecret, setClientSecret] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user: authUser } = useAuth();
   
   // Load payment methods from Stripe
   useEffect(() => {

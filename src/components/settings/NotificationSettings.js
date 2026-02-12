@@ -44,6 +44,7 @@ const NotificationSettings = ({ user }) => {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
   
   // Handle toggle change

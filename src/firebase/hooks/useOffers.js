@@ -3,7 +3,7 @@
  * Provides offer functionality and state management for components
  */
 import { useState, useEffect, useCallback } from 'react';
-import { onSnapshot, collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../config';
 import { useAuth } from './useAuth';
 import offerModel, { OfferStatus } from '../models/offerModel';

@@ -10,17 +10,14 @@ import {
   limit, 
   getDocs,
   getDoc,
-  addDoc, 
-  updateDoc, 
+  addDoc,
+  updateDoc,
   serverTimestamp,
-  doc,
-  or,
-  and
+  doc
 } from 'firebase/firestore';
 import { db } from '../config';
 
 // Collection references
-const messagesCollection = collection(db, 'messages');
 const conversationsCollection = collection(db, 'conversations');
 
 // Message and conversation types
@@ -361,7 +358,7 @@ export const getUnreadConversationCount = async (userId) => {
   }
 };
 
-export default {
+const messageModel = {
   getOrCreateConversation,
   findConversationBetweenUsers,
   getUserConversations,
@@ -375,3 +372,5 @@ export default {
   MessageType,
   ConversationStatus
 };
+
+export default messageModel;

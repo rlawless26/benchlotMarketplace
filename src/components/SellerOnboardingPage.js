@@ -14,7 +14,7 @@ import { doc, getDoc } from 'firebase/firestore';
 const SellerOnboardingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [accountStatus, setAccountStatus] = useState(null);
   const [error, setError] = useState(null);
@@ -219,6 +219,7 @@ const SellerOnboardingPage = () => {
     };
     
     checkUserAndStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, loading, location]);
   
   // Handle refreshing the onboarding link
