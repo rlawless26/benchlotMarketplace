@@ -8,6 +8,8 @@ import {
   X,
   AlertTriangle
 } from 'lucide-react';
+import { sendEmailVerification } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useSeller } from '../firebase/hooks/useSeller';
 import { toolCategories, toolConditions } from '../firebase/models/toolModel';
@@ -288,18 +290,25 @@ const SellerOnboardAndListPage = () => {
   // Handle send verification email
   const handleSendVerificationEmail = async () => {
     try {
-      // TODO: Implement email verification sending
-      
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError('You must be logged in to verify your email.');
+        return;
+      }
+
+      await sendEmailVerification(currentUser);
       setSuccessMessage('Verification email sent. Please check your inbox.');
-      
-      // In a real implementation, you would call a Firebase function here
-      // For now, we'll simulate it with a timeout
+
       setTimeout(() => {
         setSuccessMessage(null);
       }, 5000);
-      
     } catch (err) {
-      setError('Failed to send verification email. Please try again.');
+      console.error('Error sending verification email:', err);
+      if (err.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please wait a few minutes and try again.');
+      } else {
+        setError('Failed to send verification email. Please try again.');
+      }
     }
   };
   
