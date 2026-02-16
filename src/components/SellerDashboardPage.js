@@ -78,8 +78,6 @@ const SellerDashboardPage = () => {
   const [sellerBalance, setSellerBalance] = useState({ available: 0, pending: 0 });
   const [transfers, setTransfers] = useState([]);
   const [sellerOrders, setSellerOrders] = useState([]);
-  const [earningsLoading, setEarningsLoading] = useState(false);
-  
   // Fetch seller status and data on mount
   useEffect(() => {
     const loadSellerData = async () => {
