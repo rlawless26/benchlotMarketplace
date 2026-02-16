@@ -3362,7 +3362,10 @@ exports.stripeApi = exports.api;
 
 /**
  * Scheduled Functions for email notifications
+ * Note: These use Firebase Functions v1 pubsub.schedule() syntax,
+ * which is only available when deployed via Firebase CLI (not gcloud functions deploy).
  */
+if (functions.pubsub && typeof functions.pubsub.schedule === 'function') {
 
 // Send listing expiration reminders (Daily at 9 AM)
 exports.sendListingExpirationReminders = functions.pubsub
@@ -3842,6 +3845,8 @@ exports.sendMonthlySalesSummaries = functions.pubsub
       return null;
     }
   });
+
+} // end if (functions.pubsub.schedule)
 
 /**
  * Helper function to get views count for a seller's listings
