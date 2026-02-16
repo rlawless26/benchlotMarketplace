@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
-import { getConnectAccountStatus, getConnectDashboardLink } from '../utils/stripeService';
+import { getConnectAccountStatus, getConnectDashboardLink, getSellerBalance, getSellerTransfers, getSellerOrders } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
 import { Check, Loader, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
@@ -73,6 +73,12 @@ const SellerDashboardPage = () => {
   const [offers, setOffers] = useState([]);
   const [totalSales, setTotalSales] = useState(0);
   const [ordersCount, setOrdersCount] = useState(0);
+
+  // State for earnings/payouts
+  const [sellerBalance, setSellerBalance] = useState({ available: 0, pending: 0 });
+  const [transfers, setTransfers] = useState([]);
+  const [sellerOrders, setSellerOrders] = useState([]);
+  const [earningsLoading, setEarningsLoading] = useState(false);
   
   // Fetch seller status and data on mount
   useEffect(() => {
@@ -265,69 +271,38 @@ const SellerDashboardPage = () => {
           }));
         }
         
-        // Fetch seller's listings from Firebase
-        // For now, we'll use mock data
-        setListings([
-          {
-            id: 'listing1',
-            name: 'DeWalt Power Drill',
-            price: 149.99,
-            status: 'active',
-            images: ['https://via.placeholder.com/150']
-          },
-          {
-            id: 'listing2',
-            name: 'Makita Circular Saw',
-            price: 219.99,
-            status: 'active',
-            images: ['https://via.placeholder.com/150']
-          }
-        ]);
-        
-        // Fetch recent offers
-        // For now, we'll use mock data
-        setOffers([
-          {
-            id: 'offer1',
-            toolId: 'listing1',
-            toolTitle: 'DeWalt Power Drill',
-            buyerId: 'buyer1',
-            buyerName: 'John Doe',
-            buyerPhoto: null,
-            originalPrice: 149.99,
-            currentPrice: 130.00,
-            status: 'pending',
-            createdAt: { seconds: Date.now() / 1000 - 60 * 60 }
-          },
-          {
-            id: 'offer2',
-            toolId: 'listing2',
-            toolTitle: 'Makita Circular Saw',
-            buyerId: 'buyer2',
-            buyerName: 'Jane Smith',
-            buyerPhoto: null,
-            originalPrice: 219.99,
-            currentPrice: 195.00,
-            status: 'accepted',
-            createdAt: { seconds: Date.now() / 1000 - 2 * 60 * 60 }
-          },
-          {
-            id: 'offer3',
-            toolId: 'listing1',
-            toolTitle: 'DeWalt Power Drill',
-            buyerId: 'buyer3',
-            buyerName: 'Bob Johnson',
-            buyerPhoto: null,
-            originalPrice: 149.99,
-            currentPrice: 120.00,
-            status: 'countered',
-            createdAt: { seconds: Date.now() / 1000 - 5 * 60 * 60 }
-          }
-        ]);
+        // Fetch real seller data from APIs
+        try {
+          const [ordersData, balanceData, transfersData] = await Promise.allSettled([
+            getSellerOrders(user.uid),
+            getSellerBalance(user.uid),
+            getSellerTransfers(user.uid, 10)
+          ]);
 
-        // Fetch orders count and total sales
-        setOrdersCount(5);
-        setTotalSales(1256.78);
+          if (ordersData.status === 'fulfilled') {
+            setSellerOrders(ordersData.value.orders || []);
+            setOrdersCount(ordersData.value.totalOrders || 0);
+            setTotalSales(ordersData.value.totalEarnings || 0);
+          }
+
+          if (balanceData.status === 'fulfilled') {
+            setSellerBalance({
+              available: balanceData.value.available || 0,
+              pending: balanceData.value.pending || 0
+            });
+          }
+
+          if (transfersData.status === 'fulfilled') {
+            setTransfers(transfersData.value.transfers || []);
+          }
+        } catch (dataError) {
+          console.error('Error fetching seller financial data:', dataError);
+          // Non-fatal - dashboard still loads with zero values
+        }
+
+        // Reset listings - MyListings component handles its own data
+        setListings([]);
+        setOffers([]);
         
         setLoading(false);
       } catch (err) {
@@ -625,7 +600,7 @@ const SellerDashboardPage = () => {
                     </svg>
                     My Listings
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveMainTab('orders')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                       activeMainTab === 'orders' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
@@ -636,7 +611,16 @@ const SellerDashboardPage = () => {
                     </svg>
                     Orders
                   </button>
-                  <button 
+                  <button
+                    onClick={() => setActiveMainTab('earnings')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'earnings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <DollarSign className="h-5 w-5 mr-2" />
+                    Earnings
+                  </button>
+                  <button
                     onClick={() => setActiveMainTab('settings')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                       activeMainTab === 'settings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
@@ -681,24 +665,31 @@ const SellerDashboardPage = () => {
                   </Link>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <button 
-                    onClick={() => setActiveMainTab('listings')}
-                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">ACTIVE LISTINGS</h3>
-                    <p className="text-2xl font-bold">{listings.length || 0}</p>
-                  </button>
-                  <button 
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <button
                     onClick={() => setActiveMainTab('orders')}
                     className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
                   >
                     <h3 className="text-sm font-medium text-gray-500 mb-1">ORDERS</h3>
                     <p className="text-2xl font-bold">{ordersCount || 0}</p>
                   </button>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL SALES</h3>
+                  <button
+                    onClick={() => setActiveMainTab('earnings')}
+                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL EARNINGS</h3>
                     <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
+                  </button>
+                  <button
+                    onClick={() => setActiveMainTab('earnings')}
+                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                  >
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">AVAILABLE</h3>
+                    <p className="text-2xl font-bold text-green-700">${sellerBalance.available.toFixed(2)}</p>
+                  </button>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING</h3>
+                    <p className="text-2xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
                   </div>
                 </div>
                 
@@ -901,7 +892,7 @@ const SellerDashboardPage = () => {
                   
                   {/* Orders list */}
                   <div className="space-y-4">
-                    {ordersCount === 0 ? (
+                    {sellerOrders.length === 0 ? (
                       <div className="text-center py-8 bg-gray-50 rounded-lg">
                         <Package className="mx-auto h-12 w-12 text-gray-400" />
                         <p className="mt-4 text-gray-500 font-medium">No orders yet</p>
@@ -910,41 +901,42 @@ const SellerDashboardPage = () => {
                         </p>
                       </div>
                     ) : (
-                      // Mock orders for demonstration
-                      [1, 2, 3].map(i => (
-                        <div key={i} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                      sellerOrders.map(order => (
+                        <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                             <div>
                               <div className="flex items-center">
-                                <h3 className="font-medium">Order #{1000 + i}</h3>
+                                <h3 className="font-medium">Order #{order.id.slice(-6).toUpperCase()}</h3>
                                 <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  i === 1 ? 'bg-yellow-100 text-yellow-800' : 
-                                  i === 2 ? 'bg-green-100 text-green-800' : 
-                                  'bg-blue-100 text-blue-800'
+                                  order.status === 'paid' ? 'bg-yellow-100 text-yellow-800' :
+                                  order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                  order.status === 'refunded' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {i === 1 ? 'Processing' : i === 2 ? 'Shipped' : 'Pending'}
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-500 mt-1">Placed on {new Date().toLocaleDateString()}</p>
-                              <div className="mt-3 flex items-center">
-                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                  <span className="text-xs font-medium text-gray-500">
-                                    {String.fromCharCode(64 + i)}
+                              <p className="text-sm text-gray-500 mt-1">
+                                {order.createdAt?.seconds
+                                  ? new Date(order.createdAt.seconds * 1000).toLocaleDateString()
+                                  : 'Recently'}
+                              </p>
+                              <div className="mt-2 text-sm text-gray-600">
+                                {order.items.map((item, idx) => (
+                                  <span key={idx}>
+                                    {item.name || item.title}{idx < order.items.length - 1 ? ', ' : ''}
                                   </span>
-                                </div>
-                                <div className="ml-2 text-sm">
-                                  <p className="font-medium text-gray-900">Customer Name</p>
-                                  <p className="text-gray-500">customer@example.com</p>
-                                </div>
+                                ))}
                               </div>
                             </div>
-                            
+
                             <div className="flex flex-col items-end">
-                              <p className="text-lg font-bold text-gray-900">${(50 * i).toFixed(2)}</p>
-                              <p className="text-sm text-gray-500">{i + 1} items</p>
-                              <button className="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-benchlot-primary hover:bg-benchlot-secondary">
-                                View Details
-                              </button>
+                              <p className="text-lg font-bold text-gray-900">${order.sellerEarnings.toFixed(2)}</p>
+                              <p className="text-xs text-gray-400">
+                                ${order.sellerTotal.toFixed(2)} - ${order.platformFee.toFixed(2)} fee
+                              </p>
+                              <p className="text-sm text-gray-500">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
                         </div>
@@ -955,6 +947,100 @@ const SellerDashboardPage = () => {
               </div>
             )}
             
+            {activeMainTab === 'earnings' && (
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-medium text-stone-800">Earnings & Payouts</h2>
+                  <p className="text-stone-600 text-sm mt-1">Track your earnings, transfers, and available balance</p>
+                </div>
+
+                <div className="p-6">
+                  {/* Balance cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-green-800 mb-1">Available Balance</h3>
+                      <p className="text-3xl font-bold text-green-700">${sellerBalance.available.toFixed(2)}</p>
+                      <p className="text-xs text-green-600 mt-1">Ready for payout</p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-amber-800 mb-1">Pending Balance</h3>
+                      <p className="text-3xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
+                      <p className="text-xs text-amber-600 mt-1">Processing from recent sales</p>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-gray-700 mb-1">Total Earned</h3>
+                      <p className="text-3xl font-bold text-gray-900">${totalSales.toFixed(2)}</p>
+                      <p className="text-xs text-gray-500 mt-1">After 5% platform fee</p>
+                    </div>
+                  </div>
+
+                  {/* Fee explanation */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                    <div className="flex">
+                      <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                        <h4 className="text-sm font-medium text-blue-800">How earnings work</h4>
+                        <p className="text-xs text-blue-700 mt-1">
+                          Benchlot charges a 5% platform fee on each sale. When a buyer purchases your item,
+                          the payment is processed and your earnings (minus the fee) are transferred to your
+                          connected bank account. Transfers typically arrive within 2-3 business days.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transfer history */}
+                  <h3 className="text-lg font-medium text-stone-800 mb-4">Transfer History</h3>
+                  {transfers.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-4 text-gray-500 font-medium">No transfers yet</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        When you make sales, your earnings transfers will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {transfers.map(transfer => (
+                            <tr key={transfer.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                {new Date(transfer.created * 1000).toLocaleDateString()}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {transfer.description || 'Sale earnings transfer'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                  transfer.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  transfer.status === 'reversed' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right text-green-700">
+                                ${transfer.amount.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeMainTab === 'settings' && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="p-6 border-b">
