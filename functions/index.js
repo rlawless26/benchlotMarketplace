@@ -6,7 +6,6 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors')({ origin: true });
-const emailService = require('./emailService');
 
 /**
  * Utility function to get config values with fallbacks
@@ -43,6 +42,9 @@ try {
 
 const db = admin.firestore();
 
+// Import email service AFTER Firebase is initialized (it uses admin.firestore() at import time)
+const emailService = require('./emailService');
+
 // Initialize Stripe with error handling
 let stripe;
 try {
@@ -52,28 +54,19 @@ try {
   
   if (stripeKey) {
     console.log('Using Stripe key from config');
-    
-    // Log key type (live or test) for verification
     console.log('Key type:', stripeKey.startsWith('sk_live') ? 'LIVE MODE' : 'TEST MODE');
     console.log('Key prefix:', stripeKey.substring(0, 10) + '...');
-    
-    // Force live key for production
-    if (process.env.NODE_ENV === 'production' && !stripeKey.startsWith('sk_live')) {
-      console.warn('⚠️ WARNING: Not using a live key in production!');
-    }
-    
+
     stripe = require('stripe')(stripeKey);
-  } 
-  // Last resort fallback - this should only happen in development
-  else {
-    console.warn('⚠️ No Stripe key found in environment, falling back to hardcoded test key');
-    console.warn('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
-    stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
+  } else {
+    console.error('❌ STRIPE_SECRET environment variable is not set. Stripe will not work.');
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
+    // Do not initialize stripe — endpoints will return errors if called without it
+    stripe = null;
   }
 } catch (error) {
   console.error('Error initializing Stripe:', error);
-  console.warn('⚠️ FALLING BACK TO TEST MODE - THIS SHOULD NOT HAPPEN IN PRODUCTION');
-  stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
+  stripe = null;
 }
 
 // Express app for API endpoints
@@ -91,17 +84,12 @@ app.post('/create-payment-intent', async (req, res) => {
     // Log the full request body for debugging
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
-    const { cartId, userId, isGuestCheckout, cartItems, cartTotal, mockCart } = req.body;
-    
-    // Handle the "mockCart" case from the client-side fix
-    if (mockCart && cartId === 'guest-cart') {
-      console.log('Using mockCart from request');
-      return res.json({
-        clientSecret: `pi_mockCart${Date.now()}_secret_${mockCart.id}`,
-        isMarketplace: false
-      });
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured. Please set the STRIPE_SECRET environment variable.' });
     }
-    
+
+    const { cartId, userId, isGuestCheckout, cartItems, cartTotal } = req.body;
+
     // Log extracted values
     console.log('Extracted values:');
     console.log(`- cartId: ${cartId}`);
@@ -1328,7 +1316,242 @@ app.post('/stripe-webhook', async (req, res) => {
         break;
       }
       
-      // Other event types can be added here as needed
+      // Transfer events - track money movement to sellers
+      case 'transfer.created': {
+        const transfer = event.data.object;
+        console.log(`Transfer ${transfer.id} created: $${transfer.amount / 100} to ${transfer.destination}`);
+
+        // Record or update in Firestore
+        const existingTransfer = await db.collection('transfers')
+          .where('transferId', '==', transfer.id)
+          .limit(1)
+          .get();
+
+        if (existingTransfer.empty) {
+          await db.collection('transfers').add({
+            transferId: transfer.id,
+            amount: transfer.amount / 100,
+            currency: transfer.currency,
+            destination: transfer.destination,
+            status: 'created',
+            description: transfer.description,
+            metadata: transfer.metadata || {},
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        break;
+      }
+
+      case 'transfer.reversed': {
+        const transfer = event.data.object;
+        console.log(`Transfer ${transfer.id} reversed`);
+
+        const transferSnap = await db.collection('transfers')
+          .where('transferId', '==', transfer.id)
+          .limit(1)
+          .get();
+
+        if (!transferSnap.empty) {
+          await transferSnap.docs[0].ref.update({
+            status: 'reversed',
+            reversed: true,
+            reversedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        break;
+      }
+
+      // Payout events - money leaving Stripe to seller's bank
+      case 'payout.created': {
+        const payout = event.data.object;
+        const connectedAccountId = event.account; // Connected account that received the payout
+        console.log(`Payout ${payout.id} created: $${payout.amount / 100} for account ${connectedAccountId}`);
+
+        if (connectedAccountId) {
+          // Find the seller by Stripe account ID
+          const sellerSnap = await db.collection('users')
+            .where('stripeAccountId', '==', connectedAccountId)
+            .limit(1)
+            .get();
+
+          if (!sellerSnap.empty) {
+            const sellerId = sellerSnap.docs[0].id;
+
+            await db.collection('payouts').add({
+              payoutId: payout.id,
+              sellerId,
+              stripeAccountId: connectedAccountId,
+              amount: payout.amount / 100,
+              currency: payout.currency,
+              status: payout.status,
+              arrivalDate: payout.arrival_date,
+              method: payout.method,
+              createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log(`Recorded payout ${payout.id} for seller ${sellerId}`);
+          }
+        }
+        break;
+      }
+
+      case 'payout.paid': {
+        const payout = event.data.object;
+        const connectedAccountId = event.account;
+        console.log(`Payout ${payout.id} paid: $${payout.amount / 100}`);
+
+        // Update payout status in Firestore
+        const payoutSnap = await db.collection('payouts')
+          .where('payoutId', '==', payout.id)
+          .limit(1)
+          .get();
+
+        if (!payoutSnap.empty) {
+          await payoutSnap.docs[0].ref.update({
+            status: 'paid',
+            paidAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+
+          // Send payout notification email to seller
+          const payoutData = payoutSnap.docs[0].data();
+          if (payoutData.sellerId) {
+            const sellerDoc = await db.collection('users').doc(payoutData.sellerId).get();
+            if (sellerDoc.exists) {
+              const sellerEmail = sellerDoc.data().email || sellerDoc.data().contactEmail;
+              if (sellerEmail) {
+                try {
+                  await emailService.sendPayoutNotificationEmail(sellerEmail, {
+                    sellerId: payoutData.sellerId,
+                    sellerName: sellerDoc.data().sellerName || sellerDoc.data().displayName || 'Seller',
+                    amount: payout.amount / 100,
+                    arrival_date: payout.arrival_date,
+                    transactionId: payout.id
+                  });
+                  console.log(`Payout notification sent to ${sellerEmail}`);
+                } catch (emailError) {
+                  console.error('Error sending payout notification:', emailError);
+                }
+              }
+            }
+          }
+        }
+        break;
+      }
+
+      case 'payout.failed': {
+        const payout = event.data.object;
+        console.log(`Payout ${payout.id} failed: ${payout.failure_message}`);
+
+        const payoutSnap = await db.collection('payouts')
+          .where('payoutId', '==', payout.id)
+          .limit(1)
+          .get();
+
+        if (!payoutSnap.empty) {
+          await payoutSnap.docs[0].ref.update({
+            status: 'failed',
+            failureMessage: payout.failure_message || 'Unknown failure',
+            failedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        break;
+      }
+
+      // Refund events
+      case 'charge.refunded': {
+        const charge = event.data.object;
+        console.log(`Charge ${charge.id} refunded`);
+
+        // Find orders associated with this charge's payment intent
+        if (charge.payment_intent) {
+          const orderSnap = await db.collection('orders')
+            .where('paymentIntentId', '==', charge.payment_intent)
+            .limit(1)
+            .get();
+
+          if (!orderSnap.empty) {
+            const isFullRefund = charge.amount_refunded >= charge.amount;
+            await orderSnap.docs[0].ref.update({
+              status: isFullRefund ? 'refunded' : 'partially_refunded',
+              refundAmount: charge.amount_refunded / 100,
+              lastRefundAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`Updated order ${orderSnap.docs[0].id} refund status`);
+          }
+        }
+        break;
+      }
+
+      // Dispute events
+      case 'charge.dispute.created': {
+        const dispute = event.data.object;
+        console.log(`Dispute ${dispute.id} created for charge ${dispute.charge}`);
+
+        // Record the dispute
+        await db.collection('disputes').add({
+          disputeId: dispute.id,
+          chargeId: dispute.charge,
+          amount: dispute.amount / 100,
+          currency: dispute.currency,
+          reason: dispute.reason,
+          status: dispute.status,
+          evidenceDueBy: dispute.evidence_details?.due_by,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Find associated order and update status
+        if (dispute.payment_intent) {
+          const orderSnap = await db.collection('orders')
+            .where('paymentIntentId', '==', dispute.payment_intent)
+            .limit(1)
+            .get();
+
+          if (!orderSnap.empty) {
+            await orderSnap.docs[0].ref.update({
+              disputeId: dispute.id,
+              disputeStatus: dispute.status,
+              disputeReason: dispute.reason
+            });
+          }
+        }
+
+        // Notify platform admin (use platform email)
+        console.log(`DISPUTE ALERT: ${dispute.id} - $${dispute.amount / 100} - Reason: ${dispute.reason}`);
+        break;
+      }
+
+      case 'charge.dispute.closed': {
+        const dispute = event.data.object;
+        console.log(`Dispute ${dispute.id} closed with status: ${dispute.status}`);
+
+        const disputeSnap = await db.collection('disputes')
+          .where('disputeId', '==', dispute.id)
+          .limit(1)
+          .get();
+
+        if (!disputeSnap.empty) {
+          await disputeSnap.docs[0].ref.update({
+            status: dispute.status,
+            closedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        // Update order dispute status
+        if (dispute.payment_intent) {
+          const orderSnap = await db.collection('orders')
+            .where('paymentIntentId', '==', dispute.payment_intent)
+            .limit(1)
+            .get();
+
+          if (!orderSnap.empty) {
+            await orderSnap.docs[0].ref.update({
+              disputeStatus: dispute.status
+            });
+          }
+        }
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -2753,6 +2976,353 @@ app.post('/detach-payment-method', async (req, res) => {
   }
 });
 
+/**
+ * Seller Earnings & Payout Endpoints
+ *
+ * These endpoints provide sellers with visibility into their
+ * earnings, transfer history, and balance information.
+ */
+
+/**
+ * Get a seller's balance from their Stripe connected account
+ * Returns available and pending balance amounts
+ */
+app.get('/get-seller-balance', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+
+    console.log(`Getting seller balance for user ${userId}`);
+
+    // Get the user from Firestore
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+
+    if (!userData.stripeAccountId) {
+      return res.status(404).json({ error: 'User is not a seller' });
+    }
+
+    // Get balance from Stripe for the connected account
+    const balance = await stripe.balance.retrieve({
+      stripeAccount: userData.stripeAccountId
+    });
+
+    // Extract USD amounts (default currency)
+    const available = balance.available
+      .filter(b => b.currency === 'usd')
+      .reduce((sum, b) => sum + b.amount, 0);
+    const pending = balance.pending
+      .filter(b => b.currency === 'usd')
+      .reduce((sum, b) => sum + b.amount, 0);
+
+    res.json({
+      available: available / 100, // Convert cents to dollars
+      pending: pending / 100,
+      currency: 'usd'
+    });
+  } catch (error) {
+    console.error('Error getting seller balance:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get transfer history for a seller
+ * Returns transfers from the platform to the seller's connected account
+ */
+app.get('/get-seller-transfers', async (req, res) => {
+  try {
+    const { userId, limit: queryLimit, startingAfter } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+
+    console.log(`Getting transfer history for user ${userId}`);
+
+    // Get the user from Firestore
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+
+    if (!userData.stripeAccountId) {
+      return res.status(404).json({ error: 'User is not a seller' });
+    }
+
+    // Fetch transfers from Stripe destined for this connected account
+    const transferParams = {
+      destination: userData.stripeAccountId,
+      limit: Math.min(parseInt(queryLimit) || 25, 100)
+    };
+
+    if (startingAfter) {
+      transferParams.starting_after = startingAfter;
+    }
+
+    const transfers = await stripe.transfers.list(transferParams);
+
+    // Format the transfer data
+    const formattedTransfers = transfers.data.map(transfer => ({
+      id: transfer.id,
+      amount: transfer.amount / 100,
+      currency: transfer.currency,
+      created: transfer.created,
+      description: transfer.description,
+      status: transfer.reversed ? 'reversed' : 'completed',
+      metadata: transfer.metadata || {}
+    }));
+
+    res.json({
+      transfers: formattedTransfers,
+      hasMore: transfers.has_more
+    });
+  } catch (error) {
+    console.error('Error getting seller transfers:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get orders for a seller
+ * Returns orders that contain items from this seller
+ */
+app.get('/get-seller-orders', async (req, res) => {
+  try {
+    const { userId, status, limit: queryLimit } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+
+    console.log(`Getting orders for seller ${userId}`);
+
+    const resultLimit = Math.min(parseInt(queryLimit) || 50, 100);
+
+    // Query orders that have items from this seller
+    // Since Firestore can't do array-contains on nested fields,
+    // we query all recent orders and filter server-side
+    let ordersQuery = db.collection('orders')
+      .orderBy('createdAt', 'desc')
+      .limit(resultLimit * 3); // Fetch extra to account for filtering
+
+    if (status) {
+      ordersQuery = db.collection('orders')
+        .where('status', '==', status)
+        .orderBy('createdAt', 'desc')
+        .limit(resultLimit * 3);
+    }
+
+    const ordersSnapshot = await ordersQuery.get();
+
+    // Filter orders that contain items from this seller
+    const sellerOrders = [];
+
+    for (const doc of ordersSnapshot.docs) {
+      if (sellerOrders.length >= resultLimit) break;
+
+      const order = doc.data();
+      const sellerItems = (order.items || []).filter(
+        item => item.sellerId === userId
+      );
+
+      if (sellerItems.length > 0) {
+        // Calculate seller's portion of the order
+        const sellerTotal = sellerItems.reduce(
+          (sum, item) => sum + (item.price * (item.quantity || 1)), 0
+        );
+        const platformFee = sellerTotal * 0.05;
+
+        sellerOrders.push({
+          id: doc.id,
+          status: order.status,
+          createdAt: order.createdAt,
+          buyerId: order.userId,
+          buyerEmail: order.userEmail || null,
+          isGuestOrder: order.isGuestOrder || false,
+          items: sellerItems,
+          sellerTotal,
+          platformFee,
+          sellerEarnings: sellerTotal - platformFee,
+          shippingAddress: order.shippingAddress || null,
+          paymentIntentId: order.paymentIntentId
+        });
+      }
+    }
+
+    // Compute aggregate stats
+    let totalEarnings = 0;
+    let totalFees = 0;
+    for (const order of sellerOrders) {
+      totalEarnings += order.sellerEarnings;
+      totalFees += order.platformFee;
+    }
+
+    res.json({
+      orders: sellerOrders,
+      totalOrders: sellerOrders.length,
+      totalEarnings,
+      totalFees
+    });
+  } catch (error) {
+    console.error('Error getting seller orders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Refund Processing
+ *
+ * Creates a refund for a payment, optionally reversing the
+ * transfer to the seller's connected account.
+ */
+app.post('/create-refund', async (req, res) => {
+  try {
+    const { orderId, reason, amount } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'Missing orderId' });
+    }
+
+    console.log(`Processing refund for order ${orderId}`);
+
+    // Get the order from Firestore
+    const orderDoc = await db.collection('orders').doc(orderId).get();
+
+    if (!orderDoc.exists) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderDoc.data();
+
+    if (!order.paymentIntentId) {
+      return res.status(400).json({ error: 'Order has no associated payment' });
+    }
+
+    // Build refund params
+    const refundParams = {
+      payment_intent: order.paymentIntentId,
+      reason: reason || 'requested_by_customer',
+      metadata: {
+        orderId,
+        refundedBy: req.body.userId || 'admin'
+      }
+    };
+
+    // Partial refund if amount specified, otherwise full refund
+    if (amount) {
+      refundParams.amount = Math.round(amount * 100);
+    }
+
+    // Create the refund in Stripe
+    const refund = await stripe.refunds.create(refundParams);
+
+    console.log(`Refund ${refund.id} created for order ${orderId}, amount: ${refund.amount / 100}`);
+
+    // Reverse associated transfers to sellers
+    const transfersSnapshot = await db.collection('transfers')
+      .where('paymentIntentId', '==', order.paymentIntentId)
+      .get();
+
+    const reversals = [];
+
+    for (const transferDoc of transfersSnapshot.docs) {
+      const transfer = transferDoc.data();
+      try {
+        // Calculate reversal amount proportionally if partial refund
+        let reversalAmount;
+        if (amount && amount < order.totalAmount) {
+          const ratio = amount / order.totalAmount;
+          reversalAmount = Math.round(transfer.amount * ratio * 100);
+        }
+
+        const reversalParams = { metadata: { orderId, refundId: refund.id } };
+        if (reversalAmount) {
+          reversalParams.amount = reversalAmount;
+        }
+
+        const reversal = await stripe.transfers.createReversal(
+          transfer.transferId,
+          reversalParams
+        );
+
+        console.log(`Transfer ${transfer.transferId} reversed: ${reversal.id}`);
+
+        // Update transfer record
+        await transferDoc.ref.update({
+          reversed: true,
+          reversalId: reversal.id,
+          reversalAmount: (reversalAmount || transfer.amount * 100) / 100,
+          reversedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        reversals.push({
+          transferId: transfer.transferId,
+          reversalId: reversal.id,
+          sellerId: transfer.sellerId
+        });
+      } catch (reversalError) {
+        console.error(`Error reversing transfer ${transfer.transferId}:`, reversalError);
+      }
+    }
+
+    // Update order status
+    await db.collection('orders').doc(orderId).update({
+      status: amount && amount < order.totalAmount ? 'partially_refunded' : 'refunded',
+      refundId: refund.id,
+      refundAmount: refund.amount / 100,
+      refundReason: reason || 'requested_by_customer',
+      refundedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Send refund notification email to buyer
+    try {
+      let buyerEmail = order.userEmail;
+      if (!buyerEmail && order.userId && order.userId !== 'guest') {
+        const buyerDoc = await db.collection('users').doc(order.userId).get();
+        if (buyerDoc.exists) {
+          buyerEmail = buyerDoc.data().email;
+        }
+      }
+
+      if (buyerEmail) {
+        await emailService.sendPaymentReceiptEmail(buyerEmail, {
+          orderId,
+          totalAmount: refund.amount / 100,
+          buyerName: order.userId === 'guest' ? 'Customer' : '',
+          paymentMethod: 'Refund',
+          isRefund: true
+        });
+        console.log(`Refund notification sent to ${buyerEmail}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending refund notification:', emailError);
+    }
+
+    res.json({
+      success: true,
+      refundId: refund.id,
+      amount: refund.amount / 100,
+      status: refund.status,
+      reversals
+    });
+  } catch (error) {
+    console.error('Error creating refund:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Export the API as a Firebase Function with public access
 exports.api = functions.https.onRequest((req, res) => {
     // Enable CORS for all origins
@@ -2778,7 +3348,10 @@ exports.stripeApi = exports.api;
 
 /**
  * Scheduled Functions for email notifications
+ * Note: These use Firebase Functions v1 pubsub.schedule() syntax,
+ * which is only available when deployed via Firebase CLI (not gcloud functions deploy).
  */
+if (functions.pubsub && typeof functions.pubsub.schedule === 'function') {
 
 // Send listing expiration reminders (Daily at 9 AM)
 exports.sendListingExpirationReminders = functions.pubsub
@@ -3258,6 +3831,8 @@ exports.sendMonthlySalesSummaries = functions.pubsub
       return null;
     }
   });
+
+} // end if (functions.pubsub.schedule)
 
 /**
  * Helper function to get views count for a seller's listings

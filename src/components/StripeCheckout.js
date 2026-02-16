@@ -17,7 +17,6 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, CreditCard, Lock } from 'lucide-react';
 
 // Load Stripe outside of a component's render to avoid recreating the Stripe object
-// This is your test publishable API key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 // Firebase function API endpoint
@@ -80,33 +79,6 @@ const CheckoutForm = ({
   // Common function to handle successful payment
   const handleSuccessfulPayment = async (paymentIntent) => {
     try {
-      // Check if we're using a mock payment in development mode
-      const isMockPayment = paymentIntent.id.includes('mock_') && process.env.NODE_ENV === 'development';
-      
-      if (isMockPayment) {
-        console.log("Development mode: Simulating successful order creation for mock payment");
-        
-        // For guest checkout in development, simulate a successful order
-        setSucceeded(true);
-        setError(null);
-        setProcessing(false);
-        
-        // Clear the cart in the local state
-        try {
-          await emptyCart();
-        } catch (cartError) {
-          console.error('Error clearing cart:', cartError);
-        }
-        
-        // Generate a mock order ID and navigate to confirmation
-        const mockOrderId = `order_mock_${Date.now()}`;
-        setTimeout(() => {
-          navigate(`/order-confirmation/${mockOrderId}`);
-        }, 2000);
-        
-        return;
-      }
-      
       // Prepare cart data for guest checkout
       let guestCartData = null;
       if (isGuestCheckout && cartId === 'guest-cart') {
@@ -185,31 +157,8 @@ const CheckoutForm = ({
       }, 2000);
     } catch (err) {
       console.error('Error confirming payment:', err);
-      
-      // In development mode, provide a more graceful fallback
-      if (process.env.NODE_ENV === 'development') {
-        console.warn("Development mode: Simulating order success despite backend error");
-        setSucceeded(true);
-        setError(null);
-        setProcessing(false);
-        
-        // Clear the cart in the local state
-        try {
-          await emptyCart();
-        } catch (cartError) {
-          console.error('Error clearing cart:', cartError);
-        }
-        
-        // Generate a mock order ID and navigate to confirmation
-        const mockOrderId = `order_mock_${Date.now()}`;
-        setTimeout(() => {
-          navigate(`/order-confirmation/${mockOrderId}`);
-        }, 2000);
-      } else {
-        // In production, show the actual error
-        setError(`Payment succeeded, but order creation failed. Please contact support.`);
-        setProcessing(false);
-      }
+      setError(`Payment succeeded, but order creation failed. Please contact support.`);
+      setProcessing(false);
     }
   };
 
@@ -259,35 +208,12 @@ const CheckoutForm = ({
       };
     }
     
-    // Check if we're using a mock client secret for dev mode
-    const isMockSecret = clientSecret && (
-      clientSecret.includes('devfallback') || 
-      clientSecret.includes('guestcart') || 
-      clientSecret.includes('mockstripe') ||
-      clientSecret.includes('mockguestcart')
-    );
-    
-    let result;
-    
-    if (isMockSecret && process.env.NODE_ENV === 'development') {
-      // In development with mock secret, simulate a successful payment
-      console.log("Development mode: Simulating successful payment with mock client secret");
-      result = {
-        paymentIntent: {
-          id: `pi_mock_${Date.now()}`,
-          status: 'succeeded',
-          amount: Math.round(amount * 100) // Convert to cents
-        }
-      };
-    } else {
-      // Normal Stripe payment flow
-      result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-          billing_details: billingDetails
-        }
-      });
-    }
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement),
+        billing_details: billingDetails
+      }
+    });
     
     if (result.error) {
       console.error('Stripe payment error:', result.error);
@@ -331,21 +257,11 @@ const CheckoutForm = ({
         requestPayerEmail: true,
       });
 
-      // Check if the Payment Request is supported
+      // Check if the Payment Request is supported (Apple Pay, Google Pay)
       pr.canMakePayment().then(result => {
-        console.log("Payment Request can make payment result:", result);
-        
-        // If in development mode, show Apple Pay for testing even if device doesn't support it
-        if (process.env.NODE_ENV === 'development') {
-          console.log("In development mode - showing Apple Pay for testing");
+        if (result && result.applePay) {
           setPaymentRequest(pr);
           setShowApplePay(true);
-        } else if (result && result.applePay) {
-          console.log("Apple Pay is supported");
-          setPaymentRequest(pr);
-          setShowApplePay(true);
-        } else {
-          console.log("Apple Pay is not supported on this device/browser");
         }
       });
 
@@ -646,16 +562,6 @@ const StripeCheckout = ({
       try {
         setLoading(true);
         
-        // For development/testing, create mock client secret if we're in development
-        if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_MOCK_PAYMENT === 'true') {
-          console.log("Using mock payment in development mode");
-          setTimeout(() => {
-            setClientSecret('mock_client_secret_for_dev');
-            setLoading(false);
-          }, 1000);
-          return;
-        }
-        
         console.log("Sending request to:", `${FIREBASE_API_URL}/create-payment-intent`);
         
         // Create a regular payload structure
@@ -746,38 +652,6 @@ const StripeCheckout = ({
       } catch (err) {
         console.error('Error creating payment intent:', err);
         setError(`Payment initialization failed: ${err.message}`);
-        
-        // Better fallback for development environments, especially for guest checkout
-        if (process.env.NODE_ENV === 'development') {
-          console.warn("Using enhanced client-side fallback for development mode");
-          
-          // For guest checkout, we'll create a more realistic fallback
-          if (isGuestCheckout && cartId === 'guest-cart') {
-            try {
-              // Generate a deterministic but unique-looking client secret based on cart contents
-              const guestCartData = localStorage.getItem('benchlot_guest_cart');
-              if (guestCartData) {
-                const parsedCart = JSON.parse(guestCartData);
-                const cartHash = btoa(JSON.stringify(parsedCart.items || [])).substring(0, 10);
-                const mockSecret = `pi_guestcart${Date.now()}_secret_${cartHash}`;
-                console.log("Created mock client secret for guest checkout:", mockSecret);
-                setClientSecret(mockSecret);
-              } else {
-                // Fallback to generic mock secret
-                setClientSecret(`pi_devfallback${Date.now()}_secret_mockguestcart`);
-              }
-            } catch (error) {
-              console.error('Error creating enhanced mock client secret:', error);
-              // Still provide a fallback
-              setClientSecret(`pi_devfallback${Date.now()}_secret_mockstripe`);
-            }
-          } else {
-            // Regular fallback for authenticated users in dev mode
-            console.warn("Using client-side fallback for development only");
-            // Create a fallback client secret for testing with timestamp to avoid stripe validation errors
-            setClientSecret(`pi_devfallback${Date.now()}_secret_mockstripe`);
-          }
-        }
       } finally {
         setLoading(false);
       }

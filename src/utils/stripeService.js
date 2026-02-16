@@ -127,14 +127,140 @@ export const getConnectDashboardLink = async (userId) => {
 };
 
 /**
+ * Get seller's Stripe balance (available + pending)
+ * @param {string} userId User ID
+ * @returns {Promise<object>} Balance data with available and pending amounts
+ */
+export const getSellerBalance = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/get-seller-balance?userId=${encodeURIComponent(userId)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get seller balance');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting seller balance:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get transfer history for a seller
+ * @param {string} userId User ID
+ * @param {number} limit Number of transfers to return
+ * @param {string} startingAfter Pagination cursor
+ * @returns {Promise<object>} Transfers data
+ */
+export const getSellerTransfers = async (userId, limit = 25, startingAfter = null) => {
+  try {
+    let url = `${API_URL}/get-seller-transfers?userId=${encodeURIComponent(userId)}&limit=${limit}`;
+    if (startingAfter) {
+      url += `&startingAfter=${encodeURIComponent(startingAfter)}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get seller transfers');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting seller transfers:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get orders for a seller
+ * @param {string} userId User ID
+ * @param {string} status Optional status filter
+ * @param {number} limit Number of orders to return
+ * @returns {Promise<object>} Orders data with aggregate stats
+ */
+export const getSellerOrders = async (userId, status = null, limit = 50) => {
+  try {
+    let url = `${API_URL}/get-seller-orders?userId=${encodeURIComponent(userId)}&limit=${limit}`;
+    if (status) {
+      url += `&status=${encodeURIComponent(status)}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get seller orders');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting seller orders:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a refund for an order
+ * @param {string} orderId Order ID
+ * @param {string} reason Refund reason
+ * @param {number} amount Optional partial refund amount (full refund if omitted)
+ * @param {string} userId ID of user initiating the refund
+ * @returns {Promise<object>} Refund result
+ */
+export const createRefund = async (orderId, reason, amount = null, userId = null) => {
+  try {
+    const body = { orderId, reason };
+    if (amount) body.amount = amount;
+    if (userId) body.userId = userId;
+
+    const response = await fetch(`${API_URL}/create-refund`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create refund');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating refund:', error);
+    throw error;
+  }
+};
+
+/**
  * Get payouts history for a Connect account
- * This will need to be implemented on the server side
  * @param {string} userId User ID
  * @returns {Promise<object>} Payouts data
  */
 export const getPayouts = async (userId) => {
-  // This would need to be implemented in the future
-  return Promise.resolve({ payouts: [] });
+  // Payouts are tracked via webhooks in the payouts collection
+  // This function serves as a client-side convenience wrapper
+  return getSellerTransfers(userId);
 };
 
 /**
@@ -210,6 +336,10 @@ const stripeService = {
   getConnectAccountStatus,
   refreshConnectAccountLink,
   getConnectDashboardLink,
+  getSellerBalance,
+  getSellerTransfers,
+  getSellerOrders,
+  createRefund,
   getPayouts,
   addBankAccount,
   updateConnectAccount

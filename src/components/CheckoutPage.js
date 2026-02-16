@@ -30,7 +30,7 @@ import {
 
 const CheckoutPage = () => {
   const { cart, loading, error } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, signUp } = useAuth();
   const navigate = useNavigate();
   
   // Checkout steps state
@@ -382,18 +382,14 @@ const CheckoutPage = () => {
   const handleProceedToPayment = async () => {
     if (validateShippingForm()) {
       // Handle guest account creation if selected
-      if (isGuestCheckout && createAccount) {
+      if (isGuestCheckout && createAccount && guestEmail && guestPassword) {
         try {
-          // Here you would call a function to create a user account
-          // For now, we'll just display a message
-          console.log('Would create account with:', { email: guestEmail, password: guestPassword });
-          
-          // You'd typically use Firebase auth or your auth system to create an account
-          // const { createUserWithEmailAndPassword } = require('firebase/auth');
-          // await createUserWithEmailAndPassword(auth, guestEmail, guestPassword);
-          
-          // Then update the UI
-          // setIsGuestCheckout(false);
+          const displayName = `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim();
+          const result = await signUp(guestEmail, guestPassword, { displayName });
+
+          if (result.error) {
+            throw new Error(result.error);
+          }
         } catch (error) {
           console.error('Error creating account:', error);
           setFormErrors(prev => ({
@@ -445,28 +441,14 @@ const CheckoutPage = () => {
     }
     
     try {
-      // TODO: Replace with actual Firebase auth call
-      // const { createUserWithEmailAndPassword } = require('firebase/auth');
-      // const userCredential = await createUserWithEmailAndPassword(auth, guestEmail, guestPassword);
-      // const newUser = userCredential.user;
-      
-      console.log('Would create account with:', { 
-        email: guestEmail, 
-        password: guestPassword,
-        firstName: shippingAddress.firstName,
-        lastName: shippingAddress.lastName
-      });
-      
-      // Show success message and maintain it
+      const displayName = `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim();
+      const result = await signUp(guestEmail, guestPassword, { displayName });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
       setAccountCreated(true);
-      
-      // In a production app, you'd typically:
-      // 1. Create the user account with Firebase Auth
-      // 2. Update their profile with the name information
-      // 3. Set the user's shipping address in their profile
-      // 4. Migrate their guest cart to their user cart
-      
-      // The success message will remain visible throughout checkout
     } catch (error) {
       console.error('Error creating account:', error);
       setFormErrors(prev => ({

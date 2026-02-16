@@ -159,6 +159,39 @@ service cloud.firestore {
       }
     }
     
+    // Transfers - records of money transfers to sellers
+    match /transfers/{transferId} {
+      // Sellers can view their own transfers, admins can view all
+      allow read: if isSignedIn() && (
+                  resource.data.sellerId == request.auth.uid ||
+                  isAdmin()
+                  );
+
+      // Only created/updated by Firebase Functions
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
+    // Payouts - records of bank payouts to sellers
+    match /payouts/{payoutId} {
+      // Sellers can view their own payouts
+      allow read: if isSignedIn() && (
+                  resource.data.sellerId == request.auth.uid ||
+                  isAdmin()
+                  );
+
+      // Only created/updated by Firebase Functions
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
+    // Disputes - chargeback/dispute records
+    match /disputes/{disputeId} {
+      // Only admins can view disputes
+      allow read: if isAdmin();
+
+      // Only created/updated by Firebase Functions
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();

@@ -45,9 +45,7 @@ import BankDetailsPage from './components/BankDetailsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import TestOrderButton from './components/TestOrderButton';
-import AuthModalExample from './components/AuthModalExample';
-// Note: TestNotificationButton and UserIdDisplay removed
+// Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Styles
 import './styles/design-system.css';
@@ -147,15 +145,11 @@ function App() {
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   
-                  {/* Demo Pages */}
-                  <Route path="/demo" element={<AuthPage />} />
-                  <Route path="/demo/auth-modal" element={<AuthModalExample />} />
                 </Routes>
               </main>
               
               <Footer />
               <EnvironmentDisplay />
-              {process.env.NODE_ENV === 'development' && <TestOrderButton />}
               <Analytics />
               <SpeedInsights />
             </div>
