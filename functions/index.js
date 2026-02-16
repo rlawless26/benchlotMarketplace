@@ -54,28 +54,19 @@ try {
   
   if (stripeKey) {
     console.log('Using Stripe key from config');
-    
-    // Log key type (live or test) for verification
     console.log('Key type:', stripeKey.startsWith('sk_live') ? 'LIVE MODE' : 'TEST MODE');
     console.log('Key prefix:', stripeKey.substring(0, 10) + '...');
-    
-    // Force live key for production
-    if (process.env.NODE_ENV === 'production' && !stripeKey.startsWith('sk_live')) {
-      console.warn('⚠️ WARNING: Not using a live key in production!');
-    }
-    
+
     stripe = require('stripe')(stripeKey);
-  } 
-  // Last resort fallback - this should only happen in development
-  else {
-    console.warn('⚠️ No Stripe key found in environment, falling back to hardcoded test key');
-    console.warn('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
-    stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
+  } else {
+    console.error('❌ STRIPE_SECRET environment variable is not set. Stripe will not work.');
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
+    // Do not initialize stripe — endpoints will return errors if called without it
+    stripe = null;
   }
 } catch (error) {
   console.error('Error initializing Stripe:', error);
-  console.warn('⚠️ FALLING BACK TO TEST MODE - THIS SHOULD NOT HAPPEN IN PRODUCTION');
-  stripe = require('stripe')('sk_test_51R42hePJSOllkrGgAhjsqqLDv8tYbuW6dcrKfOMjfv2QfnhWC5KZ1EZpf4bKITGpeLdozy6yN6B7tvB51YfgKZz90015yqqPnS');
+  stripe = null;
 }
 
 // Express app for API endpoints
@@ -93,17 +84,12 @@ app.post('/create-payment-intent', async (req, res) => {
     // Log the full request body for debugging
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
-    const { cartId, userId, isGuestCheckout, cartItems, cartTotal, mockCart } = req.body;
-    
-    // Handle the "mockCart" case from the client-side fix
-    if (mockCart && cartId === 'guest-cart') {
-      console.log('Using mockCart from request');
-      return res.json({
-        clientSecret: `pi_mockCart${Date.now()}_secret_${mockCart.id}`,
-        isMarketplace: false
-      });
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured. Please set the STRIPE_SECRET environment variable.' });
     }
-    
+
+    const { cartId, userId, isGuestCheckout, cartItems, cartTotal } = req.body;
+
     // Log extracted values
     console.log('Extracted values:');
     console.log(`- cartId: ${cartId}`);
