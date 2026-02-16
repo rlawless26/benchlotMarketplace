@@ -6,7 +6,6 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors')({ origin: true });
-const emailService = require('./emailService');
 
 /**
  * Utility function to get config values with fallbacks
@@ -42,6 +41,9 @@ try {
 }
 
 const db = admin.firestore();
+
+// Import email service AFTER Firebase is initialized (it uses admin.firestore() at import time)
+const emailService = require('./emailService');
 
 // Initialize Stripe with error handling
 let stripe;
