@@ -4,46 +4,61 @@
  */
 import React, { useState } from 'react';
 
-const ImageComponent = ({ 
-  src, 
-  alt = 'Image', 
+/**
+ * Generates an inline SVG data URI placeholder image.
+ * @param {number} width - Placeholder width
+ * @param {number} height - Placeholder height
+ * @param {string} text - Text to display on the placeholder
+ * @returns {string} Data URI string for the SVG
+ */
+const generatePlaceholder = (width, height, text) => {
+  const svgWidth = width || 300;
+  const svgHeight = height || 200;
+  const displayText = text || 'Image';
+  const truncatedText = displayText.length > 30
+    ? displayText.substring(0, 27) + '...'
+    : displayText;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+    <rect width="100%" height="100%" fill="#E7E5E4"/>
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#78716C">${truncatedText}</text>
+  </svg>`;
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+const ImageComponent = ({
+  src,
+  alt = 'Image',
   className = 'object-cover',
   width,
   height,
-  fallbackSrc = '/placeholder.jpg',
+  fallbackSrc,
   placeholderText = null
 }) => {
   const [imageError, setImageError] = useState(false);
-  
-  // Handle image loading error
+  const [fallbackError, setFallbackError] = useState(false);
+
   const handleError = () => {
-    console.log('Image failed to load:', src);
-    setImageError(true);
+    if (!imageError) {
+      setImageError(true);
+    } else if (!fallbackError) {
+      setFallbackError(true);
+    }
   };
 
-  // Generate a placeholder image if no source or fallback
-  const generatePlaceholder = () => {
-    // If specific placeholder text is provided, use it
-    const text = placeholderText || alt || 'Image';
-    
-    // Create a placeholder image with the text
-    // Using via.placeholder.com for demonstration
-    const placeholderWidth = width || 300;
-    const placeholderHeight = height || 200;
-    return `https://via.placeholder.com/${placeholderWidth}x${placeholderHeight}?text=${encodeURIComponent(text)}&cachebuster=${Date.now()}`;
-  };
-
-  // Determine the image source to use
   const getImageSource = () => {
-    if (imageError) {
-      return fallbackSrc || generatePlaceholder();
+    const text = placeholderText || alt || 'Image';
+
+    if (!imageError && src) {
+      return src;
     }
-    
-    if (!src) {
-      return fallbackSrc || generatePlaceholder();
+
+    if (!fallbackError && fallbackSrc) {
+      return fallbackSrc;
     }
-    
-    return src;
+
+    return generatePlaceholder(width, height, text);
   };
 
   return (

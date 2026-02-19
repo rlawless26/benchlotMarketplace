@@ -31,6 +31,7 @@ import SettingsPage from './Pages/SettingsPage';
 import OrdersPage from './Pages/OrdersPage';
 import OrderDetailPage from './Pages/OrderDetailPage';
 import MessagesPage from './Pages/MessagesPage';
+import NotFoundPage from './Pages/NotFoundPage';
 
 // Seller page imports
 import SellerSignupPage from './components/SellerSignupPage';
@@ -144,7 +145,9 @@ function App() {
                   <Route path="/categories" element={<CategoriesPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
-                  
+
+                  {/* 404 Not Found */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
               
