@@ -301,23 +301,6 @@ const PaymentSettings = ({ user }) => {
       } catch (err) {
         console.error('Error fetching payment methods:', err);
         setError('Failed to load payment methods. Please try again later.');
-        
-        // In development mode, use mock data for testing
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Using mock payment methods data for development');
-          setPaymentMethods([
-            {
-              id: 'pm_1234567890',
-              type: 'card',
-              isDefault: true,
-              brand: 'visa',
-              lastFour: '4242',
-              expiryMonth: 12,
-              expiryYear: 2025,
-              nickname: 'Primary Card'
-            }
-          ]);
-        }
       } finally {
         setIsLoading(false);
       }
