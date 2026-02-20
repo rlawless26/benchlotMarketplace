@@ -208,6 +208,7 @@ const PaymentSettings = ({ user }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customerId, setCustomerId] = useState(user?.stripeCustomerId || null);
   
   // Load payment methods from Stripe
   useEffect(() => {
@@ -218,9 +219,9 @@ const PaymentSettings = ({ user }) => {
         setIsLoading(true);
         
         // Get the Stripe customer ID from the user profile or create one if it doesn't exist
-        let customerId = user.stripeCustomerId;
-        
-        if (!customerId) {
+        let currentCustomerId = user.stripeCustomerId;
+
+        if (!currentCustomerId) {
           // Create a Stripe customer if one doesn't exist
           const response = await fetch(`${FIREBASE_API_URL}/create-customer`, {
             method: 'POST',
@@ -233,19 +234,18 @@ const PaymentSettings = ({ user }) => {
               name: user.displayName || '',
             }),
           });
-          
+
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to create customer');
           }
-          
+
           const data = await response.json();
-          customerId = data.customerId;
-          
-          // Update the user profile with the Stripe customer ID
-          // This should be done by the server but we'll do it here for completeness
-          // In a production app, this would typically be managed by a backend function
+          currentCustomerId = data.customerId;
         }
+
+        // Store in state so SetupForm can access it
+        setCustomerId(currentCustomerId);
         
         // Fetch the payment methods from the server
         const response = await fetch(`${FIREBASE_API_URL}/get-payment-methods`, {
@@ -254,7 +254,7 @@ const PaymentSettings = ({ user }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            customerId: customerId,
+            customerId: currentCustomerId,
           }),
         });
         
@@ -343,7 +343,7 @@ const PaymentSettings = ({ user }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerId: user.stripeCustomerId,
+          customerId: customerId,
           paymentMethodId: newPaymentMethod.id,
           isDefault: newPaymentMethod.isDefault || paymentMethods.length === 0,
           nickname: newPaymentMethod.nickname
@@ -414,7 +414,7 @@ const PaymentSettings = ({ user }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            customerId: user.stripeCustomerId,
+            customerId: customerId,
             paymentMethodId: updatedPaymentMethods[0].id,
             isDefault: true
           }),
@@ -444,7 +444,7 @@ const PaymentSettings = ({ user }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerId: user.stripeCustomerId,
+          customerId: customerId,
           paymentMethodId,
           isDefault: true
         }),
@@ -576,10 +576,10 @@ const PaymentSettings = ({ user }) => {
         {/* Add card form */}
         {isAddingCard && (
           <Elements stripe={stripePromise}>
-            <SetupForm 
-              onSuccess={handlePaymentMethodAdded} 
+            <SetupForm
+              onSuccess={handlePaymentMethodAdded}
               onCancel={handleCancelAddCard}
-              customerId={user.stripeCustomerId}
+              customerId={customerId}
             />
           </Elements>
         )}
