@@ -314,28 +314,51 @@ const PaymentSettings = ({ user }) => {
     setIsAddingCard(true);
   };
   
+  // Fetch payment methods from Stripe and update state
+  const refreshPaymentMethods = async () => {
+    const response = await fetch(`${FIREBASE_API_URL}/get-payment-methods`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        setPaymentMethods([]);
+        return;
+      }
+      throw new Error('Failed to fetch payment methods');
+    }
+
+    const data = await response.json();
+    const formatted = data.paymentMethods.map(method => {
+      if (method.type === 'card') {
+        return {
+          id: method.id,
+          type: method.type,
+          isDefault: method.isDefault || false,
+          brand: method.card.brand,
+          lastFour: method.card.last4,
+          expiryMonth: method.card.exp_month,
+          expiryYear: method.card.exp_year,
+          nickname: method.metadata?.nickname || `${method.card.brand.charAt(0).toUpperCase() + method.card.brand.slice(1)} ending in ${method.card.last4}`
+        };
+      }
+      return {
+        id: method.id,
+        type: method.type,
+        isDefault: method.isDefault || false,
+        nickname: method.metadata?.nickname || `Payment Method ${method.id}`
+      };
+    });
+    setPaymentMethods(formatted);
+  };
+
   // Handle the successful addition of a payment method
   const handlePaymentMethodAdded = async (newPaymentMethod) => {
     try {
       setSaving(true);
-      
-      // Update the payment methods array with the new one
-      let updatedPaymentMethods = [...paymentMethods];
-      
-      // If this is the first payment method or it's set as default, update all existing methods
-      if (newPaymentMethod.isDefault || paymentMethods.length === 0) {
-        updatedPaymentMethods = updatedPaymentMethods.map(method => ({
-          ...method,
-          isDefault: false
-        }));
-      }
-      
-      // Add the new payment method
-      updatedPaymentMethods.push({
-        ...newPaymentMethod,
-        isDefault: newPaymentMethod.isDefault || paymentMethods.length === 0
-      });
-      
+
       // Save to Stripe via our API
       const response = await fetch(`${FIREBASE_API_URL}/update-payment-method`, {
         method: 'POST',
@@ -349,14 +372,14 @@ const PaymentSettings = ({ user }) => {
           nickname: newPaymentMethod.nickname
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update payment method');
       }
-      
-      // Update the state
-      setPaymentMethods(updatedPaymentMethods);
+
+      // Re-fetch full payment methods from Stripe so card details are complete
+      await refreshPaymentMethods();
       setIsAddingCard(false);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
