@@ -5,7 +5,25 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
-const cors = require('cors')({ origin: true });
+const allowedOrigins = [
+  'https://benchlot.com',
+  'https://www.benchlot.com',
+  'https://benchlot-6d64e.web.app',
+  'https://benchlot-6d64e.firebaseapp.com',
+];
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:3000');
+}
+const cors = require('cors')({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, server-to-server, Stripe webhooks)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+});
 
 /**
  * Utility function to get config values with fallbacks
@@ -75,6 +93,25 @@ app.use(cors);
 app.use(express.json());
 
 /**
+ * Middleware to verify Firebase ID token from Authorization header.
+ * Attaches decoded token to req.user on success.
+ */
+const requireAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+  try {
+    const idToken = authHeader.split('Bearer ')[1];
+    req.user = await admin.auth().verifyIdToken(idToken);
+    next();
+  } catch (error) {
+    console.error('Auth token verification failed:', error.message);
+    return res.status(401).json({ error: 'Invalid or expired authentication token' });
+  }
+};
+
+/**
  * Create a payment intent
  * This is the first step in the payment process
  * For marketplace purchases, this also includes application fee calculations
@@ -114,13 +151,30 @@ app.post('/create-payment-intent', async (req, res) => {
     // Handle guest checkout with cart data in request
     if (isGuestCheckoutBool && cartId === 'guest-cart' && cartItems && cartTotal) {
       console.log('Processing guest cart from request payload');
-      console.log('Guest cart items:', JSON.stringify(cartItems, null, 2));
-      console.log('Guest cart total:', cartTotal);
-      
-      // For guest checkout, create a payment intent directly without lookup
-      // This bypasses the need to have a cart in Firestore
+
+      // Validate cart items against actual prices in Firestore
+      let verifiedTotal = 0;
+      for (const item of cartItems) {
+        if (!item.toolId) {
+          return res.status(400).json({ error: 'Cart item missing toolId' });
+        }
+        const toolDoc = await db.collection('tools').doc(item.toolId).get();
+        if (!toolDoc.exists) {
+          return res.status(400).json({ error: `Tool ${item.toolId} not found` });
+        }
+        const tool = toolDoc.data();
+        const quantity = item.quantity || 1;
+        verifiedTotal += (tool.current_price || tool.price) * quantity;
+      }
+
+      // Reject if client total doesn't match verified total (allow small rounding tolerance)
+      if (Math.abs(verifiedTotal - cartTotal) > 0.01) {
+        console.error(`Price mismatch: client sent $${cartTotal}, verified $${verifiedTotal}`);
+        return res.status(400).json({ error: 'Cart total does not match current prices. Please refresh and try again.' });
+      }
+
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(cartTotal * 100), // Convert to cents
+        amount: Math.round(verifiedTotal * 100), // Use verified total, not client total
         currency: 'usd',
         metadata: {
           cartId: 'guest-cart',
@@ -129,10 +183,9 @@ app.post('/create-payment-intent', async (req, res) => {
           guestEmail: req.body.guestEmail || ''
         }
       });
-      
-      console.log(`Created direct payment intent for guest checkout: ${paymentIntent.id}`);
-      
-      // Return the client secret to the client
+
+      console.log(`Created payment intent for guest checkout: ${paymentIntent.id}`);
+
       return res.json({
         clientSecret: paymentIntent.client_secret,
         isMarketplace: false
@@ -1126,37 +1179,43 @@ app.post('/stripe-webhook', async (req, res) => {
   
   try {
     // Get both webhook secrets from environment variables
-    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
-    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || 'whsec_test';
-    
-    console.log('Webhook secrets available:', 
-      paymentWebhookSecret !== 'whsec_test' ? 'Payment webhook ✓' : 'Payment webhook ✘',
-      connectWebhookSecret !== 'whsec_test' ? 'Connect webhook ✓' : 'Connect webhook ✘');
+    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
+
+    if (!paymentWebhookSecret && !connectWebhookSecret) {
+      console.error('No webhook secrets configured. Set STRIPE_WEBHOOK_SECRET and/or STRIPE_CONNECT_WEBHOOK_SECRET.');
+      return res.status(500).send('Webhook secrets not configured');
+    }
     
     // Try verifying with payment webhook secret first
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.rawBody || req.body,
-        signature,
-        paymentWebhookSecret
-      );
-      console.log('✅ Webhook verified with payment webhook secret');
-    } catch (paymentError) {
-      // If that fails, try with connected account webhook secret
+    if (paymentWebhookSecret) {
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.rawBody || req.body,
+          signature,
+          paymentWebhookSecret
+        );
+      } catch (paymentError) {
+        // Will try connect secret next
+      }
+    }
+
+    // If not verified yet, try with connected account webhook secret
+    if (!event && connectWebhookSecret) {
       try {
         event = stripe.webhooks.constructEvent(
           req.rawBody || req.body,
           signature,
           connectWebhookSecret
         );
-        console.log('✅ Webhook verified with connect webhook secret');
       } catch (connectError) {
-        // If both fail, return error
-        console.error('❌ Webhook signature verification failed for both secrets');
-        console.error('Payment webhook error:', paymentError.message);
-        console.error('Connect webhook error:', connectError.message);
-        return res.status(400).send(`Webhook Error: ${paymentError.message}`);
+        // Will fall through to error below
       }
+    }
+
+    if (!event) {
+      console.error('Webhook signature verification failed');
+      return res.status(400).send('Webhook signature verification failed');
     }
     
     console.log(`Webhook event type: ${event.type}`);
@@ -1689,7 +1748,7 @@ app.post('/send-password-reset', async (req, res) => {
 });
 
 // Send account creation welcome email
-app.post('/send-welcome-email', async (req, res) => {
+app.post('/send-welcome-email', requireAuth, async (req, res) => {
   try {
     const { email, firstName } = req.body;
     
@@ -1713,7 +1772,7 @@ app.post('/send-welcome-email', async (req, res) => {
 });
 
 // Send listing published email
-app.post('/send-listing-published', async (req, res) => {
+app.post('/send-listing-published', requireAuth, async (req, res) => {
   try {
     const { email, listingDetails } = req.body;
     
@@ -1737,7 +1796,7 @@ app.post('/send-listing-published', async (req, res) => {
 });
 
 // Send message received email
-app.post('/send-message-notification', async (req, res) => {
+app.post('/send-message-notification', requireAuth, async (req, res) => {
   try {
     const { email, messageDetails } = req.body;
     
@@ -1761,7 +1820,7 @@ app.post('/send-message-notification', async (req, res) => {
 });
 
 // Send offer received email
-app.post('/send-offer-notification', async (req, res) => {
+app.post('/send-offer-notification', requireAuth, async (req, res) => {
   try {
     const { email, offerDetails } = req.body;
     
@@ -1785,7 +1844,7 @@ app.post('/send-offer-notification', async (req, res) => {
 });
 
 // Send test email (for verification purposes)
-app.post('/send-test-email', async (req, res) => {
+app.post('/send-test-email', requireAuth, async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -1809,7 +1868,7 @@ app.post('/send-test-email', async (req, res) => {
 });
 
 // Send order confirmation email (can be triggered manually)
-app.post('/send-order-confirmation', async (req, res) => {
+app.post('/send-order-confirmation', requireAuth, async (req, res) => {
   try {
     const { email, purchaseDetails, orderId } = req.body;
     
@@ -1881,7 +1940,7 @@ app.post('/send-order-confirmation', async (req, res) => {
 });
 
 // Send payment receipt email
-app.post('/send-payment-receipt', async (req, res) => {
+app.post('/send-payment-receipt', requireAuth, async (req, res) => {
   try {
     const { email, paymentDetails, orderId } = req.body;
     
@@ -1952,7 +2011,7 @@ app.post('/send-payment-receipt', async (req, res) => {
 });
 
 // Send shipping notification email
-app.post('/send-shipping-notification', async (req, res) => {
+app.post('/send-shipping-notification', requireAuth, async (req, res) => {
   try {
     const { email, shippingDetails, orderId } = req.body;
     
@@ -2025,7 +2084,7 @@ app.post('/send-shipping-notification', async (req, res) => {
 });
 
 // Send offer status update email
-app.post('/send-offer-status-update', async (req, res) => {
+app.post('/send-offer-status-update', requireAuth, async (req, res) => {
   try {
     const { email, offerDetails, offerId } = req.body;
     
@@ -2121,7 +2180,7 @@ app.post('/send-offer-status-update', async (req, res) => {
 });
 
 // Send review request email
-app.post('/send-review-request', async (req, res) => {
+app.post('/send-review-request', requireAuth, async (req, res) => {
   try {
     const { email, reviewDetails, orderId } = req.body;
     
@@ -2212,7 +2271,7 @@ app.post('/send-review-request', async (req, res) => {
 });
 
 // Send listing expiration reminder email
-app.post('/send-listing-expiration-reminder', async (req, res) => {
+app.post('/send-listing-expiration-reminder', requireAuth, async (req, res) => {
   try {
     const { email, listingDetails, listingId } = req.body;
     
@@ -2297,7 +2356,7 @@ app.post('/send-listing-expiration-reminder', async (req, res) => {
 });
 
 // Send shipping reminder email
-app.post('/send-shipping-reminder', async (req, res) => {
+app.post('/send-shipping-reminder', requireAuth, async (req, res) => {
   try {
     const { email, reminderDetails, orderId } = req.body;
     
@@ -2433,7 +2492,7 @@ app.post('/send-shipping-reminder', async (req, res) => {
 });
 
 // Send payout notification email
-app.post('/send-payout-notification', async (req, res) => {
+app.post('/send-payout-notification', requireAuth, async (req, res) => {
   try {
     const { email, payoutDetails, payoutId } = req.body;
     
@@ -2511,7 +2570,7 @@ app.post('/send-payout-notification', async (req, res) => {
 });
 
 // Send monthly sales summary email
-app.post('/send-monthly-sales-summary', async (req, res) => {
+app.post('/send-monthly-sales-summary', requireAuth, async (req, res) => {
   try {
     const { email, summaryDetails, sellerId, month, year } = req.body;
     
@@ -3323,23 +3382,9 @@ app.post('/create-refund', async (req, res) => {
   }
 });
 
-// Export the API as a Firebase Function with public access
-exports.api = functions.https.onRequest((req, res) => {
-    // Enable CORS for all origins
-    res.set('Access-Control-Allow-Origin', '*');
-    
-    if (req.method === 'OPTIONS') {
-      // Handle preflight requests
-      res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.set('Access-Control-Max-Age', '3600');
-      res.status(204).send('');
-      return;
-    }
-    
-    // Pass the request to the Express app
-    return app(req, res);
-  });
+// Export the API as a Firebase Function
+// CORS is handled by the Express cors middleware configured above
+exports.api = functions.https.onRequest(app);
 
 // Maintain backward compatibility with previous stripeApi endpoint
 exports.stripeApi = exports.api;

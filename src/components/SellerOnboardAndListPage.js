@@ -212,22 +212,6 @@ const SellerOnboardAndListPage = () => {
         'profile.isSeller': true
       });
       
-      console.log("Seller account creation result:", sellerAccountResult);
-      
-      // TEMPORARY: Manually override redirect URL if it points to Stripe
-      // This lets us test our local BankDetailsPage without deploying to Firebase
-      if (sellerAccountResult.success && sellerAccountResult.url) {
-        const currentUrl = window.location.origin;
-        const accountId = sellerAccountResult.accountId;
-        
-        // Check if the URL is a Stripe URL
-        if (sellerAccountResult.url.includes('stripe.com')) {
-          console.log("INTERCEPTED STRIPE REDIRECT! Using local bank details page instead");
-          // Override with our local bank details page
-          sellerAccountResult.url = `${currentUrl}/seller/bank-details?accountId=${accountId}`;
-        }
-      }
-      
       if (!sellerAccountResult.success) {
         console.error('Seller account creation failed:', sellerAccountResult.error);
         // If the error includes "NOT_FOUND", it's likely a missing document error

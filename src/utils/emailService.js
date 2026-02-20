@@ -3,6 +3,7 @@
 
 // Import environment utilities
 import { getConfig } from './environment';
+import { getAuth } from 'firebase/auth';
 
 // Base API URL - environment-specific configuration
 const API_URL = process.env.REACT_APP_API_URL || getConfig(
@@ -17,13 +18,18 @@ const API_URL = process.env.REACT_APP_API_URL || getConfig(
 // Generic request helper function
 const sendRequest = async (endpoint, data) => {
   try {
-    console.log(`Sending email request to ${endpoint}:`, data);
-    
+    const headers = { 'Content-Type': 'application/json' };
+
+    // Attach auth token if user is signed in
+    const auth = getAuth();
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}/${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 
