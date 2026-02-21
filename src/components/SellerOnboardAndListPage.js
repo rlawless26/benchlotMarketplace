@@ -188,14 +188,6 @@ const SellerOnboardAndListPage = () => {
       // We don't block progression based on email verification status
       // Users can proceed regardless, but we show them the status in the UI
       
-      console.log("Creating seller account with data:", {
-        sellerName: formData.sellerName,
-        sellerType: formData.sellerType,
-        location: formData.location,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone
-      });
-      
       // Create Stripe Connect account with seller data
       const sellerAccountResult = await createSellerAccount({
         sellerName: formData.sellerName,
@@ -247,8 +239,6 @@ const SellerOnboardAndListPage = () => {
       if (!sellerAccountResult.url) {
         throw new Error('No Stripe URL received. Please try again.');
       }
-      
-      console.log("Redirecting to URL:", sellerAccountResult.url);
       
       // Fix URL for local development - intercept benchlot.com URLs and redirect to localhost
       let redirectUrl = sellerAccountResult.url;

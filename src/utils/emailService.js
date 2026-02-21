@@ -40,7 +40,6 @@ const sendRequest = async (endpoint, data) => {
       throw new Error(result.error?.message || 'Failed to send email');
     }
     
-    console.log(`Email sent successfully via ${endpoint}`);
     return { success: true, data: result };
   } catch (error) {
     console.error(`Error in ${endpoint}:`, error);

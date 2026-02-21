@@ -39,7 +39,6 @@ const useNotifications = () => {
         );
       } catch (err) {
         // Fallback to a simpler query without the extra filter
-        console.log('Using fallback buyer notification query');
         buyerQuery = query(
           collection(db, 'offers'),
           where('buyerId', '==', user.uid),
@@ -80,7 +79,6 @@ const useNotifications = () => {
         );
       } catch (err) {
         // Fallback to a simpler query without the extra filter
-        console.log('Using fallback seller notification query');
         sellerQuery = query(
           collection(db, 'offers'),
           where('sellerId', '==', user.uid),

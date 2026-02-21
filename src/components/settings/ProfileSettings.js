@@ -25,7 +25,6 @@ const ProfileSettings = ({ user }) => {
   // Initialize form with user data
   useEffect(() => {
     if (user) {
-      console.log('User data in ProfileSettings:', JSON.stringify(user, null, 2));
       setProfileData({
         displayName: user.displayName || '',
         firstName: user.profile?.firstName || user.firstName || '',

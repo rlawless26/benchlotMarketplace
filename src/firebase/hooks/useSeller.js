@@ -18,27 +18,16 @@ export function SellerProvider({ children }) {
   
   // Fetch seller status on mount or when user changes
   useEffect(() => {
-    console.log('SellerProvider - User state changed:', { 
-      hasUser: !!user, 
-      isAuthenticated: !!user,
-      profileIsSeller: user?.profile?.isSeller,
-      topLevelIsSeller: user?.isSeller,
-      hasBankAccount: user?.hasBankAccount,
-      verified: user?.verified
-    });
-    
     // Check for seller status in multiple possible locations
     const userIsSeller = user?.isSeller === true || 
                          user?.seller?.isSeller === true || 
                          (user?.seller?.hasBankAccount === true && user?.seller?.verified === true);
     
     if (user && userIsSeller) {
-      console.log('SellerProvider - User is a seller, fetching status');
       getSellerStatus();
       
       // If seller object is missing but isSeller is true at top level, update the document
       if (user.isSeller === true && !user.seller?.isSeller) {
-        console.log('SellerProvider - Fixing missing seller object structure');
         try {
           const userRef = doc(db, 'users', user.uid);
           updateDoc(userRef, {
@@ -48,8 +37,6 @@ export function SellerProvider({ children }) {
               verified: user.verified || true,
               sellerSince: user.sellerSince || new Date().toISOString()
             }
-          }).then(() => {
-            console.log('SellerProvider - Updated seller object structure successfully');
           }).catch(err => {
             console.error('SellerProvider - Error updating seller object structure:', err);
           });
@@ -58,7 +45,6 @@ export function SellerProvider({ children }) {
         }
       }
     } else {
-      console.log('SellerProvider - User is not a seller or no user, clearing status');
       setSellerStatus(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,17 +60,12 @@ export function SellerProvider({ children }) {
         throw new Error('You must be logged in to become a seller');
       }
       
-      // Show which API we're using
-      console.log(`Using API URL: ${API_URL}`);
-      
       // First, ensure the user document exists in Firestore
       // This prevents the "No document to update" error
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        console.log("User document doesn't exist in Firestore, creating it first");
-        
         // Create a basic user document with the provided seller data
         const userData = {
           uid: user.uid,
@@ -121,10 +102,7 @@ export function SellerProvider({ children }) {
         
         // Create the user document
         await setDoc(userRef, userData);
-        console.log("Created user document in Firestore");
       } else {
-        console.log("User document exists in Firestore, updating with seller data");
-        
         // Update existing user document with seller data
         await updateDoc(userRef, {
           sellerName: sellerData.sellerName || user.displayName || user.email.split('@')[0],
@@ -165,8 +143,6 @@ export function SellerProvider({ children }) {
         sellerBio: sellerData.sellerBio || ''
       };
       
-      console.log("Making API request to create-connected-account:", requestData);
-      
       // Create a connected account with Stripe
       const response = await fetch(`${API_URL}/create-connected-account`, {
         method: 'POST',
@@ -182,11 +158,9 @@ export function SellerProvider({ children }) {
       }
       
       const data = await response.json();
-      console.log("Response from create-connected-account:", data);
-      
-      // Extract the URL from the response and log it
+
+      // Extract the URL from the response
       const redirectUrl = data.url;
-      console.log("Redirect URL:", redirectUrl);
       
       // Return the URL for the Stripe onboarding flow
       return { 

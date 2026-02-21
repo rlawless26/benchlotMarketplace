@@ -86,8 +86,8 @@ service cloud.firestore {
       
       // Only authenticated users can create tools
       // But they must be a seller if we're enforcing seller status
-      allow create: if isSignedIn() && 
-                    (isSeller() || true) && // Conditionally enforce seller status (currently not enforced)
+      allow create: if isSignedIn() &&
+                    isSeller() &&
                     request.resource.data.user_id == request.auth.uid &&
                     isValidTool();
       

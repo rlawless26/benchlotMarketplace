@@ -5,6 +5,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const allowedOrigins = [
   'https://benchlot.com',
   'https://www.benchlot.com',
@@ -35,12 +36,10 @@ const cors = require('cors')({
 const getConfig = (key, envVarName, defaultValue) => {
   // Try environment variable
   if (process.env[envVarName]) {
-    console.log(`Using ${envVarName} from environment variables`);
     return process.env[envVarName];
   }
-  
+
   // Fall back to default
-  console.log(`Using default value for ${key}`);
   return defaultValue;
 };
 
@@ -50,12 +49,10 @@ try {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
-  console.log('Initialized Firebase Admin with explicit service account credentials');
 } catch (error) {
   console.error('Error initializing with service account, falling back to default:', error);
   // Fall back to default credentials
   admin.initializeApp();
-  console.log('Initialized Firebase Admin with default credentials');
 }
 
 const db = admin.firestore();
@@ -71,10 +68,7 @@ try {
                     process.env.STRIPE_SECRET_KEY;
   
   if (stripeKey) {
-    console.log('Using Stripe key from config');
-    console.log('Key type:', stripeKey.startsWith('sk_live') ? 'LIVE MODE' : 'TEST MODE');
-    console.log('Key prefix:', stripeKey.substring(0, 10) + '...');
-
+    console.log('Stripe initialized in', stripeKey.startsWith('sk_live') ? 'LIVE' : 'TEST', 'mode');
     stripe = require('stripe')(stripeKey);
   } else {
     console.error('❌ STRIPE_SECRET environment variable is not set. Stripe will not work.');
@@ -111,6 +105,36 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+// Rate limiters
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // 10 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+// Apply general rate limit to all routes
+app.use(generalLimiter);
+
+// Apply strict limits to sensitive endpoints
+app.use('/create-payment-intent', strictLimiter);
+app.use('/confirm-payment', strictLimiter);
+app.use('/create-connected-account', strictLimiter);
+app.use('/create-customer', strictLimiter);
+app.use('/send-password-reset', strictLimiter);
+
+// Limit request body size
+app.use(express.json({ limit: '1mb' }));
+
 /**
  * Create a payment intent
  * This is the first step in the payment process
@@ -118,39 +142,25 @@ const requireAuth = async (req, res, next) => {
  */
 app.post('/create-payment-intent', async (req, res) => {
   try {
-    // Log the full request body for debugging
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-    
     if (!stripe) {
       return res.status(500).json({ error: 'Stripe is not configured. Please set the STRIPE_SECRET environment variable.' });
     }
 
     const { cartId, userId, isGuestCheckout, cartItems, cartTotal } = req.body;
 
-    // Log extracted values
-    console.log('Extracted values:');
-    console.log(`- cartId: ${cartId}`);
-    console.log(`- userId: ${userId}`);
-    console.log(`- isGuestCheckout: ${isGuestCheckout}`);
-    console.log(`- cartItems present: ${Boolean(cartItems)}`);
-    console.log(`- cartTotal: ${cartTotal}`);
-    
     if (!cartId || !userId) {
       return res.status(400).json({ error: 'Missing cartId or userId' });
     }
-    
-    console.log(`Attempting to process cart ${cartId} for user ${userId}`);
-    console.log(`Guest checkout: ${isGuestCheckout ? 'Yes' : 'No'}`);
-    
+
+    console.log(`create-payment-intent: cart=${cartId}, user=${userId}, guest=${!!isGuestCheckout}`);
+
     let cart;
-    
+
     // Convert isGuestCheckout to boolean if it's a string
     const isGuestCheckoutBool = isGuestCheckout === true || isGuestCheckout === 'true';
-    console.log(`isGuestCheckout converted to boolean: ${isGuestCheckoutBool}`);
     
     // Handle guest checkout with cart data in request
     if (isGuestCheckoutBool && cartId === 'guest-cart' && cartItems && cartTotal) {
-      console.log('Processing guest cart from request payload');
 
       // Validate cart items against actual prices in Firestore
       let verifiedTotal = 0;
@@ -184,7 +194,7 @@ app.post('/create-payment-intent', async (req, res) => {
         }
       });
 
-      console.log(`Created payment intent for guest checkout: ${paymentIntent.id}`);
+      console.log(`Created guest payment intent: ${paymentIntent.id}`);
 
       return res.json({
         clientSecret: paymentIntent.client_secret,
@@ -194,19 +204,13 @@ app.post('/create-payment-intent', async (req, res) => {
       try {
         // Get the cart from Firestore for authenticated users
         const cartRef = db.collection('carts').doc(cartId);
-        console.log('Cart reference created:', cartRef.path);
-        
         const cartDoc = await cartRef.get();
-        console.log('Cart document fetch attempt completed');
-        
+
         if (!cartDoc.exists) {
-          console.log(`Cart ${cartId} not found`);
           return res.status(404).json({ error: 'Cart not found' });
         }
-        
-        console.log(`Cart ${cartId} found successfully`);
+
         cart = cartDoc.data();
-        console.log('Cart data:', JSON.stringify(cart, null, 2));
         
         // Verify the cart belongs to the user (skip for guest checkout)
         if (!isGuestCheckout && cart.userId !== userId) {
@@ -244,7 +248,6 @@ app.post('/create-payment-intent', async (req, res) => {
       
       // If there are seller items, process as marketplace purchase
       if (hasSeller) {
-        console.log('Processing as marketplace purchase');
         
         // For each seller, verify their account is active
         for (const sellerId in sellerItems) {
@@ -295,7 +298,6 @@ app.post('/create-payment-intent', async (req, res) => {
     }
     
     // If not a marketplace purchase, create a standard payment intent
-    console.log('Processing as standard purchase');
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Stripe expects amounts in cents
       currency: 'usd',
@@ -337,13 +339,10 @@ app.post('/confirm-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing paymentIntentId or cartId' });
     }
     
-    console.log(`Retrieving payment intent from Stripe: ${paymentIntentId}`);
-    
     // Verify the payment intent with Stripe
     let paymentIntent;
     try {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      console.log(`Retrieved payment intent with status: ${paymentIntent.status}`);
     } catch (stripeError) {
       console.error(`Stripe error retrieving payment intent ${paymentIntentId}:`, stripeError);
       return res.status(400).json({ 
@@ -353,35 +352,26 @@ app.post('/confirm-payment', async (req, res) => {
     }
     
     if (paymentIntent.status !== 'succeeded') {
-      console.log(`Payment intent ${paymentIntentId} has status ${paymentIntent.status}, not succeeded`);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: `Payment has not succeeded. Current status: ${paymentIntent.status}`,
         code: 'payment_not_succeeded'
       });
     }
     
-    console.log(`Confirming payment for intent ${paymentIntentId}, cart ${cartId}`);
-    console.log(`Guest checkout: ${isGuestCheckout ? 'Yes' : 'No'}`);
-    
+    console.log(`confirm-payment: intent=${paymentIntentId}, cart=${cartId}, guest=${!!isGuestCheckout}`);
+
     // Convert isGuestCheckout to boolean if it's a string
     const isGuestCheckoutBool = isGuestCheckout === true || isGuestCheckout === 'true';
-    console.log(`isGuestCheckout converted to boolean: ${isGuestCheckoutBool}`);
 
     // Process guest cart directly from the request payload
     if (isGuestCheckoutBool && cartId === 'guest-cart' && cartItems) {
       try {
-        console.log('Processing guest cart order');
-        console.log('Guest cart items:', JSON.stringify(cartItems, null, 2));
-        console.log('Guest cart total:', cartTotal);
-        
         // Verify payment intent metadata matches guest checkout
         const paymentMetadata = paymentIntent.metadata || {};
-        console.log('Payment intent metadata:', JSON.stringify(paymentMetadata, null, 2));
-        
+
         if (paymentMetadata.isGuestCheckout === 'true' && paymentMetadata.cartId === 'guest-cart') {
-          console.log('Payment intent metadata confirms this is a guest checkout');
+          // Metadata already set
         } else {
-          console.log('Adding guest checkout info to payment intent metadata');
           // Update payment intent with guest metadata if not already present
           await stripe.paymentIntents.update(paymentIntentId, {
             metadata: {
@@ -394,7 +384,6 @@ app.post('/confirm-payment', async (req, res) => {
         }
         
         // Create order in Firestore with guest information
-        console.log('Creating guest order in Firestore');
         const orderRef = await db.collection('orders').add({
           userId: 'guest',
           userEmail: guestEmail || 'guest@example.com',
@@ -408,12 +397,11 @@ app.post('/confirm-payment', async (req, res) => {
           createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
-        console.log(`Guest order created successfully with ID: ${orderRef.id}`);
-        
+        console.log(`Guest order created: ${orderRef.id}`);
+
         // Send order confirmation email to guest buyer
         try {
           if (guestEmail) {
-            console.log(`Sending order confirmation email to guest: ${guestEmail}`);
             const purchaseDetails = {
               orderId: orderRef.id,
               totalAmount: cartTotal || 0,
@@ -424,13 +412,11 @@ app.post('/confirm-payment', async (req, res) => {
               paymentMethod: 'Credit Card'
             };
             
-            const emailResult = await emailService.sendOrderConfirmationEmail(
+            await emailService.sendOrderConfirmationEmail(
               guestEmail,
               purchaseDetails
             );
-            
-            console.log(`Order confirmation email sent to guest (${guestEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
-            
+
             // Also send payment receipt email
             try {
               const paymentDetails = {
@@ -446,8 +432,6 @@ app.post('/confirm-payment', async (req, res) => {
                 guestEmail,
                 paymentDetails
               );
-              
-              console.log(`Payment receipt email sent to guest (${guestEmail})`);
             } catch (paymentEmailError) {
               console.error('Error sending payment receipt email to guest:', paymentEmailError);
             }
@@ -476,8 +460,6 @@ app.post('/confirm-payment', async (req, res) => {
                         sellerEmail,
                         orderDetails
                       );
-                      
-                      console.log(`Order notification email sent to seller ${item.sellerId} (${sellerEmail})`);
                     }
                   }
                 } catch (sellerEmailError) {
@@ -485,8 +467,6 @@ app.post('/confirm-payment', async (req, res) => {
                 }
               }
             }
-          } else {
-            console.log('No guest email provided, skipping order confirmation email');
           }
         } catch (emailError) {
           console.error('Error sending order confirmation email to guest:', emailError);
@@ -504,21 +484,14 @@ app.post('/confirm-payment', async (req, res) => {
     // For authenticated users, get the cart from Firestore
     let cart;
     try {
-      console.log(`Attempting to get cart ${cartId}`);
       const cartRef = db.collection('carts').doc(cartId);
-      console.log('Cart reference created:', cartRef.path);
-      
       const cartDoc = await cartRef.get();
-      console.log('Cart document fetch completed');
-      
+
       if (!cartDoc.exists) {
-        console.log(`Cart ${cartId} not found`);
         return res.status(404).json({ error: 'Cart not found for payment confirmation' });
       }
-      
-      console.log(`Cart ${cartId} found successfully`);
+
       cart = cartDoc.data();
-      console.log('Cart data:', JSON.stringify(cart, null, 2));
     } catch (firestoreError) {
       console.error('Detailed Firestore error:', firestoreError);
       console.error('Error code:', firestoreError.code);
@@ -531,7 +504,6 @@ app.post('/confirm-payment', async (req, res) => {
     
     // Create an order in Firestore
     try {
-      console.log('Creating order in Firestore');
       const orderRef = await db.collection('orders').add({
         userId: cart.userId,
         items: cart.items,
@@ -543,8 +515,8 @@ app.post('/confirm-payment', async (req, res) => {
         billingAddress: billingAddress || shippingAddress || {}
       });
       
-      console.log(`Order created successfully with ID: ${orderRef.id}`);
-      
+      console.log(`Order created: ${orderRef.id}`);
+
       // Send order confirmation and payment receipt emails to buyer
       try {
         // Get user email from Firestore
@@ -552,9 +524,8 @@ app.post('/confirm-payment', async (req, res) => {
         if (userDoc.exists) {
           const userEmail = userDoc.data().email;
           const userName = userDoc.data().displayName || userDoc.data().firstName || userDoc.data().lastName;
-          
+
           if (userEmail) {
-            console.log(`Sending order confirmation email to user: ${userEmail}`);
             const purchaseDetails = {
               orderId: orderRef.id,
               userId: cart.userId,
@@ -567,13 +538,11 @@ app.post('/confirm-payment', async (req, res) => {
               paymentMethod: 'Credit Card'
             };
             
-            const emailResult = await emailService.sendOrderConfirmationEmail(
+            await emailService.sendOrderConfirmationEmail(
               userEmail,
               purchaseDetails
             );
-            
-            console.log(`Order confirmation email sent to user (${userEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
-            
+
             // Also send payment receipt email
             try {
               const paymentDetails = {
@@ -590,8 +559,6 @@ app.post('/confirm-payment', async (req, res) => {
                 userEmail,
                 paymentDetails
               );
-              
-              console.log(`Payment receipt email sent to user (${userEmail})`);
             } catch (paymentEmailError) {
               console.error('Error sending payment receipt email to user:', paymentEmailError);
             }
@@ -620,8 +587,6 @@ app.post('/confirm-payment', async (req, res) => {
                         sellerEmail,
                         orderDetails
                       );
-                      
-                      console.log(`Order notification email sent to seller ${item.sellerId} (${sellerEmail})`);
                     }
                   }
                 } catch (sellerEmailError) {
@@ -629,11 +594,7 @@ app.post('/confirm-payment', async (req, res) => {
                 }
               }
             }
-          } else {
-            console.log(`No email found for user ${cart.userId}, skipping order confirmation email`);
           }
-        } else {
-          console.log(`User ${cart.userId} not found, skipping order confirmation email`);
         }
       } catch (emailError) {
         console.error('Error sending emails to user:', emailError);
@@ -641,7 +602,6 @@ app.post('/confirm-payment', async (req, res) => {
       }
       
       // Update the cart status and clear its contents
-      console.log(`Updating cart ${cartId} status to completed and clearing items`);
       const cartRef = db.collection('carts').doc(cartId);
       await cartRef.update({
         status: 'completed',
@@ -652,16 +612,13 @@ app.post('/confirm-payment', async (req, res) => {
       });
       
       // Also clear the items subcollection
-      console.log(`Clearing items subcollection for cart ${cartId}`);
       const itemsSnapshot = await db.collection('carts').doc(cartId).collection('items').get();
       const batch = db.batch();
       itemsSnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
       });
       await batch.commit();
-      
-      console.log(`Cart ${cartId} updated successfully`);
-      
+
       // Return success
       res.json({ success: true, orderId: orderRef.id });
     } catch (dbError) {
@@ -702,18 +659,16 @@ app.post('/create-connected-account', async (req, res) => {
       sellerBio 
     } = req.body;
     
-    console.log(`Creating connected account for user ${userId} with email ${email}`);
-    
     if (!userId || !email) {
-      console.log('Missing userId or email');
       return res.status(400).json({ error: 'Missing userId or email' });
     }
+
+    console.log(`create-connected-account: user=${userId}`);
     
     // Check if user already has a Stripe account
     try {
       const userDoc = await db.collection('users').doc(userId).get();
       if (userDoc.exists && userDoc.data().stripeAccountId) {
-        console.log(`User ${userId} already has a Stripe account: ${userDoc.data().stripeAccountId}`);
         
         // Create a new account link for continuing onboarding
         const appUrl = process.env.APP_URL || 'https://benchlot.com';
@@ -736,7 +691,6 @@ app.post('/create-connected-account', async (req, res) => {
     }
     
     // Create a connected account with Stripe
-    console.log('Creating Stripe connected account');
     
     // Define common account parameters
     const accountParams = {
@@ -819,15 +773,6 @@ app.post('/create-connected-account', async (req, res) => {
         };
       }
       
-      // Log the exact data being sent for debugging
-      console.log('Setting account parameters with individual data:', JSON.stringify({
-        business_type: accountParams.business_type,
-        'business_profile.url': accountParams.business_profile.url,
-        'tos_acceptance.date': accountParams.tos_acceptance?.date,
-        'tos_acceptance.ip': accountParams.tos_acceptance?.ip,
-        'individual.first_name': accountParams.individual.first_name,
-        'individual.last_name': accountParams.individual.last_name
-      }, null, 2));
     } else {
       // For businesses
       accountParams.company = {
@@ -857,29 +802,19 @@ app.post('/create-connected-account', async (req, res) => {
     // This is the correct configuration for a US-based marketplace platform where the platform handles all payments
     // and sellers only receive their share of the funds.
     
-    console.log('Account parameters:', JSON.stringify(accountParams, null, 2));
     const account = await stripe.accounts.create(accountParams);
-    
-    console.log(`Stripe account created with ID: ${account.id}`);
-    console.log('Full account response:', JSON.stringify(account, null, 2));
+    console.log(`Stripe account created: ${account.id}`);
     
     // Step 2: Explicitly update the Person (representative) with required information
     try {
-      console.log('Starting person creation/update process');
-      
       // Extract the person ID from the account
-      console.log('Account individual:', account.individual);
       const personId = account.individual?.id;
-      console.log('Extracted personId:', personId);
-      
+
       // Get first and last name with fallbacks
       const firstNameValue = firstName || (sellerName ? sellerName.split(' ')[0] : null) || email.split('@')[0] || "User";
       const lastNameValue = lastName || (sellerName && sellerName.split(' ').length > 1 ? sellerName.split(' ').slice(1).join(' ') : "User");
-      console.log(`Using name values: firstName=${firstNameValue}, lastName=${lastNameValue}`);
       
       if (personId) {
-        console.log(`Found person ID ${personId}, updating with name information...`);
-        
         // Update the person with explicit name information
         try {
           const updatedPerson = await stripe.accounts.updatePerson(
@@ -894,11 +829,8 @@ app.post('/create-connected-account', async (req, res) => {
             }
           );
           
-          console.log(`Successfully updated person with name: ${firstNameValue} ${lastNameValue}`);
-          console.log('Updated person response:', JSON.stringify(updatedPerson, null, 2));
         } catch (updateError) {
-          console.error('Error updating person:', updateError);
-          console.log('Falling back to creating a new person');
+          console.error('Error updating person, falling back to create:', updateError.message);
           // Fall through to person creation as a backup
           const newPerson = await stripe.accounts.createPerson(
             account.id,
@@ -911,19 +843,9 @@ app.post('/create-connected-account', async (req, res) => {
             }
           );
           
-          console.log(`Created new person after update failure: ${newPerson.id}`);
         }
       } else {
-        console.log('Person ID not found in account response, creating new person...');
-        
-        // Always create a new person with representative relationship
-        // This is our fallback when the person ID isn't automatically provided
-        console.log(`Creating person with account ID: ${account.id}`);
-        console.log('Person data:', JSON.stringify({
-          first_name: firstNameValue,
-          last_name: lastNameValue,
-          relationship: { representative: true }
-        }, null, 2));
+        // Person ID not found in account response, creating new person
         
         try {
           const newPerson = await stripe.accounts.createPerson(
@@ -937,11 +859,8 @@ app.post('/create-connected-account', async (req, res) => {
             }
           );
           
-          console.log(`Created new person with ID: ${newPerson.id} and name: ${firstNameValue} ${lastNameValue}`);
-          console.log('New person response:', JSON.stringify(newPerson, null, 2));
         } catch (createError) {
           console.error('Error creating person:', createError);
-          console.error('Create person error details:', JSON.stringify(createError, null, 2));
         }
       }
     } catch (personError) {
@@ -953,7 +872,6 @@ app.post('/create-connected-account', async (req, res) => {
     
     // Store the account ID and seller info in Firestore
     try {
-      console.log(`Updating user ${userId} with Stripe account info`);
       
       // Create seller profile data
       const sellerProfile = {
@@ -984,18 +902,13 @@ app.post('/create-connected-account', async (req, res) => {
       
       // Update user record
       await db.collection('users').doc(userId).update(sellerProfile);
-      console.log('User updated successfully with seller profile');
     } catch (firestoreError) {
       console.error('Error updating user in Firestore:', firestoreError);
-      console.error('Error code:', firestoreError.code);
-      console.error('Error message:', firestoreError.message);
       throw firestoreError;
     }
     
     // Handle account setup for ALL sellers - bypass Stripe hosted onboarding completely
     const appUrl = process.env.APP_URL || 'https://benchlot.com';
-    console.log('BYPASSING Stripe hosted onboarding for all sellers');
-    console.log(`Using app URL: ${appUrl}`);
     
     // Skip Stripe hosted onboarding completely
     // Route everyone to our bank account collection UI
@@ -1009,11 +922,7 @@ app.post('/create-connected-account', async (req, res) => {
       stripeStatus: 'pending_bank_details'
     });
     
-    console.log(`Directing user to our custom bank details form: ${setupResult.url}`);
-    
     const accountLink = setupResult;
-    
-    console.log('Account link created successfully');
     
     // Return the account link URL and new account ID
     res.json({ 
@@ -1023,7 +932,6 @@ app.post('/create-connected-account', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating connected account:', error);
-    console.error('Error details:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1040,7 +948,6 @@ app.get('/get-account-status', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
     
-    console.log(`Getting account status for user ${userId}`);
     
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1096,7 +1003,6 @@ app.get('/refresh-account-link', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
     
-    console.log(`Refreshing account link for user ${userId}`);
     
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1139,7 +1045,6 @@ app.get('/get-dashboard-link', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
     
-    console.log(`Creating dashboard link for user ${userId}`);
     
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1175,8 +1080,6 @@ app.post('/stripe-webhook', async (req, res) => {
   const signature = req.headers['stripe-signature'];
   let event;
 
-  console.log('Received webhook from Stripe');
-  
   try {
     // Get both webhook secrets from environment variables
     const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -1225,7 +1128,6 @@ app.post('/stripe-webhook', async (req, res) => {
       // Connected account events
       case 'account.updated': {
         const account = event.data.object;
-        console.log(`Account ${account.id} was updated`);
         
         // Find the user by Stripe account ID
         const usersSnapshot = await db.collection('users')
@@ -1234,12 +1136,10 @@ app.post('/stripe-webhook', async (req, res) => {
           .get();
           
         if (usersSnapshot.empty) {
-          console.log(`No user found for account ${account.id}`);
           break;
         }
-        
+
         const userId = usersSnapshot.docs[0].id;
-        console.log(`Found user ${userId} for account ${account.id}`);
         
         // Update account status in Firestore
         await db.collection('users').doc(userId).update({
@@ -1249,8 +1149,6 @@ app.post('/stripe-webhook', async (req, res) => {
           lastStatusUpdate: admin.firestore.FieldValue.serverTimestamp()
         });
         
-        console.log(`Updated user ${userId} account status`);
-        
         // If onboarding is now complete, send an email notification
         if (account.details_submitted && account.payouts_enabled) {
           const userData = usersSnapshot.docs[0].data();
@@ -1259,7 +1157,6 @@ app.post('/stripe-webhook', async (req, res) => {
               userData.contactEmail || userData.email,
               { sellerName: userData.sellerName || 'Seller' }
             );
-            console.log(`Sent onboarding complete email to ${userData.contactEmail || userData.email}`);
           } catch (emailError) {
             console.error('Error sending onboarding complete email:', emailError);
           }
@@ -1271,7 +1168,6 @@ app.post('/stripe-webhook', async (req, res) => {
       // Payment success events
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object;
-        console.log(`Payment intent ${paymentIntent.id} succeeded`);
         
         // Check if this is for a marketplace payment with transfers
         if (paymentIntent.metadata && paymentIntent.metadata.cartId) {
@@ -1282,7 +1178,6 @@ app.post('/stripe-webhook', async (req, res) => {
             const cartDoc = await cartRef.get();
             
             if (!cartDoc.exists) {
-              console.log(`Cart ${cartId} not found for successful payment`);
               break;
             }
             
@@ -1292,7 +1187,6 @@ app.post('/stripe-webhook', async (req, res) => {
             // This is a simple implementation - in a full system we'd track
             // individual seller items and their prices
             if (cart.items && cart.items.length > 0) {
-              console.log(`Processing transfers for ${cart.items.length} items`);
               
               // Group items by seller
               const sellerItems = {};
@@ -1311,14 +1205,12 @@ app.post('/stripe-webhook', async (req, res) => {
                 const sellerDoc = await db.collection('users').doc(sellerId).get();
                 
                 if (!sellerDoc.exists) {
-                  console.log(`Seller ${sellerId} not found for transfer`);
                   continue;
                 }
-                
+
                 const seller = sellerDoc.data();
-                
+
                 if (!seller.stripeAccountId) {
-                  console.log(`Seller ${sellerId} has no Stripe account ID`);
                   continue;
                 }
                 
@@ -1348,7 +1240,7 @@ app.post('/stripe-webhook', async (req, res) => {
                     }
                   });
                   
-                  console.log(`Created transfer ${transfer.id} to seller ${sellerId} for ${sellerAmount/100}`);
+                  console.log(`Transfer ${transfer.id}: $${sellerAmount/100} to seller ${sellerId}`);
                   
                   // Record the transfer in Firestore
                   await db.collection('transfers').add({
@@ -1378,7 +1270,6 @@ app.post('/stripe-webhook', async (req, res) => {
       // Transfer events - track money movement to sellers
       case 'transfer.created': {
         const transfer = event.data.object;
-        console.log(`Transfer ${transfer.id} created: $${transfer.amount / 100} to ${transfer.destination}`);
 
         // Record or update in Firestore
         const existingTransfer = await db.collection('transfers')
@@ -1403,7 +1294,6 @@ app.post('/stripe-webhook', async (req, res) => {
 
       case 'transfer.reversed': {
         const transfer = event.data.object;
-        console.log(`Transfer ${transfer.id} reversed`);
 
         const transferSnap = await db.collection('transfers')
           .where('transferId', '==', transfer.id)
@@ -1424,7 +1314,6 @@ app.post('/stripe-webhook', async (req, res) => {
       case 'payout.created': {
         const payout = event.data.object;
         const connectedAccountId = event.account; // Connected account that received the payout
-        console.log(`Payout ${payout.id} created: $${payout.amount / 100} for account ${connectedAccountId}`);
 
         if (connectedAccountId) {
           // Find the seller by Stripe account ID
@@ -1448,7 +1337,6 @@ app.post('/stripe-webhook', async (req, res) => {
               createdAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log(`Recorded payout ${payout.id} for seller ${sellerId}`);
           }
         }
         break;
@@ -1457,7 +1345,6 @@ app.post('/stripe-webhook', async (req, res) => {
       case 'payout.paid': {
         const payout = event.data.object;
         const connectedAccountId = event.account;
-        console.log(`Payout ${payout.id} paid: $${payout.amount / 100}`);
 
         // Update payout status in Firestore
         const payoutSnap = await db.collection('payouts')
@@ -1486,7 +1373,6 @@ app.post('/stripe-webhook', async (req, res) => {
                     arrival_date: payout.arrival_date,
                     transactionId: payout.id
                   });
-                  console.log(`Payout notification sent to ${sellerEmail}`);
                 } catch (emailError) {
                   console.error('Error sending payout notification:', emailError);
                 }
@@ -1499,7 +1385,7 @@ app.post('/stripe-webhook', async (req, res) => {
 
       case 'payout.failed': {
         const payout = event.data.object;
-        console.log(`Payout ${payout.id} failed: ${payout.failure_message}`);
+        console.error(`Payout ${payout.id} failed: ${payout.failure_message}`);
 
         const payoutSnap = await db.collection('payouts')
           .where('payoutId', '==', payout.id)
@@ -1519,7 +1405,6 @@ app.post('/stripe-webhook', async (req, res) => {
       // Refund events
       case 'charge.refunded': {
         const charge = event.data.object;
-        console.log(`Charge ${charge.id} refunded`);
 
         // Find orders associated with this charge's payment intent
         if (charge.payment_intent) {
@@ -1535,7 +1420,6 @@ app.post('/stripe-webhook', async (req, res) => {
               refundAmount: charge.amount_refunded / 100,
               lastRefundAt: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`Updated order ${orderSnap.docs[0].id} refund status`);
           }
         }
         break;
@@ -1544,7 +1428,6 @@ app.post('/stripe-webhook', async (req, res) => {
       // Dispute events
       case 'charge.dispute.created': {
         const dispute = event.data.object;
-        console.log(`Dispute ${dispute.id} created for charge ${dispute.charge}`);
 
         // Record the dispute
         await db.collection('disputes').add({
@@ -1575,13 +1458,12 @@ app.post('/stripe-webhook', async (req, res) => {
         }
 
         // Notify platform admin (use platform email)
-        console.log(`DISPUTE ALERT: ${dispute.id} - $${dispute.amount / 100} - Reason: ${dispute.reason}`);
+        console.error(`DISPUTE ALERT: ${dispute.id} - $${dispute.amount / 100} - Reason: ${dispute.reason}`);
         break;
       }
 
       case 'charge.dispute.closed': {
         const dispute = event.data.object;
-        console.log(`Dispute ${dispute.id} closed with status: ${dispute.status}`);
 
         const disputeSnap = await db.collection('disputes')
           .where('disputeId', '==', dispute.id)
@@ -1642,7 +1524,6 @@ app.post('/add-bank-account', async (req, res) => {
       return res.status(400).json({ error: 'Missing required bank account details' });
     }
     
-    console.log(`Adding bank account for user ${userId}`);
     
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1707,7 +1588,6 @@ app.post('/add-bank-account', async (req, res) => {
  */
 app.get('/', (req, res) => {
   try {
-    console.log('Status endpoint called');
     const response = {
       status: 'ok',
       timestamp: new Date().toISOString()
@@ -1732,7 +1612,6 @@ app.post('/send-password-reset', async (req, res) => {
       return res.status(400).json({ error: 'Missing email or resetLink' });
     }
     
-    console.log(`Sending password reset email to ${email}`);
     const result = await emailService.sendPasswordResetEmail(email, resetLink);
     
     if (result.success) {
@@ -1756,7 +1635,6 @@ app.post('/send-welcome-email', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing email' });
     }
     
-    console.log(`Sending welcome email to ${email}`);
     const result = await emailService.sendAccountCreationEmail(email, firstName);
     
     if (result.success) {
@@ -1780,7 +1658,6 @@ app.post('/send-listing-published', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing email or listingDetails' });
     }
     
-    console.log(`Sending listing published email to ${email}`, listingDetails);
     const result = await emailService.sendListingPublishedEmail(email, listingDetails);
     
     if (result.success) {
@@ -1804,7 +1681,6 @@ app.post('/send-message-notification', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing email or messageDetails' });
     }
     
-    console.log(`Sending message notification email to ${email}`);
     const result = await emailService.sendMessageReceivedEmail(email, messageDetails);
     
     if (result.success) {
@@ -1828,7 +1704,6 @@ app.post('/send-offer-notification', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing email or offerDetails' });
     }
     
-    console.log(`Sending offer notification email to ${email}`);
     const result = await emailService.sendOfferReceivedEmail(email, offerDetails);
     
     if (result.success) {
@@ -1852,7 +1727,6 @@ app.post('/send-test-email', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing email' });
     }
     
-    console.log(`Sending test email to ${email}`);
     const result = await emailService.sendTestEmail(email);
     
     if (result.success) {
@@ -1878,7 +1752,6 @@ app.post('/send-order-confirmation', requireAuth, async (req, res) => {
     
     // If orderId is provided but not purchaseDetails, fetch the order from Firestore
     if (orderId && !purchaseDetails) {
-      console.log(`Fetching order ${orderId} for order confirmation email`);
       const orderDoc = await db.collection('orders').doc(orderId).get();
       
       if (!orderDoc.exists) {
@@ -1909,7 +1782,6 @@ app.post('/send-order-confirmation', requireAuth, async (req, res) => {
         paymentMethod: order.paymentMethod || 'Credit Card'
       };
       
-      console.log(`Sending order confirmation email for order ${orderId} to ${email}`);
       const result = await emailService.sendOrderConfirmationEmail(email, details);
       
       if (result.success) {
@@ -1921,7 +1793,6 @@ app.post('/send-order-confirmation', requireAuth, async (req, res) => {
     } 
     // If purchase details were provided directly
     else if (purchaseDetails) {
-      console.log(`Sending order confirmation email to ${email} with provided details`);
       const result = await emailService.sendOrderConfirmationEmail(email, purchaseDetails);
       
       if (result.success) {
@@ -1950,7 +1821,6 @@ app.post('/send-payment-receipt', requireAuth, async (req, res) => {
     
     // If orderId is provided but not payment details, fetch the order from Firestore
     if (orderId && !paymentDetails) {
-      console.log(`Fetching order ${orderId} for payment receipt email`);
       const orderDoc = await db.collection('orders').doc(orderId).get();
       
       if (!orderDoc.exists) {
@@ -1980,7 +1850,6 @@ app.post('/send-payment-receipt', requireAuth, async (req, res) => {
         last4: order.last4 || '****'
       };
       
-      console.log(`Sending payment receipt email for order ${orderId} to ${email}`);
       const result = await emailService.sendPaymentReceiptEmail(email, details);
       
       if (result.success) {
@@ -1992,7 +1861,6 @@ app.post('/send-payment-receipt', requireAuth, async (req, res) => {
     } 
     // If payment details were provided directly
     else if (paymentDetails) {
-      console.log(`Sending payment receipt email to ${email} with provided details`);
       const result = await emailService.sendPaymentReceiptEmail(email, paymentDetails);
       
       if (result.success) {
@@ -2021,7 +1889,6 @@ app.post('/send-shipping-notification', requireAuth, async (req, res) => {
     
     // If orderId is provided but not shipping details, fetch the order from Firestore
     if (orderId && !shippingDetails) {
-      console.log(`Fetching order ${orderId} for shipping notification email`);
       const orderDoc = await db.collection('orders').doc(orderId).get();
       
       if (!orderDoc.exists) {
@@ -2053,7 +1920,6 @@ app.post('/send-shipping-notification', requireAuth, async (req, res) => {
         estimatedDelivery: req.body.estimatedDelivery
       };
       
-      console.log(`Sending shipping notification email for order ${orderId} to ${email}`);
       const result = await emailService.sendShippingNotificationEmail(email, details);
       
       if (result.success) {
@@ -2065,7 +1931,6 @@ app.post('/send-shipping-notification', requireAuth, async (req, res) => {
     } 
     // If shipping details were provided directly
     else if (shippingDetails) {
-      console.log(`Sending shipping notification email to ${email} with provided details`);
       const result = await emailService.sendShippingNotificationEmail(email, shippingDetails);
       
       if (result.success) {
@@ -2094,7 +1959,6 @@ app.post('/send-offer-status-update', requireAuth, async (req, res) => {
     
     // If offerId is provided but not offer details, fetch the offer from Firestore
     if (offerId && !offerDetails) {
-      console.log(`Fetching offer ${offerId} for status update email`);
       const offerDoc = await db.collection('offers').doc(offerId).get();
       
       if (!offerDoc.exists) {
@@ -2149,7 +2013,6 @@ app.post('/send-offer-status-update', requireAuth, async (req, res) => {
         message: req.body.message || offer.sellerMessage
       };
       
-      console.log(`Sending offer status update email for offer ${offerId} to ${email}`);
       const result = await emailService.sendOfferStatusUpdateEmail(email, details);
       
       if (result.success) {
@@ -2161,7 +2024,6 @@ app.post('/send-offer-status-update', requireAuth, async (req, res) => {
     } 
     // If offer details were provided directly
     else if (offerDetails) {
-      console.log(`Sending offer status update email to ${email} with provided details`);
       const result = await emailService.sendOfferStatusUpdateEmail(email, offerDetails);
       
       if (result.success) {
@@ -2190,7 +2052,6 @@ app.post('/send-review-request', requireAuth, async (req, res) => {
     
     // If orderId is provided but not review details, fetch the order from Firestore
     if (orderId && !reviewDetails) {
-      console.log(`Fetching order ${orderId} for review request email`);
       const orderDoc = await db.collection('orders').doc(orderId).get();
       
       if (!orderDoc.exists) {
@@ -2234,7 +2095,6 @@ app.post('/send-review-request', requireAuth, async (req, res) => {
         reviewDaysLeft: 14 // Two weeks to leave a review
       };
       
-      console.log(`Sending review request email for order ${orderId} to ${email}`);
       const result = await emailService.sendReviewRequestEmail(email, details);
       
       if (result.success) {
@@ -2252,7 +2112,6 @@ app.post('/send-review-request', requireAuth, async (req, res) => {
     } 
     // If review details were provided directly
     else if (reviewDetails) {
-      console.log(`Sending review request email to ${email} with provided details`);
       const result = await emailService.sendReviewRequestEmail(email, reviewDetails);
       
       if (result.success) {
@@ -2281,7 +2140,6 @@ app.post('/send-listing-expiration-reminder', requireAuth, async (req, res) => {
     
     // If listingId is provided but not listing details, fetch the listing from Firestore
     if (listingId && !listingDetails) {
-      console.log(`Fetching listing ${listingId} for expiration reminder email`);
       const listingDoc = await db.collection('tools').doc(listingId).get();
       
       if (!listingDoc.exists) {
@@ -2325,7 +2183,6 @@ app.post('/send-listing-expiration-reminder', requireAuth, async (req, res) => {
         offerCount: listing.offerCount || 0
       };
       
-      console.log(`Sending listing expiration reminder email for listing ${listingId} to ${email}`);
       const result = await emailService.sendListingExpirationReminderEmail(email, details);
       
       if (result.success) {
@@ -2337,7 +2194,6 @@ app.post('/send-listing-expiration-reminder', requireAuth, async (req, res) => {
     } 
     // If listing details were provided directly
     else if (listingDetails) {
-      console.log(`Sending listing expiration reminder email to ${email} with provided details`);
       const result = await emailService.sendListingExpirationReminderEmail(email, listingDetails);
       
       if (result.success) {
@@ -2366,7 +2222,6 @@ app.post('/send-shipping-reminder', requireAuth, async (req, res) => {
     
     // If orderId is provided but not reminder details, fetch the order from Firestore
     if (orderId && !reminderDetails) {
-      console.log(`Fetching order ${orderId} for shipping reminder email`);
       const orderDoc = await db.collection('orders').doc(orderId).get();
       
       if (!orderDoc.exists) {
@@ -2461,7 +2316,6 @@ app.post('/send-shipping-reminder', requireAuth, async (req, res) => {
         shippingCutOff: '3 days'
       };
       
-      console.log(`Sending shipping reminder email for order ${orderId} to ${sellerEmail}`);
       const result = await emailService.sendShippingReminderEmail(sellerEmail, details);
       
       if (result.success) {
@@ -2473,7 +2327,6 @@ app.post('/send-shipping-reminder', requireAuth, async (req, res) => {
     } 
     // If reminder details were provided directly
     else if (reminderDetails) {
-      console.log(`Sending shipping reminder email to ${email} with provided details`);
       const result = await emailService.sendShippingReminderEmail(email, reminderDetails);
       
       if (result.success) {
@@ -2502,7 +2355,6 @@ app.post('/send-payout-notification', requireAuth, async (req, res) => {
     
     // If payoutId is provided but not payout details, fetch the payout from Stripe
     if (payoutId && !payoutDetails) {
-      console.log(`Fetching payout ${payoutId} from Stripe`);
       try {
         const payout = await stripe.payouts.retrieve(payoutId);
         
@@ -2535,7 +2387,6 @@ app.post('/send-payout-notification', requireAuth, async (req, res) => {
           transactionId: payout.id
         };
         
-        console.log(`Sending payout notification email for payout ${payoutId} to ${email}`);
         const result = await emailService.sendPayoutNotificationEmail(email, details);
         
         if (result.success) {
@@ -2551,7 +2402,6 @@ app.post('/send-payout-notification', requireAuth, async (req, res) => {
     } 
     // If payout details were provided directly
     else if (payoutDetails) {
-      console.log(`Sending payout notification email to ${email} with provided details`);
       const result = await emailService.sendPayoutNotificationEmail(email, payoutDetails);
       
       if (result.success) {
@@ -2581,7 +2431,6 @@ app.post('/send-monthly-sales-summary', requireAuth, async (req, res) => {
     // If sellerId, month, and year are provided but not summary details, 
     // generate the summary data
     if (sellerId && month && year && !summaryDetails) {
-      console.log(`Generating sales summary for seller ${sellerId} for ${month}/${year}`);
       try {
         // Get seller details
         const sellerDoc = await db.collection('users').doc(sellerId).get();
@@ -2608,9 +2457,7 @@ app.post('/send-monthly-sales-summary', requireAuth, async (req, res) => {
           .where('createdAt', '<=', endDate)
           .where('status', 'in', ['paid', 'shipped', 'delivered', 'completed'])
           .get();
-        
-        console.log(`Found ${ordersSnapshot.docs.length} orders for seller ${sellerId} in ${monthName}`);
-        
+
         // Calculate sales metrics
         let totalSales = 0;
         let totalFees = 0;
@@ -2677,7 +2524,6 @@ app.post('/send-monthly-sales-summary', requireAuth, async (req, res) => {
           topPerformingItem
         };
         
-        console.log(`Sending monthly sales summary email for ${monthName} ${year} to ${email}`);
         const result = await emailService.sendMonthlySalesSummaryEmail(email, details);
         
         if (result.success) {
@@ -2693,7 +2539,6 @@ app.post('/send-monthly-sales-summary', requireAuth, async (req, res) => {
     } 
     // If summary details were provided directly
     else if (summaryDetails) {
-      console.log(`Sending monthly sales summary email to ${email} with provided details`);
       const result = await emailService.sendMonthlySalesSummaryEmail(email, summaryDetails);
       
       if (result.success) {
@@ -2725,23 +2570,18 @@ app.post('/update-connect-account', async (req, res) => {
       websiteUrl
     } = req.body;
     
-    console.log(`Updating connected account for user ${userId}`);
-    
     if (!userId) {
-      console.log('Missing userId');
       return res.status(400).json({ error: 'Missing userId' });
     }
-    
+
     // Get user's Stripe account ID from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) {
-      console.log(`User ${userId} not found`);
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userData = userDoc.data();
     if (!userData.stripeAccountId) {
-      console.log(`User ${userId} does not have a Stripe account`);
       return res.status(400).json({ error: 'User does not have a Stripe account' });
     }
     
@@ -2767,15 +2607,8 @@ app.post('/update-connect-account', async (req, res) => {
       url: effectiveUrl
     };
     
-    console.log(`Updating Stripe account ${userData.stripeAccountId} with:`, JSON.stringify(updateParams, null, 2));
-    
     // Update the Stripe account
     const updatedAccount = await stripe.accounts.update(userData.stripeAccountId, updateParams);
-    
-    console.log(`Stripe account updated successfully:`, {
-      id: updatedAccount.id,
-      requirements: updatedAccount.requirements?.currently_due || []
-    });
     
     // Update user record in Firestore with updated Stripe status
     const userUpdates = {
@@ -2785,7 +2618,6 @@ app.post('/update-connect-account', async (req, res) => {
     };
     
     await db.collection('users').doc(userId).update(userUpdates);
-    console.log(`User ${userId} updated with first/last name`);
     
     res.json({ 
       success: true, 
@@ -2815,20 +2647,17 @@ app.post('/create-customer', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId or email' });
     }
     
-    console.log(`Creating/retrieving customer for user ${userId} with email ${email}`);
     
     // First, check if the user already has a Stripe customer ID in Firestore
     try {
       const userDoc = await db.collection('users').doc(userId).get();
       if (userDoc.exists && userDoc.data().stripeCustomerId) {
-        console.log(`User ${userId} already has a Stripe customer: ${userDoc.data().stripeCustomerId}`);
         
         // Check if the customer still exists in Stripe
         try {
           const customer = await stripe.customers.retrieve(userDoc.data().stripeCustomerId);
           
           if (customer && !customer.deleted) {
-            console.log(`Found existing Stripe customer: ${customer.id}`);
             return res.json({ customerId: customer.id });
           }
         } catch (stripeError) {
@@ -2851,7 +2680,6 @@ app.post('/create-customer', async (req, res) => {
       }
     });
     
-    console.log(`Created new Stripe customer: ${customer.id}`);
     
     // Update the user record in Firestore with the Stripe customer ID
     await db.collection('users').doc(userId).update({
@@ -2877,7 +2705,6 @@ app.post('/create-setup-intent', async (req, res) => {
       return res.status(400).json({ error: 'Missing customerId' });
     }
     
-    console.log(`Creating SetupIntent for customer ${customerId}`);
     
     // Create a SetupIntent
     const setupIntent = await stripe.setupIntents.create({
@@ -2886,7 +2713,6 @@ app.post('/create-setup-intent', async (req, res) => {
       usage: 'off_session' // Allow the payment method to be used for future off-session payments
     });
     
-    console.log(`Created SetupIntent: ${setupIntent.id}`);
     
     res.json({ clientSecret: setupIntent.client_secret });
   } catch (error) {
@@ -2906,7 +2732,6 @@ app.post('/get-payment-methods', async (req, res) => {
       return res.status(400).json({ error: 'Missing customerId' });
     }
     
-    console.log(`Getting payment methods for customer ${customerId}`);
     
     // Get all payment methods for the customer
     const paymentMethods = await stripe.paymentMethods.list({
@@ -2914,7 +2739,6 @@ app.post('/get-payment-methods', async (req, res) => {
       type: 'card'
     });
     
-    console.log(`Found ${paymentMethods.data.length} payment methods`);
     
     // Get the customer to check for default payment method
     const customer = await stripe.customers.retrieve(customerId);
@@ -2944,8 +2768,6 @@ app.post('/update-payment-method', async (req, res) => {
       return res.status(400).json({ error: 'Missing customerId or paymentMethodId' });
     }
     
-    console.log(`Updating payment method ${paymentMethodId} for customer ${customerId}`);
-    console.log(`isDefault: ${isDefault}, nickname: ${nickname}`);
     
     // Update payment method metadata if a nickname is provided
     if (nickname) {
@@ -2954,7 +2776,6 @@ app.post('/update-payment-method', async (req, res) => {
           nickname
         }
       });
-      console.log(`Updated payment method metadata with nickname: ${nickname}`);
     }
     
     // Set as default payment method if requested
@@ -2964,7 +2785,6 @@ app.post('/update-payment-method', async (req, res) => {
           default_payment_method: paymentMethodId
         }
       });
-      console.log(`Set payment method ${paymentMethodId} as default for customer ${customerId}`);
     }
     
     res.json({ success: true });
@@ -2985,7 +2805,6 @@ app.post('/detach-payment-method', async (req, res) => {
       return res.status(400).json({ error: 'Missing paymentMethodId' });
     }
     
-    console.log(`Detaching payment method ${paymentMethodId}`);
     
     // Retrieve the payment method to get the customer ID
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
@@ -2993,7 +2812,6 @@ app.post('/detach-payment-method', async (req, res) => {
     
     // Detach the payment method
     const detachedPaymentMethod = await stripe.paymentMethods.detach(paymentMethodId);
-    console.log(`Detached payment method ${detachedPaymentMethod.id}`);
     
     // Check if this was the default payment method
     if (customerId) {
@@ -3002,7 +2820,6 @@ app.post('/detach-payment-method', async (req, res) => {
         
         // If this was the default payment method, try to set a new default
         if (customer.invoice_settings?.default_payment_method === paymentMethodId) {
-          console.log(`Detached payment method was the default, finding a new default...`);
           
           // Get remaining payment methods
           const paymentMethods = await stripe.paymentMethods.list({
@@ -3017,9 +2834,7 @@ app.post('/detach-payment-method', async (req, res) => {
                 default_payment_method: paymentMethods.data[0].id
               }
             });
-            console.log(`Set new default payment method: ${paymentMethods.data[0].id}`);
           } else {
-            console.log(`No remaining payment methods to set as default`);
           }
         }
       } catch (customerError) {
@@ -3054,7 +2869,6 @@ app.get('/get-seller-balance', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
 
-    console.log(`Getting seller balance for user ${userId}`);
 
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -3105,7 +2919,6 @@ app.get('/get-seller-transfers', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
 
-    console.log(`Getting transfer history for user ${userId}`);
 
     // Get the user from Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -3165,7 +2978,6 @@ app.get('/get-seller-orders', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId parameter' });
     }
 
-    console.log(`Getting orders for seller ${userId}`);
 
     const resultLimit = Math.min(parseInt(queryLimit) || 50, 100);
 
@@ -3254,7 +3066,6 @@ app.post('/create-refund', async (req, res) => {
       return res.status(400).json({ error: 'Missing orderId' });
     }
 
-    console.log(`Processing refund for order ${orderId}`);
 
     // Get the order from Firestore
     const orderDoc = await db.collection('orders').doc(orderId).get();
@@ -3287,7 +3098,7 @@ app.post('/create-refund', async (req, res) => {
     // Create the refund in Stripe
     const refund = await stripe.refunds.create(refundParams);
 
-    console.log(`Refund ${refund.id} created for order ${orderId}, amount: ${refund.amount / 100}`);
+    console.log(`Refund created: ${refund.id}, order=${orderId}, amount=$${refund.amount / 100}`);
 
     // Reverse associated transfers to sellers
     const transfersSnapshot = await db.collection('transfers')
@@ -3316,7 +3127,6 @@ app.post('/create-refund', async (req, res) => {
           reversalParams
         );
 
-        console.log(`Transfer ${transfer.transferId} reversed: ${reversal.id}`);
 
         // Update transfer record
         await transferDoc.ref.update({
@@ -3363,7 +3173,6 @@ app.post('/create-refund', async (req, res) => {
           paymentMethod: 'Refund',
           isRefund: true
         });
-        console.log(`Refund notification sent to ${buyerEmail}`);
       }
     } catch (emailError) {
       console.error('Error sending refund notification:', emailError);
@@ -3402,7 +3211,6 @@ if (functions.pubsub && typeof functions.pubsub.schedule === 'function') {
 exports.sendListingExpirationReminders = functions.pubsub
   .schedule('0 9 * * *')
   .onRun(async (context) => {
-    console.log('Running scheduled listing expiration reminders');
     
     try {
       // Get listings expiring in 3 days
@@ -3419,7 +3227,7 @@ exports.sendListingExpirationReminders = functions.pubsub
         .limit(100) // Process in batches
         .get();
       
-      console.log(`Found ${listingsSnapshot.docs.length} listings expiring soon`);
+      console.log(`Expiration reminders: ${listingsSnapshot.docs.length} listings expiring soon`);
       
       // Send notifications for each listing
       for (const doc of listingsSnapshot.docs) {
@@ -3427,7 +3235,6 @@ exports.sendListingExpirationReminders = functions.pubsub
         const sellerId = listing.userId || listing.sellerId;
         
         if (!sellerId) {
-          console.log(`Listing ${doc.id} has no seller ID, skipping`);
           continue;
         }
         
@@ -3436,18 +3243,16 @@ exports.sendListingExpirationReminders = functions.pubsub
           const sellerDoc = await db.collection('users').doc(sellerId).get();
           
           if (!sellerDoc.exists) {
-            console.log(`Seller ${sellerId} not found, skipping`);
             continue;
           }
-          
+
           const seller = sellerDoc.data();
           const sellerEmail = seller.email || seller.contactEmail;
-          
+
           if (!sellerEmail) {
-            console.log(`Seller ${sellerId} has no email, skipping`);
             continue;
           }
-          
+
           // Format expiration date
           const expirationDate = listing.expiresAt ? 
             new Date(listing.expiresAt.toDate ? listing.expiresAt.toDate() : listing.expiresAt).toLocaleDateString() : 
@@ -3476,7 +3281,6 @@ exports.sendListingExpirationReminders = functions.pubsub
             }
           );
           
-          console.log(`Expiration reminder email for listing ${doc.id} sent to ${sellerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
           
           // Add a small delay to prevent rate limiting
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -3498,7 +3302,6 @@ exports.sendListingExpirationReminders = functions.pubsub
 exports.sendShippingReminders = functions.pubsub
   .schedule('0 10 * * *')
   .onRun(async (context) => {
-    console.log('Running scheduled shipping reminders');
     
     try {
       // Get orders that are 2 days old and not shipped yet
@@ -3515,7 +3318,7 @@ exports.sendShippingReminders = functions.pubsub
         .limit(100) // Process in batches
         .get();
       
-      console.log(`Found ${ordersSnapshot.docs.length} unshipped orders from 2+ days ago`);
+      console.log(`Shipping reminders: ${ordersSnapshot.docs.length} unshipped orders`);
       
       // Send reminders for each order
       for (const doc of ordersSnapshot.docs) {
@@ -3523,7 +3326,6 @@ exports.sendShippingReminders = functions.pubsub
         
         // Skip if no items
         if (!order.items || order.items.length === 0) {
-          console.log(`Order ${doc.id} has no items, skipping`);
           continue;
         }
         
@@ -3535,7 +3337,6 @@ exports.sendShippingReminders = functions.pubsub
           const sellerId = item.sellerId || item.userId;
           
           if (!sellerId) {
-            console.log(`Item ${item.id} in order ${doc.id} has no seller ID, skipping`);
             continue;
           }
           
@@ -3553,7 +3354,6 @@ exports.sendShippingReminders = functions.pubsub
             const sellerDoc = await db.collection('users').doc(sellerId).get();
             
             if (!sellerDoc.exists) {
-              console.log(`Seller ${sellerId} not found, skipping`);
               continue;
             }
             
@@ -3561,7 +3361,6 @@ exports.sendShippingReminders = functions.pubsub
             const sellerEmail = seller.email || seller.contactEmail;
             
             if (!sellerEmail) {
-              console.log(`Seller ${sellerId} has no email, skipping`);
               continue;
             }
             
@@ -3605,7 +3404,6 @@ exports.sendShippingReminders = functions.pubsub
               }
             );
             
-            console.log(`Shipping reminder email for order ${doc.id} sent to seller ${sellerId} (${sellerEmail}): ${emailResult.success ? 'Success' : 'Failed'}`);
             
             // Add a small delay to prevent rate limiting
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -3628,7 +3426,6 @@ exports.sendShippingReminders = functions.pubsub
 exports.sendReviewRequests = functions.pubsub
   .schedule('0 11 * * *')
   .onRun(async (context) => {
-    console.log('Running scheduled review request emails');
     
     try {
       // Get orders that were delivered 3 days ago
@@ -3649,7 +3446,7 @@ exports.sendReviewRequests = functions.pubsub
         .limit(100) // Process in batches
         .get();
       
-      console.log(`Found ${ordersSnapshot.docs.length} orders delivered 3 days ago`);
+      console.log(`Review requests: ${ordersSnapshot.docs.length} orders delivered 3 days ago`);
       
       // Send review requests for each order
       for (const doc of ordersSnapshot.docs) {
@@ -3657,7 +3454,6 @@ exports.sendReviewRequests = functions.pubsub
         
         // Skip guest orders if no email
         if (order.userId === 'guest' && !order.userEmail) {
-          console.log(`Guest order ${doc.id} has no email, skipping`);
           continue;
         }
         
@@ -3678,7 +3474,6 @@ exports.sendReviewRequests = functions.pubsub
           }
           
           if (!buyerEmail) {
-            console.log(`Order ${doc.id} has no buyer email, skipping`);
             continue;
           }
           
@@ -3711,7 +3506,6 @@ exports.sendReviewRequests = functions.pubsub
             }
           );
           
-          console.log(`Review request email for order ${doc.id} sent to ${buyerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
           
           // Mark that review request has been sent
           await db.collection('orders').doc(doc.id).update({
@@ -3739,7 +3533,6 @@ exports.sendReviewRequests = functions.pubsub
 exports.sendMonthlySalesSummaries = functions.pubsub
   .schedule('0 5 1 * *')
   .onRun(async (context) => {
-    console.log('Running scheduled monthly sales summary emails');
     
     try {
       // Get the previous month details
@@ -3750,7 +3543,7 @@ exports.sendMonthlySalesSummaries = functions.pubsub
       const monthName = previousMonth.toLocaleString('default', { month: 'long' });
       const year = previousMonth.getFullYear();
       
-      console.log(`Generating sales summaries for ${monthName} ${year}`);
+      console.log(`Monthly sales summaries: generating for ${monthName} ${year}`);
       
       // Get all sellers
       const sellersSnapshot = await db.collection('users')
@@ -3758,7 +3551,6 @@ exports.sendMonthlySalesSummaries = functions.pubsub
         .limit(500) // Process in batches
         .get();
       
-      console.log(`Found ${sellersSnapshot.docs.length} sellers to process`);
       
       // Process each seller
       for (const sellerDoc of sellersSnapshot.docs) {
@@ -3769,10 +3561,9 @@ exports.sendMonthlySalesSummaries = functions.pubsub
           const sellerEmail = seller.email || seller.contactEmail;
           
           if (!sellerEmail) {
-            console.log(`Seller ${sellerId} has no email, skipping`);
             continue;
           }
-          
+
           // Get completed orders for this seller in the previous month
           const ordersSnapshot = await db.collection('orders')
             .where('items', 'array-contains', { sellerId: sellerId })
@@ -3781,11 +3572,8 @@ exports.sendMonthlySalesSummaries = functions.pubsub
             .where('status', 'in', ['paid', 'shipped', 'delivered', 'completed'])
             .get();
           
-          console.log(`Found ${ordersSnapshot.docs.length} orders for seller ${sellerId} in ${monthName}`);
-          
           // Skip if no orders
           if (ordersSnapshot.docs.length === 0) {
-            console.log(`No orders for seller ${sellerId} in ${monthName}, skipping`);
             continue;
           }
           
@@ -3859,7 +3647,6 @@ exports.sendMonthlySalesSummaries = functions.pubsub
             }
           );
           
-          console.log(`Monthly sales summary for ${monthName} ${year} sent to ${sellerEmail}: ${emailResult.success ? 'Success' : 'Failed'}`);
           
           // Add a small delay to prevent rate limiting
           await new Promise(resolve => setTimeout(resolve, 200));

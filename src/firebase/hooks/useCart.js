@@ -32,23 +32,18 @@ export function CartProvider({ children }) {
         setLoading(true);
         
         if (isAuthenticated() && user) {
-          console.log("useCart - Loading cart for authenticated user:", user.uid);
-          
           // Check if we need to migrate a guest cart to the user's cart
           const migratedCart = await migrateGuestCart(user.uid);
-          
+
           if (migratedCart) {
-            console.log("useCart - Migrated guest cart to user cart");
             setCart(migratedCart);
           } else {
             // No migration needed, just get the user's cart
             const userCart = await getOrCreateCart(user.uid);
-            console.log("useCart - Cart loaded:", userCart);
             setCart(userCart);
           }
         } else {
           // Use guest cart for unauthenticated users
-          console.log("useCart - Loading guest cart");
           const guestCart = await getOrCreateCart(null);
           setCart(guestCart);
         }

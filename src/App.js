@@ -59,15 +59,7 @@ function SellerStatusFix() {
   
   useEffect(() => {
     if (user?.uid) {
-      console.log('Checking if seller status needs fixing for:', user.uid);
       fixSellerStatus(user.uid)
-        .then(fixed => {
-          if (fixed) {
-            console.log('Fixed seller status for user:', user.uid);
-          } else {
-            console.log('No fixes needed for user:', user.uid);
-          }
-        })
         .catch(error => {
           console.error('Error fixing seller status:', error);
         });

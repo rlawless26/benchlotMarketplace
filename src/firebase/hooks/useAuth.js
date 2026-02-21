@@ -26,8 +26,6 @@ export function AuthProvider({ children }) {
 
   // Set up auth state listener
   useEffect(() => {
-    console.log("Setting up auth state listener");
-    
     // Set loading to true when initializing
     setLoading(true);
     
@@ -43,18 +41,14 @@ export function AuthProvider({ children }) {
       setLoading(true);
       try {
         if (firebaseUser) {
-          console.log("User signed in:", firebaseUser.uid);
-          
           const userRef = doc(db, 'users', firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           
           let userProfile = null;
           
           if (userSnap.exists()) {
-            console.log("User profile found in Firestore");
             userProfile = userSnap.data();
           } else {
-            console.log("No user profile found, creating...");
             // Create a basic profile with role field to satisfy security rules
             userProfile = {
               uid: firebaseUser.uid,
@@ -75,7 +69,6 @@ export function AuthProvider({ children }) {
             
             try {
               await setDoc(userRef, userProfile);
-              console.log("Created new user profile");
             } catch (err) {
               console.error("Error creating user profile:", err);
             }
@@ -97,11 +90,8 @@ export function AuthProvider({ children }) {
             profile: userProfile.profile || {}
           };
           
-          console.log('Merged user data:', JSON.stringify(userData, null, 2));
-          
           setUser(userData);
         } else {
-          console.log("User signed out or no user");
           setUser(null);
           setProfile(null);
         }
@@ -152,7 +142,6 @@ export function AuthProvider({ children }) {
       
       // Send welcome email
       try {
-        console.log("Sending welcome email to new user:", email);
         await emailService.sendAccountCreationEmail(email, userProfile.displayName);
       } catch (emailError) {
         // Don't fail signup if email fails
@@ -191,7 +180,6 @@ export function AuthProvider({ children }) {
       
       // Also send our customized email with more detailed instructions
       try {
-        console.log("Sending custom password reset email:", email);
         const resetLink = `${window.location.origin}/reset-password?email=${encodeURIComponent(email)}`;
         await emailService.sendPasswordResetEmail(email, resetLink);
       } catch (emailError) {
