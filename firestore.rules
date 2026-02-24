@@ -197,6 +197,15 @@ service cloud.firestore {
       allow read, write: if isServiceAccount() || isAdmin();
     }
     
+    // Waitlist signups (public, unauthenticated)
+    match /waitlist/{emailId} {
+      allow create, update: if request.resource.data.keys().hasOnly(['email', 'signed_up_at']) &&
+                               request.resource.data.email is string &&
+                               request.resource.data.email.size() > 0 &&
+                               request.resource.data.email.size() < 255;
+      allow read, delete: if isAdmin();
+    }
+
     // Feedback or reviews (if implemented)
     match /reviews/{reviewId} {
       // Anyone can read reviews

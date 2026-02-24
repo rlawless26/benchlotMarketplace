@@ -11,6 +11,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Page imports
+import WaitlistLandingPage from './Pages/WaitlistLandingPage';
 import LandingPage from './Pages/LandingPage';
 import LandingPageNew from './Pages/LandingPageNew';
 import MarketplacePage from './Pages/MarketplacePage';
@@ -69,6 +70,78 @@ function SellerStatusFix() {
   return null;
 }
 
+// Layout wrapper for the full marketplace app (with header/footer)
+function AppLayout() {
+  return (
+    <div className="App min-h-screen flex flex-col bg-stone-50">
+      <SellerStatusFix />
+      <Header />
+      <main className="flex-grow">
+        <Routes>
+          {/* Original landing pages preserved at alternate routes */}
+          <Route path="/app-home" element={<LandingPageNew />} />
+          <Route path="/old-home" element={<LandingPage />} />
+
+          {/* Marketplace */}
+          <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/browse" element={<MarketplacePage />} />
+
+          {/* Tool Routes */}
+          <Route path="/tools/:id" element={<ToolDetailPage />} />
+          <Route path="/tools/new" element={<ToolListingFormPage />} />
+          <Route path="/tools/edit/:id" element={<ToolListingFormPage />} />
+
+          {/* Seller Tool Routes */}
+          <Route path="/seller/tools/new" element={<ToolListingFormPage />} />
+
+          {/* User Routes */}
+          <Route path="/my-listings" element={<MyListingsPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/messages/conversation/:conversationId" element={<MessagesPage />} />
+
+          {/* Cart Routes */}
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+
+          {/* Order Routes */}
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
+          <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+          <Route path="/order-complete" element={<OrderConfirmationPage />} />
+
+          {/* Seller Routes */}
+          <Route path="/sell" element={<SellerLandingPage />} />
+          <Route path="/seller/signup" element={<SellerSignupPage />} />
+          <Route path="/seller/onboarding" element={<SellerOnboardingPage />} />
+          <Route path="/seller/onboarding/refresh" element={<SellerOnboardingPage />} />
+          <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
+          <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+
+          {/* New Tool-First Seller Flow */}
+          <Route path="/seller/onboard-and-list" element={<SellerOnboardAndListPage />} />
+          <Route path="/seller/create-pending-listing" element={<CreatePendingListingPage />} />
+          <Route path="/seller/bank-details" element={<BankDetailsPage />} />
+
+          {/* About, Help, Legal and Categories */}
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+
+          {/* 404 Not Found */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
+      <Footer />
+      <EnvironmentDisplay />
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -76,78 +149,15 @@ function App() {
         <SellerProvider>
           <NotificationProvider>
             <Router>
-              <div className="App min-h-screen flex flex-col bg-stone-50">
-                <ScrollToTop />
-                <SellerStatusFix />
-              <Header />
-              
-              <main className="flex-grow">
-                <Routes>
-                  {/* Landing Page (Home) */}
-                  <Route path="/" element={<LandingPageNew />} />
-                  <Route path="/old-home" element={<LandingPage />} />
-                  
-                  {/* Marketplace */}
-                  <Route path="/marketplace" element={<MarketplacePage />} />
-                  <Route path="/browse" element={<MarketplacePage />} />
-                  
-                  {/* Tool Routes */}
-                  <Route path="/tools/:id" element={<ToolDetailPage />} />
-                  <Route path="/tools/new" element={<ToolListingFormPage />} />
-                  <Route path="/tools/edit/:id" element={<ToolListingFormPage />} />
-                  
-                  {/* Seller Tool Routes */}
-                  <Route path="/seller/tools/new" element={<ToolListingFormPage />} />
-                  
-                  {/* User Routes */}
-                  <Route path="/my-listings" element={<MyListingsPage />} />
-                  {/* Preserved for backward compatibility but not used by new flows */}
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route path="/wishlist" element={<WishlistPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/messages/conversation/:conversationId" element={<MessagesPage />} />
-                  
-                  {/* Cart Routes */}
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
-                  
-                  {/* Order Routes */}
-                  <Route path="/orders" element={<OrdersPage />} />
-                  <Route path="/orders/:id" element={<OrderDetailPage />} />
-                  <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
-                  <Route path="/order-complete" element={<OrderConfirmationPage />} />
-                  
-                  {/* Seller Routes */}
-                  <Route path="/sell" element={<SellerLandingPage />} />
-                  <Route path="/seller/signup" element={<SellerSignupPage />} />
-                  <Route path="/seller/onboarding" element={<SellerOnboardingPage />} />
-                  <Route path="/seller/onboarding/refresh" element={<SellerOnboardingPage />} />
-                  <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
-                  <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
-                  
-                  {/* New Tool-First Seller Flow */}
-                  <Route path="/seller/onboard-and-list" element={<SellerOnboardAndListPage />} />
-                  <Route path="/seller/create-pending-listing" element={<CreatePendingListingPage />} />
-                  <Route path="/seller/bank-details" element={<BankDetailsPage />} />
-                  
-                  {/* About, Help, Legal and Categories */}
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/help" element={<HelpPage />} />
-                  <Route path="/categories" element={<CategoriesPage />} />
-                  <Route path="/terms" element={<TermsPage />} />
-                  <Route path="/privacy" element={<PrivacyPage />} />
-
-                  {/* 404 Not Found */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              
-              <Footer />
-              <EnvironmentDisplay />
+              <ScrollToTop />
+              <Routes>
+                {/* Standalone waitlist landing page — no header/footer */}
+                <Route path="/" element={<WaitlistLandingPage />} />
+                {/* All other routes render inside the app layout */}
+                <Route path="/*" element={<AppLayout />} />
+              </Routes>
               <Analytics />
               <SpeedInsights />
-            </div>
             </Router>
           </NotificationProvider>
         </SellerProvider>
