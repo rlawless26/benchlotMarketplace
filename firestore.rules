@@ -192,6 +192,16 @@ service cloud.firestore {
       allow write: if isServiceAccount() || isAdmin();
     }
 
+    // Waitlist signups (anonymous access for landing page)
+    match /waitlist/{docId} {
+      // Anyone can create a waitlist entry (no auth required)
+      allow create: if request.resource.data.keys().hasAll(['email', 'signed_up_at'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() > 0;
+      // Only admins can read/update/delete
+      allow read, update, delete: if isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();
