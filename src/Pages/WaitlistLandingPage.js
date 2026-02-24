@@ -1,6 +1,6 @@
 // src/Pages/WaitlistLandingPage.js
 import React, { useState } from 'react';
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Search, Users, ShieldCheck } from 'lucide-react';
 
@@ -15,23 +15,8 @@ const WaitlistLandingPage = () => {
     setSubmitStatus({ type: '', message: '' });
 
     try {
-      // Check for duplicate email
-      const waitlistRef = collection(db, 'waitlist');
-      const q = query(waitlistRef, where('email', '==', email.toLowerCase().trim()));
-      const existing = await getDocs(q);
-
-      if (!existing.empty) {
-        setSubmitStatus({
-          type: 'success',
-          message: "You're already on the list! We'll be in touch soon."
-        });
-        setEmail('');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Write to Firestore
-      await addDoc(waitlistRef, {
+      // Write to Firestore (duplicates handled server-side by HubSpot 409)
+      await addDoc(collection(db, 'waitlist'), {
         email: email.toLowerCase().trim(),
         signed_up_at: serverTimestamp()
       });
