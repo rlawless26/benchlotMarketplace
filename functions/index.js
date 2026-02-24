@@ -3201,6 +3201,70 @@ exports.stripeApi = exports.api;
 // Note: Email test functions have been removed after successful testing
 
 /**
+ * Sync new waitlist signups to HubSpot as contacts.
+ * Triggers on every new document created in the 'waitlist' collection.
+ * Uses firebase-functions v2 Firestore trigger syntax.
+ */
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+
+exports.syncWaitlistToHubSpot = onDocumentCreated('waitlist/{docId}', async (event) => {
+  const snap = event.data;
+  if (!snap) {
+    console.error('No data in event');
+    return null;
+  }
+
+  const data = snap.data();
+  const email = data.email;
+
+  if (!email) {
+    console.error('Waitlist doc missing email:', event.params.docId);
+    return null;
+  }
+
+  const hubspotApiKey = process.env.HUBSPOT_API_KEY;
+  if (!hubspotApiKey) {
+    console.error('HUBSPOT_API_KEY not set — skipping HubSpot sync');
+    return null;
+  }
+
+  const axios = require('axios');
+
+  try {
+    await axios.post(
+      'https://api.hubapi.com/crm/v3/objects/contacts',
+      {
+        properties: {
+          email: email,
+          lifecyclestage: 'subscriber',
+          hs_lead_status: 'NEW'
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${hubspotApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log(`HubSpot contact created for ${email}`);
+    await snap.ref.update({ hubspot_synced: true });
+  } catch (error) {
+    // 409 = contact already exists in HubSpot — not an error
+    if (error.response && error.response.status === 409) {
+      console.log(`HubSpot contact already exists for ${email}`);
+      await snap.ref.update({ hubspot_synced: true, hubspot_existing: true });
+    } else {
+      console.error('HubSpot sync error:', error.response?.data || error.message);
+      await snap.ref.update({ hubspot_synced: false, hubspot_error: error.message });
+    }
+  }
+
+  return null;
+});
+
+/**
  * Scheduled Functions for email notifications
  * Note: These use Firebase Functions v1 pubsub.schedule() syntax,
  * which is only available when deployed via Firebase CLI (not gcloud functions deploy).
