@@ -101,6 +101,7 @@ Testing Sheets/
 # temporary files and test scripts
 fix-*.js
 test-*.js
+!src/test-utils.js
 create-*.js
 admin-create-*.js
 populate-*.js
