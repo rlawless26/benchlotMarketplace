@@ -111,6 +111,7 @@ const generalLimiter = rateLimit({
   max: 100, // 100 requests per window per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { ip: false }, // Disable IP validation for Firebase emulator compatibility
   message: { error: 'Too many requests, please try again later.' }
 });
 
@@ -119,6 +120,7 @@ const strictLimiter = rateLimit({
   max: 10, // 10 requests per window per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { ip: false }, // Disable IP validation for Firebase emulator compatibility
   message: { error: 'Too many requests, please try again later.' }
 });
 
@@ -3188,6 +3190,161 @@ app.post('/create-refund', async (req, res) => {
   } catch (error) {
     console.error('Error creating refund:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── ToolScan Endpoint ───────────────────────────────────────────────────────
+
+const Anthropic = require('@anthropic-ai/sdk');
+const { TOOLSCAN_SYSTEM_PROMPT } = require('./toolscan-prompt');
+
+// Rate-limit ToolScan more tightly (costs real money per call)
+const toolscanLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // 20 scans per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { ip: false }, // Disable IP validation for Firebase emulator compatibility
+  message: { error: 'Too many scan requests, please try again later.' }
+});
+
+/**
+ * POST /toolscan
+ * Accepts a base64-encoded image (or array of images) and optional context.
+ * Returns structured tool identifications via Claude vision.
+ *
+ * Body: { images: [{ data: "base64...", media_type: "image/jpeg" }], context?: string }
+ */
+app.post('/toolscan', toolscanLimiter, requireAuth, async (req, res) => {
+  try {
+    const { images, context } = req.body;
+
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ error: 'At least one image is required.' });
+    }
+
+    if (images.length > 5) {
+      return res.status(400).json({ error: 'Maximum 5 images per scan.' });
+    }
+
+    // Validate each image
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    for (const img of images) {
+      if (!img.data || !img.media_type) {
+        return res.status(400).json({ error: 'Each image must have data and media_type fields.' });
+      }
+      if (!allowedTypes.includes(img.media_type)) {
+        return res.status(400).json({ error: `Unsupported image type: ${img.media_type}. Use JPEG, PNG, or WebP.` });
+      }
+    }
+
+    // Initialize Anthropic client
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicKey) {
+      console.error('ANTHROPIC_API_KEY environment variable is not set.');
+      return res.status(500).json({ error: 'ToolScan is not configured. Missing API key.' });
+    }
+
+    const anthropic = new Anthropic({ apiKey: anthropicKey });
+
+    // Build the user message content: image blocks + optional context
+    const content = [];
+
+    for (const img of images) {
+      content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: img.media_type,
+          data: img.data,
+        },
+      });
+    }
+
+    // Add user context if provided
+    let userText = 'Identify all hand tools visible in the image(s) and generate listing details.';
+    if (context && context.trim()) {
+      userText += `\n\nSeller context: "${context.trim()}"`;
+    }
+    content.push({ type: 'text', text: userText });
+
+    // Call Claude API
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      temperature: 0,
+      system: TOOLSCAN_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content }],
+    });
+
+    // Extract the text response
+    const responseText = message.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('');
+
+    // Parse JSON from response — Claude may wrap in ```json ... ```
+    let parsed;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in response');
+      }
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (parseError) {
+      console.error('Failed to parse ToolScan response:', parseError.message);
+      console.error('Raw response:', responseText.substring(0, 500));
+      return res.status(500).json({
+        error: 'Failed to parse tool identification results.',
+        raw: responseText,
+      });
+    }
+
+    // Store the scan session in Firestore
+    const scanSession = {
+      userId: req.user.uid,
+      imageCount: images.length,
+      toolCount: parsed.tools ? parsed.tools.length : 0,
+      context: context || null,
+      results: parsed,
+      model: 'claude-sonnet-4-20250514',
+      usage: {
+        input_tokens: message.usage?.input_tokens || 0,
+        output_tokens: message.usage?.output_tokens || 0,
+      },
+      createdAt: admin.firestore.FieldValue
+        ? admin.firestore.FieldValue.serverTimestamp()
+        : new Date(),
+    };
+
+    let scanRefId;
+    try {
+      const scanRef = await db.collection('toolscans').add(scanSession);
+      scanRefId = scanRef.id;
+    } catch (firestoreError) {
+      // Don't fail the scan if Firestore write fails — still return results
+      console.error('Failed to store scan session:', firestoreError.message);
+      scanRefId = null;
+    }
+
+    res.json({
+      success: true,
+      scanId: scanRefId,
+      results: parsed,
+    });
+  } catch (error) {
+    console.error('ToolScan error:', error.message || error);
+    console.error('ToolScan error stack:', error.stack);
+
+    // Handle Anthropic API errors specifically
+    if (error.status === 429) {
+      return res.status(429).json({ error: 'AI service rate limit reached. Please try again in a moment.' });
+    }
+    if (error.status === 400) {
+      return res.status(400).json({ error: 'Image could not be processed. Try a different photo.' });
+    }
+
+    res.status(500).json({ error: error.message || 'An error occurred during tool scanning.' });
   }
 });
 

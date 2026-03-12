@@ -22,6 +22,7 @@ import CartPage from './Pages/CartPage';
 import CheckoutPage from './Pages/CheckoutPage';
 import OrderConfirmationPage from './Pages/OrderConfirmationPage';
 import ToolListingFormPage from './Pages/ToolListingFormPage';
+import ToolScanPage from './Pages/ToolScanPage';
 import AboutPage from './Pages/AboutPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
@@ -93,6 +94,9 @@ function AppLayout() {
           {/* Marketplace */}
           <Route path="/marketplace" element={<MarketplacePage />} />
           <Route path="/browse" element={<MarketplacePage />} />
+
+          {/* ToolScan */}
+          <Route path="/scan" element={<ToolScanPage />} />
 
           {/* Tool Routes */}
           <Route path="/tools/:id" element={<ToolDetailPage />} />
