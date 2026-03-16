@@ -1,5 +1,5 @@
 // src/Pages/ToolScanPage.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { Camera, Upload, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
@@ -35,6 +35,10 @@ const ToolScanPage = () => {
 
   // Publishing state
   const [publishingTools, setPublishingTools] = useState({});
+
+  useEffect(() => {
+    document.title = 'ToolScan | Rekerf';
+  }, []);
 
   const handleFileSelect = useCallback((e) => {
     const files = Array.from(e.target.files);
@@ -210,13 +214,13 @@ const ToolScanPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="min-h-screen bg-bone flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-serif font-semibold text-benchlot-primary mb-4">Sign in to use ToolScan</h2>
-          <p className="text-gray-600 mb-6">You need an account to scan and list tools.</p>
+          <h2 className="text-2xl font-display font-semibold text-spruce mb-4">Sign in to use ToolScan</h2>
+          <p className="text-secondary mb-6">You need an account to scan and list tools.</p>
           <button
             onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-benchlot-primary text-white rounded-lg hover:bg-benchlot-secondary transition-colors"
+            className="px-6 py-3 bg-honey text-dark-teal rounded-lg hover:bg-honey-light transition-colors"
           >
             Sign In
           </button>
@@ -226,25 +230,25 @@ const ToolScanPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-bone">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-serif font-semibold text-benchlot-primary">ToolScan</h1>
+            <Sparkles className="w-8 h-8 text-honey" />
+            <h1 className="text-3xl font-display font-semibold text-spruce">ToolScan</h1>
           </div>
-          <p className="text-gray-600 text-lg">
+          <p className="text-secondary text-lg">
             Snap a photo of your tools and let AI identify them, generate descriptions, and suggest prices.
           </p>
         </div>
 
-        {/* Upload Section — shown when no results yet */}
+        {/* Upload Section -- shown when no results yet */}
         {!scanResults && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-6 mb-6">
             {/* Image upload area */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-dark-teal mb-3">
                 Upload photos of your tools
               </label>
 
@@ -252,11 +256,11 @@ const ToolScanPage = () => {
               {previews.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
                   {previews.map((preview, i) => (
-                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-stone-200">
                       <img src={preview} alt={`Upload ${i + 1}`} className="w-full h-full object-cover" />
                       <button
                         onClick={() => removeFile(i)}
-                        className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                        className="absolute top-2 right-2 p-1 bg-spruce/50 rounded-full text-bone hover:bg-spruce/70 transition-colors"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -265,9 +269,9 @@ const ToolScanPage = () => {
 
                   {/* Add more button */}
                   {previews.length < MAX_IMAGES && (
-                    <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
-                      <Plus className="w-8 h-8 text-gray-400" />
-                      <span className="text-sm text-gray-500 mt-1">Add more</span>
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-stone-300 flex flex-col items-center justify-center cursor-pointer hover:border-honey hover:bg-honey/5 transition-colors">
+                      <Plus className="w-8 h-8 text-stone-400" />
+                      <span className="text-sm text-secondary mt-1">Add more</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -282,18 +286,18 @@ const ToolScanPage = () => {
 
               {/* Initial upload drop zone */}
               {previews.length === 0 && (
-                <label className="block border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                <label className="block border-2 border-dashed border-stone-300 rounded-xl p-12 text-center cursor-pointer hover:border-honey hover:bg-honey/5 transition-colors">
                   <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
-                      <Camera className="w-8 h-8 text-gray-400" />
+                    <div className="w-16 h-16 rounded-full bg-bone flex items-center justify-center mb-4">
+                      <Camera className="w-8 h-8 text-stone-400" />
                     </div>
-                    <p className="text-gray-700 font-medium mb-1">
+                    <p className="text-dark-teal font-medium mb-1">
                       Drop photos here or tap to upload
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-secondary">
                       Single tool, group shot, open toolbox — ToolScan handles it all
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-stone-400 mt-2">
                       JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.
                     </p>
                   </div>
@@ -312,7 +316,7 @@ const ToolScanPage = () => {
             <div className="mb-6">
               <button
                 onClick={() => setShowContext(!showContext)}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-benchlot-primary transition-colors"
+                className="flex items-center gap-2 text-sm text-secondary hover:text-spruce transition-colors"
               >
                 {showContext ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 Add context (optional)
@@ -322,7 +326,7 @@ const ToolScanPage = () => {
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
                   placeholder={'E.g., "These are from my grandfather\'s workshop" or "Found at an estate sale, mostly machinist tools"'}
-                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent/50 focus:border-accent resize-none"
+                  className="mt-3 w-full px-4 py-3 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-honey/50 focus:border-honey resize-none"
                   rows={3}
                 />
               )}
@@ -331,8 +335,8 @@ const ToolScanPage = () => {
             {/* Error display */}
             {scanError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{scanError}</p>
+                <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-error">{scanError}</p>
               </div>
             )}
 
@@ -340,7 +344,7 @@ const ToolScanPage = () => {
             <button
               onClick={handleScan}
               disabled={selectedFiles.length === 0 || scanning}
-              className="w-full py-3 px-6 bg-benchlot-primary text-white rounded-lg font-medium hover:bg-benchlot-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 px-6 bg-honey text-dark-teal rounded-lg font-medium hover:bg-honey-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {scanning ? (
                 <>
@@ -356,7 +360,7 @@ const ToolScanPage = () => {
             </button>
 
             {scanning && (
-              <p className="text-center text-sm text-gray-500 mt-3">
+              <p className="text-center text-sm text-secondary mt-3">
                 This usually takes 10-20 seconds depending on the number of tools.
               </p>
             )}
@@ -369,16 +373,16 @@ const ToolScanPage = () => {
             {/* Results header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-serif font-semibold text-benchlot-primary">
+                <h2 className="text-xl font-display font-semibold text-spruce">
                   {scanResults.tools.length} {scanResults.tools.length === 1 ? 'Tool' : 'Tools'} Identified
                 </h2>
                 {scanResults.general_notes && (
-                  <p className="text-sm text-gray-600 mt-1">{scanResults.general_notes}</p>
+                  <p className="text-sm text-secondary mt-1">{scanResults.general_notes}</p>
                 )}
               </div>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm border border-stone-300 rounded-lg hover:bg-bone-dark transition-colors"
               >
                 Scan New Photos
               </button>
@@ -386,8 +390,8 @@ const ToolScanPage = () => {
 
             {/* Tool cards */}
             {scanResults.tools.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-                <p className="text-gray-600">No tools were identified. Try a clearer photo with better lighting.</p>
+              <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
+                <p className="text-secondary">No tools were identified. Try a clearer photo with better lighting.</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -407,8 +411,8 @@ const ToolScanPage = () => {
             )}
 
             {/* Disclaimer */}
-            <div className="mt-8 p-4 bg-stone-100 rounded-lg">
-              <p className="text-xs text-gray-500">
+            <div className="mt-8 p-4 bg-bone rounded-lg">
+              <p className="text-xs text-secondary">
                 ToolScan uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing. Confidence levels indicate how certain the AI is about its identification.
               </p>
             </div>

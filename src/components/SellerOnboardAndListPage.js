@@ -240,9 +240,9 @@ const SellerOnboardAndListPage = () => {
         throw new Error('No Stripe URL received. Please try again.');
       }
       
-      // Fix URL for local development - intercept benchlot.com URLs and redirect to localhost
+      // Fix URL for local development - intercept rekerf.com URLs and redirect to localhost
       let redirectUrl = sellerAccountResult.url;
-      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('benchlot.com')) {
+      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('rekerf.com')) {
         // Extract the path and query params
         const urlObj = new URL(redirectUrl);
         const pathWithQuery = urlObj.pathname + urlObj.search;
@@ -304,10 +304,10 @@ const SellerOnboardAndListPage = () => {
   // Render loading state
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-spruce"></div>
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </main>
@@ -316,12 +316,12 @@ const SellerOnboardAndListPage = () => {
   }
   
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 md:p-8">
           {/* Header */}
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
-            {formStep === 1 ? 'Start Selling on Benchlot' : 
+            {formStep === 1 ? 'Start Selling on Rekerf' : 
              formStep === 2 ? 'Tell us about your tool' : 
              formStep === 3 ? 'Set up your payment details' :
              'Review your listing'}
@@ -335,7 +335,7 @@ const SellerOnboardAndListPage = () => {
           
           {/* Success message */}
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-6 flex items-start">
+            <div className="bg-green-50 border border-green-200 text-spruce px-4 py-3 rounded-md mb-6 flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
               <p>{successMessage}</p>
             </div>
@@ -345,31 +345,31 @@ const SellerOnboardAndListPage = () => {
           <div className="mb-8">
             <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 1 ? 'bg-green-700 text-white' : 'bg-gray-200'
+                formStep >= 1 ? 'bg-honey text-dark-teal' : 'bg-gray-200'
               }`}>
                 1
               </div>
               <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 2 ? 'bg-green-700' : 'bg-gray-200'
+                formStep >= 2 ? 'bg-spruce' : 'bg-gray-200'
               }`}></div>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 2 ? 'bg-green-700 text-white' : 'bg-gray-200'
+                formStep >= 2 ? 'bg-honey text-dark-teal' : 'bg-gray-200'
               }`}>
                 2
               </div>
               <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 3 ? 'bg-green-700' : 'bg-gray-200'
+                formStep >= 3 ? 'bg-spruce' : 'bg-gray-200'
               }`}></div>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 3 ? 'bg-green-700 text-white' : 'bg-gray-200'
+                formStep >= 3 ? 'bg-honey text-dark-teal' : 'bg-gray-200'
               }`}>
                 3
               </div>
               <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 4 ? 'bg-green-700' : 'bg-gray-200'
+                formStep >= 4 ? 'bg-spruce' : 'bg-gray-200'
               }`}></div>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 4 ? 'bg-green-700 text-white' : 'bg-gray-200'
+                formStep >= 4 ? 'bg-honey text-dark-teal' : 'bg-gray-200'
               }`}>
                 4
               </div>
@@ -389,7 +389,7 @@ const SellerOnboardAndListPage = () => {
                 Verify your email to continue
               </h2>
               <p className="mb-4">
-                We need to verify your email address before you can list tools on Benchlot.
+                We need to verify your email address before you can list tools on Rekerf.
                 Please check your inbox for a verification email from us.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -422,7 +422,7 @@ const SellerOnboardAndListPage = () => {
                       name="sellerName"
                       value={formData.sellerName}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                       required
                     />
                     <p className="text-sm text-gray-500 mt-1">This is how you'll appear to buyers</p>
@@ -457,7 +457,7 @@ const SellerOnboardAndListPage = () => {
                       </label>
                     </div>
                     {formData.sellerType === 'individual' && (
-                      <p className="text-sm text-green-600 mt-1">
+                      <p className="text-sm text-spruce mt-1">
                         Recommended: Faster verification for individuals
                       </p>
                     )}
@@ -475,7 +475,7 @@ const SellerOnboardAndListPage = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                         required
                         placeholder="Enter your city"
                       />
@@ -491,7 +491,7 @@ const SellerOnboardAndListPage = () => {
                         name="state"
                         value={formData.state}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
                         required
                       >
                         <option value="">Select a state</option>
@@ -512,7 +512,7 @@ const SellerOnboardAndListPage = () => {
                       name="contactEmail"
                       value={formData.contactEmail}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                       required
                     />
                   </div>
@@ -527,7 +527,7 @@ const SellerOnboardAndListPage = () => {
                       name="contactPhone"
                       value={formData.contactPhone}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                     />
                     <p className="text-sm text-gray-500 mt-1">Optional, but helps with local pickup</p>
                   </div>
@@ -543,7 +543,7 @@ const SellerOnboardAndListPage = () => {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      className="w-full py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium flex items-center justify-center"
+                      className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center justify-center"
                     >
                       <span>Continue to Tool Details</span>
                       <ChevronRight className="ml-2 h-4 w-4" />
@@ -571,7 +571,7 @@ const SellerOnboardAndListPage = () => {
                           name="toolName"
                           value={formData.toolName}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                           placeholder="e.g., Milwaukee M18 Drill"
                           required
                         />
@@ -587,7 +587,7 @@ const SellerOnboardAndListPage = () => {
                           name="category"
                           value={formData.category}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
                           required
                         >
                           <option value="">Select a category</option>
@@ -609,7 +609,7 @@ const SellerOnboardAndListPage = () => {
                           name="condition"
                           value={formData.condition}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700 bg-white"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
                           required
                         >
                           <option value="">Select condition</option>
@@ -632,7 +632,7 @@ const SellerOnboardAndListPage = () => {
                           name="brand"
                           value={formData.brand}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                           placeholder="e.g., Milwaukee, DeWalt, Makita"
                         />
                       </div>
@@ -648,7 +648,7 @@ const SellerOnboardAndListPage = () => {
                           name="model"
                           value={formData.model}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                           placeholder="e.g., M18 FUEL"
                         />
                       </div>
@@ -665,7 +665,7 @@ const SellerOnboardAndListPage = () => {
                         value={formData.description}
                         onChange={handleChange}
                         rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-700"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
                         placeholder="Provide details about your tool..."
                         required
                       />
@@ -694,7 +694,7 @@ const SellerOnboardAndListPage = () => {
                             onChange={handleChange}
                             min="0"
                             step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
                             placeholder="0"
                             required
                           />
@@ -718,7 +718,7 @@ const SellerOnboardAndListPage = () => {
                             onChange={handleChange}
                             min="0"
                             step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
                             placeholder="0"
                           />
                         </div>
@@ -740,7 +740,7 @@ const SellerOnboardAndListPage = () => {
                             shipping_price: e.target.checked ? '0' : formData.shipping_price
                           });
                         }}
-                        className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                        className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       />
                       <label htmlFor="free_shipping" className="ml-2 block text-sm text-gray-700">
                         Offer free shipping
@@ -764,7 +764,7 @@ const SellerOnboardAndListPage = () => {
                             onChange={handleChange}
                             min="0"
                             step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-green-700"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
                             placeholder="0"
                           />
                         </div>
@@ -785,7 +785,7 @@ const SellerOnboardAndListPage = () => {
                           <div className="flex flex-col mr-2 space-y-4">
                             <div>
                               {user?.emailVerified ? (
-                                <div className="bg-green-100 text-green-700 rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
+                                <div className="bg-green-100 text-spruce rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
                                   <Check className="h-3.5 w-3.5" />
                                 </div>
                               ) : (
@@ -815,7 +815,7 @@ const SellerOnboardAndListPage = () => {
                           <div className="flex flex-col space-y-4">
                             <div className="text-sm">
                               {user?.emailVerified ? (
-                                <span className="text-green-700 font-medium">Email verified</span>
+                                <span className="text-spruce font-medium">Email verified</span>
                               ) : (
                                 <div>
                                   <span className="text-blue-700">Verify your email address</span>{" "}
@@ -861,7 +861,7 @@ const SellerOnboardAndListPage = () => {
                       type="button"
                       onClick={handleFinalSubmit}
                       disabled={isSubmitting}
-                      className="px-6 py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium flex items-center"
+                      className="px-6 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center"
                     >
                       {isSubmitting ? (
                         <>

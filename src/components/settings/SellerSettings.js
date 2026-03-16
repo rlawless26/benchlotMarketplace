@@ -210,8 +210,8 @@ const SellerSettings = ({ user }) => {
         <button
           id={id}
           type="button"
-          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary ${
-            checked ? 'bg-benchlot-primary' : 'bg-stone-200'
+          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce ${
+            checked ? 'bg-spruce' : 'bg-stone-200'
           }`}
           role="switch"
           aria-checked={checked}
@@ -280,7 +280,7 @@ const SellerSettings = ({ user }) => {
           name="businessName"
           value={sellerData.businessName}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           placeholder="Your business or shop name"
         />
       </div>
@@ -298,7 +298,7 @@ const SellerSettings = ({ user }) => {
           name="businessType"
           value={sellerData.businessType}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce bg-white"
         >
           <option value="individual">Individual / Sole Proprietor</option>
           <option value="professional">Professional / Contractor</option>
@@ -320,7 +320,7 @@ const SellerSettings = ({ user }) => {
           value={sellerData.businessDescription}
           onChange={handleChange}
           rows="4"
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           placeholder="Describe your business, expertise, and the types of tools you offer"
         ></textarea>
       </div>
@@ -344,7 +344,7 @@ const SellerSettings = ({ user }) => {
               name="businessCity"
               value={sellerData.businessCity || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               placeholder="Your business city"
             />
           </div>
@@ -362,7 +362,7 @@ const SellerSettings = ({ user }) => {
               name="businessState"
               value={sellerData.businessState || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce bg-white"
             >
               <option value="">Select a state</option>
               {[
@@ -446,7 +446,7 @@ const SellerSettings = ({ user }) => {
               name="contactEmail"
               value={sellerData.contactEmail}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               placeholder="Your business email address"
             />
           </div>
@@ -465,7 +465,7 @@ const SellerSettings = ({ user }) => {
               name="contactPhone"
               value={sellerData.contactPhone}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               placeholder="Your business phone number"
             />
           </div>
@@ -483,7 +483,7 @@ const SellerSettings = ({ user }) => {
                   value="email"
                   checked={sellerData.preferredContactMethod === 'email'}
                   onChange={handleChange}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                 />
                 <span className="ml-2 text-sm text-stone-700">Email</span>
               </label>
@@ -494,7 +494,7 @@ const SellerSettings = ({ user }) => {
                   value="phone"
                   checked={sellerData.preferredContactMethod === 'phone'}
                   onChange={handleChange}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                 />
                 <span className="ml-2 text-sm text-stone-700">Phone</span>
               </label>
@@ -505,7 +505,7 @@ const SellerSettings = ({ user }) => {
                   value="message"
                   checked={sellerData.preferredContactMethod === 'message'}
                   onChange={handleChange}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                 />
                 <span className="ml-2 text-sm text-stone-700">Platform Message</span>
               </label>
@@ -545,7 +545,7 @@ const SellerSettings = ({ user }) => {
                 </p>
                 <button
                   type="button"
-                  className="mt-2 text-sm text-benchlot-primary hover:text-benchlot-secondary flex items-center"
+                  className="mt-2 text-sm text-spruce hover:text-spruce-light flex items-center"
                   onClick={() => alert('This would open the Stripe dashboard')}
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
@@ -558,7 +558,7 @@ const SellerSettings = ({ user }) => {
           <button
             type="button"
             onClick={handleStripeConnect}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
+            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-spruce hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce"
           >
             Connect with Stripe
           </button>
@@ -598,7 +598,7 @@ const SellerSettings = ({ user }) => {
               onChange={handleNestedNumberChange}
               min="0"
               max="90"
-              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             />
             
             <div className="mt-4">
@@ -616,7 +616,7 @@ const SellerSettings = ({ user }) => {
                 onChange={handleNestedNumberChange}
                 min="0"
                 max="50"
-                className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               />
             </div>
             
@@ -633,7 +633,7 @@ const SellerSettings = ({ user }) => {
                 value={sellerData.policies.returns.conditions}
                 onChange={handleChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                 placeholder="Describe any conditions for accepting returns"
               ></textarea>
             </div>
@@ -661,7 +661,7 @@ const SellerSettings = ({ user }) => {
               onChange={handleNestedNumberChange}
               min="1"
               max="30"
-              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             />
           </div>
           
@@ -677,7 +677,7 @@ const SellerSettings = ({ user }) => {
               name="policies.rental.extensionPolicy"
               value={sellerData.policies.rental.extensionPolicy}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce bg-white"
             >
               <option value="flexible">Flexible - Easy to extend rental periods</option>
               <option value="moderate">Moderate - May extend depending on availability</option>
@@ -712,7 +712,7 @@ const SellerSettings = ({ user }) => {
                     onChange={handleNestedNumberChange}
                     min="0"
                     max="100"
-                    className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                    className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                   />
                   <span className="ml-2">%</span>
                 </div>
@@ -734,7 +734,7 @@ const SellerSettings = ({ user }) => {
                     value={sellerData.policies.rental.lateFees.dailyRate}
                     onChange={handleNestedNumberChange}
                     min="0"
-                    className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                    className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                   />
                 </div>
               </div>
@@ -756,7 +756,7 @@ const SellerSettings = ({ user }) => {
                   onChange={handleNestedNumberChange}
                   min="0"
                   max="72"
-                  className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                  className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                 />
                 <span className="ml-2">hours</span>
               </div>
@@ -776,7 +776,7 @@ const SellerSettings = ({ user }) => {
               value={sellerData.policies.rental.damagePolicy}
               onChange={handleChange}
               rows="3"
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               placeholder="Describe your policy for handling damaged tools"
             ></textarea>
           </div>
@@ -813,7 +813,7 @@ const SellerSettings = ({ user }) => {
                 min="0"
                 step="0.1"
                 max="20"
-                className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                className="w-20 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               />
               <span className="ml-2">%</span>
             </div>
@@ -848,7 +848,7 @@ const SellerSettings = ({ user }) => {
               onChange={handleNestedNumberChange}
               min="1"
               max="10"
-              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             />
             <p className="text-xs text-stone-500 mt-1">
               Time needed to prepare and ship tools after an order is placed
@@ -863,7 +863,7 @@ const SellerSettings = ({ user }) => {
                   type="checkbox"
                   checked={sellerData.policies.shipping.shippingMethods?.includes('standard')}
                   onChange={() => handleShippingMethodChange('standard')}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
                 />
                 <span className="ml-2 text-sm text-stone-700">Standard Shipping (3-5 business days)</span>
               </label>
@@ -873,7 +873,7 @@ const SellerSettings = ({ user }) => {
                   type="checkbox"
                   checked={sellerData.policies.shipping.shippingMethods?.includes('express')}
                   onChange={() => handleShippingMethodChange('express')}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
                 />
                 <span className="ml-2 text-sm text-stone-700">Express Shipping (1-2 business days)</span>
               </label>
@@ -883,7 +883,7 @@ const SellerSettings = ({ user }) => {
                   type="checkbox"
                   checked={sellerData.policies.shipping.shippingMethods?.includes('economy')}
                   onChange={() => handleShippingMethodChange('economy')}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
                 />
                 <span className="ml-2 text-sm text-stone-700">Economy Shipping (5-7 business days)</span>
               </label>
@@ -893,7 +893,7 @@ const SellerSettings = ({ user }) => {
                   type="checkbox"
                   checked={sellerData.policies.shipping.shippingMethods?.includes('freight')}
                   onChange={() => handleShippingMethodChange('freight')}
-                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
                 />
                 <span className="ml-2 text-sm text-stone-700">Freight (for large equipment)</span>
               </label>
@@ -939,7 +939,7 @@ const SellerSettings = ({ user }) => {
                 onChange={handleNestedNumberChange}
                 min="0"
                 step="5"
-                className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
               />
             </div>
             <p className="text-xs text-stone-500 mt-1">
@@ -972,7 +972,7 @@ const SellerSettings = ({ user }) => {
   );
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Seller Settings</h2>
         <p className="text-stone-600 text-sm mt-1">Manage your seller profile, policies, and preferences</p>
@@ -986,7 +986,7 @@ const SellerSettings = ({ user }) => {
           </p>
           <button
             onClick={handleStripeConnect}
-            className="mt-3 px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
+            className="mt-3 px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light"
           >
             Connect Payment Account
           </button>
@@ -1016,7 +1016,7 @@ const SellerSettings = ({ user }) => {
               onClick={() => setActiveTab('business')}
               className={`pb-4 px-1 ${
                 activeTab === 'business'
-                  ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                  ? 'border-b-2 border-spruce text-spruce'
                   : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
               } flex items-center`}
             >
@@ -1028,7 +1028,7 @@ const SellerSettings = ({ user }) => {
               onClick={() => setActiveTab('policies')}
               className={`pb-4 px-1 ${
                 activeTab === 'policies'
-                  ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                  ? 'border-b-2 border-spruce text-spruce'
                   : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
               } flex items-center`}
             >
@@ -1040,7 +1040,7 @@ const SellerSettings = ({ user }) => {
               onClick={() => setActiveTab('shipping')}
               className={`pb-4 px-1 ${
                 activeTab === 'shipping'
-                  ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                  ? 'border-b-2 border-spruce text-spruce'
                   : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
               } flex items-center`}
             >
@@ -1061,7 +1061,7 @@ const SellerSettings = ({ user }) => {
         <div className="flex justify-end mt-8">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={saving}
           >
             {saving ? (

@@ -1,6 +1,7 @@
 {
-  "name": "Benchlot",
-  "short_name": "Benchlot",
+  "name": "Rekerf",
+  "short_name": "Rekerf",
+  "description": "The marketplace for premium used hand tools",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -13,7 +14,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#3c4532",
-  "background_color": "#ffffff",
+  "theme_color": "#1a3030",
+  "background_color": "#f2f0eb",
   "display": "standalone"
 }

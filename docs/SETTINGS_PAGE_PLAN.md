@@ -1,8 +1,8 @@
-# Benchlot Settings Page - Incremental Implementation Plan
+# Rekerf Settings Page - Incremental Implementation Plan
 
 ## Overview
 
-This document outlines an incremental approach to implementing the User Profile System for Benchlot, using the existing SettingsPage.jsx as a foundation. The goal is to build a MVP (Minimum Viable Product) version of the settings system that supports both regular users and sellers, while setting the stage for more advanced features as the product matures.
+This document outlines an incremental approach to implementing the User Profile System for Rekerf, using the existing SettingsPage.jsx as a foundation. The goal is to build a MVP (Minimum Viable Product) version of the settings system that supports both regular users and sellers, while setting the stage for more advanced features as the product matures.
 
 ## Analysis of Existing SettingsPage.jsx
 
@@ -78,7 +78,7 @@ const SettingsPage = () => {
   return (
     <div className="bg-base min-h-screen">
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-benchlot-primary mb-6">Account Settings</h1>
+        <h1 className="text-3xl font-serif font-medium text-spruce mb-6">Account Settings</h1>
         
         {/* Settings grid layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -94,7 +94,7 @@ const SettingsPage = () => {
                   <li>
                     <button
                       className={`w-full text-left px-3 py-2 rounded-md flex items-center ${
-                        activeTab === 'profile' ? 'bg-benchlot-accent-light text-benchlot-primary' : 'hover:bg-stone-50 text-stone-700'
+                        activeTab === 'profile' ? 'bg-bone-dark text-spruce' : 'hover:bg-stone-50 text-stone-700'
                       }`}
                       onClick={() => setActiveTab('profile')}
                     >
@@ -110,7 +110,7 @@ const SettingsPage = () => {
                     <li>
                       <button
                         className={`w-full text-left px-3 py-2 rounded-md flex items-center ${
-                          activeTab === 'seller' ? 'bg-benchlot-accent-light text-benchlot-primary' : 'hover:bg-stone-50 text-stone-700'
+                          activeTab === 'seller' ? 'bg-bone-dark text-spruce' : 'hover:bg-stone-50 text-stone-700'
                         }`}
                         onClick={() => setActiveTab('seller')}
                       >
@@ -166,7 +166,7 @@ const SellerSettings = () => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-medium text-benchlot-primary">Seller Settings</h2>
+        <h2 className="text-xl font-medium text-spruce">Seller Settings</h2>
         <p className="text-stone-600 text-sm mt-1">Manage your seller account and preferences</p>
       </div>
       
@@ -179,7 +179,7 @@ const SellerSettings = () => {
           </p>
           <button
             onClick={handleCompleteOnboarding}
-            className="mt-3 px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
+            className="mt-3 px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
           >
             Complete Setup
           </button>
@@ -193,7 +193,7 @@ const SellerSettings = () => {
             onClick={() => setActiveTab('business')}
             className={`pb-4 px-1 ${
               activeTab === 'business'
-                ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                ? 'border-b-2 border-spruce text-spruce'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
             }`}
           >
@@ -203,7 +203,7 @@ const SellerSettings = () => {
             onClick={() => setActiveTab('policies')}
             className={`pb-4 px-1 ${
               activeTab === 'policies'
-                ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                ? 'border-b-2 border-spruce text-spruce'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
             }`}
           >
@@ -213,7 +213,7 @@ const SellerSettings = () => {
             onClick={() => setActiveTab('shipping')}
             className={`pb-4 px-1 ${
               activeTab === 'shipping'
-                ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                ? 'border-b-2 border-spruce text-spruce'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
             }`}
           >

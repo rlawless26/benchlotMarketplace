@@ -6,45 +6,90 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        benchlot: {
-          primary: '#243B53',    // Navy blue primary
-          secondary: '#1A2C40',  // Darker navy for hover states
-          accent: '#C08B7C',     // Light clay/terracotta accent
-          'accent-hover': '#A77A6C',
-          'accent-light': '#F2ECEA',
-          'accent-dark': '#d4d4d4',
-          'accent-bg': '#EFE9E7',
-          base: '#FAFAFA',       // Base background color
-          white: '#FFFFFF',
-          'text-primary': '#121A24',
-          'text-secondary': '#364A63',
-          'footer-bg': '#121A24',
-          'ivory-light': '#FAFAFA',
-          success: '#2E6E7E',
-          error: '#B43C38',
+        spruce: {
+          DEFAULT: '#1a3030',
+          light: '#2a4a48',
+          dark: '#0e2020',
         },
-        navy: {
-          50: '#EFF3F7',
-          100: '#D0DCE8',
-          200: '#B1C5DA',
-          300: '#92AECC',
-          400: '#6E93BB',
-          500: '#5179A5',
-          600: '#3A5E87',
-          700: '#243B53',
-          800: '#1A2C40',
-          900: '#121A24',
-        }
+        bone: {
+          DEFAULT: '#f2f0eb',
+          dark: '#e8e6e0',
+          light: '#f8f6f2',
+        },
+        honey: {
+          DEFAULT: '#d4aa60',
+          light: '#e0c080',
+          dark: '#b08a40',
+        },
+        'dark-teal': {
+          DEFAULT: '#0c1c1e',
+          light: '#1a2e30',
+        },
+        badge: {
+          accent: '#d4aa60',
+          'accent-text': '#0c1c1e',
+          highlight: '#d6ece4',
+          'highlight-text': '#1a3030',
+          neutral: '#e8e6e0',
+          'neutral-text': '#4a5a54',
+        },
+        // Semantic colors
+        success: '#2a6a4a',
+        error: '#a83a2a',
+        warning: '#b08a40',
+        info: '#2a5a6a',
       },
-      boxShadow: {
-        card: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      fontFamily: {
+        display: ["'Petrona'", 'Georgia', "'Times New Roman'", 'serif'],
+        body: ["'Outfit'", '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'sans-serif'],
+      },
+      fontSize: {
+        'hero': '72px',
+        'h1': '48px',
+        'h2': '32px',
+        'h3': '24px',
+        'h4': '20px',
+        'body': '15px',
+        'body-sm': '13px',
+        'caption': '11px',
+        'label': '10px',
+        'nav': '13px',
+        'btn': '13px',
+        'btn-sm': '11px',
+        'price': '16px',
+        'wordmark': '20px',
+      },
+      borderColor: {
+        DEFAULT: '#e4e2dc',
+        light: '#eceae4',
+        dark: '#d4d2cc',
+      },
+      backgroundColor: {
+        page: '#f2f0eb',
+      },
+      textColor: {
+        primary: '#0c1c1e',
+        secondary: '#4a5a54',
+        muted: '#8a8a80',
+        price: '#d4aa60',
+        'on-spruce': '#f2f0eb',
+        'on-dark': '#f2f0eb',
+        'on-dark-muted': '#6a8a84',
+        'on-honey': '#0c1c1e',
       },
       borderRadius: {
-        'sm': '0.25rem',
-        'lg': '0.5rem',
-        'card': '0.5rem',
-        'full': '9999px',
+        'card': '10px',
+        'btn': '8px',
+        'btn-sm': '6px',
+        'section': '12px',
+        'badge': '16px',
+      },
+      boxShadow: {
+        'sm': '0 1px 2px rgba(12, 28, 30, 0.05)',
+        'md': '0 2px 8px rgba(12, 28, 30, 0.08)',
+        'lg': '0 4px 16px rgba(12, 28, 30, 0.10)',
+        'card': '0 2px 8px rgba(12, 28, 30, 0.08)',
+        'card-hover': '0 4px 16px rgba(12, 28, 30, 0.10)',
       },
       spacing: {
         '72': '18rem',
@@ -55,10 +100,6 @@ module.exports = {
         'container': '55rem',
       },
     },
-    fontFamily: {
-      serif: ['Spectral', 'serif'],
-      sans: ['Mulish', 'sans-serif'],
-    }
   },
   plugins: [],
 }

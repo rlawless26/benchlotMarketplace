@@ -174,7 +174,7 @@ const ConversationView = ({ conversationId, onClose }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <Loader className="h-8 w-8 text-benchlot-primary animate-spin mb-4" />
+        <Loader className="h-8 w-8 text-spruce animate-spin mb-4" />
         <p className="text-stone-600">Loading conversation...</p>
       </div>
     );
@@ -205,8 +205,8 @@ const ConversationView = ({ conversationId, onClose }) => {
         <div className="flex items-center">
           {otherParticipant ? (
             <>
-              <div className="h-10 w-10 rounded-full bg-benchlot-accent-light flex items-center justify-center mr-3">
-                <User className="h-6 w-6 text-benchlot-primary" />
+              <div className="h-10 w-10 rounded-full bg-bone-dark flex items-center justify-center mr-3">
+                <User className="h-6 w-6 text-spruce" />
               </div>
               <div>
                 <h3 className="font-medium">{otherParticipant.name}</h3>
@@ -217,7 +217,7 @@ const ConversationView = ({ conversationId, onClose }) => {
             </>
           ) : (
             <div className="flex items-center">
-              <MessageCircle className="h-6 w-6 text-benchlot-primary mr-3" />
+              <MessageCircle className="h-6 w-6 text-spruce mr-3" />
               <h3 className="font-medium">Conversation</h3>
             </div>
           )}
@@ -302,7 +302,7 @@ const ConversationView = ({ conversationId, onClose }) => {
                     <div 
                       className={`p-3 rounded-lg ${
                         isCurrentUser 
-                          ? 'bg-benchlot-primary text-white rounded-br-none' 
+                          ? 'bg-spruce text-bone rounded-br-none' 
                           : 'bg-stone-100 text-stone-800 rounded-bl-none'
                       }`}
                     >
@@ -348,7 +348,7 @@ const ConversationView = ({ conversationId, onClose }) => {
           <input
             type="text"
             ref={messageInputRef}
-            className="flex-1 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full px-4 py-2.5 text-sm border-stone-300 rounded-lg shadow-sm"
+            className="flex-1 focus:ring-spruce focus:border-spruce block w-full px-4 py-2.5 text-sm border-stone-300 rounded-lg shadow-sm"
             placeholder="Type a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -356,7 +356,7 @@ const ConversationView = ({ conversationId, onClose }) => {
           />
           <button
             type="submit"
-            className="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-bone bg-spruce hover:bg-spruce-light transition-colors disabled:opacity-50"
             disabled={!newMessage.trim() || sendingMessage}
           >
             {sendingMessage ? (

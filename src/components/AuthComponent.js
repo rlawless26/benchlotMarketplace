@@ -79,8 +79,8 @@ function AuthComponent() {
       <div className="section-container py-8">
         <div className="flex justify-center items-center p-8">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-benchlot-accent border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-benchlot-primary font-medium">Loading authentication...</p>
+            <div className="w-12 h-12 border-4 border-honey border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-spruce font-medium">Loading authentication...</p>
           </div>
         </div>
       </div>
@@ -89,8 +89,8 @@ function AuthComponent() {
 
   return (
     <div className="section-container py-8">
-      <div className="bg-white rounded-lg shadow-card p-6">
-        <h2 className="text-2xl font-bold text-benchlot-primary mb-6">Firebase Authentication</h2>
+      <div className="bg-bone-light rounded-lg shadow-card p-6">
+        <h2 className="text-2xl font-bold text-spruce mb-6">Firebase Authentication</h2>
         
         {error && (
           <div className="alert-error mb-6">
@@ -114,7 +114,7 @@ function AuthComponent() {
         
         {user ? (
           <div className="bg-gray-50 rounded-lg p-6 mb-6">
-            <h3 className="text-xl font-semibold text-benchlot-primary mb-4">Logged In User</h3>
+            <h3 className="text-xl font-semibold text-spruce mb-4">Logged In User</h3>
             <div className="space-y-3 mb-6">
               <p className="flex flex-wrap">
                 <span className="font-medium w-32">Email:</span> 
@@ -158,8 +158,8 @@ function AuthComponent() {
                 onClick={() => setAuthMode('signin')}
                 className={`px-4 py-2 font-medium transition-colors duration-200 -mb-px ${
                   authMode === 'signin' 
-                    ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                    : 'text-gray-500 hover:text-benchlot-primary'
+                    ? 'text-honey border-b-2 border-honey' 
+                    : 'text-gray-500 hover:text-spruce'
                 }`}
               >
                 Sign In
@@ -168,8 +168,8 @@ function AuthComponent() {
                 onClick={() => setAuthMode('signup')}
                 className={`px-4 py-2 font-medium transition-colors duration-200 -mb-px ${
                   authMode === 'signup' 
-                    ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                    : 'text-gray-500 hover:text-benchlot-primary'
+                    ? 'text-honey border-b-2 border-honey' 
+                    : 'text-gray-500 hover:text-spruce'
                 }`}
               >
                 Sign Up
@@ -178,8 +178,8 @@ function AuthComponent() {
                 onClick={() => setAuthMode('reset')}
                 className={`px-4 py-2 font-medium transition-colors duration-200 -mb-px ${
                   authMode === 'reset' 
-                    ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                    : 'text-gray-500 hover:text-benchlot-primary'
+                    ? 'text-honey border-b-2 border-honey' 
+                    : 'text-gray-500 hover:text-spruce'
                 }`}
               >
                 Reset Password
@@ -188,7 +188,7 @@ function AuthComponent() {
             
             {authMode === 'signin' && (
               <form onSubmit={handleSignIn} className="space-y-6">
-                <h3 className="text-xl font-semibold text-benchlot-primary mb-4">Sign In</h3>
+                <h3 className="text-xl font-semibold text-spruce mb-4">Sign In</h3>
                 <div className="form-group">
                   <label htmlFor="signin-email" className="form-label">Email</label>
                   <input
@@ -219,7 +219,7 @@ function AuthComponent() {
             
             {authMode === 'signup' && (
               <form onSubmit={handleSignUp} className="space-y-6">
-                <h3 className="text-xl font-semibold text-benchlot-primary mb-4">Sign Up</h3>
+                <h3 className="text-xl font-semibold text-spruce mb-4">Sign Up</h3>
                 <div className="form-group">
                   <label htmlFor="signup-email" className="form-label">Email</label>
                   <input
@@ -250,7 +250,7 @@ function AuthComponent() {
             
             {authMode === 'reset' && (
               <form onSubmit={handleResetPassword} className="space-y-6">
-                <h3 className="text-xl font-semibold text-benchlot-primary mb-4">Reset Password</h3>
+                <h3 className="text-xl font-semibold text-spruce mb-4">Reset Password</h3>
                 <p className="text-gray-600 mb-4">Enter your email address and we'll send you a link to reset your password.</p>
                 <div className="form-group">
                   <label htmlFor="reset-email" className="form-label">Email</label>
@@ -271,7 +271,7 @@ function AuthComponent() {
         )}
         
         <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-benchlot-primary mb-3">Authentication Debug</h3>
+          <h3 className="text-lg font-semibold text-spruce mb-3">Authentication Debug</h3>
           <pre className="text-xs overflow-auto p-3 bg-gray-100 rounded border border-gray-300 max-h-60">
             {JSON.stringify({ user, loading, error }, null, 2)}
           </pre>

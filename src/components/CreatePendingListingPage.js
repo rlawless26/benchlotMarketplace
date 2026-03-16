@@ -71,11 +71,11 @@ const CreatePendingListingPage = () => {
   
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-md p-8">
+          <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-12 h-12 border-4 border-t-transparent border-green-700 rounded-full animate-spin mb-4"></div>
+              <div className="w-12 h-12 border-4 border-t-transparent border-spruce rounded-full animate-spin mb-4"></div>
               <h2 className="text-xl font-medium text-gray-800 mb-2">Creating Your Listing</h2>
               <p className="text-gray-600 text-center">
                 Please wait while we create your tool listing...
@@ -89,9 +89,9 @@ const CreatePendingListingPage = () => {
   
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-md p-8">
+          <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
               {error}
             </div>
@@ -110,9 +110,9 @@ const CreatePendingListingPage = () => {
   }
   
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
           <div className="flex flex-col items-center justify-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -127,7 +127,7 @@ const CreatePendingListingPage = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <button 
                 onClick={() => navigate(`/tools/${toolId}?action=add-photos`)}
-                className="px-6 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 flex items-center justify-center"
+                className="px-6 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />

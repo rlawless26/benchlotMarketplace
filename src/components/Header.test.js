@@ -77,9 +77,9 @@ beforeEach(() => {
 
 describe('Header', () => {
   describe('Unauthenticated user', () => {
-    it('renders logo and Benchlot link', () => {
+    it('renders logo and Rekerf link', () => {
       renderWithProviders(<Header />);
-      expect(screen.getByText('Benchlot')).toBeInTheDocument();
+      expect(screen.getByText('Rekerf')).toBeInTheDocument();
     });
 
     it('shows Log In and Sign Up buttons', () => {

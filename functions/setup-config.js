@@ -1,5 +1,5 @@
 /**
- * Configuration setup script for Benchlot Firebase Functions
+ * Configuration setup script for Rekerf Firebase Functions
  * 
  * This script helps set up the necessary configuration values for the Firebase Functions.
  * Run this script before deploying or testing the functions locally.
@@ -10,7 +10,7 @@ const { execSync } = require('child_process');
 // Placeholder values (replace these with your actual values)
 const config = {
   app: {
-    url: 'https://benchlot.com' // Your production app URL
+    url: 'https://rekerf.com' // Your production app URL
   },
   sendgrid: {
     api_key: 'SG.REPLACE_WITH_YOUR_ACTUAL_SENDGRID_API_KEY', // Replace with your actual SendGrid API key

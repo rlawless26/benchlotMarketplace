@@ -272,8 +272,8 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-benchlot-accent border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-benchlot-primary font-medium">Loading...</p>
+          <div className="w-12 h-12 border-4 border-honey border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-spruce font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -282,7 +282,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
   // Container classes
   const containerClasses = isModal 
     ? "form-container p-6" 
-    : "form-container bg-white rounded-lg shadow-md p-6 my-8";
+    : "form-container bg-bone-light rounded-lg shadow-md p-6 my-8";
 
   return (
     <div className={containerClasses}>
@@ -307,7 +307,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
       {/* Already logged in view */}
       {user ? (
         <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-benchlot-primary mb-4">Welcome Back</h3>
+          <h3 className="text-xl font-semibold text-spruce mb-4">Welcome Back</h3>
           <div className="space-y-2 mb-6">
             <p className="flex">
               <span className="font-medium w-32">Name:</span> 
@@ -333,8 +333,8 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
               onClick={() => setAuthMode('signin')}
               className={`px-4 py-2 font-medium transition-colors duration-200 ${
                 authMode === 'signin' 
-                  ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                  : 'text-gray-500 hover:text-benchlot-primary'
+                  ? 'text-honey border-b-2 border-honey' 
+                  : 'text-gray-500 hover:text-spruce'
               }`}
             >
               Login
@@ -343,8 +343,8 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
               onClick={() => setAuthMode('signup')}
               className={`px-4 py-2 font-medium transition-colors duration-200 ${
                 authMode === 'signup' 
-                  ? 'text-benchlot-accent border-b-2 border-benchlot-accent' 
-                  : 'text-gray-500 hover:text-benchlot-primary'
+                  ? 'text-honey border-b-2 border-honey' 
+                  : 'text-gray-500 hover:text-spruce'
               }`}
             >
               Sign Up
@@ -357,7 +357,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
           {/* Sign In Form */}
           {authMode === 'signin' && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-benchlot-primary mb-5">Log in to your Benchlot account</h3>
+              <h3 className="text-xl font-semibold text-spruce mb-5">Log in to your Rekerf account</h3>
               <form onSubmit={handleSignIn} className="space-y-5">
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">
@@ -391,7 +391,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-benchlot-primary focus:ring-benchlot-primary"
+                      className="h-4 w-4 rounded border-gray-300 text-spruce focus:ring-spruce"
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                       Remember me
@@ -401,12 +401,12 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   <button 
                     type="button" 
                     onClick={() => setAuthMode('reset')}
-                    className="text-sm font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                    className="text-sm font-medium text-spruce hover:text-spruce-light"
                   >
                     Forgot password?
                   </button>
                 </div>
-                <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
+                <button type="submit" className="w-full px-6 py-3 bg-honey text-dark-teal font-semibold hover:bg-honey-light transition-colors flex items-center justify-center gap-2 rounded-md">
                   <span>Login</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -417,7 +417,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">OR</span>
+                  <span className="px-4 bg-bone-light text-gray-500">OR</span>
                 </div>
               </div>
               
@@ -452,7 +452,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                 Don't have an account?{' '}
                 <button
                   onClick={() => setAuthMode('signup')}
-                  className="font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                  className="font-medium text-spruce hover:text-spruce-light"
                 >
                   Sign up now
                 </button>
@@ -463,7 +463,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
           {/* Sign Up Form */}
           {authMode === 'signup' && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-benchlot-primary mb-5">Create a free Benchlot account</h3>
+              <h3 className="text-xl font-semibold text-spruce mb-5">Create a free Rekerf account</h3>
               <form onSubmit={handleSignUp} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">
@@ -539,23 +539,23 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                       id="terms"
                       name="terms"
                       type="checkbox"
-                      className="h-4 w-4 mt-1 rounded border-gray-300 text-benchlot-primary focus:ring-benchlot-primary"
+                      className="h-4 w-4 mt-1 rounded border-gray-300 text-spruce focus:ring-spruce"
                       required
                     />
                     <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
                       I agree to the{' '}
-                      <a href="/terms" className="text-benchlot-primary hover:text-benchlot-secondary">
+                      <a href="/terms" className="text-spruce hover:text-spruce-light">
                         Terms of Service
                       </a>{' '}
                       and{' '}
-                      <a href="/privacy" className="text-benchlot-primary hover:text-benchlot-secondary">
+                      <a href="/privacy" className="text-spruce hover:text-spruce-light">
                         Privacy Policy
                       </a>
                     </label>
                   </div>
                 </div>
                 
-                <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
+                <button type="submit" className="w-full px-6 py-3 bg-honey text-dark-teal font-semibold hover:bg-honey-light transition-colors flex items-center justify-center gap-2 rounded-md">
                   <span>Create Account</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -566,7 +566,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">OR</span>
+                  <span className="px-4 bg-bone-light text-gray-500">OR</span>
                 </div>
               </div>
               
@@ -601,7 +601,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                 Already have an account?{' '}
                 <button
                   onClick={() => setAuthMode('signin')}
-                  className="font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                  className="font-medium text-spruce hover:text-spruce-light"
                 >
                   Login instead
                 </button>
@@ -612,7 +612,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
           {/* Reset Password Form */}
           {authMode === 'reset' && (
             <form onSubmit={handleResetPassword} className="space-y-6">
-              <h3 className="text-xl font-semibold text-benchlot-primary mb-5">Reset your password</h3>
+              <h3 className="text-xl font-semibold text-spruce mb-5">Reset your password</h3>
               <p className="text-gray-600 mb-4">Enter your email address and we'll send you a link to reset your password.</p>
               <div className="form-group">
                 <label htmlFor="reset-email" className="form-label">
@@ -627,7 +627,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                   required
                 />
               </div>
-              <button type="submit" className="w-full px-6 py-3 bg-[#17613F] text-white font-semibold hover:bg-[#17613F]/90 transition-colors flex items-center justify-center gap-2 rounded-md">
+              <button type="submit" className="w-full px-6 py-3 bg-honey text-dark-teal font-semibold hover:bg-honey-light transition-colors flex items-center justify-center gap-2 rounded-md">
                 <span>Send Reset Link</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -636,7 +636,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
                 Remember your password?{' '}
                 <button
                   onClick={() => setAuthMode('signin')}
-                  className="font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                  className="font-medium text-spruce hover:text-spruce-light"
                 >
                   Back to login
                 </button>

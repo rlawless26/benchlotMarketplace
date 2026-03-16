@@ -1,5 +1,5 @@
 /**
- * Test script for Benchlot SendGrid email integration
+ * Test script for Rekerf SendGrid email integration
  * 
  * This script tests all the email endpoints implemented in the Firebase Functions.
  * It makes direct HTTP requests to the deployed Firebase Functions endpoints.
@@ -8,7 +8,7 @@
 const axios = require('axios');
 
 // Configuration
-const testEmail = process.argv[2] || 'test@benchlot.com'; // Use email from command line or default
+const testEmail = process.argv[2] || 'test@rekerf.com'; // Use email from command line or default
 const apiUrl = 'https://api-sed2e4p6ua-uc.a.run.app'; // Deployed Firebase Function URL
 
 // Helper function to log test results
@@ -57,7 +57,7 @@ const testWelcomeEmail = async () => {
 const testPasswordResetEmail = async () => {
   const result = await callEndpoint('send-password-reset', {
     email: testEmail,
-    resetLink: 'https://benchlot.com/reset-password?token=sample-token'
+    resetLink: 'https://rekerf.com/reset-password?token=sample-token'
   });
   logResult('Password Reset Email', result.success, result.error);
   return result;
@@ -115,7 +115,7 @@ const testSimpleTestEmail = async () => {
 
 // Run all tests
 const runAllTests = async () => {
-  console.log('🚀 Starting Benchlot SendGrid Email Tests');
+  console.log('🚀 Starting Rekerf SendGrid Email Tests');
   console.log('=========================================');
   console.log(`Using email: ${testEmail}`);
   console.log(`API URL: ${apiUrl}`);

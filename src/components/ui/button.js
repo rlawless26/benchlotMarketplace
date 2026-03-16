@@ -1,40 +1,40 @@
 // src/components/ui/button.js
 import React from 'react';
 
-const Button = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  className = '', 
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
   isLoading = false,
   disabled = false,
   type = 'button',
-  ...rest 
+  ...rest
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary';
-  
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce font-body';
+
   const variantClasses = {
-    primary: 'bg-benchlot-primary text-white hover:bg-benchlot-secondary',
-    secondary: 'bg-white text-benchlot-primary border border-benchlot-primary hover:bg-benchlot-accent-light',
-    outline: 'bg-transparent border border-benchlot-primary text-benchlot-primary hover:bg-benchlot-accent-light',
-    ghost: 'bg-transparent text-benchlot-primary hover:bg-benchlot-accent-light',
+    primary: 'bg-honey text-dark-teal hover:bg-honey-light',
+    secondary: 'bg-spruce text-bone hover:bg-spruce-light',
+    outline: 'bg-transparent border border-spruce text-spruce hover:bg-bone-dark',
+    ghost: 'bg-transparent text-spruce hover:bg-bone-dark',
     danger: 'bg-red-600 text-white hover:bg-red-700',
   };
-  
+
   const sizeClasses = {
     sm: 'text-xs px-3 py-1.5',
     md: 'text-sm px-4 py-2',
     lg: 'text-base px-6 py-3',
   };
-  
+
   const disabledClasses = disabled || isLoading ? 'opacity-60 cursor-not-allowed' : '';
-  
+
   const buttonClasses = `${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${sizeClasses[size] || sizeClasses.md} ${disabledClasses} ${className}`;
-  
+
   return (
-    <button 
+    <button
       type={type}
-      className={buttonClasses} 
+      className={buttonClasses}
       disabled={disabled || isLoading}
       {...rest}
     >

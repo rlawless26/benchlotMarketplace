@@ -1,5 +1,5 @@
 /**
- * Main Stylesheet for Benchlot
+ * Main Stylesheet for Rekerf
  */
 
 @tailwind base;
@@ -8,86 +8,147 @@
 
 /* Custom Colors */
 :root {
-  /* Using the color scheme from tailwind.config.js */
-  --color-primary: #243B53;
-  --color-secondary: #1A2C40;
-  --color-accent: #C08B7C;
-  --color-base: #FAFAFA;
-  --color-text: #121A24;
-  --color-gray-light: #F8F9FA;
-  --color-gray-medium: #E9ECEF;
-  --color-gray-dark: #6C757D;
-  --color-success: #28A745;
-  --color-danger: #DC3545;
-  --color-warning: #FFC107;
-  --color-info: #17A2B8;
+  --color-spruce: #1a3030;
+  --color-spruce-light: #2a4a48;
+  --color-spruce-dark: #0e2020;
+  --color-bone: #f2f0eb;
+  --color-bone-dark: #e8e6e0;
+  --color-bone-light: #f8f6f2;
+  --color-honey: #d4aa60;
+  --color-honey-light: #e0c080;
+  --color-honey-dark: #b08a40;
+  --color-dark-teal: #0c1c1e;
+  --color-dark-teal-light: #1a2e30;
+  --color-text-primary: #0c1c1e;
+  --color-text-secondary: #4a5a54;
+  --color-text-muted: #8a8a80;
+  --color-border: #e4e2dc;
+  --color-border-light: #eceae4;
+  --color-border-dark: #d4d2cc;
+  --color-success: #2a6a4a;
+  --color-error: #a83a2a;
+  --color-warning: #b08a40;
+  --color-info: #2a5a6a;
 }
 
 /* Base Typography */
 @layer base {
   html {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-    "Helvetica Neue", Arial, sans-serif;
-    @apply text-benchlot-text-primary;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #0c1c1e;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium leading-tight mb-4;
+
+  h1, h2, h3 {
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+    @apply leading-tight mb-4;
   }
-  
+
+  h4, h5, h6 {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    @apply font-semibold leading-tight mb-4;
+  }
+
   h1 {
     @apply text-3xl md:text-4xl;
+    font-weight: 800;
+    letter-spacing: -0.5px;
   }
-  
+
   h2 {
     @apply text-2xl md:text-3xl;
+    font-weight: 700;
   }
-  
+
   h3 {
     @apply text-xl md:text-2xl;
+    font-weight: 700;
   }
-  
+
   p {
     @apply mb-4;
   }
-  
+
   a {
-    @apply text-benchlot-primary hover:text-benchlot-secondary;
+    color: #d4aa60;
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: #e0c080;
   }
 }
 
 /* Component Classes */
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+    @apply px-6 py-3 font-bold transition-all duration-200;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    border-radius: 8px;
   }
-  
+
   .btn-primary {
-    @apply bg-benchlot-primary text-white hover:bg-benchlot-secondary;
+    background-color: #d4aa60;
+    color: #0c1c1e;
   }
-  
+
+  .btn-primary:hover {
+    background-color: #e0c080;
+  }
+
   .btn-secondary {
-    @apply bg-benchlot-accent text-white hover:bg-benchlot-accent-hover;
+    background-color: #1a3030;
+    color: #f2f0eb;
   }
-  
+
+  .btn-secondary:hover {
+    background-color: #2a4a48;
+  }
+
   .btn-outline {
-    @apply border border-benchlot-primary text-benchlot-primary hover:bg-benchlot-accent-light;
+    background-color: transparent;
+    border: 2px solid #1a3030;
+    color: #1a3030;
   }
-  
+
+  .btn-outline:hover {
+    background-color: rgba(26, 48, 48, 0.05);
+  }
+
   .card {
-    @apply bg-white rounded-lg shadow-md overflow-hidden;
+    background-color: #f8f6f2;
+    border-radius: 10px;
+    border: 1px solid #e4e2dc;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease;
   }
-  
+
   .form-input {
-    @apply w-full border border-benchlot-accent-dark rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:border-transparent;
+    @apply w-full px-3 py-2;
+    border: 1px solid #e4e2dc;
+    border-radius: 6px;
+    color: #0c1c1e;
+    font-family: 'Outfit', sans-serif;
+    background-color: #f8f6f2;
   }
-  
+
+  .form-input:focus {
+    outline: none;
+    border-color: #1a3030;
+    box-shadow: 0 0 0 3px rgba(26, 48, 48, 0.1);
+  }
+
   .form-label {
-    @apply block text-sm font-medium text-benchlot-text-primary mb-1;
+    @apply block text-sm font-medium mb-1;
+    color: #0c1c1e;
+    font-family: 'Outfit', sans-serif;
   }
-  
+
   .form-error {
-    @apply text-benchlot-error text-sm mt-1;
+    color: #a83a2a;
+    font-size: 13px;
+    margin-top: 4px;
   }
 }
 
@@ -96,11 +157,11 @@
   .transition-fast {
     @apply transition-all duration-150 ease-in-out;
   }
-  
+
   .transition-medium {
     @apply transition-all duration-300 ease-in-out;
   }
-  
+
   .transition-slow {
     @apply transition-all duration-500 ease-in-out;
   }
@@ -108,7 +169,8 @@
 
 /* Global Styles */
 body {
-  @apply bg-benchlot-base text-benchlot-text-primary;
+  background-color: #f2f0eb;
+  color: #0c1c1e;
   min-height: 100vh;
 }
 
@@ -129,13 +191,14 @@ main {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-benchlot-base;
+  background-color: #f2f0eb;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-benchlot-accent-dark rounded-full;
+  background-color: #e8e6e0;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-benchlot-accent;
+  background-color: #d4d2cc;
 }

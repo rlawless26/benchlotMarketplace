@@ -372,7 +372,7 @@ const ToolDetailPage = () => {
       <div className="bg-base min-h-screen">
         <main className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <Loader className="h-8 w-8 text-benchlot-primary animate-spin" />
+            <Loader className="h-8 w-8 text-spruce animate-spin" />
             <span className="ml-2 text-stone-600">Loading tool details...</span>
           </div>
         </main>
@@ -395,7 +395,7 @@ const ToolDetailPage = () => {
             </div>
             <div className="mt-4">
               <button
-                className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
+                className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
                 onClick={() => navigate('/marketplace')}
               >
                 Return to Marketplace
@@ -422,7 +422,7 @@ const ToolDetailPage = () => {
             </div>
             <div className="mt-4">
               <button
-                className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
+                className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
                 onClick={() => navigate('/marketplace')}
               >
                 Browse Available Tools
@@ -436,19 +436,19 @@ const ToolDetailPage = () => {
 
   // Main content when tool is loaded successfully
   return (
-    <div className={`${isOwner() ? 'bg-gray-100' : 'bg-stone-50'} min-h-screen`}>
+    <div className={`${isOwner() ? 'bg-bone' : 'bg-bone'} min-h-screen`}>
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Photo uploader banner for listing that needs images */}
         {showPhotoUploader && isOwner() && (
-          <div className="mb-6 bg-benchlot-accent-light border border-benchlot-accent rounded-lg p-4">
+          <div className="mb-6 bg-bone-dark border border-honey rounded-lg p-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
               <div className="mb-4 md:mb-0">
-                <h3 className="text-benchlot-primary font-medium text-lg mb-1">
+                <h3 className="text-spruce font-medium text-lg mb-1">
                   {tool.images && tool.images.length > 0 
                     ? 'Add more photos to increase visibility' 
                     : 'Your listing needs photos to be visible to buyers'}
                 </h3>
-                <p className="text-benchlot-primary">
+                <p className="text-spruce">
                   {tool.images && tool.images.length > 0 
                     ? 'Tools with multiple photos sell 3X faster!' 
                     : 'Upload at least one photo to activate your listing'}
@@ -477,8 +477,8 @@ const ToolDetailPage = () => {
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-md file:border-0
                       file:text-sm file:font-medium
-                      file:bg-benchlot-primary file:text-white
-                      hover:file:bg-benchlot-secondary
+                      file:bg-spruce file:text-bone
+                      hover:file:bg-spruce-light
                       file:cursor-pointer file:shadow"
                   />
                 </label>
@@ -501,7 +501,7 @@ const ToolDetailPage = () => {
                 
                 {/* Loading indicator */}
                 {uploadingPhoto && (
-                  <p className="mt-2 text-benchlot-primary text-sm flex items-center">
+                  <p className="mt-2 text-spruce text-sm flex items-center">
                     <Loader className="h-4 w-4 mr-1 animate-spin" />
                     Uploading photo...
                   </p>
@@ -514,13 +514,13 @@ const ToolDetailPage = () => {
         {/* Breadcrumb navigation */}
         <div className="mb-6">
           <nav className="flex mb-4 text-sm text-stone-600">
-            <Link to="/" className="hover:text-benchlot-primary">Home</Link>
+            <Link to="/" className="hover:text-spruce">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/marketplace" className="hover:text-benchlot-primary">Marketplace</Link>
+            <Link to="/marketplace" className="hover:text-spruce">Marketplace</Link>
             <span className="mx-2">/</span>
             {tool.category && (
               <>
-                <Link to={`/marketplace?category=${encodeURIComponent(tool.category)}`} className="hover:text-benchlot-primary">
+                <Link to={`/marketplace?category=${encodeURIComponent(tool.category)}`} className="hover:text-spruce">
                   {tool.category}
                 </Link>
                 <span className="mx-2">/</span>
@@ -529,7 +529,7 @@ const ToolDetailPage = () => {
             <span className="text-stone-800 font-medium truncate">{tool.name}</span>
           </nav>
           <button
-            className="flex items-center text-stone-600 hover:text-benchlot-primary"
+            className="flex items-center text-stone-600 hover:text-spruce"
             onClick={() => navigate('/marketplace')}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -542,7 +542,7 @@ const ToolDetailPage = () => {
           {/* Left column - Images (6/9 width on desktop) always first on mobile */}
           <div className="lg:col-span-6 space-y-4 order-1">
             {/* Main image */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-md relative aspect-square">
+            <div className="bg-bone-light rounded-lg overflow-hidden shadow-md relative aspect-square">
               {tool.images && tool.images.length > 0 ? (
                 <img
                   src={tool.images[activeImageIndex].url}
@@ -601,7 +601,7 @@ const ToolDetailPage = () => {
                     onClick={() => setActiveImageIndex(index)}
                     className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all
                       ${activeImageIndex === index 
-                        ? 'border-benchlot-accent shadow-sm' 
+                        ? 'border-honey shadow-sm' 
                         : 'border-gray-200 hover:border-gray-300'}`}
                     aria-label={`View image ${index + 1}`}
                   >
@@ -619,13 +619,13 @@ const ToolDetailPage = () => {
           {/* Right column - Pricing, seller info, actions (3/9 width on desktop) - second on mobile */}
           <div className="space-y-4 order-2 lg:col-span-3">
             {/* Main info card */}
-            <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h1 className="text-2xl font-medium text-stone-800 mb-2">{tool.name}</h1>
 
               {/* Pricing */}
               <div className="mb-4">
                 <div className="flex items-baseline">
-                  <span className="text-2xl font-medium text-stone-800">
+                  <span className="text-2xl font-medium text-honey">
                     {formatPrice(tool.current_price)}
                   </span>
                   {tool.original_price && tool.original_price > tool.current_price && (
@@ -689,12 +689,12 @@ const ToolDetailPage = () => {
               <div className="mb-6">
                 {/* Category Tags - Primary color background */}
                 {tool.category && (
-                  <span className="inline-block bg-benchlot-accent-light text-benchlot-primary text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-bone-dark text-spruce text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.category}
                   </span>
                 )}
                 {tool.subcategory && (
-                  <span className="inline-block bg-benchlot-accent-light text-benchlot-primary text-xs px-2 py-1 rounded mr-2 mb-2">
+                  <span className="inline-block bg-bone-dark text-spruce text-xs px-2 py-1 rounded mr-2 mb-2">
                     {tool.subcategory}
                   </span>
                 )}
@@ -722,7 +722,7 @@ const ToolDetailPage = () => {
                     {/* Edit listing button */}
                     <button
                       onClick={() => navigate(`/tools/edit/${tool.id}`)}
-                      className="w-full py-3 bg-benchlot-accent text-white rounded-md hover:bg-benchlot-accent-dark flex items-center justify-center font-medium"
+                      className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light flex items-center justify-center font-medium"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -733,7 +733,7 @@ const ToolDetailPage = () => {
                     {/* View all listings button */}
                     <button
                       onClick={() => navigate('/my-listings')}
-                      className="w-full py-3 bg-white border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 flex items-center justify-center font-medium"
+                      className="w-full py-3 bg-bone-light border border-stone-300 text-dark-teal rounded-md hover:bg-bone-dark flex items-center justify-center font-medium"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -749,7 +749,7 @@ const ToolDetailPage = () => {
                         const addToCartBtn = document.querySelector('[aria-label="Add this item to your cart"]');
                         if (addToCartBtn) addToCartBtn.click();
                       }}
-                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex"
+                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-honey text-dark-teal hover:bg-honey-light justify-center flex"
                     >
                       <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -765,7 +765,7 @@ const ToolDetailPage = () => {
                     
                     {/* Make offer button with consistent styling */}
                     <button
-                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200"
+                      className="w-full py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-dark-teal border border-stone-200 justify-center flex hover:bg-stone-200"
                       onClick={openOfferModal}
                     >
                       Make an Offer
@@ -774,7 +774,7 @@ const ToolDetailPage = () => {
                     <div className="flex w-full gap-3">
                       {/* Contact seller button - same style as Make Offer */}
                       <button
-                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200"
+                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-dark-teal border border-stone-200 justify-center flex hover:bg-stone-200"
                         onClick={contactSeller}
                       >
                         Contact Seller
@@ -786,7 +786,7 @@ const ToolDetailPage = () => {
                           const wishlistBtn = document.querySelector('[aria-label="Watch this item"]');
                           if (wishlistBtn) wishlistBtn.click();
                         }}
-                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-benchlot-text-primary border border-stone-200 justify-center flex hover:bg-stone-200 items-center"
+                        className="flex-1 py-3 rounded-md font-semibold text-[96%] transition-colors bg-stone-100 text-dark-teal border border-stone-200 justify-center flex hover:bg-stone-200 items-center"
                       >
                         <Heart className="h-4 w-4 mr-1.5" />
                         Watch
@@ -813,16 +813,16 @@ const ToolDetailPage = () => {
               <div className="bg-emerald-800/80 rounded-lg p-5 shadow-md hidden lg:block">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 mr-4">
-                    <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-8 w-8 text-bone" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-grow">
-                    <h3 className="text-md font-medium text-white">Want to sell yours?</h3>
-                    <p className="text-sm text-white text-opacity-90 mb-3">List a tool like this one and start earning.</p>
+                    <h3 className="text-md font-medium text-bone">Want to sell yours?</h3>
+                    <p className="text-sm text-bone text-opacity-90 mb-3">List a tool like this one and start earning.</p>
                     <button 
                       onClick={() => navigate('/sell')}
-                      className="inline-flex items-center py-2 px-4 bg-white rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
+                      className="inline-flex items-center py-2 px-4 bg-bone-light rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
                     >
                       Sell one like this
                     </button>
@@ -834,7 +834,7 @@ const ToolDetailPage = () => {
           
           {/* Description section - will appear after image and info/button sections on mobile */}
           <div className="lg:col-span-9 order-3">
-            <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h2 className="text-lg font-medium text-stone-800 mb-4">Description</h2>
               <p className="text-stone-600 whitespace-pre-line">{tool.description || "No description provided."}</p>
             </div>
@@ -842,7 +842,7 @@ const ToolDetailPage = () => {
 
           {/* Specifications section - will appear fourth on mobile */}
           <div className="lg:col-span-9 order-4">
-            <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h2 className="text-lg font-medium text-stone-800 mb-4">Specifications</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {tool.brand && (
@@ -918,7 +918,7 @@ const ToolDetailPage = () => {
           {/* The condition below was expanded to check for user_id as an alternative */}
           {(tool.seller || tool.user_id) && (
             <div className="lg:col-span-9 order-5 mt-6">
-              <div className="bg-white rounded-lg p-6 shadow-md">
+              <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
                 <h2 className="text-xl font-medium text-stone-800 mb-4">About the Seller</h2>
                 
                 {/* Debug output to see what seller data we have - set to visible */}
@@ -995,7 +995,7 @@ const ToolDetailPage = () => {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={contactSeller}
-                        className="inline-flex items-center px-4 py-2 border border-benchlot-primary text-sm font-medium rounded-md text-benchlot-primary hover:bg-benchlot-accent-light"
+                        className="inline-flex items-center px-4 py-2 border border-spruce text-sm font-medium rounded-md text-spruce hover:bg-bone-dark"
                       >
                         <MessageCircle className="h-4 w-4 mr-1" />
                         Contact Seller
@@ -1063,13 +1063,13 @@ const ToolDetailPage = () => {
           
           {/* More Like This section */}
           <div className="lg:col-span-9 order-6 mt-6">
-            <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h2 className="text-xl font-medium text-stone-800 mb-4">More Like This</h2>
               
               {similarTools.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {similarTools.map(similarTool => (
-                    <div key={similarTool.id} className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                    <div key={similarTool.id} className="bg-bone-light rounded-lg overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
                       <Link to={`/tools/${similarTool.id}`} className="block">
                         <div className="aspect-square overflow-hidden bg-gray-100">
                           {similarTool.images && similarTool.images.length > 0 ? (
@@ -1086,7 +1086,7 @@ const ToolDetailPage = () => {
                         </div>
                         <div className="p-3">
                           <h3 className="text-stone-800 font-medium truncate">{similarTool.name}</h3>
-                          <p className="text-benchlot-primary font-medium mt-1">
+                          <p className="text-honey font-medium mt-1">
                             {formatPrice(similarTool.current_price || similarTool.price || 0)}
                           </p>
                         </div>
@@ -1106,7 +1106,7 @@ const ToolDetailPage = () => {
           
           {/* Recently Viewed section */}
           <div className="lg:col-span-9 order-7 mt-6">
-            <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h2 className="text-xl font-medium text-stone-800 mb-4">Recently Viewed</h2>
               
               {/* Debug info */}
@@ -1120,7 +1120,7 @@ const ToolDetailPage = () => {
               {recentlyViewed.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {recentlyViewed.map(viewedTool => (
-                    <div key={viewedTool.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div key={viewedTool.id} className="bg-bone-light rounded-lg overflow-hidden shadow-sm border border-default hover:shadow-md transition-shadow">
                       <Link to={`/tools/${viewedTool.id}`} className="block">
                         <div className="aspect-square overflow-hidden bg-gray-100">
                           {viewedTool.images && viewedTool.images.length > 0 ? (
@@ -1137,7 +1137,7 @@ const ToolDetailPage = () => {
                         </div>
                         <div className="p-2">
                           <h3 className="text-stone-800 text-sm truncate">{viewedTool.name}</h3>
-                          <p className="text-benchlot-primary text-sm font-medium mt-0.5">
+                          <p className="text-honey text-sm font-medium mt-0.5">
                             {formatPrice(viewedTool.current_price || viewedTool.price || 0)}
                           </p>
                         </div>
@@ -1161,16 +1161,16 @@ const ToolDetailPage = () => {
               <div className="bg-emerald-800/80 rounded-lg p-5 shadow-md">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 mr-4">
-                    <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-8 w-8 text-bone" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-grow">
-                    <h3 className="text-md font-medium text-white">Want to sell yours?</h3>
-                    <p className="text-sm text-white text-opacity-90 mb-3">List a tool like this one and start earning.</p>
+                    <h3 className="text-md font-medium text-bone">Want to sell yours?</h3>
+                    <p className="text-sm text-bone text-opacity-90 mb-3">List a tool like this one and start earning.</p>
                     <button 
                       onClick={() => navigate('/sell')}
-                      className="inline-flex items-center py-2 px-4 bg-white rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
+                      className="inline-flex items-center py-2 px-4 bg-bone-light rounded-md text-sm font-medium text-emerald-800 hover:bg-opacity-90 transition-colors"
                     >
                       Sell one like this
                     </button>

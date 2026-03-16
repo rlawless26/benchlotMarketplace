@@ -91,9 +91,9 @@ const NotificationSettings = ({ user }) => {
     <div className="flex items-center">
       <button
         type="button"
-        className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary ${
+        className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
-        } ${checked ? 'bg-benchlot-primary' : 'bg-stone-200'}`}
+        } ${checked ? 'bg-spruce' : 'bg-stone-200'}`}
         role="switch"
         aria-checked={checked}
         onClick={disabled ? undefined : onChange}
@@ -107,7 +107,7 @@ const NotificationSettings = ({ user }) => {
       </button>
       <span className={`ml-3 text-sm ${disabled ? 'text-stone-500' : 'text-stone-700'}`}>
         {label}
-        {disabled && <span className="text-xs ml-1 text-benchlot-primary font-medium">(Required)</span>}
+        {disabled && <span className="text-xs ml-1 text-spruce font-medium">(Required)</span>}
       </span>
     </div>
   );
@@ -119,14 +119,14 @@ const NotificationSettings = ({ user }) => {
     return (
       <div className="py-5 border-b border-stone-200 last:border-b-0">
         <div className="flex items-start mb-4">
-          <div className={`flex-shrink-0 p-1.5 rounded-full ${required ? 'bg-benchlot-primary bg-opacity-20 text-benchlot-primary' : 'bg-benchlot-accent-light text-benchlot-primary'}`}>
+          <div className={`flex-shrink-0 p-1.5 rounded-full ${required ? 'bg-spruce bg-opacity-20 text-spruce' : 'bg-bone-dark text-spruce'}`}>
             <Icon className="h-5 w-5" />
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-stone-800 flex items-center">
               {title}
               {required && (
-                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-benchlot-primary text-white">
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-honey text-dark-teal">
                   Required
                 </span>
               )}
@@ -148,7 +148,7 @@ const NotificationSettings = ({ user }) => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Email Notification Settings</h2>
         <p className="text-stone-600 text-sm mt-1">Choose which email notifications you'd like to receive</p>
@@ -180,7 +180,7 @@ const NotificationSettings = ({ user }) => {
         </div>
         
         {/* Categories */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4">
+        <div className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4">
           <NotificationCategory
             icon={ShoppingBag}
             title="Transaction Notifications"
@@ -234,7 +234,7 @@ const NotificationSettings = ({ user }) => {
           <div className="flex justify-end">
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+              className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
               disabled={saving}
             >
               {saving ? (

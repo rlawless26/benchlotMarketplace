@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project
+Rekerf — The marketplace for premium used hand tools. Formerly "Benchlot".
+
 ## Build/Test Commands
 - `npm start` - Start the React development server
 - `npm test` - Run tests (Jest with React Testing Library)
@@ -18,5 +21,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Error Handling**: Use try/catch with detailed console.error for debugging
 - **Documentation**: Use JSDoc for functions, especially in model files
 - **Firebase**: Abstract Firebase operations into model files and custom hooks
-- **Styling**: Use Tailwind CSS with custom color theme defined in tailwind.config.js
+- **Styling**: Use Tailwind CSS with Rekerf design system (see tailwind.config.js)
 - **Context**: Use React Context for app-wide state management
+
+## Brand / Design System
+- **Fonts**: Petrona (display/headings), Outfit (body/UI)
+- **Colors**: Spruce (#1a3030), Bone (#f2f0eb), Honey (#d4aa60), Dark Teal (#0c1c1e)
+- **Rules**: Never pure white backgrounds (use Bone). Never pure black text (use Dark Teal). Prices always in Honey. Button text on Honey is always Dark Teal.
+- **Firebase project ID**: `benchlot-6d64e` (do not rename — this is the Google Cloud project identifier)

@@ -1,6 +1,6 @@
 {
   "name": "functions",
-  "description": "Firebase Functions for Benchlot",
+  "description": "Firebase Functions for Rekerf",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",

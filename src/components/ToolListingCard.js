@@ -1,6 +1,6 @@
 /**
  * Tool Listing Card Component
- * Displays a tool listing in card format with Benchlot forest green styling
+ * Displays a tool listing in card format with Rekerf styling
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -27,14 +27,14 @@ const ToolListingCard = ({ tool, featured = false }) => {
   return (
     <div 
       className={`
-        bg-white rounded-lg overflow-hidden shadow-card hover:shadow-card-hover 
+        bg-bone-light rounded-lg overflow-hidden shadow-card hover:shadow-card-hover
         transition-all duration-200 flex flex-col h-full relative
-        ${featured ? 'ring-2 ring-benchlot-primary' : 'border border-gray-100'}
+        ${featured ? 'ring-2 ring-spruce' : 'border border-default'}
       `}
     >
       {/* Featured badge */}
       {featured && (
-        <div className="absolute top-2 right-12 z-10 bg-benchlot-primary text-white px-2.5 py-1 text-xs font-medium rounded-full shadow-sm">
+        <div className="absolute top-2 right-12 z-10 bg-spruce text-bone px-2.5 py-1 text-xs font-medium rounded-full shadow-sm">
           Featured
         </div>
       )}
@@ -67,18 +67,18 @@ const ToolListingCard = ({ tool, featured = false }) => {
       
       {/* Tool details */}
       <div className="p-4 flex flex-col flex-grow">
-        <Link to={`/tools/${tool.id}`} className="text-lg font-serif font-semibold text-benchlot-text-primary hover:text-benchlot-primary transition-colors duration-150 mb-1 line-clamp-2">
+        <Link to={`/tools/${tool.id}`} className="text-lg font-display font-bold text-dark-teal hover:text-spruce transition-colors duration-150 mb-1 line-clamp-2">
           {tool.name}
         </Link>
         
         <div className="mt-1 space-y-2 mb-3">
           {tool.category && (
-            <div className="inline-block bg-benchlot-accent-light text-benchlot-primary text-xs font-medium px-2.5 py-1 rounded-full">
+            <div className="inline-block bg-bone-dark text-spruce text-xs font-medium px-2.5 py-1 rounded-full">
               {tool.category}
             </div>
           )}
           
-          <div className="flex flex-wrap gap-x-4 text-sm text-benchlot-text-secondary">
+          <div className="flex flex-wrap gap-x-4 text-sm text-secondary">
             {tool.condition && (
               <div>
                 Condition: <span className="font-medium">{tool.condition}</span>
@@ -101,11 +101,11 @@ const ToolListingCard = ({ tool, featured = false }) => {
                 {formatPrice(originalPrice)}
               </span>
             )}
-            <span className="text-xl font-bold text-benchlot-primary">
+            <span className="text-xl font-bold text-honey">
               {formatPrice(displayPrice)}
             </span>
             {tool.rental_period && (
-              <span className="ml-1 text-xs text-benchlot-text-secondary">
+              <span className="ml-1 text-xs text-secondary">
                 /{tool.rental_period}
               </span>
             )}
@@ -113,11 +113,11 @@ const ToolListingCard = ({ tool, featured = false }) => {
         </div>
         
         {/* Location and seller info */}
-        <div className="mt-3 pt-3 border-t border-benchlot-accent-light text-sm text-benchlot-text-secondary flex flex-wrap items-center justify-between">
+        <div className="mt-3 pt-3 border-t border-default text-sm text-secondary flex flex-wrap items-center justify-between">
           <div>
             {tool.location && (
               <span className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-benchlot-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-spruce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>

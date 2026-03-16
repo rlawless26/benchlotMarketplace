@@ -238,10 +238,10 @@ const OrderConfirmation = () => {
           <p>{error}</p>
         </div>
         <div className="flex space-x-4 mt-6">
-          <Link to="/" className="px-4 py-2 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">
+          <Link to="/" className="px-4 py-2 bg-honey text-dark-teal rounded hover:bg-honey-light">
             Return to Home
           </Link>
-          <Link to="/orders" className="px-4 py-2 border border-benchlot-primary text-benchlot-primary rounded hover:bg-benchlot-accent-light">
+          <Link to="/orders" className="px-4 py-2 border border-spruce text-spruce rounded hover:bg-bone-dark">
             View Orders
           </Link>
         </div>
@@ -270,9 +270,9 @@ const OrderConfirmation = () => {
       
       {/* Order Information */}
       <div className="mb-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bone-light rounded-lg shadow-md overflow-hidden border border-default">
           {/* Order Header */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <div className="px-6 py-4 border-b border-gray-200 bg-bone">
             <div className="flex flex-wrap justify-between items-center">
               <div>
                 <h2 className="text-lg font-semibold">Order #{order.id.slice(-8).toUpperCase()}</h2>
@@ -308,7 +308,7 @@ const OrderConfirmation = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/tools/${item.toolId}`} className="text-benchlot-primary hover:underline font-medium">
+                    <Link to={`/tools/${item.toolId}`} className="text-spruce hover:underline font-medium">
                       {item.name}
                     </Link>
                     <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
@@ -392,15 +392,15 @@ const OrderConfirmation = () => {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4 justify-between items-center mt-8">
         <div className="space-x-4">
-          <Link 
-            to="/" 
-            className="px-5 py-2 border border-benchlot-primary text-benchlot-primary rounded-md hover:bg-benchlot-accent-light"
+          <Link
+            to="/"
+            className="px-5 py-2 border border-spruce text-spruce rounded-md hover:bg-bone-dark"
           >
             Continue Shopping
           </Link>
-          <Link 
-            to="/orders" 
-            className="px-5 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary"
+          <Link
+            to="/orders"
+            className="px-5 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
           >
             View All Orders
           </Link>

@@ -1,9 +1,7 @@
 /**
- * Benchlot Design System
+ * Rekerf Design System
  * Global styles and design tokens for consistent UI
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=Mulish:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,203 +10,370 @@
 @layer base {
   /* Base element styling */
   html {
-    @apply text-benchlot-text-primary;
-    font-size: 17px;
+    color: #0c1c1e;
+    font-size: 15px;
     scroll-behavior: smooth;
   }
-  
+
   body {
-    @apply font-sans bg-benchlot-base;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #f2f0eb;
     letter-spacing: 0.015em;
+    line-height: 1.7;
+    color: #0c1c1e;
   }
 
   h1, h2, h3 {
-    @apply font-serif font-semibold text-benchlot-text-primary;
-  }
-
-  h4, h5, h6 {
-    @apply font-sans font-semibold text-benchlot-text-primary;
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+    color: #0c1c1e;
   }
 
   h1 {
-    @apply text-3xl md:text-4xl;
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
   }
 
   h2 {
-    @apply text-2xl md:text-3xl;
+    font-weight: 700;
     font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.3;
   }
 
   h3 {
-    @apply text-xl md:text-2xl;
+    font-weight: 700;
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    line-height: 1.3;
+  }
+
+  h4, h5, h6 {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    color: #0c1c1e;
   }
 
   h4 {
-    @apply text-lg md:text-xl;
-  }
-  
-  /* Adding forest color utility classes for backward compatibility */
-  .text-forest-700 {
-    @apply text-benchlot-primary;
-  }
-  
-  .text-forest-800 {
-    @apply text-benchlot-secondary;
-  }
-  
-  .text-forest-400 {
-    @apply text-benchlot-accent;
-  }
-  
-  .bg-forest-700 {
-    @apply bg-benchlot-primary;
-  }
-  
-  .bg-forest-800 {
-    @apply bg-benchlot-secondary;
-  }
-  
-  .bg-forest-50 {
-    @apply bg-benchlot-accent-light;
-  }
-  
-  .bg-forest-100 {
-    @apply bg-benchlot-accent-light;
-  }
-  
-  .hover\:bg-forest-800:hover {
-    @apply hover:bg-benchlot-secondary;
-  }
-  
-  .hover\:bg-forest-50:hover {
-    @apply hover:bg-benchlot-accent-light;
-  }
-  
-  .border-forest-700 {
-    @apply border-benchlot-primary;
+    font-size: 1.25rem;
   }
 }
 
 @layer components {
   /* Button variants */
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none cursor-pointer;
+    @apply inline-flex items-center justify-center font-bold transition-all duration-200 focus:outline-none cursor-pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    padding: 11px 24px;
+    border-radius: 8px;
   }
 
   .btn-primary {
-    @apply btn bg-benchlot-primary text-white hover:bg-benchlot-secondary;
+    @apply btn;
+    background-color: #d4aa60;
+    color: #0c1c1e;
+  }
+
+  .btn-primary:hover {
+    background-color: #e0c080;
+  }
+
+  .btn-primary:active {
+    background-color: #b08a40;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-benchlot-text-primary border border-benchlot-accent hover:bg-benchlot-accent-bg;
+    @apply btn;
+    background-color: #1a3030;
+    color: #f2f0eb;
+  }
+
+  .btn-secondary:hover {
+    background-color: #2a4a48;
+  }
+
+  .btn-secondary:active {
+    background-color: #0e2020;
+  }
+
+  .btn-outline {
+    @apply btn;
+    background-color: transparent;
+    border: 2px solid #1a3030;
+    color: #1a3030;
+  }
+
+  .btn-outline:hover {
+    background-color: rgba(26, 48, 48, 0.05);
   }
 
   .btn-accent {
-    @apply btn bg-benchlot-accent text-white hover:bg-benchlot-accent-hover;
+    @apply btn-primary;
   }
 
   .btn-sm {
-    @apply px-3 py-1.5 text-sm;
+    font-size: 11px;
+    padding: 8px 18px;
+    border-radius: 6px;
   }
 
   .btn-lg {
-    @apply px-5 py-3 text-lg;
+    font-size: 13px;
+    padding: 14px 32px;
+    border-radius: 8px;
   }
 
   /* Card components */
   .card {
-    @apply bg-white rounded-lg shadow-card transition-shadow duration-200 overflow-hidden;
+    background-color: #f8f6f2;
+    border-radius: 10px;
+    border: 1px solid #e4e2dc;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    overflow: hidden;
   }
 
-  .card-hover {
-    @apply hover:shadow-card-hover;
+  .card-hover:hover {
+    box-shadow: 0 4px 16px rgba(12, 28, 30, 0.10);
+    border-color: #d4d2cc;
   }
 
   /* Form elements */
   .form-input {
-    @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary placeholder-benchlot-text-secondary focus:outline-none focus:border-benchlot-primary transition duration-200;
-    font-size: 1.05rem;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e4e2dc;
+    border-radius: 6px;
+    color: #0c1c1e;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    background-color: #f8f6f2;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-input::placeholder {
+    color: #8a8a80;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #1a3030;
+    box-shadow: 0 0 0 3px rgba(26, 48, 48, 0.1);
   }
 
   .form-select {
-    @apply w-full px-3 py-2 border border-benchlot-accent-dark rounded-sm text-benchlot-text-primary focus:outline-none focus:border-benchlot-primary transition duration-200;
-    font-size: 1.05rem;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e4e2dc;
+    border-radius: 6px;
+    color: #0c1c1e;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    background-color: #f8f6f2;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-select:focus {
+    outline: none;
+    border-color: #1a3030;
+    box-shadow: 0 0 0 3px rgba(26, 48, 48, 0.1);
   }
 
   .form-checkbox {
-    @apply h-4 w-4 text-benchlot-primary rounded focus:ring-benchlot-primary focus:ring-offset-0 border-2 border-benchlot-primary;
+    @apply h-4 w-4 rounded;
+    color: #1a3030;
+    border: 2px solid #1a3030;
+  }
+
+  .form-checkbox:focus {
+    ring-color: #1a3030;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-benchlot-text-primary mb-1;
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0c1c1e;
+    margin-bottom: 4px;
+    font-family: 'Outfit', sans-serif;
   }
 
   .form-group {
-    @apply mb-4;
+    margin-bottom: 16px;
   }
 
-  /* Status indicators */
+  .form-error {
+    color: #a83a2a;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* Status indicators / Badges */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-3 py-1 text-xs font-medium;
+    border-radius: 16px;
+    font-family: 'Outfit', sans-serif;
   }
 
   .badge-success {
-    @apply badge bg-green-100 text-green-800;
+    @apply badge;
+    background-color: #d6ece4;
+    color: #1a3030;
   }
 
   .badge-error {
-    @apply badge bg-red-100 text-red-800;
+    @apply badge;
+    background-color: #fde8e8;
+    color: #a83a2a;
   }
 
   .badge-accent {
-    @apply badge bg-benchlot-accent-light text-benchlot-primary;
+    @apply badge;
+    background-color: #d4aa60;
+    color: #0c1c1e;
   }
 
-  /* Message styles */
+  .badge-highlight {
+    @apply badge;
+    background-color: #d6ece4;
+    color: #1a3030;
+  }
+
+  .badge-neutral {
+    @apply badge;
+    background-color: #e8e6e0;
+    color: #4a5a54;
+  }
+
+  /* Message styles / Alerts */
   .alert {
-    @apply p-4 border-l-4 rounded-md mb-4;
+    padding: 16px;
+    border-left: 4px solid;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-family: 'Outfit', sans-serif;
   }
 
   .alert-success {
-    @apply alert bg-green-50 border-benchlot-success text-green-700;
+    @apply alert;
+    background-color: #ecf5f0;
+    border-color: #2a6a4a;
+    color: #2a6a4a;
   }
 
   .alert-error {
-    @apply alert bg-red-50 border-benchlot-error text-red-700;
+    @apply alert;
+    background-color: #fef2f0;
+    border-color: #a83a2a;
+    color: #a83a2a;
   }
 
   .alert-info {
-    @apply alert bg-benchlot-accent-light border-benchlot-primary text-benchlot-primary;
+    @apply alert;
+    background-color: #edf5f7;
+    border-color: #2a5a6a;
+    color: #2a5a6a;
+  }
+
+  .alert-warning {
+    @apply alert;
+    background-color: #fdf6ec;
+    border-color: #b08a40;
+    color: #b08a40;
   }
 
   /* Layout utilities */
   .page-container {
-    @apply max-w-container mx-auto px-4 sm:px-6 lg:px-8 py-6 w-[90%];
+    max-width: 55rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    padding-block: 1.5rem;
+    width: 90%;
+  }
+
+  @media (min-width: 640px) {
+    .page-container {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .page-container {
+      padding-inline: 2rem;
+    }
   }
 
   .section-container {
-    @apply max-w-container mx-auto;
+    max-width: 55rem;
+    margin-inline: auto;
   }
 
   .form-container {
-    @apply w-[90%] bg-white max-w-container mx-auto p-6 rounded-lg;
-    /* Remove the shadow */
-    box-shadow: none;
+    width: 90%;
+    max-width: 55rem;
+    margin-inline: auto;
+    padding: 24px;
+    background-color: #f8f6f2;
+    border-radius: 10px;
+    border: 1px solid #e4e2dc;
   }
 
   /* Header Styles */
   .main-header {
-    @apply py-6 sticky top-0 left-0 right-0 bg-benchlot-base z-50;
+    padding-block: 16px;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #0c1c1e;
+    z-index: 50;
   }
 
   .logo {
-    @apply font-serif font-semibold text-xl text-benchlot-primary tracking-wider;
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: #f2f0eb;
+    letter-spacing: -1.5px;
   }
 
   .nav-link {
-    @apply text-benchlot-text-secondary text-sm transition duration-200 hover:text-benchlot-primary;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: #6a8a84;
+    letter-spacing: 0.3px;
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #f2f0eb;
+  }
+
+  /* Section label / eyebrow */
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #8a8a80;
+  }
+
+  /* Price display */
+  .price {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #d4aa60;
+  }
+
+  /* Tagline */
+  .tagline {
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+    font-weight: 500;
+    font-style: italic;
+    color: #d4aa60;
   }
 
   /* Feature Card */
@@ -217,29 +382,37 @@
   }
 
   .feature-icon {
-    @apply w-8 h-8 text-benchlot-primary mb-4;
+    width: 32px;
+    height: 32px;
+    color: #d4aa60;
+    margin-bottom: 16px;
   }
 
   .feature-title {
-    @apply text-xl font-serif font-semibold mb-2;
+    font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: #0c1c1e;
   }
 
   .feature-text {
-    @apply text-benchlot-text-secondary;
+    color: #4a5a54;
+    font-family: 'Outfit', sans-serif;
   }
 }
 
 /* Animation utilities */
 @layer utilities {
   .transition-fast {
-    @apply transition duration-150 ease-in-out;
+    transition: all 150ms ease;
   }
 
   .transition-medium {
-    @apply transition duration-300 ease-in-out;
+    transition: all 250ms ease;
   }
 
   .transition-slow {
-    @apply transition duration-500 ease-in-out;
+    transition: all 400ms ease;
   }
 }

@@ -103,7 +103,7 @@ const ToolScanCard = ({
             />
           )}
           <div className="flex gap-2 mt-2">
-            <button onClick={saveEdit} className="text-xs px-3 py-1 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">
+            <button onClick={saveEdit} className="text-xs px-3 py-1 bg-spruce text-bone rounded hover:bg-spruce-light">
               Save
             </button>
             <button onClick={cancelEdit} className="text-xs px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
@@ -130,7 +130,7 @@ const ToolScanCard = ({
   const isPublished = publishState === 'done' || publishedToolId;
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border transition-colors ${
+    <div className={`bg-bone-light rounded-xl shadow-sm border transition-colors ${
       isPublished ? 'border-green-300 bg-green-50/30' : 'border-gray-200'
     }`}>
       {/* Card Header */}
@@ -150,17 +150,17 @@ const ToolScanCard = ({
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className="w-full px-3 py-2 border border-accent rounded-lg text-lg font-serif focus:ring-2 focus:ring-accent/50"
+                      className="w-full px-3 py-2 border border-accent rounded-lg text-lg font-display focus:ring-2 focus:ring-accent/50"
                       autoFocus
                     />
                     <div className="flex gap-2 mt-2">
-                      <button onClick={saveEdit} className="text-xs px-3 py-1 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">Save</button>
+                      <button onClick={saveEdit} className="text-xs px-3 py-1 bg-spruce text-bone rounded hover:bg-spruce-light">Save</button>
                       <button onClick={cancelEdit} className="text-xs px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <h3
-                    className="text-lg font-serif font-semibold text-benchlot-primary cursor-pointer hover:text-accent transition-colors"
+                    className="text-lg font-display font-semibold text-spruce cursor-pointer hover:text-accent transition-colors"
                     onClick={() => startEdit('suggested_title', tool.suggested_title)}
                     title="Click to edit title"
                   >
@@ -266,7 +266,7 @@ const ToolScanCard = ({
                   autoFocus
                 />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={saveEdit} className="text-xs px-3 py-1 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">Save</button>
+                  <button onClick={saveEdit} className="text-xs px-3 py-1 bg-spruce text-bone rounded hover:bg-spruce-light">Save</button>
                   <button onClick={cancelEdit} className="text-xs px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                 </div>
               </div>
@@ -328,7 +328,7 @@ const ToolScanCard = ({
               </div>
               {editing === 'suggested_price_low' || editing === 'suggested_price_high' ? (
                 <div className="flex gap-2">
-                  <button onClick={saveEdit} className="text-xs px-3 py-1 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary">Save</button>
+                  <button onClick={saveEdit} className="text-xs px-3 py-1 bg-spruce text-bone rounded hover:bg-spruce-light">Save</button>
                   <button onClick={cancelEdit} className="text-xs px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                 </div>
               ) : null}
@@ -363,14 +363,14 @@ const ToolScanCard = ({
           <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
             {isPublished ? (
               <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-2 text-green-700">
+                <div className="flex items-center gap-2 text-spruce">
                   <Check className="w-5 h-5" />
                   <span className="text-sm font-medium">Saved as draft listing</span>
                 </div>
                 {publishedToolId && (
                   <button
                     onClick={() => onNavigateToListing(publishedToolId)}
-                    className="flex items-center gap-1.5 text-sm text-benchlot-primary hover:text-accent transition-colors ml-auto"
+                    className="flex items-center gap-1.5 text-sm text-spruce hover:text-accent transition-colors ml-auto"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Edit listing
@@ -382,7 +382,7 @@ const ToolScanCard = ({
                 <button
                   onClick={handlePublish}
                   disabled={publishState === 'publishing'}
-                  className="flex-1 py-2.5 px-4 bg-benchlot-primary text-white rounded-lg text-sm font-medium hover:bg-benchlot-secondary disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 px-4 bg-honey text-dark-teal rounded-lg text-sm font-medium hover:bg-honey-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   {publishState === 'publishing' ? (
                     <>

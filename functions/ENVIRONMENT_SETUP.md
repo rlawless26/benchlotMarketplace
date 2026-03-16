@@ -15,7 +15,7 @@ Our code has been updated to use environment variables (`process.env`) instead.
 
 1. **Go to Firebase Console**
    - Open [https://console.firebase.google.com/](https://console.firebase.google.com/)
-   - Select your "benchlot" project
+   - Select your "rekerf" project
 
 2. **Navigate to Functions**
    - Click on "Functions" in the left sidebar
@@ -30,7 +30,7 @@ Our code has been updated to use environment variables (`process.env`) instead.
      STRIPE_SECRET=your_stripe_secret_key
      STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
      STRIPE_CONNECT_WEBHOOK_SECRET=your_stripe_connect_webhook_secret
-     APP_URL=https://benchlot.com
+     APP_URL=https://rekerf.com
      SENDGRID_API_KEY=your_sendgrid_api_key
      ```
    - Click "Update"
@@ -44,7 +44,7 @@ Our code has been updated to use environment variables (`process.env`) instead.
      STRIPE_SECRET=your_stripe_secret_key
      STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
      STRIPE_CONNECT_WEBHOOK_SECRET=your_stripe_connect_webhook_secret
-     APP_URL=https://benchlot.com
+     APP_URL=https://rekerf.com
      SENDGRID_API_KEY=your_sendgrid_api_key
      ```
 

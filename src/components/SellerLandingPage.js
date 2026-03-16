@@ -41,7 +41,7 @@ const SellerLandingPage = () => {
   };
   
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       {/* Hero Section */}
       <section className="py-16 md:py-24 bg-stone-50 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -63,14 +63,14 @@ const SellerLandingPage = () => {
                   <input
                     type="text"
                     placeholder="e.g., Lie-Nielsen No. 62 Low Angle Jack" 
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-spruce"
                     value={toolName}
                     onChange={(e) => setToolName(e.target.value)}
                     required
                   />
                   <button 
                     type="submit"
-                    className="w-full bg-benchlot-primary text-white px-6 py-3 rounded-md hover:bg-benchlot-secondary transition-colors flex items-center justify-center"
+                    className="w-full bg-honey text-dark-teal px-6 py-3 rounded-md hover:bg-spruce-light transition-colors flex items-center justify-center"
                   >
                     Start Selling
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -94,7 +94,7 @@ const SellerLandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-medium text-gray-800 mb-4">
-              How selling works on Benchlot
+              How selling works on Rekerf
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Our straightforward process helps you turn unused tools into cash quickly and safely.
@@ -102,9 +102,9 @@ const SellerLandingPage = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-benchlot-accent-light rounded-full flex items-center justify-center mb-6">
-                <Camera className="h-6 w-6 text-benchlot-primary" />
+            <div className="bg-bone-light p-8 rounded-lg shadow-sm border border-default">
+              <div className="w-12 h-12 bg-bone-dark rounded-full flex items-center justify-center mb-6">
+                <Camera className="h-6 w-6 text-spruce" />
               </div>
               <h3 className="text-xl font-medium text-gray-800 mb-3">
                 List your tools
@@ -115,9 +115,9 @@ const SellerLandingPage = () => {
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-benchlot-accent-light rounded-full flex items-center justify-center mb-6">
-                <ShieldCheck className="h-6 w-6 text-benchlot-primary" />
+            <div className="bg-bone-light p-8 rounded-lg shadow-sm border border-default">
+              <div className="w-12 h-12 bg-bone-dark rounded-full flex items-center justify-center mb-6">
+                <ShieldCheck className="h-6 w-6 text-spruce" />
               </div>
               <h3 className="text-xl font-medium text-gray-800 mb-3">
                 Make secure sales
@@ -128,9 +128,9 @@ const SellerLandingPage = () => {
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-benchlot-accent-light rounded-full flex items-center justify-center mb-6">
-                <DollarSign className="h-6 w-6 text-benchlot-primary" />
+            <div className="bg-bone-light p-8 rounded-lg shadow-sm border border-default">
+              <div className="w-12 h-12 bg-bone-dark rounded-full flex items-center justify-center mb-6">
+                <DollarSign className="h-6 w-6 text-spruce" />
               </div>
               <h3 className="text-xl font-medium text-gray-800 mb-3">
                 Get paid quickly
@@ -144,12 +144,12 @@ const SellerLandingPage = () => {
         </div>
       </section>
       
-      {/* Why Sell on Benchlot Section */}
+      {/* Why Sell on Rekerf Section */}
       <section className="py-16 md:py-24 bg-stone-50 border-y border-stone-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-medium text-gray-800 mb-4">
-              Why sell on Benchlot?
+              Why sell on Rekerf?
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Your tools deserve buyers who appreciate them.
@@ -159,8 +159,8 @@ const SellerLandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-benchlot-accent-light rounded-full flex items-center justify-center">
-                  <Users className="h-5 w-5 text-benchlot-primary" />
+                <div className="w-10 h-10 bg-bone-dark rounded-full flex items-center justify-center">
+                  <Users className="h-5 w-5 text-spruce" />
                 </div>
               </div>
               <div>
@@ -174,8 +174,8 @@ const SellerLandingPage = () => {
             
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-benchlot-accent-light rounded-full flex items-center justify-center">
-                  <Camera className="h-5 w-5 text-benchlot-primary" />
+                <div className="w-10 h-10 bg-bone-dark rounded-full flex items-center justify-center">
+                  <Camera className="h-5 w-5 text-spruce" />
                 </div>
               </div>
               <div>
@@ -189,8 +189,8 @@ const SellerLandingPage = () => {
             
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-benchlot-accent-light rounded-full flex items-center justify-center">
-                  <BarChart className="h-5 w-5 text-benchlot-primary" />
+                <div className="w-10 h-10 bg-bone-dark rounded-full flex items-center justify-center">
+                  <BarChart className="h-5 w-5 text-spruce" />
                 </div>
               </div>
               <div>
@@ -204,8 +204,8 @@ const SellerLandingPage = () => {
             
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-benchlot-accent-light rounded-full flex items-center justify-center">
-                  <ShieldCheck className="h-5 w-5 text-benchlot-primary" />
+                <div className="w-10 h-10 bg-bone-dark rounded-full flex items-center justify-center">
+                  <ShieldCheck className="h-5 w-5 text-spruce" />
                 </div>
               </div>
               <div>
@@ -228,12 +228,12 @@ const SellerLandingPage = () => {
               What sellers are saying
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Hear from makers who have successfully sold tools on Benchlot
+              Hear from makers who have successfully sold tools on Rekerf
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="bg-bone-light p-6 rounded-lg shadow-sm border border-default">
               <div className="flex items-center mb-4">
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -254,7 +254,7 @@ const SellerLandingPage = () => {
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="bg-bone-light p-6 rounded-lg shadow-sm border border-default">
               <div className="flex items-center mb-4">
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -275,7 +275,7 @@ const SellerLandingPage = () => {
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="bg-bone-light p-6 rounded-lg shadow-sm border border-default">
               <div className="flex items-center mb-4">
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -284,7 +284,7 @@ const SellerLandingPage = () => {
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
               <p className="text-gray-600 mb-4">
-                "I inherited my grandfather's tool chest full of Stanley Bedrock planes. Benchlot
+                "I inherited my grandfather's tool chest full of Stanley Bedrock planes. Rekerf
                 helped me find them homes with people who'd actually put them to work."
               </p>
               <div className="flex items-center">
@@ -300,24 +300,24 @@ const SellerLandingPage = () => {
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-benchlot-primary text-white">
+      <section className="py-16 md:py-24 bg-spruce text-bone">
         <div className="max-w-5xl mx-auto px-4 md:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-medium mb-6">
             Your tools deserve a second life on someone's bench
           </h2>
-          <p className="text-lg text-benchlot-accent-light mb-8 max-w-3xl mx-auto">
+          <p className="text-lg text-bone mb-8 max-w-3xl mx-auto">
             Whether you're upgrading, downsizing, or settling an estate, list your hand tools
             with a community that values craftsmanship.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              className="bg-white text-benchlot-primary px-8 py-4 rounded-md hover:bg-benchlot-accent-light transition-colors text-lg font-medium"
+              className="bg-honey text-dark-teal px-8 py-4 rounded-md hover:bg-honey-light transition-colors text-lg font-medium"
               onClick={() => isAuthenticated() ? navigate('/seller/onboard-and-list') : openAuthModal('signup', '/seller/onboard-and-list')}
             >
               Start Selling
             </button>
             <button 
-              className="bg-transparent border border-white text-white px-8 py-4 rounded-md hover:bg-benchlot-secondary transition-colors text-lg font-medium"
+              className="bg-transparent border border-bone text-bone px-8 py-4 rounded-md hover:bg-spruce-light transition-colors text-lg font-medium"
               onClick={() => navigate('/help')}
             >
               Learn More
@@ -327,7 +327,7 @@ const SellerLandingPage = () => {
       </section>
 
       {/* What You'll Need Section */}
-      <section className="py-16 md:py-20 bg-white">
+      <section className="py-16 md:py-20 bg-bone-light">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
@@ -340,28 +340,28 @@ const SellerLandingPage = () => {
               
               <ul className="space-y-4">
                 <li className="flex gap-3">
-                  <ChevronRight className="h-6 w-6 text-benchlot-primary flex-shrink-0" />
+                  <ChevronRight className="h-6 w-6 text-spruce flex-shrink-0" />
                   <div>
                     <h3 className="font-medium text-gray-800">Valid photo ID</h3>
                     <p className="text-gray-600">For identity verification and account security</p>
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <ChevronRight className="h-6 w-6 text-benchlot-primary flex-shrink-0" />
+                  <ChevronRight className="h-6 w-6 text-spruce flex-shrink-0" />
                   <div>
                     <h3 className="font-medium text-gray-800">Bank account information</h3>
                     <p className="text-gray-600">To receive your payments securely and quickly</p>
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <ChevronRight className="h-6 w-6 text-benchlot-primary flex-shrink-0" />
+                  <ChevronRight className="h-6 w-6 text-spruce flex-shrink-0" />
                   <div>
                     <h3 className="font-medium text-gray-800">Basic tool details</h3>
                     <p className="text-gray-600">Including brands, models, and condition information</p>
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <ChevronRight className="h-6 w-6 text-benchlot-primary flex-shrink-0" />
+                  <ChevronRight className="h-6 w-6 text-spruce flex-shrink-0" />
                   <div>
                     <h3 className="font-medium text-gray-800">Good quality photos</h3>
                     <p className="text-gray-600">Or schedule a session with our photography team</p>
@@ -371,7 +371,7 @@ const SellerLandingPage = () => {
               
               <div className="mt-8">
                 <button 
-                  className="flex items-center text-benchlot-primary font-medium hover:text-benchlot-secondary"
+                  className="flex items-center text-spruce font-medium hover:text-spruce-light"
                   onClick={() => navigate('/help')}
                 >
                   View detailed requirements

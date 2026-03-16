@@ -27,7 +27,7 @@ const ToolGrid = ({ tools, loading, error, emptyMessage = "No tools found" }) =>
 
   if (!tools || tools.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md text-center">
+      <div className="bg-bone-light p-6 rounded-lg shadow-md text-center border border-default">
         <p className="text-gray-600">{emptyMessage}</p>
       </div>
     );

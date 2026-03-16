@@ -1,5 +1,5 @@
 // src/Pages/LandingPage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Import only the icons we need
 import {
   Users,
@@ -12,6 +12,10 @@ const LandingPage = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
+
+  useEffect(() => {
+    document.title = 'Home | Rekerf';
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,30 +82,30 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="bg-stone-50">
+    <div className="bg-bone">
       {/* Hero Section with Form */}
       <section className="py-24 bg-cover bg-center relative" style={{ backgroundImage: 'url("/images/shop_tools_bg.jpg")' }}>
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
-        
+        <div className="absolute inset-0 bg-spruce bg-opacity-60"></div>
+
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-white">
-              Buy and sell new and used woodworking tools
+            <h1 className="text-4xl md:text-5xl font-display font-medium mb-6 text-bone">
+              The marketplace for premium used hand tools
             </h1>
-            <p className="text-xl text-white text-opacity-90 mb-8">
-              The marketplace for woodworkers to buy and sell new, used, and vintage woodworking tools.</p>
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-xl mx-auto">
+            <p className="text-xl mb-8" style={{ color: '#6aaa98' }}>
+              The second cut. Buy and sell premium hand tools from makers who understand their value.</p>
+            <div className="bg-bone-light rounded-lg shadow-lg p-8 max-w-xl mx-auto">
               <div className="mb-6">
-                <h3 className="text-2xl font-serif font-medium mb-2">Join Benchlot Today</h3>
-                <p className="text-stone-600 text-sm">We're building the new standard for buying and selling tools</p>
+                <h3 className="text-2xl font-display font-medium mb-2 text-dark-teal">Join Rekerf Today</h3>
+                <p className="text-secondary text-sm">We're building the new standard for buying and selling tools</p>
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="flex flex-col md:flex-row gap-4">
                   <input
                     type="email"
                     placeholder="Enter your email"
-                    className="flex-1 px-4 py-3 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary"
+                    className="flex-1 px-4 py-3 border border-stone-300 rounded-md focus:outline-none focus:border-spruce"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -109,7 +113,7 @@ const LandingPage = () => {
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-benchlot-primary hover:bg-benchlot-secondary text-white font-medium rounded-md transition-colors"
+                    className="px-6 py-3 bg-honey text-dark-teal font-medium rounded-md hover:bg-honey-light transition-colors"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Joining...' : 'Sign Up'}
@@ -118,8 +122,8 @@ const LandingPage = () => {
 
                 {submitStatus.message && (
                   <div className={`mt-4 p-3 rounded-md text-center text-sm ${submitStatus.type === 'success'
-                      ? 'bg-green-50 text-green-700 border border-green-200'
-                      : 'bg-red-50 text-red-700 border border-red-200'
+                      ? 'bg-green-50 text-success border border-green-200'
+                      : 'bg-red-50 text-error border border-red-200'
                     }`}>
                     {submitStatus.message}
                   </div>
@@ -131,52 +135,52 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bone-light">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-serif font-medium mb-4 text-stone-800">How Benchlot Works</h2>
-            <p className="text-stone-600">The trusted marketplace for woodworkers and makers</p>
+            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">How Rekerf Works</h2>
+            <p className="text-secondary">The marketplace for premium used hand tools</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
-              <div className="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BadgeCheck className="h-8 w-8 text-benchlot-primary" />
+              <div className="bg-bone-light shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <BadgeCheck className="h-8 w-8 text-spruce" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Verified Tools</h3>
-              <p className="text-stone-600">Every listing is authenticated by our experts to ensure quality and value.</p>
+              <h3 className="text-xl font-medium mb-2 text-dark-teal">Verified Tools</h3>
+              <p className="text-secondary">Every listing is authenticated by our experts to ensure quality and value.</p>
             </div>
 
             <div className="text-center">
-              <div className="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="h-8 w-8 text-benchlot-primary" />
+              <div className="bg-bone-light shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="h-8 w-8 text-spruce" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Local Community</h3>
-              <p className="text-stone-600">Connect with trusted buyers and sellers in your local maker community.</p>
+              <h3 className="text-xl font-medium mb-2 text-dark-teal">Local Community</h3>
+              <p className="text-secondary">Connect with trusted buyers and sellers in your local maker community.</p>
             </div>
 
             <div className="text-center">
-              <div className="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ChartBar className="h-8 w-8 text-benchlot-primary" />
+              <div className="bg-bone-light shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ChartBar className="h-8 w-8 text-spruce" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Fair Pricing</h3>
-              <p className="text-stone-600">Market data and transparency ensures you get the best value.</p>
+              <h3 className="text-xl font-medium mb-2 text-dark-teal">Fair Pricing</h3>
+              <p className="text-secondary">Market data and transparency ensures you get the best value.</p>
             </div>
           </div>
         </div>
       </section>
-      
+
       {/* Featured Listings Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bone-light">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-serif font-medium mb-4 text-stone-800">Featured Tools</h2>
-            <p className="text-stone-600">Quality tools from verified sellers in the Boston area</p>
+            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">Featured Tools</h2>
+            <p className="text-secondary">Quality tools from verified sellers in the Boston area</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredTools.map((tool) => (
-              <div key={tool.id} className="bg-white rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:-translate-y-1">
+              <div key={tool.id} className="bg-bone-light rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:-translate-y-1">
                 <div className="w-full h-48 bg-stone-200">
                   {/* Placeholder for image */}
                 </div>
@@ -187,24 +191,24 @@ const LandingPage = () => {
                         <Check className="h-3 w-3 mr-1" /> Verified
                       </span>
                     )}
-                    <span className="inline-flex items-center bg-benchlot-accent-light text-benchlot-primary text-xs px-2 py-1 rounded-full">
+                    <span className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
                       {tool.condition || 'Unknown'}
                     </span>
                   </div>
-                  <h3 className="text-lg font-medium mb-2">{tool.name}</h3>
+                  <h3 className="text-lg font-medium mb-2 text-dark-teal">{tool.name}</h3>
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-xl font-bold text-benchlot-primary">${tool.current_price}</span>
+                    <span className="text-xl font-bold text-honey">${tool.current_price}</span>
                     {tool.original_price && calculateDiscount(tool.original_price, tool.current_price) && (
                       <>
                         <span className="text-sm text-stone-500 line-through">${tool.original_price}</span>
-                        <span className="text-sm text-green-600">
+                        <span className="text-sm text-success">
                           {calculateDiscount(tool.original_price, tool.current_price)}% off
                         </span>
                       </>
                     )}
                   </div>
-                  <p className="text-stone-600 text-sm mb-4">{tool.location}</p>
-                  <button className="w-full py-2 border border-benchlot-primary text-benchlot-primary rounded hover:bg-benchlot-accent-light transition-colors">
+                  <p className="text-secondary text-sm mb-4">{tool.location}</p>
+                  <button className="w-full py-2 border border-spruce text-spruce rounded hover:bg-bone-dark transition-colors">
                     View Details
                   </button>
                 </div>
@@ -217,19 +221,19 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-24 bg-cover bg-center relative" style={{ backgroundImage: 'url("/images/shop_tools_bg.jpg")' }}>
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-70"></div>
-        
+        <div className="absolute inset-0 bg-spruce bg-opacity-70"></div>
+
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-serif font-medium mb-4 text-white">Ready to join the community?</h2>
-            <p className="text-white text-opacity-90 mb-8">Be among the first to access our marketplace when we launch</p>
+            <h2 className="text-3xl font-display font-medium mb-4 text-bone">Ready to join the community?</h2>
+            <p className="text-bone text-opacity-90 mb-8">Be among the first to access our marketplace when we launch</p>
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 max-w-xl mx-auto">
+            <form onSubmit={handleSubmit} className="bg-bone-light rounded-lg shadow-md p-8 max-w-xl mx-auto">
               <div className="flex flex-col md:flex-row gap-4">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary"
+                  className="flex-1 px-4 py-3 border border-stone-300 rounded-md focus:outline-none focus:border-spruce"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -237,7 +241,7 @@ const LandingPage = () => {
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-benchlot-primary hover:bg-benchlot-secondary text-white font-medium rounded-md transition-colors"
+                  className="px-6 py-3 bg-honey text-dark-teal font-medium rounded-md hover:bg-honey-light transition-colors"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Joining...' : 'Join Waitlist'}
@@ -246,8 +250,8 @@ const LandingPage = () => {
 
               {submitStatus.message && (
                 <div className={`mt-4 p-3 rounded-md text-center text-sm ${submitStatus.type === 'success'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'
+                    ? 'bg-green-50 text-success border border-green-200'
+                    : 'bg-red-50 text-error border border-red-200'
                   }`}>
                   {submitStatus.message}
                 </div>

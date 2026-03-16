@@ -1,5 +1,5 @@
 /**
- * SendGrid Email Service for Benchlot
+ * SendGrid Email Service for Rekerf
  * Handles all transactional email notifications via SendGrid API
  * 
  * This service supports the following email types:
@@ -52,7 +52,7 @@ exports.TEMPLATE_IDS = TEMPLATE_IDS;
  * @param {string} to - Recipient email
  * @param {string} templateId - SendGrid template ID
  * @param {Object} dynamicTemplateData - Template data
- * @param {string} from - Sender email (default: notifications@benchlot.com)
+ * @param {string} from - Sender email (default: notifications@rekerf.com)
  * @returns {Promise<Object>} - Success status and any error details
  */
 // Helper function to get config with fallbacks
@@ -106,7 +106,7 @@ const shouldSendEmailNotification = async (userId, notificationType) => {
   }
 };
 
-const sendEmail = async (to, templateId, dynamicTemplateData, from = 'notifications@benchlot.com') => {
+const sendEmail = async (to, templateId, dynamicTemplateData, from = 'notifications@rekerf.com') => {
   // Timestamp for logging
   console.log(`[${new Date().toISOString()}] Sending email to ${to} using template ${templateId}`);
   
@@ -222,7 +222,7 @@ exports.sendAccountCreationEmail = (to, firstName) => {
     TEMPLATE_IDS.ACCOUNT_CREATION, 
     { 
       first_name: firstName || to.split('@')[0],
-      login_link: `${process.env.APP_URL || 'https://benchlot.com'}/login`
+      login_link: `${process.env.APP_URL || 'https://rekerf.com'}/login`
     }
   );
 };
@@ -252,10 +252,10 @@ exports.sendListingPublishedEmail = async (to, listingDetails) => {
   }
   
   // Add fallback image if not provided
-  const imageUrl = listingDetails.image || listingDetails.images?.[0]?.url || 'https://benchlot.com/images/placeholder-tool.jpg';
+  const imageUrl = listingDetails.image || listingDetails.images?.[0]?.url || 'https://rekerf.com/images/placeholder-tool.jpg';
   
   // Create the listing URL
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   const listingUrl = `${appUrl}/tools/${listingDetails.id}`;
   
   // Prepare listing price with proper formatting
@@ -306,7 +306,7 @@ exports.sendMessageReceivedEmail = async (to, messageDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -349,7 +349,7 @@ exports.sendOfferReceivedEmail = async (to, offerDetails) => {
     discountPercentage = Math.max(0, discountPercentage); // Ensure non-negative
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -367,7 +367,7 @@ exports.sendOfferReceivedEmail = async (to, offerDetails) => {
 
 // Test function for verifying SendGrid setup
 exports.sendTestEmail = (to) => {
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to,
@@ -386,7 +386,7 @@ exports.sendTestEmail = (to) => {
  * @returns {Promise<Object>} - Success status and any error details
  */
 exports.sendSellerOnboardingCompleteEmail = (to, sellerDetails) => {
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -421,7 +421,7 @@ exports.sendListingExpirationReminderEmail = async (to, listingDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -431,7 +431,7 @@ exports.sendListingExpirationReminderEmail = async (to, listingDetails) => {
       item_name: listingDetails.itemName || 'Your listing',
       expiration_date: listingDetails.expirationDate || '3 days from now',
       item_price: listingDetails.price || '$0.00',
-      item_image: listingDetails.itemImage || 'https://benchlot.com/images/placeholder-tool.jpg',
+      item_image: listingDetails.itemImage || 'https://rekerf.com/images/placeholder-tool.jpg',
       listing_date: listingDetails.listingDate || 'recently',
       view_count: listingDetails.viewCount || 0,
       watch_count: listingDetails.watchCount || 0,
@@ -463,7 +463,7 @@ exports.sendOrderReceivedEmail = async (to, orderDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -483,7 +483,7 @@ exports.sendOrderReceivedEmail = async (to, orderDetails) => {
       maximumFractionDigits: 2
     }).format(item.price),
     quantity: item.quantity || 1,
-    image_url: item.imageUrl || item.image || item.images?.[0]?.url || 'https://benchlot.com/images/placeholder-tool.jpg'
+    image_url: item.imageUrl || item.image || item.images?.[0]?.url || 'https://rekerf.com/images/placeholder-tool.jpg'
   })) : [];
   
   return sendEmail(
@@ -523,7 +523,7 @@ exports.sendShippingReminderEmail = async (to, reminderDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -562,7 +562,7 @@ exports.sendPayoutNotificationEmail = async (to, payoutDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -608,7 +608,7 @@ exports.sendMonthlySalesSummaryEmail = async (to, summaryDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedTotalSales = new Intl.NumberFormat('en-US', {
@@ -671,7 +671,7 @@ exports.sendOrderReceivedEmail = async (to, orderDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -714,7 +714,7 @@ exports.sendOrderConfirmationEmail = async (to, purchaseDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -734,7 +734,7 @@ exports.sendOrderConfirmationEmail = async (to, purchaseDetails) => {
       maximumFractionDigits: 2
     }).format(item.price),
     quantity: item.quantity || 1,
-    image_url: item.imageUrl || item.image || item.images?.[0]?.url || 'https://benchlot.com/images/placeholder-tool.jpg'
+    image_url: item.imageUrl || item.image || item.images?.[0]?.url || 'https://rekerf.com/images/placeholder-tool.jpg'
   }));
   
   return sendEmail(
@@ -774,7 +774,7 @@ exports.sendPaymentReceiptEmail = async (to, paymentDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -821,7 +821,7 @@ exports.sendShippingNotificationEmail = async (to, shippingDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -863,7 +863,7 @@ exports.sendOfferStatusUpdateEmail = async (to, offerDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   // Format amounts
   const formattedOfferAmount = new Intl.NumberFormat('en-US', {
@@ -894,7 +894,7 @@ exports.sendOfferStatusUpdateEmail = async (to, offerDetails) => {
       has_message: Boolean(offerDetails.message),
       offers_url: `${appUrl}/offers`,
       listing_url: `${appUrl}/tools/${offerDetails.listingId}`,
-      item_image: offerDetails.listingImage || 'https://benchlot.com/images/placeholder-tool.jpg'
+      item_image: offerDetails.listingImage || 'https://rekerf.com/images/placeholder-tool.jpg'
     }
   );
 };
@@ -919,7 +919,7 @@ exports.sendReviewRequestEmail = async (to, reviewDetails) => {
     }
   }
   
-  const appUrl = getConfig('app.url', 'APP_URL', 'https://benchlot.com');
+  const appUrl = getConfig('app.url', 'APP_URL', 'https://rekerf.com');
   
   return sendEmail(
     to, 
@@ -928,7 +928,7 @@ exports.sendReviewRequestEmail = async (to, reviewDetails) => {
       buyer_name: reviewDetails.buyerName || to.split('@')[0],
       order_number: reviewDetails.orderId,
       item_name: reviewDetails.itemName || 'your purchase',
-      item_image: reviewDetails.itemImage || 'https://benchlot.com/images/placeholder-tool.jpg',
+      item_image: reviewDetails.itemImage || 'https://rekerf.com/images/placeholder-tool.jpg',
       delivery_date: reviewDetails.deliveryDate || 'recently',
       order_url: `${appUrl}/orders/${reviewDetails.orderId}`,
       review_url: `${appUrl}/orders/${reviewDetails.orderId}/review`,

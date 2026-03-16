@@ -1,5 +1,5 @@
 /**
- * Deploy script for Benchlot Firebase Functions
+ * Deploy script for Rekerf Firebase Functions
  * 
  * This script helps deploy Firebase Functions with environment variables set properly.
  */
@@ -16,7 +16,7 @@ const rl = readline.createInterface({
 const config = {
   SENDGRID_API_KEY: '',
   STRIPE_SECRET: '',
-  APP_URL: 'https://benchlot.com'
+  APP_URL: 'https://rekerf.com'
 };
 
 // Helper function to run shell commands
@@ -91,7 +91,7 @@ const updateEnvironmentVariables = () => {
 
 // Main function
 const deploy = async () => {
-  console.log('🚀 Benchlot Firebase Functions Deployment');
+  console.log('🚀 Rekerf Firebase Functions Deployment');
   console.log('=========================================');
   
   try {

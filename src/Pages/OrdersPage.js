@@ -198,9 +198,9 @@ const OrdersPage = () => {
   if (authLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-stone-800 mb-6">My Orders</h1>
-        <div className="bg-white rounded-lg shadow-md p-8 flex justify-center">
-          <Loader className="h-8 w-8 text-benchlot-primary animate-spin" />
+        <h1 className="text-3xl font-display font-medium text-dark-teal mb-6">My Orders</h1>
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-8 flex justify-center">
+          <Loader className="h-8 w-8 text-spruce animate-spin" />
         </div>
       </div>
     );
@@ -209,7 +209,7 @@ const OrdersPage = () => {
   return (
     <div className="bg-stone-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">My Orders</h1>
+        <h1 className="text-3xl font-display font-medium text-dark-teal mb-2">My Orders</h1>
         <p className="text-stone-600 mb-6">View and track your order history</p>
         
         {error && (
@@ -219,7 +219,7 @@ const OrdersPage = () => {
         )}
         
         {/* Filters and Search Bar */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4 justify-between">
             <div className="w-full md:w-1/3">
               <div className="relative">
@@ -229,7 +229,7 @@ const OrdersPage = () => {
                 <input
                   type="text"
                   placeholder="Search orders..."
-                  className="block w-full pl-10 pr-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -239,7 +239,7 @@ const OrdersPage = () => {
             <div className="flex flex-wrap gap-3">
               <div className="relative">
                 <select
-                  className="appearance-none pl-9 pr-8 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary text-sm bg-white"
+                  className="appearance-none pl-9 pr-8 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce text-sm bg-white"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
@@ -293,7 +293,7 @@ const OrdersPage = () => {
         
         {/* Orders List */}
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-bone-light rounded-lg shadow-md border border-default p-8 text-center">
             <Package className="h-12 w-12 text-stone-400 mx-auto mb-4" />
             <h2 className="text-xl font-medium text-stone-800 mb-2">No orders found</h2>
             <p className="text-stone-600 mb-6">
@@ -305,14 +305,14 @@ const OrdersPage = () => {
             {orders.length === 0 && (
               <Link
                 to="/marketplace"
-                className="inline-flex items-center px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-primary-dark"
+                className="inline-flex items-center px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
               >
                 Browse Tools
               </Link>
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
             <div className="grid grid-cols-1 divide-y divide-stone-200">
               {filteredOrders.map(order => (
                 <div key={order.id} className="p-4 md:p-6 hover:bg-stone-50">
@@ -361,7 +361,7 @@ const OrdersPage = () => {
                   <div className="mt-4 pt-3 border-t border-stone-200 flex justify-end">
                     <Link
                       to={`/orders/${order.id}`}
-                      className="text-benchlot-primary hover:text-benchlot-primary-dark font-medium"
+                      className="text-spruce hover:text-spruce-dark font-medium"
                     >
                       View Order Details
                     </Link>

@@ -64,8 +64,8 @@ const PrivacySettings = ({ user }) => {
       <div className="flex-shrink-0 mt-1">
         <button
           type="button"
-          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary ${
-            checked ? 'bg-benchlot-primary' : 'bg-stone-200'
+          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce ${
+            checked ? 'bg-spruce' : 'bg-stone-200'
           }`}
           role="switch"
           aria-checked={checked}
@@ -93,7 +93,7 @@ const PrivacySettings = ({ user }) => {
       <div className="py-4 border-b border-stone-200 last:border-b-0">
         <div className="flex items-start mb-3">
           {icon && (
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Icon className="h-5 w-5" />
             </div>
           )}
@@ -108,7 +108,7 @@ const PrivacySettings = ({ user }) => {
             <label key={option.value} className="flex items-center">
               <input
                 type="radio"
-                className="h-4 w-4 text-benchlot-primary border-stone-300 focus:ring-benchlot-primary"
+                className="h-4 w-4 text-spruce border-stone-300 focus:ring-spruce"
                 name={name}
                 value={option.value}
                 checked={value === option.value}
@@ -128,7 +128,7 @@ const PrivacySettings = ({ user }) => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Privacy Settings</h2>
         <p className="text-stone-600 text-sm mt-1">Control your privacy and visibility preferences</p>
@@ -151,7 +151,7 @@ const PrivacySettings = ({ user }) => {
         )}
         
         {/* Privacy Settings */}
-        <div className="bg-white border border-stone-200 rounded-lg overflow-hidden mb-6 p-4">
+        <div className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden mb-6 p-4">
           <RadioButtonGroup
             title="Profile Visibility"
             description="Control who can view your profile information"
@@ -220,7 +220,7 @@ const PrivacySettings = ({ user }) => {
         {/* Data & Privacy Info */}
         <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Shield className="h-5 w-5" />
             </div>
             <div className="ml-3">
@@ -232,7 +232,7 @@ const PrivacySettings = ({ user }) => {
               <div className="flex space-x-4">
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs border border-benchlot-primary text-benchlot-primary rounded hover:bg-benchlot-accent-light"
+                  className="px-3 py-1.5 text-xs border border-spruce text-spruce rounded hover:bg-bone-dark"
                 >
                   Request Data Export
                 </button>
@@ -250,7 +250,7 @@ const PrivacySettings = ({ user }) => {
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={saving}
           >
             {saving ? (

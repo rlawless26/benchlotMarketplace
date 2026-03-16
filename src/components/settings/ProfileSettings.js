@@ -118,7 +118,7 @@ const ProfileSettings = ({ user }) => {
   
   // Render form
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Profile Information</h2>
         <p className="text-stone-600 text-sm mt-1">Update your profile information and account details</p>
@@ -168,7 +168,7 @@ const ProfileSettings = ({ user }) => {
                 />
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-sm text-benchlot-primary bg-benchlot-accent-light rounded border border-benchlot-primary hover:bg-benchlot-accent flex items-center cursor-pointer"
+                  className="px-3 py-1.5 text-sm text-spruce bg-bone-dark rounded border border-spruce hover:bg-honey flex items-center cursor-pointer"
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Change Photo
@@ -211,7 +211,7 @@ const ProfileSettings = ({ user }) => {
             name="displayName"
             value={profileData.displayName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           />
         </div>
         
@@ -230,7 +230,7 @@ const ProfileSettings = ({ user }) => {
               name="firstName"
               value={profileData.firstName}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             />
           </div>
           <div>
@@ -246,7 +246,7 @@ const ProfileSettings = ({ user }) => {
               name="lastName"
               value={profileData.lastName}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             />
           </div>
         </div>
@@ -266,7 +266,7 @@ const ProfileSettings = ({ user }) => {
             value={profileData.location}
             onChange={handleChange}
             placeholder="City, State"
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           />
         </div>
         
@@ -284,7 +284,7 @@ const ProfileSettings = ({ user }) => {
             value={profileData.bio}
             onChange={handleChange}
             rows="4"
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             placeholder="Tell us about yourself..."
           ></textarea>
         </div>
@@ -293,7 +293,7 @@ const ProfileSettings = ({ user }) => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={saving}
           >
             {saving ? (

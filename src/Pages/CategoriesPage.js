@@ -1,9 +1,13 @@
 // src/Pages/CategoriesPage.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toolCategories, toolSubcategories, toolBrands } from '../firebase/models/toolModel';
 
 const CategoriesPage = () => {
+  useEffect(() => {
+    document.title = 'Categories | Rekerf';
+  }, []);
+
   // Build categories from centralized constants
   const categories = toolCategories
     .filter(cat => cat !== 'Other')
@@ -22,28 +26,28 @@ const CategoriesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen bg-bone">
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-stone-800 mb-8">Categories</h1>
-        
+        <h1 className="text-3xl font-display font-medium text-dark-teal mb-8">Categories</h1>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {categories.map((category, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-serif font-medium text-benchlot-primary mb-4">
-                <Link 
+            <div key={index} className="bg-bone-light rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-display font-medium text-spruce mb-4">
+                <Link
                   to={createMarketplaceLink(category.title)}
-                  className="hover:text-benchlot-secondary transition-colors"
+                  className="hover:text-spruce-light transition-colors"
                 >
                   {category.title}
                 </Link>
               </h2>
-              
+
               <ul className="space-y-2">
                 {category.subcategories.map((subcategory, subIndex) => (
                   <li key={subIndex}>
-                    <Link 
+                    <Link
                       to={createMarketplaceLink(category.title, subcategory)}
-                      className="text-stone-700 hover:text-benchlot-primary transition-colors"
+                      className="text-secondary hover:text-spruce transition-colors"
                     >
                       {subcategory}
                     </Link>
@@ -53,17 +57,17 @@ const CategoriesPage = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Popular Brands section */}
         <div className="mb-12">
-          <h2 className="text-2xl font-serif font-medium text-stone-800 mb-6">Popular Brands</h2>
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-display font-medium text-dark-teal mb-6">Popular Brands</h2>
+          <div className="bg-bone-light rounded-lg shadow-md p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {toolBrands.filter(b => b !== 'Other').map((brand, index) => (
                 <div key={index} className="text-center">
-                  <Link 
+                  <Link
                     to={`/marketplace?brand=${encodeURIComponent(brand)}`}
-                    className="block p-4 text-stone-700 hover:text-benchlot-primary transition-colors"
+                    className="block p-4 text-secondary hover:text-spruce transition-colors"
                   >
                     {brand}
                   </Link>
@@ -72,63 +76,63 @@ const CategoriesPage = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Shop by Condition section */}
         <div className="mb-12">
-          <h2 className="text-2xl font-serif font-medium text-stone-800 mb-6">Shop by Condition</h2>
+          <h2 className="text-2xl font-display font-medium text-dark-teal mb-6">Shop by Condition</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {['New', 'Like New', 'Good', 'Fair'].map((condition, index) => (
-              <Link 
+              <Link
                 key={index}
                 to={`/marketplace?condition=${encodeURIComponent(condition)}`}
-                className="bg-white rounded-lg shadow-md p-6 text-center hover:bg-stone-50 transition-colors"
+                className="bg-bone-light rounded-lg shadow-md p-6 text-center hover:bg-bone-dark transition-colors"
               >
-                <span className="font-medium text-stone-800">{condition}</span>
+                <span className="font-medium text-dark-teal">{condition}</span>
               </Link>
             ))}
           </div>
         </div>
-        
+
         {/* Featured Collections section */}
         <div>
-          <h2 className="text-2xl font-serif font-medium text-stone-800 mb-6">Featured Collections</h2>
+          <h2 className="text-2xl font-display font-medium text-dark-teal mb-6">Featured Collections</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link 
+            <Link
               to="/marketplace?featured=true"
-              className="bg-white rounded-lg shadow-md overflow-hidden group"
+              className="bg-bone-light rounded-lg shadow-md overflow-hidden group"
             >
-              <div className="h-48 bg-benchlot-accent-light flex items-center justify-center">
-                <span className="text-xl font-serif text-benchlot-primary">Featured Tools</span>
+              <div className="h-48 bg-bone-dark flex items-center justify-center">
+                <span className="text-xl font-display text-spruce">Featured Tools</span>
               </div>
-              <div className="p-4 group-hover:bg-stone-50 transition-colors">
-                <h3 className="font-medium">Curated Selection</h3>
-                <p className="text-sm text-stone-600">Handpicked quality tools from trusted sellers</p>
+              <div className="p-4 group-hover:bg-bone-dark transition-colors">
+                <h3 className="font-medium text-dark-teal">Curated Selection</h3>
+                <p className="text-sm text-secondary">Handpicked quality tools from trusted sellers</p>
               </div>
             </Link>
-            
-            <Link 
+
+            <Link
               to="/marketplace?price_range=budget"
-              className="bg-white rounded-lg shadow-md overflow-hidden group"
+              className="bg-bone-light rounded-lg shadow-md overflow-hidden group"
             >
-              <div className="h-48 bg-benchlot-accent-light flex items-center justify-center">
-                <span className="text-xl font-serif text-benchlot-primary">Budget Finds</span>
+              <div className="h-48 bg-bone-dark flex items-center justify-center">
+                <span className="text-xl font-display text-spruce">Budget Finds</span>
               </div>
-              <div className="p-4 group-hover:bg-stone-50 transition-colors">
-                <h3 className="font-medium">Under $100</h3>
-                <p className="text-sm text-stone-600">Quality tools that won't break the bank</p>
+              <div className="p-4 group-hover:bg-bone-dark transition-colors">
+                <h3 className="font-medium text-dark-teal">Under $100</h3>
+                <p className="text-sm text-secondary">Quality tools that won't break the bank</p>
               </div>
             </Link>
-            
-            <Link 
+
+            <Link
               to="/marketplace?verified=true"
-              className="bg-white rounded-lg shadow-md overflow-hidden group"
+              className="bg-bone-light rounded-lg shadow-md overflow-hidden group"
             >
-              <div className="h-48 bg-benchlot-accent-light flex items-center justify-center">
-                <span className="text-xl font-serif text-benchlot-primary">Verified Tools</span>
+              <div className="h-48 bg-bone-dark flex items-center justify-center">
+                <span className="text-xl font-display text-spruce">Verified Tools</span>
               </div>
-              <div className="p-4 group-hover:bg-stone-50 transition-colors">
-                <h3 className="font-medium">Benchlot Verified</h3>
-                <p className="text-sm text-stone-600">Expert-verified condition and authenticity</p>
+              <div className="p-4 group-hover:bg-bone-dark transition-colors">
+                <h3 className="font-medium text-dark-teal">Rekerf Verified</h3>
+                <p className="text-sm text-secondary">Expert-verified condition and authenticity</p>
               </div>
             </Link>
           </div>

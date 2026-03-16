@@ -154,7 +154,7 @@ const BankDetailsPage = () => {
   
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-700"></div>
@@ -166,9 +166,9 @@ const BankDetailsPage = () => {
   }
   
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
+        <div className="bg-bone-light rounded-lg shadow-md p-6 md:p-8">
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
             Complete Your Seller Setup
           </h1>
@@ -220,7 +220,7 @@ const BankDetailsPage = () => {
             
             
             {/* Account Holder Name */}
-            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
+            <div className="bg-bone-light p-5 rounded-md border border-gray-200 shadow-sm">
               <label className="block text-gray-700 font-medium mb-1" htmlFor="accountHolderName">
                 Account Holder Name*
               </label>
@@ -254,7 +254,7 @@ const BankDetailsPage = () => {
             </div>
             
             {/* Routing Number */}
-            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
+            <div className="bg-bone-light p-5 rounded-md border border-gray-200 shadow-sm">
               <label className="block text-gray-700 font-medium mb-1" htmlFor="routingNumber">
                 Routing Number*
               </label>
@@ -288,7 +288,7 @@ const BankDetailsPage = () => {
             </div>
             
             {/* Account Number */}
-            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
+            <div className="bg-bone-light p-5 rounded-md border border-gray-200 shadow-sm">
               <label className="block text-gray-700 font-medium mb-1" htmlFor="accountNumber">
                 Account Number*
               </label>
@@ -320,7 +320,7 @@ const BankDetailsPage = () => {
             </div>
             
             {/* Confirm Account Number */}
-            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
+            <div className="bg-bone-light p-5 rounded-md border border-gray-200 shadow-sm">
               <label className="block text-gray-700 font-medium mb-1" htmlFor="confirmAccountNumber">
                 Confirm Account Number*
               </label>

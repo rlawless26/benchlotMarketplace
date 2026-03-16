@@ -317,11 +317,11 @@ const MessagesPage = () => {
     return (
       <div className="bg-stone-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">Messages</h1>
+          <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">Messages</h1>
           <p className="text-stone-600 mb-6">View and manage your offers and messages</p>
           
-          <div className="bg-white rounded-lg shadow-md p-8 flex justify-center">
-            <Loader className="h-8 w-8 text-benchlot-primary animate-spin" />
+          <div className="bg-bone-light rounded-lg shadow-md p-8 flex justify-center">
+            <Loader className="h-8 w-8 text-spruce animate-spin" />
           </div>
         </div>
       </div>
@@ -333,10 +333,10 @@ const MessagesPage = () => {
     return (
       <div className="bg-stone-50 min-h-screen flex flex-col">
         {/* Mobile header */}
-        <div className="bg-white border-b py-4 px-4">
+        <div className="bg-bone-light border-b py-4 px-4">
           <button 
             onClick={handleBackToList}
-            className="inline-flex items-center text-stone-600 hover:text-benchlot-primary"
+            className="inline-flex items-center text-stone-600 hover:text-spruce"
           >
             <ArrowLeft className="h-5 w-5 mr-1.5" />
             Back to Messages
@@ -364,10 +364,10 @@ const MessagesPage = () => {
   return (
     <div className="bg-stone-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">Messages</h1>
+        <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">Messages</h1>
         <p className="text-stone-600 mb-6">View and manage your offers and messages</p>
         
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
           <div className="grid md:grid-cols-3 h-[600px]">
             {/* Left sidebar with unified message list */}
             <div className="md:col-span-1 border-r">
@@ -376,7 +376,7 @@ const MessagesPage = () => {
                 <div className="flex border-b">
                   <button
                     className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                      filterType === 'all' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
+                      filterType === 'all' ? 'text-spruce border-b-2 border-spruce' : 'text-stone-600 hover:text-stone-900'
                     }`}
                     onClick={() => setFilterType('all')}
                   >
@@ -384,7 +384,7 @@ const MessagesPage = () => {
                   </button>
                   <button
                     className={`flex-1 py-3 px-4 text-center font-medium text-sm ${
-                      filterType === 'unread' ? 'text-benchlot-primary border-b-2 border-benchlot-primary' : 'text-stone-600 hover:text-stone-900'
+                      filterType === 'unread' ? 'text-spruce border-b-2 border-spruce' : 'text-stone-600 hover:text-stone-900'
                     }`}
                     onClick={() => setFilterType('unread')}
                   >
@@ -396,7 +396,7 @@ const MessagesPage = () => {
                     <input
                       type="text"
                       placeholder="Search messages..."
-                      className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary text-sm"
+                      className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce text-sm"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -436,7 +436,7 @@ const MessagesPage = () => {
                       }
                     </p>
                     <div className="mt-6">
-                      <Link to="/marketplace" className="px-4 py-2 bg-benchlot-primary text-white rounded-md">
+                      <Link to="/marketplace" className="px-4 py-2 bg-spruce text-bone rounded-md">
                         Browse Marketplace
                       </Link>
                     </div>
@@ -456,8 +456,8 @@ const MessagesPage = () => {
                         <li 
                           key={item.id}
                           className={`hover:bg-stone-50 cursor-pointer ${
-                            isSelected ? 'bg-benchlot-accent-light' : ''
-                          } ${item.hasUnread ? 'border-l-4 border-benchlot-primary' : 'border-l-4 border-transparent'}`}
+                            isSelected ? 'bg-bone-dark' : ''
+                          } ${item.hasUnread ? 'border-l-4 border-spruce' : 'border-l-4 border-transparent'}`}
                           onClick={() => handleSelectMessage(item)}
                         >
                           <div className="p-4">
@@ -465,12 +465,12 @@ const MessagesPage = () => {
                               <div className="flex items-center">
                                 {isOffer ? (
                                   item.isBuyer ? (
-                                    <ShoppingBag className="h-5 w-5 text-benchlot-primary mr-2" />
+                                    <ShoppingBag className="h-5 w-5 text-spruce mr-2" />
                                   ) : (
-                                    <Package className="h-5 w-5 text-benchlot-accent-dark mr-2" />
+                                    <Package className="h-5 w-5 text-dark mr-2" />
                                   )
                                 ) : (
-                                  <User className="h-5 w-5 text-benchlot-primary mr-2" />
+                                  <User className="h-5 w-5 text-spruce mr-2" />
                                 )}
                                 <div>
                                   <span className="font-medium truncate max-w-[140px] flex items-center">
@@ -509,7 +509,7 @@ const MessagesPage = () => {
                             
                             {item.hasUnread && (
                               <div className="mt-2 flex justify-end">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-benchlot-primary text-white">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-spruce text-bone">
                                   <Bell className="h-3 w-3 mr-1" />
                                   {isOffer ? 'New message' : 'Unread'}
                                 </span>

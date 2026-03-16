@@ -42,18 +42,18 @@ const NotificationPopup = ({
     switch (type) {
       case 'message':
       case 'offer':
-        return <MessageSquare className="h-5 w-5 text-benchlot-primary" />;
+        return <MessageSquare className="h-5 w-5 text-spruce" />;
       case 'cart':
-        return <ShoppingCart className="h-5 w-5 text-benchlot-primary" />;
+        return <ShoppingCart className="h-5 w-5 text-spruce" />;
       default:
-        return <Bell className="h-5 w-5 text-benchlot-primary" />;
+        return <Bell className="h-5 w-5 text-spruce" />;
     }
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-white rounded-lg shadow-xl border border-benchlot-accent overflow-hidden animate-slideIn">
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-bone-light rounded-lg shadow-xl border border-honey overflow-hidden animate-slideIn">
       {/* Attention-grabbing pulse effect */}
-      <div className="absolute inset-0 bg-benchlot-accent-light opacity-0 animate-pulse"></div>
+      <div className="absolute inset-0 bg-bone-dark opacity-0 animate-pulse"></div>
       
       {type === 'cart' ? (
         // Cart notification layout
@@ -71,7 +71,7 @@ const NotificationPopup = ({
           
           {/* If no image, show the icon */}
           {!image && (
-            <div className="mr-3 mt-0.5 bg-benchlot-accent-light p-1.5 rounded-full">
+            <div className="mr-3 mt-0.5 bg-bone-dark p-1.5 rounded-full">
               <Check className="h-5 w-5 text-green-600" />
             </div>
           )}
@@ -81,7 +81,7 @@ const NotificationPopup = ({
             <p className="text-xs text-stone-500 mt-1">{message}</p>
             
             {price && (
-              <div className="mt-1 text-sm font-medium text-benchlot-primary">
+              <div className="mt-1 text-sm font-medium text-spruce">
                 {formatPrice(price)}
               </div>
             )}
@@ -96,7 +96,7 @@ const NotificationPopup = ({
                   if (onClose) onClose();
                   window.location.href = '/cart';
                 }} 
-                className="text-xs bg-benchlot-primary text-white px-3 py-1.5 rounded-md font-medium hover:bg-benchlot-secondary transition-colors flex-1 text-center"
+                className="text-xs bg-spruce text-bone px-3 py-1.5 rounded-md font-medium hover:bg-spruce-light transition-colors flex-1 text-center"
               >
                 View Cart
               </a>
@@ -126,7 +126,7 @@ const NotificationPopup = ({
       ) : (
         // Default notification layout
         <div className="px-4 py-4 flex items-start relative">
-          <div className="mr-3 mt-0.5 bg-benchlot-accent-light p-1.5 rounded-full">
+          <div className="mr-3 mt-0.5 bg-bone-dark p-1.5 rounded-full">
             {getIcon()}
           </div>
           <div className="flex-1 pr-6">
@@ -143,7 +143,7 @@ const NotificationPopup = ({
                   if (onClose) onClose();
                   window.location.href = link;
                 }} 
-                className="text-xs bg-benchlot-primary text-white px-3 py-1.5 rounded-md font-medium hover:bg-benchlot-secondary transition-colors flex-1 text-center"
+                className="text-xs bg-spruce text-bone px-3 py-1.5 rounded-md font-medium hover:bg-spruce-light transition-colors flex-1 text-center"
               >
                 View Message
               </a>
@@ -175,7 +175,7 @@ const NotificationPopup = ({
       {/* Time indicator with slower animation and more visible styling */}
       <div className="h-1.5 bg-stone-200">
         <div 
-          className="h-full bg-benchlot-primary transition-all ease-linear" 
+          className="h-full bg-spruce transition-all ease-linear" 
           style={{ 
             width: '100%',
             animation: `shrink ${duration}ms linear forwards`

@@ -1,7 +1,7 @@
 # API Keys and Secrets Security Guide
 
 ## Overview
-This guide provides best practices for handling API keys and secrets in the Benchlot application to prevent accidental exposure of sensitive credentials.
+This guide provides best practices for handling API keys and secrets in the Rekerf application to prevent accidental exposure of sensitive credentials.
 
 ## Never Commit API Keys to Git
 

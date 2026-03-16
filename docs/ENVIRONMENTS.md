@@ -1,10 +1,10 @@
-# Benchlot Environment Setup
+# Rekerf Environment Setup
 
-This document describes the environment configuration for the Benchlot application.
+This document describes the environment configuration for the Rekerf application.
 
 ## Environments
 
-Benchlot supports three environments:
+Rekerf supports three environments:
 
 1. **Development**: Local development environment
 2. **Staging**: For testing changes before production

@@ -1,5 +1,5 @@
 /**
- * Direct test script for Benchlot SendGrid email integration
+ * Direct test script for Rekerf SendGrid email integration
  * 
  * This script tests the email service functions directly without needing the Firebase Functions emulator.
  */
@@ -8,7 +8,7 @@
 const emailService = require('./emailService');
 
 // Configuration
-const testEmail = 'test@benchlot.com'; // Replace with your test email
+const testEmail = 'test@rekerf.com'; // Replace with your test email
 
 // Helper function to log test results
 const logResult = (testName, result) => {
@@ -33,7 +33,7 @@ const testPasswordResetEmail = async () => {
   console.log('Testing password reset email...');
   const result = await emailService.sendPasswordResetEmail(
     testEmail, 
-    'https://benchlot.com/reset-password?token=sample-token'
+    'https://rekerf.com/reset-password?token=sample-token'
   );
   logResult('Password Reset Email', result);
   return result;
@@ -95,7 +95,7 @@ const testSimpleTestEmail = async () => {
 
 // Run all tests
 const runAllTests = async () => {
-  console.log('🚀 Starting Benchlot SendGrid Email Direct Tests');
+  console.log('🚀 Starting Rekerf SendGrid Email Direct Tests');
   console.log('==============================================');
   
   try {

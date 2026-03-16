@@ -113,7 +113,7 @@ const SetupForm = ({ onSuccess, onCancel, customerId }) => {
   };
   
   return (
-    <div className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
+    <div className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
       <h3 className="text-lg font-medium mb-4">Add Payment Method</h3>
       
       <form onSubmit={handleSubmit}>
@@ -141,7 +141,7 @@ const SetupForm = ({ onSuccess, onCancel, customerId }) => {
           <input
             type="text"
             id="cardNickname"
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             placeholder="e.g., Work Card, Personal Card"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
@@ -153,7 +153,7 @@ const SetupForm = ({ onSuccess, onCancel, customerId }) => {
           <label className="flex items-center">
             <input
               type="checkbox"
-              className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+              className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
               checked={makeDefault}
               onChange={(e) => setMakeDefault(e.target.checked)}
             />
@@ -175,14 +175,14 @@ const SetupForm = ({ onSuccess, onCancel, customerId }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
+            className="px-4 py-2 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce"
           >
             Cancel
           </button>
           
           <button
             type="submit"
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={processing || !cardComplete}
           >
             {processing ? (
@@ -521,11 +521,11 @@ const PaymentSettings = ({ user }) => {
   const renderPaymentMethod = (method) => (
     <div 
       key={method.id} 
-      className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 relative"
+      className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4 relative"
     >
       {/* Default badge */}
       {method.isDefault && (
-        <div className="absolute top-3 right-3 bg-benchlot-accent text-benchlot-primary text-xs font-medium px-2 py-1 rounded-full flex items-center">
+        <div className="absolute top-3 right-3 bg-honey text-spruce text-xs font-medium px-2 py-1 rounded-full flex items-center">
           <Check className="h-3 w-3 mr-1" />
           Default
         </div>
@@ -548,7 +548,7 @@ const PaymentSettings = ({ user }) => {
         {!method.isDefault && (
           <button
             onClick={() => handleSetDefault(method.id)}
-            className="text-sm text-benchlot-primary hover:text-benchlot-secondary"
+            className="text-sm text-spruce hover:text-spruce-light"
           >
             Set as default
           </button>
@@ -566,7 +566,7 @@ const PaymentSettings = ({ user }) => {
   );
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Payment Methods</h2>
         <p className="text-stone-600 text-sm mt-1">Manage your saved payment methods</p>
@@ -591,7 +591,7 @@ const PaymentSettings = ({ user }) => {
         {/* Loading state */}
         {isLoading && (
           <div className="flex justify-center items-center py-10">
-            <Loader className="animate-spin h-8 w-8 text-benchlot-primary" />
+            <Loader className="animate-spin h-8 w-8 text-spruce" />
             <span className="ml-2 text-stone-600">Loading payment methods...</span>
           </div>
         )}
@@ -611,7 +611,7 @@ const PaymentSettings = ({ user }) => {
         {!isLoading && paymentMethods.length === 0 && !isAddingCard ? (
           <div className="text-center py-10 border border-stone-200 rounded-lg">
             <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-stone-100">
-              <CreditCard className="h-8 w-8 text-benchlot-primary" />
+              <CreditCard className="h-8 w-8 text-spruce" />
             </div>
             <h3 className="text-lg font-medium mb-2">No payment methods</h3>
             <p className="text-stone-500 mb-6">
@@ -619,7 +619,7 @@ const PaymentSettings = ({ user }) => {
             </p>
             <button
               onClick={handleAddPaymentMethod}
-              className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary inline-flex items-center"
+              className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light inline-flex items-center"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Payment Method
@@ -632,7 +632,7 @@ const PaymentSettings = ({ user }) => {
               <div className="mb-6">
                 <button
                   onClick={handleAddPaymentMethod}
-                  className="px-4 py-2 border border-benchlot-primary text-benchlot-primary rounded-md hover:bg-benchlot-accent-light inline-flex items-center"
+                  className="px-4 py-2 border border-spruce text-spruce rounded-md hover:bg-bone-dark inline-flex items-center"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Payment Method
@@ -652,13 +652,13 @@ const PaymentSettings = ({ user }) => {
         {/* Security information */}
         <div className="mt-8 bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Lock className="h-5 w-5" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-stone-800">Secure Payment Processing</h3>
               <p className="text-xs text-stone-500 mt-1">
-                Benchlot uses secure encryption to protect your payment information. Your card details are never stored on our servers and are securely processed by our payment provider.
+                Rekerf uses secure encryption to protect your payment information. Your card details are never stored on our servers and are securely processed by our payment provider.
               </p>
             </div>
           </div>

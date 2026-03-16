@@ -1,10 +1,10 @@
-# SendGrid Integration Setup Guide for Benchlot
+# SendGrid Integration Setup Guide for Rekerf
 
-This guide walks through the process of setting up and configuring SendGrid email integration with Firebase Functions for Benchlot.
+This guide walks through the process of setting up and configuring SendGrid email integration with Firebase Functions for Rekerf.
 
 ## Overview
 
-Benchlot uses SendGrid to send transactional emails to users for:
+Rekerf uses SendGrid to send transactional emails to users for:
 - Account creation (welcome emails)
 - Password reset
 - Listing publications
@@ -22,7 +22,7 @@ Benchlot uses SendGrid to send transactional emails to users for:
 1. Log in to your [SendGrid account](https://app.sendgrid.com/)
 2. Navigate to Settings > API Keys
 3. Click "Create API Key"
-4. Name your API key `benchlot-firebase-functions`
+4. Name your API key `rekerf-firebase-functions`
 5. Select "Restricted Access" with the following permissions:
    - Mail Send: Full Access
    - Template Engine: Read-only Access
@@ -47,7 +47,7 @@ Make sure these templates exist in your SendGrid account. If you need to create 
 
 1. In your SendGrid dashboard, go to Settings > Sender Authentication
 2. Verify a domain or at least an email address
-3. The default sender email is `notifications@benchlot.com` - update this in the code if using a different sender
+3. The default sender email is `notifications@rekerf.com` - update this in the code if using a different sender
 
 ## Step 4: Deploy Firebase Functions with Environment Variables
 
@@ -55,7 +55,7 @@ We've created a deployment script to help with this process. To use it:
 
 1. Navigate to the functions directory:
    ```bash
-   cd /path/to/benchlot/functions
+   cd /path/to/rekerf/functions
    ```
 
 2. Run the deployment script:
@@ -66,7 +66,7 @@ We've created a deployment script to help with this process. To use it:
 3. When prompted, enter:
    - Your SendGrid API key (starts with `SG.`)
    - Your Stripe secret key (if applicable)
-   - Your app URL (defaults to `https://benchlot.com`)
+   - Your app URL (defaults to `https://rekerf.com`)
 
 The script will update the environment variables in your Firebase Functions and deploy them.
 

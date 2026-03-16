@@ -15,17 +15,17 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
   const needsVerification = !accountStatus || (!isVerified && !isPending);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden mb-6 border border-default">
       {/* Header with celebration and close button */}
-      <div className="bg-green-600 px-6 py-4 flex justify-between items-center">
+      <div className="bg-spruce px-6 py-4 flex justify-between items-center">
         <div className="flex items-center">
           <span className="text-2xl mr-2">🎉</span>
-          <h2 className="text-xl font-bold text-white">Welcome to Benchlot Sellers!</h2>
+          <h2 className="text-xl font-bold text-bone">Welcome to Rekerf Sellers!</h2>
         </div>
         {onClose && (
-          <button 
-            onClick={onClose} 
-            className="text-white hover:text-green-100"
+          <button
+            onClick={onClose}
+            className="text-bone hover:text-bone-dark"
             aria-label="Close welcome message"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -38,7 +38,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
       {/* Main content */}
       <div className="p-6">
         <p className="text-gray-700 mb-6">
-          You've successfully created your seller account. You're now ready to start listing tools and earning money on Benchlot!
+          You've successfully created your seller account. You're now ready to start listing tools and earning money on Rekerf!
         </p>
 
         {/* Verification status */}
@@ -46,7 +46,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
           <h3 className="font-medium text-gray-900 mb-2">Account Status</h3>
           
           {isVerified && (
-            <div className="flex items-center text-green-700">
+            <div className="flex items-center text-spruce">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -101,7 +101,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
                     : isPending 
                       ? 'In progress. Stripe is reviewing your information.' 
                       : needsVerification
-                        ? <Link to="/seller/onboarding" className="text-green-700 hover:underline">Go to seller onboarding</Link>
+                        ? <Link to="/seller/onboarding" className="text-spruce hover:underline">Go to seller onboarding</Link>
                         : 'Please complete verification with Stripe.'}
                 </p>
               </div>
@@ -156,7 +156,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
         <div className="text-center">
           <Link 
             to="/seller/tools/new"
-            className="inline-block bg-green-700 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-green-800"
+            className="inline-block bg-honey text-dark-teal px-8 py-3 rounded-md text-lg font-medium hover:bg-honey-light"
           >
             Create Your First Listing
           </Link>

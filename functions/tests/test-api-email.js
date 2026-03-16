@@ -1,5 +1,5 @@
 /**
- * Test script for Benchlot SendGrid Email Integration
+ * Test script for Rekerf SendGrid Email Integration
  * 
  * This script tests the API endpoints for sending emails through SendGrid.
  * Usage:
@@ -14,7 +14,7 @@
 const axios = require('axios');
 
 // Configuration
-const testEmail = process.argv[2] || 'test@benchlot.com'; // Use email from command line or default
+const testEmail = process.argv[2] || 'test@rekerf.com'; // Use email from command line or default
 const apiUrl = 'https://api-sed2e4p6ua-uc.a.run.app'; // The URL from deployment
 
 // Helper function to log test results
@@ -54,7 +54,7 @@ const callEndpoint = async (endpoint, data) => {
 const testPasswordReset = async () => {
   const result = await callEndpoint('send-password-reset', {
     email: testEmail,
-    resetLink: 'https://benchlot.com/reset-password?token=test-token-123'
+    resetLink: 'https://rekerf.com/reset-password?token=test-token-123'
   });
   logResult('Password Reset Email', result.success, result.error);
   return result;
@@ -81,7 +81,7 @@ const runTests = async () => {
   // Get specific test type if provided
   const specificTest = process.argv[3];
   
-  console.log('🚀 Testing Benchlot Email API');
+  console.log('🚀 Testing Rekerf Email API');
   console.log('============================');
   console.log(`Using email: ${testEmail}`);
   console.log(`API URL: ${apiUrl}`);

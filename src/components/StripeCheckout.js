@@ -83,7 +83,7 @@ const CheckoutForm = ({
       let guestCartData = null;
       if (isGuestCheckout && cartId === 'guest-cart') {
         try {
-          const rawCartData = localStorage.getItem('benchlot_guest_cart');
+          const rawCartData = localStorage.getItem('rekerf_guest_cart');
           if (rawCartData) {
             guestCartData = JSON.parse(rawCartData);
           }
@@ -250,7 +250,7 @@ const CheckoutForm = ({
         country: 'US',
         currency: 'usd',
         total: {
-          label: 'Benchlot Purchase',
+          label: 'Rekerf Purchase',
           amount: Math.round(amount * 100), // Convert to cents
         },
         requestPayerName: true,
@@ -370,7 +370,7 @@ const CheckoutForm = ({
           type="button"
           onClick={() => setPaymentMethod('card')}
           className={`flex items-center px-4 py-2 ${paymentMethod === 'card' 
-            ? 'border-b-2 border-benchlot-primary text-benchlot-primary' 
+            ? 'border-b-2 border-spruce text-spruce' 
             : 'text-stone-500'}`}
         >
           <CreditCard className="h-4 w-4 mr-2" />
@@ -382,7 +382,7 @@ const CheckoutForm = ({
             type="button"
             onClick={() => setPaymentMethod('apple-pay')}
             className={`flex items-center px-4 py-2 ${paymentMethod === 'apple-pay' 
-              ? 'border-b-2 border-benchlot-primary text-benchlot-primary' 
+              ? 'border-b-2 border-spruce text-spruce' 
               : 'text-stone-500'}`}
           >
             <svg className="h-5 w-5 mr-1" viewBox="0 0 24 24" fill="currentColor">
@@ -404,7 +404,7 @@ const CheckoutForm = ({
           <label htmlFor="card-element" className="block text-sm font-medium text-stone-700 mb-1">
             Credit or debit card
           </label>
-          <div className="border border-stone-300 rounded-md p-4 focus-within:ring-benchlot-primary focus-within:border-benchlot-primary">
+          <div className="border border-stone-300 rounded-md p-4 focus-within:ring-spruce focus-within:border-spruce">
             <CardElement id="card-element" options={cardStyle} onChange={handleChange} />
           </div>
           
@@ -464,11 +464,11 @@ const CheckoutForm = ({
         <button
           type="submit"
           disabled={processing || disabled || succeeded}
-          className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary disabled:opacity-50 whitespace-nowrap"
+          className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-honey text-dark-teal hover:bg-honey-light disabled:opacity-50 whitespace-nowrap"
         >
           {processing ? (
             <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-dark-teal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -573,7 +573,7 @@ const StripeCheckout = ({
         // If this is a guest checkout, we need to pass actual cart information
         if (isGuestCheckout && cartId === 'guest-cart') {
           try {
-            const rawGuestCart = localStorage.getItem('benchlot_guest_cart');
+            const rawGuestCart = localStorage.getItem('rekerf_guest_cart');
             if (rawGuestCart) {
               console.log('Raw guest cart data:', rawGuestCart);
               
@@ -667,18 +667,18 @@ const StripeCheckout = ({
   
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-benchlot-primary mb-2"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-spruce mb-2"></div>
           <p className="text-stone-600">Preparing payment...</p>
         </div>
       </div>
     );
   }
-  
+
   if (error) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
@@ -688,9 +688,9 @@ const StripeCheckout = ({
       </div>
     );
   }
-  
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
       <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
       
       {clientSecret && (

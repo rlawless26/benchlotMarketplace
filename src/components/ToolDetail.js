@@ -59,8 +59,8 @@ const ToolDetail = () => {
     return (
       <div className="page-container min-h-[70vh] flex justify-center items-center">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-benchlot-accent border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-benchlot-primary font-medium">Loading listing details...</p>
+          <div className="w-12 h-12 border-4 border-honey border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-spruce font-medium">Loading listing details...</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ const ToolDetail = () => {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+        className="mb-6 inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
       >
         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -144,7 +144,7 @@ const ToolDetail = () => {
                     onClick={() => setActiveImageIndex(index)}
                     className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all
                       ${activeImageIndex === index 
-                        ? 'border-benchlot-accent shadow-sm' 
+                        ? 'border-honey shadow-sm' 
                         : 'border-gray-200 hover:border-gray-300'}`}
                     aria-label={`View image ${index + 1}`}
                   >
@@ -162,7 +162,7 @@ const ToolDetail = () => {
           {/* Right Column - Details */}
           <div className="w-full md:w-1/2 p-4 md:p-6 border-t md:border-t-0 md:border-l border-gray-200">
             <div className="mb-3 flex flex-wrap justify-between items-start gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-benchlot-primary">{tool.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-spruce">{tool.name}</h1>
               <div className={`badge ${
                 tool.status === 'active' ? 'badge-success' : 'bg-gray-100 text-gray-800'
               }`}>
@@ -177,7 +177,7 @@ const ToolDetail = () => {
                   {formatPrice(tool.original_price)}
                 </span>
               )}
-              <span className="text-2xl font-bold text-benchlot-accent">
+              <span className="text-2xl font-bold text-honey">
                 {formatPrice(tool.current_price || tool.price)}
               </span>
             </div>
@@ -283,7 +283,7 @@ const ToolDetail = () => {
             
             {/* Description */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-benchlot-primary mb-3">Description</h2>
+              <h2 className="text-xl font-semibold text-spruce mb-3">Description</h2>
               <div className="text-gray-700 whitespace-pre-line rounded-md bg-gray-50 p-4 border border-gray-200">
                 {tool.description || "No description provided."}
               </div>
@@ -317,7 +317,7 @@ const ToolDetail = () => {
                   <AddToCartButton tool={tool} extraClasses="btn-primary w-full justify-center text-lg py-3" />
                   
                   <button
-                    className="w-full py-3 rounded-md font-medium transition-colors bg-white text-benchlot-text-primary border border-benchlot-primary justify-center flex"
+                    className="w-full py-3 rounded-md font-medium transition-colors bg-bone-light text-dark-teal border border-spruce justify-center flex"
                     onClick={() => {
                       // Temporary placeholder - will implement make offer functionality later
                       alert('Make an offer functionality coming soon!');
@@ -328,7 +328,7 @@ const ToolDetail = () => {
                   
                   <div className="flex w-full gap-3">
                     <button
-                      className="flex-1 py-3 rounded-md font-medium transition-colors bg-white text-benchlot-text-primary justify-center flex"
+                      className="flex-1 py-3 rounded-md font-medium transition-colors bg-bone-light text-dark-teal justify-center flex"
                       onClick={() => {
                         // Temporary placeholder - will implement contact functionality later
                         alert('Contact seller functionality coming soon!');

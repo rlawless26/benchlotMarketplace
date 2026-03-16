@@ -93,12 +93,12 @@ const SaveToolButton = ({
     } else if (variant === 'filled') {
       classes += isInWishlist
         ? 'bg-red-600 text-white hover:bg-red-700 '
-        : 'bg-benchlot-primary text-white hover:bg-benchlot-secondary ';
+        : 'bg-spruce text-bone hover:bg-spruce-light ';
     } else {
       // Default variant
       classes += isInWishlist
         ? 'text-red-600 hover:text-red-700 '
-        : 'text-stone-600 hover:text-benchlot-primary ';
+        : 'text-stone-600 hover:text-spruce ';
     }
     
     // Add rounded corners for all variants

@@ -56,7 +56,7 @@ const SettingsPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader className="h-10 w-10 text-benchlot-primary animate-spin" />
+        <Loader className="h-10 w-10 text-spruce animate-spin" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ const SettingsPage = () => {
       <li>
         <button
           className={`w-full text-left px-3 py-2 rounded-md flex items-center ${
-            active ? 'bg-benchlot-accent-light text-benchlot-primary' : 'hover:bg-stone-50 text-stone-700'
+            active ? 'bg-bone-dark text-spruce' : 'hover:bg-stone-50 text-stone-700'
           }`}
           onClick={() => onClick(id)}
         >
@@ -83,13 +83,13 @@ const SettingsPage = () => {
   return (
     <div className="bg-stone-50 min-h-screen">
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-serif font-medium text-stone-800 mb-6">Account Settings</h1>
+        <h1 className="text-3xl font-display font-medium text-stone-800 mb-6">Account Settings</h1>
         
         {/* Settings grid layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden sticky top-24">
+            <div className="bg-bone-light rounded-lg shadow-md overflow-hidden sticky top-24">
               <div className="p-4 border-b">
                 <h2 className="font-medium text-stone-800">Settings</h2>
               </div>
@@ -145,8 +145,8 @@ const SettingsPage = () => {
           <div className="lg:col-span-3">
             <React.Suspense 
               fallback={
-                <div className="bg-white rounded-lg shadow-md p-8 flex justify-center">
-                  <Loader className="h-8 w-8 text-benchlot-primary animate-spin" />
+                <div className="bg-bone-light rounded-lg shadow-md p-8 flex justify-center">
+                  <Loader className="h-8 w-8 text-spruce animate-spin" />
                 </div>
               }
             >

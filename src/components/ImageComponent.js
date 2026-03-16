@@ -1,6 +1,6 @@
 /**
  * Reliable Image Component
- * Handles image loading with fallbacks and error handling
+ * Handles image loading with fallbacks and error handling for Rekerf
  */
 import React, { useState } from 'react';
 

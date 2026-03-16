@@ -35,21 +35,21 @@ const AuthModalExample = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={openSignIn}
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary transition-colors"
+            className="px-4 py-2 bg-spruce text-bone rounded-md hover:bg-spruce-light transition-colors"
           >
             Open Sign In Modal
           </button>
           
           <button
             onClick={openSignUp}
-            className="px-4 py-2 bg-benchlot-accent text-benchlot-primary rounded-md hover:bg-benchlot-accent-light transition-colors"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-bone-dark transition-colors"
           >
             Open Sign Up Modal
           </button>
           
           <button
             onClick={openReset}
-            className="px-4 py-2 border border-benchlot-primary text-benchlot-primary rounded-md hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 border border-spruce text-spruce rounded-md hover:bg-gray-50 transition-colors"
           >
             Open Reset Password Modal
           </button>
@@ -107,7 +107,7 @@ return (
         }
         message={
           authMode === 'signin' ? 'Welcome back! Sign in to continue.' :
-          authMode === 'signup' ? 'Join the Benchlot community today.' :
+          authMode === 'signup' ? 'Join the Rekerf community today.' :
           'Enter your email to receive password reset instructions.'
         }
       />

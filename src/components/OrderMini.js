@@ -78,7 +78,7 @@ const OrderMini = ({ order }) => {
   if (!order) return null;
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-bone-light rounded-lg shadow-sm border border-default overflow-hidden hover:shadow-md transition-shadow">
       <div className="p-4">
         <div className="flex justify-between items-start">
           <div>
@@ -99,7 +99,7 @@ const OrderMini = ({ order }) => {
           <div className="text-sm font-medium">{formatPrice(order.totalAmount)}</div>
           <Link 
             to={`/orders/${order.id}`}
-            className="text-xs text-benchlot-primary hover:text-benchlot-primary-dark font-medium"
+            className="text-xs text-spruce hover:text-spruce-dark font-medium"
           >
             View Details
           </Link>

@@ -405,7 +405,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
       )}
       
       {success && (
-        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-100 text-green-700 px-4 py-3 rounded-md shadow-lg max-w-md animate-fade-in-out flex items-center">
+        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-100 text-spruce px-4 py-3 rounded-md shadow-lg max-w-md animate-fade-in-out flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
@@ -415,7 +415,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -617,7 +617,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
         </div>
         
         {/* Pricing */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Pricing</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -670,7 +670,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
         </div>
         
         {/* Additional Details */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Additional Details</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -725,7 +725,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
         </div>
         
         {/* Shipping Options */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Shipping Options</h2>
           
           <div className="mb-4">
@@ -735,7 +735,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 id="useDefaultShipping"
                 checked={formData.shipping.useDefault}
                 onChange={() => handleUseDefaultToggle('shipping')}
-                className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
               />
               <label htmlFor="useDefaultShipping" className="ml-2 block text-sm text-gray-700">
                 Use my default shipping settings
@@ -755,7 +755,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                     <input
                       id="method-standard"
                       type="checkbox"
-                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       checked={formData.shipping.methods.includes('standard')}
                       onChange={() => handleShippingMethodChange('standard')}
                     />
@@ -769,7 +769,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                     <input
                       id="method-express"
                       type="checkbox"
-                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       checked={formData.shipping.methods.includes('express')}
                       onChange={() => handleShippingMethodChange('express')}
                     />
@@ -783,7 +783,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                     <input
                       id="method-economy"
                       type="checkbox"
-                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       checked={formData.shipping.methods.includes('economy')}
                       onChange={() => handleShippingMethodChange('economy')}
                     />
@@ -797,7 +797,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                     <input
                       id="method-freight"
                       type="checkbox"
-                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       checked={formData.shipping.methods.includes('freight')}
                       onChange={() => handleShippingMethodChange('freight')}
                     />
@@ -839,7 +839,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                     <input
                       id="offerLocalPickup"
                       type="checkbox"
-                      className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                      className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                       checked={formData.shipping.offerLocalPickup}
                       onChange={() => handleNestedChange('shipping', 'offerLocalPickup', !formData.shipping.offerLocalPickup)}
                     />
@@ -855,7 +855,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                   <input
                     id="offersFreeShipping"
                     type="checkbox"
-                    className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                    className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                     checked={formData.shipping.offersFreeShipping}
                     onChange={() => handleNestedChange('shipping', 'offersFreeShipping', !formData.shipping.offersFreeShipping)}
                   />
@@ -898,7 +898,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
         </div>
         
         {/* Return Policy */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Return Policy</h2>
           
           <div className="mb-4">
@@ -908,7 +908,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 id="useDefaultReturns"
                 checked={formData.returns.useDefault}
                 onChange={() => handleUseDefaultToggle('returns')}
-                className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
               />
               <label htmlFor="useDefaultReturns" className="ml-2 block text-sm text-gray-700">
                 Use my default return policy
@@ -925,7 +925,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
                 <input
                   id="acceptsReturns"
                   type="checkbox"
-                  className="h-4 w-4 text-green-700 focus:ring-green-700 border-gray-300 rounded"
+                  className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
                   checked={formData.returns.acceptsReturns}
                   onChange={() => handleNestedChange('returns', 'acceptsReturns', !formData.returns.acceptsReturns)}
                 />
@@ -977,7 +977,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
         </div>
         
         {/* Images */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-bone-light p-6 rounded-lg shadow-md border border-default">
           <h2 className="text-xl font-semibold mb-4">Images</h2>
           <p className="text-sm text-gray-500 mb-4">
             Upload up to 5 high-quality images of your tool. First image will be the main image.
@@ -1069,7 +1069,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-green-700 text-white rounded-md font-medium hover:bg-green-800 disabled:opacity-50"
+            className="px-6 py-2 bg-honey text-dark-teal rounded-md font-medium hover:bg-honey-light disabled:opacity-50"
           >
             {loading ? (
               <span>Saving...</span>

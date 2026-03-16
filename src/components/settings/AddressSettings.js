@@ -251,7 +251,7 @@ const AddressSettings = ({ user }) => {
   
   // Render the address form
   const renderAddressForm = () => (
-    <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
+    <form onSubmit={handleSubmit} className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4 mb-6">
       <h3 className="text-lg font-medium mb-4">
         {editingAddress ? 'Edit Address' : 'Add New Address'}
       </h3>
@@ -269,7 +269,7 @@ const AddressSettings = ({ user }) => {
               value="shipping"
               checked={addressForm.type === 'shipping'}
               onChange={handleChange}
-              className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+              className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
             />
             <span className="ml-2 text-sm text-stone-700">Shipping</span>
           </label>
@@ -280,7 +280,7 @@ const AddressSettings = ({ user }) => {
               value="billing"
               checked={addressForm.type === 'billing'}
               onChange={handleChange}
-              className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+              className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
             />
             <span className="ml-2 text-sm text-stone-700">Billing</span>
           </label>
@@ -291,7 +291,7 @@ const AddressSettings = ({ user }) => {
               value="both"
               checked={addressForm.type === 'both'}
               onChange={handleChange}
-              className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+              className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
             />
             <span className="ml-2 text-sm text-stone-700">Both</span>
           </label>
@@ -306,7 +306,7 @@ const AddressSettings = ({ user }) => {
             name="isDefault"
             checked={addressForm.isDefault}
             onChange={handleChange}
-            className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300 rounded"
+            className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300 rounded"
           />
           <span className="ml-2 text-sm text-stone-700">Set as default address</span>
         </label>
@@ -326,7 +326,7 @@ const AddressSettings = ({ user }) => {
           name="fullName"
           value={addressForm.fullName}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           required
         />
       </div>
@@ -345,7 +345,7 @@ const AddressSettings = ({ user }) => {
           name="street"
           value={addressForm.street}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           required
         />
       </div>
@@ -364,7 +364,7 @@ const AddressSettings = ({ user }) => {
           name="apt"
           value={addressForm.apt}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
         />
       </div>
       
@@ -383,7 +383,7 @@ const AddressSettings = ({ user }) => {
             name="city"
             value={addressForm.city}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             required
           />
         </div>
@@ -401,7 +401,7 @@ const AddressSettings = ({ user }) => {
             name="state"
             value={addressForm.state}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             required
           />
         </div>
@@ -419,7 +419,7 @@ const AddressSettings = ({ user }) => {
             name="zipCode"
             value={addressForm.zipCode}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
             required
           />
         </div>
@@ -438,7 +438,7 @@ const AddressSettings = ({ user }) => {
           name="country"
           value={addressForm.country}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce bg-white"
           required
         >
           <option value="US">United States</option>
@@ -462,7 +462,7 @@ const AddressSettings = ({ user }) => {
           name="phone"
           value={addressForm.phone}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           placeholder="For delivery questions"
         />
       </div>
@@ -481,7 +481,7 @@ const AddressSettings = ({ user }) => {
           value={addressForm.instructions}
           onChange={handleChange}
           rows="2"
-          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
           placeholder="Notes for delivery driver, gate codes, etc."
         />
       </div>
@@ -491,14 +491,14 @@ const AddressSettings = ({ user }) => {
         <button
           type="button"
           onClick={handleCancel}
-          className="px-4 py-2 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
+          className="px-4 py-2 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce"
         >
           Cancel
         </button>
         
         <button
           type="submit"
-          className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+          className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
           disabled={saving}
         >
           {saving ? (
@@ -518,11 +518,11 @@ const AddressSettings = ({ user }) => {
   const renderAddressCard = (address) => (
     <div 
       key={address.id} 
-      className="bg-white border border-stone-200 rounded-lg overflow-hidden p-4 relative"
+      className="bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4 relative"
     >
       {/* Default badge */}
       {address.isDefault && (
-        <div className="absolute top-3 right-3 bg-benchlot-accent text-benchlot-primary text-xs font-medium px-2 py-1 rounded-full flex items-center">
+        <div className="absolute top-3 right-3 bg-honey text-spruce text-xs font-medium px-2 py-1 rounded-full flex items-center">
           <Home className="h-3 w-3 mr-1" />
           Default
         </div>
@@ -553,7 +553,7 @@ const AddressSettings = ({ user }) => {
       <div className="flex space-x-3">
         <button
           onClick={() => handleEditAddress(address)}
-          className="flex items-center text-sm text-benchlot-primary hover:text-benchlot-secondary"
+          className="flex items-center text-sm text-spruce hover:text-spruce-light"
         >
           <EditIcon className="h-4 w-4 mr-1" />
           Edit
@@ -571,7 +571,7 @@ const AddressSettings = ({ user }) => {
   );
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Your Addresses</h2>
         <p className="text-stone-600 text-sm mt-1">Manage your shipping and billing addresses</p>
@@ -600,7 +600,7 @@ const AddressSettings = ({ user }) => {
         {addresses.length === 0 && !isAdding ? (
           <div className="text-center py-10 border border-stone-200 rounded-lg">
             <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-stone-100">
-              <MapPin className="h-8 w-8 text-benchlot-primary" />
+              <MapPin className="h-8 w-8 text-spruce" />
             </div>
             <h3 className="text-lg font-medium mb-2">No addresses yet</h3>
             <p className="text-stone-500 mb-6">
@@ -608,7 +608,7 @@ const AddressSettings = ({ user }) => {
             </p>
             <button
               onClick={handleAddNew}
-              className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary inline-flex items-center"
+              className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light inline-flex items-center"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Address
@@ -621,7 +621,7 @@ const AddressSettings = ({ user }) => {
               <div className="mb-6">
                 <button
                   onClick={handleAddNew}
-                  className="px-4 py-2 border border-benchlot-primary text-benchlot-primary rounded-md hover:bg-benchlot-accent-light inline-flex items-center"
+                  className="px-4 py-2 border border-spruce text-spruce rounded-md hover:bg-bone-dark inline-flex items-center"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add New Address

@@ -179,7 +179,7 @@ const PasswordSettings = () => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Password</h2>
         <p className="text-stone-600 text-sm mt-1">Update your password to keep your account secure</p>
@@ -217,7 +217,7 @@ const PasswordSettings = () => {
               name="currentPassword"
               value={passwordData.currentPassword}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary pr-10"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce pr-10"
             />
             <button
               type="button"
@@ -248,7 +248,7 @@ const PasswordSettings = () => {
               name="newPassword"
               value={passwordData.newPassword}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary pr-10"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce pr-10"
             />
             <button
               type="button"
@@ -319,7 +319,7 @@ const PasswordSettings = () => {
               name="confirmPassword"
               value={passwordData.confirmPassword}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary pr-10"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce pr-10"
             />
             <button
               type="button"
@@ -356,7 +356,7 @@ const PasswordSettings = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={saving}
           >
             {saving ? (

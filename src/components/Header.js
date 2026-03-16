@@ -42,13 +42,13 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
-  
+
   // Use hooks to access user data, wishlist, and notifications
   const { user, isAuthenticated, signOut } = useAuth();
   const { count: wishlistCount } = useWishlist();
   const { totalCount: notificationCount } = useNotifications();
   const { unreadCount: messageCount } = useMessages();
-  
+
   // Listen for auth modal events
   useEffect(() => {
     // Register for auth modal events
@@ -57,10 +57,10 @@ const Header = () => {
       setAuthMode(mode || 'signin');
       setAuthModalOpen(true);
     });
-    
+
     return unsubscribe; // Cleanup on unmount
   }, []);
-  
+
   // Create a ref for the profile menu
   const profileMenuRef = useRef(null);
 
@@ -99,18 +99,18 @@ const Header = () => {
       navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
-  
+
   // Auth modal handlers
   const openSignIn = () => {
     setAuthMode('signin');
     setAuthModalOpen(true);
   };
-  
+
   const openSignUp = () => {
     setAuthMode('signup');
     setAuthModalOpen(true);
   };
-  
+
   const closeAuthModal = () => {
     setAuthModalOpen(false);
   };
@@ -144,11 +144,11 @@ const Header = () => {
   return (
     <header className="border-b shadow-sm">
       {/* Primary Header - Tall section with logo, search, and key actions */}
-      <div className="bg-white border-b">
+      <div className="bg-dark-teal border-b border-dark">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center">
           {/* Mobile menu button */}
           <button
-            className="mr-4 lg:hidden text-stone-700"
+            className="mr-4 lg:hidden text-bone"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -157,7 +157,7 @@ const Header = () => {
 
           {/* Logo */}
           <div className="mr-6 flex-shrink-0">
-            <Link to="/" className="text-2xl font-serif text-benchlot-primary">Benchlot</Link>
+            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '20px', letterSpacing: '-1.5px' }}>Rekerf</Link>
           </div>
 
           {/* Search bar - centered and expanded */}
@@ -166,17 +166,17 @@ const Header = () => {
               <input
                 type="text"
                 placeholder="Search for tools, brands, or categories..."
-                className="w-full pl-10 pr-14 py-2.5 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary shadow-sm"
+                className="w-full pl-10 pr-14 py-2.5 border border-dark rounded-md focus:outline-none focus:border-spruce shadow-sm bg-bone text-dark-teal"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
-              <button 
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary" />
+              <button
                 type="submit"
-                className="absolute right-0 top-0 w-12 h-full border-l border-stone-300 flex items-center justify-center hover:bg-stone-50"
+                className="absolute right-0 top-0 w-12 h-full border-l border-dark flex items-center justify-center hover:bg-bone"
                 aria-label="Search"
               >
-                <Search className="h-5 w-5 text-benchlot-primary" />
+                <Search className="h-5 w-5 text-spruce" />
               </button>
             </form>
           </div>
@@ -187,41 +187,41 @@ const Header = () => {
               // Authenticated user options
               <>
                 {/* Sell your tools button */}
-                <Link 
+                <Link
                   to={user?.isSeller || user?.profile?.isSeller ? "/seller/dashboard" : "/sell"}
-                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap ml-4"
+                  className="hidden md:flex items-center px-3 py-1.5 bg-honey text-dark-teal rounded-md hover:bg-honey/90 font-body font-medium whitespace-nowrap ml-4"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
                   Sell Your Tools
                 </Link>
-                
+
                 {/* Cart Icon */}
                 <CartIcon />
-                
+
                 {/* Wishlist icon */}
-                <Link to="/wishlist" className="hidden md:flex text-stone-700 hover:text-benchlot-primary relative" aria-label="Wishlist">
+                <Link to="/wishlist" className="hidden md:flex text-secondary hover:text-bone relative" aria-label="Wishlist">
                   <Heart className="h-5 w-5" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {wishlistCount > 9 ? '9+' : wishlistCount}
                     </span>
                   )}
                 </Link>
-                
+
                 {/* Messages Icon with notifications */}
-                <Link to="/messages" className="hidden md:flex text-stone-700 hover:text-benchlot-primary relative" aria-label="Messages">
+                <Link to="/messages" className="hidden md:flex text-secondary hover:text-bone relative" aria-label="Messages">
                   <MessageSquare className="h-5 w-5" />
                   {(notificationCount > 0 || messageCount > 0) && (
-                    <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {(notificationCount + messageCount) > 9 ? '9+' : (notificationCount + messageCount)}
                     </span>
                   )}
                 </Link>
-                
+
                 {/* User Profile Dropdown - Hide on mobile */}
                 <div className="relative hidden md:block">
                   <button
-                    className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary"
+                    className="flex items-center gap-1 text-secondary hover:text-bone"
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     aria-label="Open user menu"
                     aria-expanded={profileMenuOpen}
@@ -229,7 +229,7 @@ const Header = () => {
                   >
                     {user?.photoURL ? (
                       // User has a profile image - display it
-                      <div className="w-8 h-8 rounded-full overflow-hidden border border-stone-200">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-dark">
                         <img
                           src={user.photoURL}
                           alt="Profile"
@@ -238,24 +238,24 @@ const Header = () => {
                       </div>
                     ) : (
                       // No profile image - show default icon
-                      <div className="w-8 h-8 rounded-full bg-benchlot-accent-light flex items-center justify-center">
-                        <User className="h-4 w-4 text-benchlot-primary" />
+                      <div className="w-8 h-8 rounded-full bg-spruce-light flex items-center justify-center">
+                        <User className="h-4 w-4 text-bone" />
                       </div>
                     )}
                     <ChevronDown className="h-3 w-3 hidden md:block" />
                   </button>
 
                   {profileMenuOpen && (
-                    <div 
-                      ref={profileMenuRef} 
+                    <div
+                      ref={profileMenuRef}
                       id="profile-dropdown"
-                      className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] z-[100]"
+                      className="absolute right-0 top-full mt-1 bg-bone-light shadow-lg rounded-md p-2 min-w-[220px] z-[100]"
                     >
                       {/* User info header */}
                       <div className="px-4 py-3 border-b">
                         <div className="flex items-center gap-3">
                           {user?.photoURL ? (
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-stone-200">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-dark">
                               <img
                                 src={user.photoURL}
                                 alt="Profile"
@@ -263,34 +263,34 @@ const Header = () => {
                               />
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-benchlot-accent-light flex items-center justify-center">
-                              <User className="h-5 w-5 text-benchlot-primary" />
+                            <div className="w-10 h-10 rounded-full bg-spruce-light flex items-center justify-center">
+                              <User className="h-5 w-5 text-bone" />
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-stone-800">{user?.displayName || 'User'}</div>
-                            <div className="text-xs text-stone-500">{user?.email}</div>
+                            <div className="font-body font-medium text-dark-teal">{user?.displayName || 'User'}</div>
+                            <div className="text-xs text-secondary">{user?.email}</div>
                           </div>
                         </div>
                       </div>
 
                       {/* Main Account Options */}
                       <div className="py-1">
-                        <Link to="/settings?tab=profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <Link to="/settings?tab=profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <User className="h-4 w-4" />
                           My Account
                         </Link>
 
-                        <Link to="/wishlist" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <Link to="/wishlist" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <Heart className="h-4 w-4" />
                           Saved Tools
                         </Link>
 
-                        <Link to="/messages" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <Link to="/messages" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <div className="relative">
                             <MessageSquare className="h-4 w-4" />
                             {(notificationCount > 0 || messageCount > 0) && (
-                              <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-3.5 w-3.5 flex items-center justify-center text-[0.6rem]">
+                              <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-3.5 w-3.5 flex items-center justify-center text-[0.6rem]">
                                 {(notificationCount + messageCount) > 9 ? '9+' : (notificationCount + messageCount)}
                               </span>
                             )}
@@ -298,13 +298,13 @@ const Header = () => {
                           Messages
                         </Link>
                       </div>
-                      
+
                       {/* Purchase Activity Section */}
                       <div className="border-t my-1 pt-1">
                         <div className="px-4 py-1">
-                          <span className="text-xs font-medium text-stone-500">BUYING</span>
+                          <span className="text-xs font-body font-medium text-secondary">BUYING</span>
                         </div>
-                        <Link to="/orders" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <Link to="/orders" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <Package className="h-4 w-4" />
                           Purchases
                         </Link>
@@ -313,22 +313,22 @@ const Header = () => {
                       {/* Seller Section - Conditionally rendered */}
                       <div className="border-t my-1 pt-1">
                         <div className="px-4 py-1">
-                          <span className="text-xs font-medium text-stone-500">SELLING</span>
+                          <span className="text-xs font-body font-medium text-secondary">SELLING</span>
                         </div>
-                        
+
                         {user?.isSeller || user?.profile?.isSeller ? (
                           <>
-                            <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                            <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                               <List className="h-4 w-4" />
                               My Tools
                             </Link>
-                            <Link to="/seller/dashboard" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                            <Link to="/seller/dashboard" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                               <Package className="h-4 w-4" />
                               Seller Dashboard
                             </Link>
                           </>
                         ) : (
-                          <Link to="/sell" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                          <Link to="/sell" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                             <Store className="h-4 w-4" />
                             Become a Seller
                           </Link>
@@ -337,14 +337,14 @@ const Header = () => {
 
                       {/* Settings and Logout */}
                       <div className="border-t my-1 pt-1">
-                        <Link to="/settings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm">
+                        <Link to="/settings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <Settings className="h-4 w-4" />
                           Settings
                         </Link>
-                        
+
                         <button
                           onClick={handleLogout}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2 text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary text-sm"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body"
                         >
                           <LogOut className="h-4 w-4" />
                           Sign Out
@@ -358,29 +358,29 @@ const Header = () => {
               // Unauthenticated user options
               <>
                 {/* Sell your tools button */}
-                <Link 
-                  to="/sell" 
-                  className="hidden md:flex items-center px-3 py-1.5 bg-white text-benchlot-primary border border-benchlot-primary rounded-md hover:bg-stone-50 font-medium whitespace-nowrap"
+                <Link
+                  to="/sell"
+                  className="hidden md:flex items-center px-3 py-1.5 bg-honey text-dark-teal rounded-md hover:bg-honey/90 font-body font-medium whitespace-nowrap"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
                   Sell Your Tools
                 </Link>
-                
+
                 {/* Cart Icon - right aligned */}
                 <CartIcon />
-                
+
                 {/* Login link - text only */}
-                <button 
+                <button
                   onClick={openSignIn}
-                  className="text-stone-700 hover:text-benchlot-primary text-sm font-medium whitespace-nowrap hidden md:block"
+                  className="text-secondary hover:text-bone text-sm font-body font-medium whitespace-nowrap hidden md:block"
                 >
                   Log In
                 </button>
-                
+
                 {/* Sign Up link - text only */}
                 <button
                   onClick={openSignUp}
-                  className="hidden md:block text-benchlot-primary hover:text-benchlot-secondary text-sm font-medium whitespace-nowrap"
+                  className="hidden md:block text-bone hover:text-honey text-sm font-body font-medium whitespace-nowrap"
                 >
                   Sign Up
                 </button>
@@ -391,32 +391,32 @@ const Header = () => {
       </div>
 
       {/* Secondary Header - Categories and utility links (hidden on mobile) */}
-      <div className="bg-white hidden lg:block">
+      <div className="bg-dark-teal hidden lg:block border-t border-dark">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-10 items-center">
             {/* Left side - Category links */}
-            <nav className="flex items-center gap-6 text-sm">
+            <nav className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
               <Link
                 to="/marketplace"
-                className="text-stone-700 hover:text-benchlot-primary whitespace-nowrap font-medium"
+                className="text-secondary hover:text-bone whitespace-nowrap font-medium"
               >
                 Browse All
               </Link>
-              
+
               {primaryCategories.map((category) => (
                 <div key={category.name} className="relative group">
                   <Link
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                    className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary whitespace-nowrap"
+                    className="flex items-center gap-1 text-secondary hover:text-bone whitespace-nowrap"
                   >
                     {category.name} <ChevronDown className="h-3 w-3" />
                   </Link>
-                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover:block z-10">
+                  <div className="absolute left-0 top-full mt-1 bg-bone-light shadow-lg rounded-md p-2 min-w-[200px] hidden group-hover:block z-10">
                     {category.subcategories.map((sub) => (
                       <Link
                         key={sub}
                         to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
-                        className="block px-4 py-2 text-sm text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary rounded-md"
+                        className="block px-4 py-2 text-sm text-dark-teal hover:bg-spruce-light hover:text-bone rounded-md font-body"
                       >
                         {sub}
                       </Link>
@@ -427,15 +427,15 @@ const Header = () => {
 
               {/* More categories dropdown */}
               <div className="relative group">
-                <button className="flex items-center gap-1 text-stone-700 hover:text-benchlot-primary whitespace-nowrap">
+                <button className="flex items-center gap-1 text-secondary hover:text-bone whitespace-nowrap">
                   More <ChevronDown className="h-3 w-3" />
                 </button>
-                <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md p-2 min-w-[220px] hidden group-hover:block z-10">
+                <div className="absolute left-0 top-full mt-1 bg-bone-light shadow-lg rounded-md p-2 min-w-[220px] hidden group-hover:block z-10">
                   {moreCategories.map((category) => (
                     <Link
                       key={category.name}
                       to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                      className="block px-4 py-2 text-sm text-stone-700 hover:bg-benchlot-accent-light hover:text-benchlot-primary rounded-md"
+                      className="block px-4 py-2 text-sm text-dark-teal hover:bg-spruce-light hover:text-bone rounded-md font-body"
                     >
                       {category.name}
                     </Link>
@@ -445,14 +445,14 @@ const Header = () => {
             </nav>
 
             {/* Right side - Utility links */}
-            <div className="flex items-center gap-6 text-sm">
-              <Link to="/help" className="text-stone-700 hover:text-benchlot-primary">Help</Link>
-              <Link to="/about" className="text-stone-700 hover:text-benchlot-primary">About</Link>
-              <a 
-                href="https://blog.benchlot.com/blog" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-stone-700 hover:text-benchlot-primary"
+            <div className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
+              <Link to="/help" className="text-secondary hover:text-bone">Help</Link>
+              <Link to="/about" className="text-secondary hover:text-bone">About</Link>
+              <a
+                href="https://blog.rekerf.com/blog"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:text-bone"
               >
                 Updates
               </a>
@@ -462,22 +462,22 @@ const Header = () => {
       </div>
 
       {/* Mobile Search - Visible on small screens */}
-      <div className="md:hidden border-t p-4">
+      <div className="md:hidden border-t border-dark p-4 bg-dark-teal">
         <form onSubmit={handleSearch} className="relative">
           <input
             type="text"
             placeholder="Search for tools..."
-            className="w-full pl-10 pr-14 py-2.5 border border-stone-300 rounded-md focus:outline-none focus:border-benchlot-primary shadow-sm"
+            className="w-full pl-10 pr-14 py-2.5 border border-dark rounded-md focus:outline-none focus:border-spruce shadow-sm bg-bone text-dark-teal"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
-          <button 
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary" />
+          <button
             type="submit"
-            className="absolute right-0 top-0 w-12 h-full border-l border-stone-300 flex items-center justify-center hover:bg-stone-50"
+            className="absolute right-0 top-0 w-12 h-full border-l border-dark flex items-center justify-center hover:bg-bone"
             aria-label="Search"
           >
-            <Search className="h-5 w-5 text-benchlot-primary" />
+            <Search className="h-5 w-5 text-spruce" />
           </button>
         </form>
       </div>
@@ -486,16 +486,16 @@ const Header = () => {
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-stone-900 bg-opacity-50"
+            className="absolute inset-0 bg-dark-teal bg-opacity-50"
             onClick={() => setIsMenuOpen(false)}
           ></div>
 
-          <div className="absolute inset-y-0 left-0 w-72 bg-white shadow-lg p-5 overflow-y-auto">
+          <div className="absolute inset-y-0 left-0 w-72 bg-bone shadow-lg p-5 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-xl font-serif font-medium">Menu</span>
+              <span className="text-xl font-display font-medium text-dark-teal">Menu</span>
               <button
                 onClick={() => setIsMenuOpen(false)}
-                className="text-stone-700"
+                className="text-dark-teal"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -503,19 +503,19 @@ const Header = () => {
 
             {/* Mobile Categories with updated links */}
             <div className="space-y-4">
-              <Link 
+              <Link
                 to="/marketplace"
-                className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
+                className="font-body font-medium text-dark-teal block hover:text-spruce py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Browse All Tools
               </Link>
-              
+
               {allCategories.map((category) => (
                 <div key={category.name} className="space-y-2">
                   <Link
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                    className="font-medium text-stone-800 block hover:text-benchlot-primary py-2"
+                    className="font-body font-medium text-dark-teal block hover:text-spruce py-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {category.name}
@@ -526,7 +526,7 @@ const Header = () => {
                         <Link
                           key={sub}
                           to={`/marketplace?category=${encodeURIComponent(category.name)}&subcategory=${encodeURIComponent(sub)}`}
-                          className="block text-stone-700 hover:text-benchlot-primary py-1"
+                          className="block text-dark-teal hover:text-spruce py-1 font-body"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           {sub}
@@ -539,10 +539,10 @@ const Header = () => {
             </div>
 
             {/* Mobile Sell link */}
-            <div className="mt-6 mb-6 pt-4 border-t border-stone-200">
-              <Link 
+            <div className="mt-6 mb-6 pt-4 border-t border-dark">
+              <Link
                 to="/sell"
-                className="flex items-center gap-3 px-4 py-3 bg-benchlot-accent text-benchlot-primary rounded-md font-medium mb-4"
+                className="flex items-center gap-3 px-4 py-3 bg-honey text-dark-teal rounded-md font-body font-medium mb-4"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Hammer className="h-5 w-5" />
@@ -557,16 +557,16 @@ const Header = () => {
                 <>
                   {/* Main Account Options */}
                   <div className="mb-4">
-                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                    <div className="px-3 py-1 text-xs font-body font-medium text-secondary">
                       ACCOUNT
                     </div>
-                    <Link 
-                      to="/settings?tab=profile" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/settings?tab=profile"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {user?.photoURL ? (
-                        <div className="w-7 h-7 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full overflow-hidden border border-dark flex-shrink-0">
                           <img
                             src={user.photoURL}
                             alt="Profile"
@@ -578,32 +578,32 @@ const Header = () => {
                       )}
                       My Account
                     </Link>
-                    <Link 
-                      to="/wishlist" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/wishlist"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Heart className="h-5 w-5" />
                       Saved Tools
                     </Link>
-                    <Link 
-                      to="/messages" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/messages"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <div className="relative">
                         <MessageSquare className="h-5 w-5" />
                         {notificationCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-benchlot-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-4 w-4 flex items-center justify-center">
                             {notificationCount > 9 ? '9+' : notificationCount}
                           </span>
                         )}
                       </div>
                       Messages
                     </Link>
-                    <Link 
-                      to="/cart" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/cart"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <ShoppingCart className="h-5 w-5" />
@@ -612,13 +612,13 @@ const Header = () => {
                   </div>
 
                   {/* Purchase Activity Section */}
-                  <div className="mb-4 border-t border-stone-100 pt-2">
-                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                  <div className="mb-4 border-t border-dark pt-2">
+                    <div className="px-3 py-1 text-xs font-body font-medium text-secondary">
                       BUYING
                     </div>
-                    <Link 
-                      to="/orders" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/orders"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Package className="h-5 w-5" />
@@ -627,24 +627,24 @@ const Header = () => {
                   </div>
 
                   {/* Seller Section */}
-                  <div className="mb-4 border-t border-stone-100 pt-2">
-                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                  <div className="mb-4 border-t border-dark pt-2">
+                    <div className="px-3 py-1 text-xs font-body font-medium text-secondary">
                       SELLING
                     </div>
-                    
+
                     {user?.isSeller || user?.profile?.isSeller ? (
                       <>
-                        <Link 
-                          to="/my-listings" 
-                          className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                        <Link
+                          to="/my-listings"
+                          className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <List className="h-5 w-5" />
                           My Tools
                         </Link>
-                        <Link 
-                          to="/seller/dashboard" 
-                          className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                        <Link
+                          to="/seller/dashboard"
+                          className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <Package className="h-5 w-5" />
@@ -652,9 +652,9 @@ const Header = () => {
                         </Link>
                       </>
                     ) : (
-                      <Link 
-                        to="/sell" 
-                        className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                      <Link
+                        to="/sell"
+                        className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <Store className="h-5 w-5" />
@@ -664,13 +664,13 @@ const Header = () => {
                   </div>
 
                   {/* Settings and Sign Out */}
-                  <div className="border-t border-stone-100 pt-2">
-                    <div className="px-3 py-1 text-xs font-medium text-stone-500">
+                  <div className="border-t border-dark pt-2">
+                    <div className="px-3 py-1 text-xs font-body font-medium text-secondary">
                       SETTINGS
                     </div>
-                    <Link 
-                      to="/settings" 
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                    <Link
+                      to="/settings"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Settings className="h-5 w-5" />
@@ -678,7 +678,7 @@ const Header = () => {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
+                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md w-full text-left font-body"
                     >
                       <LogOut className="h-5 w-5" />
                       Sign Out
@@ -688,30 +688,30 @@ const Header = () => {
               ) : (
                 // Logged out mobile links
                 <>
-                  <Link 
-                    to="/cart" 
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md"
+                  <Link
+                    to="/cart"
+                    className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <ShoppingCart className="h-5 w-5" />
                     Cart
                   </Link>
-                  <button 
+                  <button
                     onClick={() => {
                       setIsMenuOpen(false);
                       openSignIn();
                     }}
-                    className="flex items-center gap-3 py-3 px-3 text-stone-700 hover:text-benchlot-primary rounded-md w-full text-left"
+                    className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md w-full text-left font-body"
                   >
                     <User className="h-5 w-5" />
                     Log In
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setIsMenuOpen(false);
                       openSignUp();
                     }}
-                    className="flex items-center gap-3 py-3 px-3 bg-benchlot-primary text-white rounded-md w-full text-left"
+                    className="flex items-center gap-3 py-3 px-3 bg-spruce text-bone rounded-md w-full text-left font-body"
                   >
                     <Plus className="h-5 w-5" />
                     Sign Up
@@ -721,26 +721,26 @@ const Header = () => {
             </div>
 
             {/* Mobile utility links */}
-            <div className="border-t pt-4 border-stone-200">
-              <Link 
-                to="/help" 
-                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+            <div className="border-t pt-4 border-dark">
+              <Link
+                to="/help"
+                className="block py-2 text-dark-teal hover:text-spruce font-body"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Help
               </Link>
-              <Link 
-                to="/about" 
-                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+              <Link
+                to="/about"
+                className="block py-2 text-dark-teal hover:text-spruce font-body"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
-              <a 
-                href="https://blog.benchlot.com/blog" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="block py-2 text-stone-700 hover:text-benchlot-primary"
+              <a
+                href="https://blog.rekerf.com/blog"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block py-2 text-dark-teal hover:text-spruce font-body"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Updates
@@ -749,7 +749,7 @@ const Header = () => {
           </div>
         </div>
       )}
-      
+
       {/* Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}

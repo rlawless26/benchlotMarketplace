@@ -476,8 +476,8 @@ const SellerDashboardPage = () => {
         <button
           id={id}
           type="button"
-          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary ${
-            checked ? 'bg-benchlot-primary' : 'bg-stone-200'
+          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce ${
+            checked ? 'bg-spruce' : 'bg-stone-200'
           }`}
           role="switch"
           aria-checked={checked}
@@ -499,10 +499,10 @@ const SellerDashboardPage = () => {
   
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-spruce"></div>
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </main>
@@ -511,12 +511,12 @@ const SellerDashboardPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left sidebar */}
           <div className="col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 mb-6">
               <div className="flex items-center space-x-4 mb-6">
                 {user?.photoURL ? (
                   // Display user's profile image if available
@@ -533,8 +533,8 @@ const SellerDashboardPage = () => {
                   </div>
                 ) : (
                   // Fallback to initial if no profile image
-                  <div className="h-16 w-16 rounded-full bg-benchlot-accent-light flex items-center justify-center">
-                    <span className="text-xl font-bold text-benchlot-primary">
+                  <div className="h-16 w-16 rounded-full bg-bone-dark flex items-center justify-center">
+                    <span className="text-xl font-bold text-spruce">
                       {user?.profile?.sellerName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'S'}
                     </span>
                   </div>
@@ -559,11 +559,11 @@ const SellerDashboardPage = () => {
                 </div>
                 
                 {accountStatus && accountStatus.status !== 'active' && (
-                  <div className="mt-2 text-sm text-benchlot-primary bg-benchlot-accent-light p-2 rounded">
+                  <div className="mt-2 text-sm text-spruce bg-bone-dark p-2 rounded">
                     <p>Your seller account is being activated. This usually takes a few minutes. Feel free to continue exploring your dashboard.</p>
                     <button 
                       onClick={() => window.location.reload()} 
-                      className="mt-2 text-xs bg-benchlot-accent-light hover:bg-benchlot-accent-bg text-benchlot-primary font-medium py-1 px-2 rounded"
+                      className="mt-2 text-xs bg-bone-dark hover:bg-bone-dark text-spruce font-medium py-1 px-2 rounded"
                     >
                       Refresh Status
                     </button>
@@ -579,7 +579,7 @@ const SellerDashboardPage = () => {
                   <button 
                     onClick={() => setActiveMainTab('dashboard')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'dashboard' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                      activeMainTab === 'dashboard' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -590,7 +590,7 @@ const SellerDashboardPage = () => {
                   <button 
                     onClick={() => setActiveMainTab('listings')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'listings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                      activeMainTab === 'listings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -601,7 +601,7 @@ const SellerDashboardPage = () => {
                   <button
                     onClick={() => setActiveMainTab('orders')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'orders' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                      activeMainTab === 'orders' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,7 +612,7 @@ const SellerDashboardPage = () => {
                   <button
                     onClick={() => setActiveMainTab('earnings')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'earnings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                      activeMainTab === 'earnings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <DollarSign className="h-5 w-5 mr-2" />
@@ -621,7 +621,7 @@ const SellerDashboardPage = () => {
                   <button
                     onClick={() => setActiveMainTab('settings')}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'settings' ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                      activeMainTab === 'settings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -652,12 +652,12 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'dashboard' && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 mb-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-medium">Seller Dashboard</h2>
                   <Link 
                     to="/tools/new"
-                    className="bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-800"
+                    className="bg-honey text-dark-teal px-4 py-2 rounded-md text-sm font-medium hover:bg-honey-light"
                   >
                     + New Listing
                   </Link>
@@ -683,7 +683,7 @@ const SellerDashboardPage = () => {
                     className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
                   >
                     <h3 className="text-sm font-medium text-gray-500 mb-1">AVAILABLE</h3>
-                    <p className="text-2xl font-bold text-green-700">${sellerBalance.available.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
                   </button>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING</h3>
@@ -744,13 +744,13 @@ const SellerDashboardPage = () => {
                                   
                                   <div className="mt-1 flex space-x-2">
                                     <div className="text-sm text-gray-500 line-through">${offer.originalPrice.toFixed(2)}</div>
-                                    <div className="text-sm font-medium text-green-700">${offer.currentPrice.toFixed(2)}</div>
+                                    <div className="text-sm font-medium text-spruce">${offer.currentPrice.toFixed(2)}</div>
                                   </div>
                                 </div>
                               </div>
                               
                               <div className="mt-2 flex justify-end">
-                                <button className="text-sm text-benchlot-primary hover:text-benchlot-secondary">
+                                <button className="text-sm text-spruce hover:text-spruce-light">
                                   View Details
                                 </button>
                               </div>
@@ -761,7 +761,7 @@ const SellerDashboardPage = () => {
                       
                       {offers.length > 3 && (
                         <div className="text-center mt-4">
-                          <button className="text-benchlot-primary hover:text-benchlot-secondary font-medium">
+                          <button className="text-spruce hover:text-spruce-light font-medium">
                             View All Offers
                           </button>
                         </div>
@@ -775,7 +775,7 @@ const SellerDashboardPage = () => {
                     <h3 className="text-lg font-medium">Your Listings</h3>
                     <button 
                       onClick={() => setActiveMainTab('listings')}
-                      className="text-benchlot-primary hover:text-benchlot-secondary font-medium text-sm"
+                      className="text-spruce hover:text-spruce-light font-medium text-sm"
                     >
                       View All
                     </button>
@@ -784,7 +784,7 @@ const SellerDashboardPage = () => {
                   {listings.length === 0 ? (
                     <div className="text-center py-8 bg-gray-50 rounded-lg">
                       <p className="text-gray-500">No listings yet.</p>
-                      <Link to="/tools/new" className="text-green-700 font-medium underline mt-2 inline-block">
+                      <Link to="/tools/new" className="text-spruce font-medium underline mt-2 inline-block">
                         Create your first listing
                       </Link>
                     </div>
@@ -805,7 +805,7 @@ const SellerDashboardPage = () => {
                           </div>
                           <div className="p-4">
                             <h4 className="font-medium">{listing.name}</h4>
-                            <p className="text-green-700 font-medium mt-1">${listing.price.toFixed(2)}</p>
+                            <p className="text-spruce font-medium mt-1">${listing.price.toFixed(2)}</p>
                             <div className="flex justify-between mt-3">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 listing.status === 'active' ? 'bg-green-100 text-green-800' : 
@@ -813,7 +813,7 @@ const SellerDashboardPage = () => {
                               }`}>
                                 {listing.status}
                               </span>
-                              <Link to={`/tools/edit/${listing.id}`} className="text-green-700 text-sm font-medium">
+                              <Link to={`/tools/edit/${listing.id}`} className="text-spruce text-sm font-medium">
                                 Edit
                               </Link>
                             </div>
@@ -827,13 +827,13 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'listings' && (
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-bone-light rounded-lg shadow-md border border-default">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-medium text-stone-800">My Listings</h2>
                     <Link 
                       to="/tools/new"
-                      className="bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-800"
+                      className="bg-honey text-dark-teal px-4 py-2 rounded-md text-sm font-medium hover:bg-honey-light"
                     >
                       + New Listing
                     </Link>
@@ -847,7 +847,7 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'orders' && (
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-bone-light rounded-lg shadow-md border border-default">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-medium text-stone-800">Orders</h2>
                   <p className="text-stone-600 text-sm mt-1">Manage and track orders from your customers</p>
@@ -865,12 +865,12 @@ const SellerDashboardPage = () => {
                       <input 
                         type="text" 
                         placeholder="Search orders..." 
-                        className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                        className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                       />
                     </div>
                     
                     <div className="flex space-x-2">
-                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary">
+                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce">
                         <option value="all">All Orders</option>
                         <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
@@ -879,7 +879,7 @@ const SellerDashboardPage = () => {
                         <option value="cancelled">Cancelled</option>
                       </select>
                       
-                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary">
+                      <select className="border border-gray-300 rounded-md py-2 pl-3 pr-10 text-gray-700 focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="highest">Highest Price</option>
@@ -946,7 +946,7 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'earnings' && (
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-bone-light rounded-lg shadow-md border border-default">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-medium text-stone-800">Earnings & Payouts</h2>
                   <p className="text-stone-600 text-sm mt-1">Track your earnings, transfers, and available balance</p>
@@ -957,7 +957,7 @@ const SellerDashboardPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-5">
                       <h3 className="text-sm font-medium text-green-800 mb-1">Available Balance</h3>
-                      <p className="text-3xl font-bold text-green-700">${sellerBalance.available.toFixed(2)}</p>
+                      <p className="text-3xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
                       <p className="text-xs text-green-600 mt-1">Ready for payout</p>
                     </div>
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
@@ -979,7 +979,7 @@ const SellerDashboardPage = () => {
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-blue-800">How earnings work</h4>
                         <p className="text-xs text-blue-700 mt-1">
-                          Benchlot charges a 5% platform fee on each sale. When a buyer purchases your item,
+                          Rekerf charges a 5% platform fee on each sale. When a buyer purchases your item,
                           the payment is processed and your earnings (minus the fee) are transferred to your
                           connected bank account. Transfers typically arrive within 2-3 business days.
                         </p>
@@ -1026,7 +1026,7 @@ const SellerDashboardPage = () => {
                                   {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right text-green-700">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right text-spruce">
                                 ${transfer.amount.toFixed(2)}
                               </td>
                             </tr>
@@ -1040,7 +1040,7 @@ const SellerDashboardPage = () => {
             )}
 
             {activeMainTab === 'settings' && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
                 <div className="p-6 border-b">
                   <h2 className="text-xl font-medium text-stone-800">Seller Settings</h2>
                   <p className="text-stone-600 text-sm mt-1">Manage your seller profile, policies, and preferences</p>
@@ -1048,7 +1048,7 @@ const SellerDashboardPage = () => {
                 
                 {/* Status messages */}
                 {success && (
-                  <div className="m-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-6 flex items-center">
+                  <div className="m-6 bg-green-50 border border-green-200 text-spruce px-4 py-3 rounded-md mb-6 flex items-center">
                     <Check className="h-5 w-5 mr-2" />
                     Seller settings saved successfully!
                   </div>
@@ -1062,7 +1062,7 @@ const SellerDashboardPage = () => {
                         onClick={() => setActiveSettingsTab('business')}
                         className={`pb-4 px-1 ${
                           activeSettingsTab === 'business'
-                            ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                            ? 'border-b-2 border-spruce text-spruce'
                             : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
                         } flex items-center`}
                       >
@@ -1074,7 +1074,7 @@ const SellerDashboardPage = () => {
                         onClick={() => setActiveSettingsTab('policies')}
                         className={`pb-4 px-1 ${
                           activeSettingsTab === 'policies'
-                            ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                            ? 'border-b-2 border-spruce text-spruce'
                             : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
                         } flex items-center`}
                       >
@@ -1086,7 +1086,7 @@ const SellerDashboardPage = () => {
                         onClick={() => setActiveSettingsTab('shipping')}
                         className={`pb-4 px-1 ${
                           activeSettingsTab === 'shipping'
-                            ? 'border-b-2 border-benchlot-primary text-benchlot-primary'
+                            ? 'border-b-2 border-spruce text-spruce'
                             : 'border-transparent text-stone-500 hover:border-stone-300 hover:text-stone-700'
                         } flex items-center`}
                       >
@@ -1113,7 +1113,7 @@ const SellerDashboardPage = () => {
                           name="businessName"
                           value={sellerData.businessName}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                           placeholder="Your business or shop name"
                         />
                       </div>
@@ -1131,7 +1131,7 @@ const SellerDashboardPage = () => {
                           name="businessType"
                           value={sellerData.businessType}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary bg-white"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce bg-white"
                         >
                           <option value="individual">Individual / Sole Proprietor</option>
                           <option value="professional">Professional / Contractor</option>
@@ -1153,7 +1153,7 @@ const SellerDashboardPage = () => {
                           value={sellerData.businessDescription}
                           onChange={handleChange}
                           rows="4"
-                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                           placeholder="Describe your business, expertise, and the types of tools you offer"
                         ></textarea>
                       </div>
@@ -1177,7 +1177,7 @@ const SellerDashboardPage = () => {
                               name="contactEmail"
                               value={sellerData.contactEmail}
                               onChange={handleChange}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                               placeholder="Your business email address"
                             />
                           </div>
@@ -1196,7 +1196,7 @@ const SellerDashboardPage = () => {
                               name="contactPhone"
                               value={sellerData.contactPhone}
                               onChange={handleChange}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                               placeholder="Your business phone number"
                             />
                           </div>
@@ -1214,7 +1214,7 @@ const SellerDashboardPage = () => {
                                   value="email"
                                   checked={sellerData.preferredContactMethod === 'email'}
                                   onChange={handleChange}
-                                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                                 />
                                 <span className="ml-2 text-sm text-stone-700">Email</span>
                               </label>
@@ -1225,7 +1225,7 @@ const SellerDashboardPage = () => {
                                   value="phone"
                                   checked={sellerData.preferredContactMethod === 'phone'}
                                   onChange={handleChange}
-                                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                                 />
                                 <span className="ml-2 text-sm text-stone-700">Phone</span>
                               </label>
@@ -1236,7 +1236,7 @@ const SellerDashboardPage = () => {
                                   value="message"
                                   checked={sellerData.preferredContactMethod === 'message'}
                                   onChange={handleChange}
-                                  className="h-4 w-4 text-benchlot-primary focus:ring-benchlot-primary border-stone-300"
+                                  className="h-4 w-4 text-spruce focus:ring-spruce border-stone-300"
                                 />
                                 <span className="ml-2 text-sm text-stone-700">Platform Message</span>
                               </label>
@@ -1271,12 +1271,12 @@ const SellerDashboardPage = () => {
                               </div>
                               <div className="ml-3">
                                 <h3 className="text-sm font-medium text-green-800">Payment Account Connected</h3>
-                                <p className="text-xs text-green-700 mt-1">
+                                <p className="text-xs text-spruce mt-1">
                                   Your Stripe account is connected. You can now receive payments for your tool sales.
                                 </p>
                                 <button
                                   type="button"
-                                  className="mt-2 text-sm text-benchlot-primary hover:text-benchlot-secondary flex items-center"
+                                  className="mt-2 text-sm text-spruce hover:text-spruce-light flex items-center"
                                   onClick={handleAccessStripeDashboard}
                                 >
                                   <ExternalLink className="h-4 w-4 mr-1" />
@@ -1289,7 +1289,7 @@ const SellerDashboardPage = () => {
                           <button
                             type="button"
                             onClick={handleAccessStripeDashboard}
-                            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary"
+                            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-dark-teal bg-honey hover:bg-honey-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce"
                           >
                             Connect with Stripe
                           </button>
@@ -1329,7 +1329,7 @@ const SellerDashboardPage = () => {
                               onChange={handleNestedNumberChange}
                               min="0"
                               max="90"
-                              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                              className="w-32 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                             />
                             
                             <div className="mt-4">
@@ -1345,7 +1345,7 @@ const SellerDashboardPage = () => {
                                 value={sellerData.policies.returns.conditions}
                                 onChange={handleChange}
                                 rows="3"
-                                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-benchlot-primary focus:border-benchlot-primary"
+                                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-1 focus:ring-spruce focus:border-spruce"
                                 placeholder="Describe any conditions for accepting returns"
                               ></textarea>
                             </div>
@@ -1368,7 +1368,7 @@ const SellerDashboardPage = () => {
                       {/* Shipping Methods Section */}
                       <div className="mb-6">
                         <div className="flex items-start mb-4">
-                          <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+                          <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
                             <Truck className="h-5 w-5" />
                           </div>
                           <div className="ml-3">
@@ -1385,7 +1385,7 @@ const SellerDashboardPage = () => {
                                 <input
                                   id="method-standard"
                                   type="checkbox"
-                                  className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                                  className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                                   checked={sellerData.policies.shipping.shippingMethods?.includes('standard')}
                                   onChange={() => handleShippingMethodChange('standard')}
                                 />
@@ -1399,7 +1399,7 @@ const SellerDashboardPage = () => {
                                 <input
                                   id="method-express"
                                   type="checkbox"
-                                  className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                                  className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                                   checked={sellerData.policies.shipping.shippingMethods?.includes('express')}
                                   onChange={() => handleShippingMethodChange('express')}
                                 />
@@ -1413,7 +1413,7 @@ const SellerDashboardPage = () => {
                                 <input
                                   id="method-economy"
                                   type="checkbox"
-                                  className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                                  className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                                   checked={sellerData.policies.shipping.shippingMethods?.includes('economy')}
                                   onChange={() => handleShippingMethodChange('economy')}
                                 />
@@ -1427,7 +1427,7 @@ const SellerDashboardPage = () => {
                                 <input
                                   id="method-freight"
                                   type="checkbox"
-                                  className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                                  className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                                   checked={sellerData.policies.shipping.shippingMethods?.includes('freight')}
                                   onChange={() => handleShippingMethodChange('freight')}
                                 />
@@ -1447,7 +1447,7 @@ const SellerDashboardPage = () => {
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                                className="border-stone-300 focus:ring-spruce focus:border-spruce block w-full sm:text-sm rounded-md"
                                 value={sellerData.policies.shipping.defaultShippingPrice}
                                 onChange={(e) => {
                                   setSellerData({
@@ -1498,7 +1498,7 @@ const SellerDashboardPage = () => {
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                                    className="border-stone-300 focus:ring-spruce focus:border-spruce block w-full sm:text-sm rounded-md"
                                     value={sellerData.policies.shipping.freeShippingThreshold}
                                     onChange={(e) => {
                                       setSellerData({
@@ -1547,7 +1547,7 @@ const SellerDashboardPage = () => {
                   <div className="flex justify-end mt-8">
                     <button
                       onClick={handleSaveSettings}
-                      className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+                      className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
                       disabled={saving}
                     >
                       {saving ? (

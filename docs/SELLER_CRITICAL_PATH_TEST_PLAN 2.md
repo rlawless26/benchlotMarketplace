@@ -1,13 +1,13 @@
-# Benchlot Seller Journey Critical Path Test Plan
+# Rekerf Seller Journey Critical Path Test Plan
 
-This document outlines the critical path for testing the core seller functionality on Benchlot. The focus is on ensuring that the essential seller journey works correctly, rather than optimizing the user experience at this stage.
+This document outlines the critical path for testing the core seller functionality on Rekerf. The focus is on ensuring that the essential seller journey works correctly, rather than optimizing the user experience at this stage.
 
 ## Critical Path Overview
 
-The critical path for a Benchlot seller consists of the following key stages:
+The critical path for a Rekerf seller consists of the following key stages:
 
 1. **Account Creation & Authentication**
-   - Sign up as a new Benchlot user
+   - Sign up as a new Rekerf user
    - Verify email address
    - Log in successfully
 
@@ -69,8 +69,8 @@ When conducting tests, focus on the following priorities:
 ## Test User Setup
 
 For consistent testing, use the following test accounts:
-- Test Seller: seller.test@benchlot.com / BenchTest123!
-- Test Buyer: buyer.test@benchlot.com / BenchTest123!
+- Test Seller: seller.test@rekerf.com / BenchTest123!
+- Test Buyer: buyer.test@rekerf.com / BenchTest123!
 
 Use Stripe's test card numbers for payment testing:
 - Success: 4242 4242 4242 4242

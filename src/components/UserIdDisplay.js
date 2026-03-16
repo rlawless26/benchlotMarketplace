@@ -26,13 +26,13 @@ const UserIdDisplay = () => {
   return (
     <div className="bg-green-100 p-4 rounded-md mb-4">
       <p className="text-green-800 font-medium">Your User ID:</p>
-      <div className="mt-2 p-2 bg-white rounded border border-green-300 font-mono">
+      <div className="mt-2 p-2 bg-bone-light rounded border border-green-300 font-mono">
         {userId}
       </div>
       <p className="mt-2 text-sm text-green-700">
         Use this ID to create a test conversation:
         <br />
-        <code className="bg-white px-2 py-1 rounded">
+        <code className="bg-bone-light px-2 py-1 rounded">
           node create-test-conversation.js {userId}
         </code>
       </p>

@@ -73,8 +73,8 @@ const CartPage = () => {
       <div>
         <div className="flex justify-center items-center min-h-[50vh]">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-benchlot-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-benchlot-primary font-medium">Loading your cart...</p>
+            <div className="w-12 h-12 border-4 border-spruce border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-spruce font-medium">Loading your cart...</p>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ const CartPage = () => {
         </div>
         <Link
           to="/"
-          className="inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+          className="inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-1" />
           Continue Shopping
@@ -101,14 +101,14 @@ const CartPage = () => {
   if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div>
-        <div className="bg-white rounded-lg shadow-card p-8 text-center">
+        <div className="bg-bone-light rounded-lg shadow-card p-8 text-center">
           <div className="mx-auto w-20 h-20 mb-6 text-stone-300">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-serif font-semibold mb-3">Your cart is empty</h2>
-          <p className="text-benchlot-text-secondary mb-6 max-w-md mx-auto">Add some tools to your cart and they'll appear here.</p>
+          <h2 className="text-2xl font-display font-semibold mb-3">Your cart is empty</h2>
+          <p className="text-secondary mb-6 max-w-md mx-auto">Add some tools to your cart and they'll appear here.</p>
           <Link
             to="/marketplace"
             className="btn-primary text-lg py-3 px-8"
@@ -122,12 +122,12 @@ const CartPage = () => {
   
   return (
     <div>
-      <p className="text-benchlot-text-secondary mb-6">{cart.items.length} {cart.items.length === 1 ? 'item' : 'items'} in your cart</p>
+      <p className="text-secondary mb-6">{cart.items.length} {cart.items.length === 1 ? 'item' : 'items'} in your cart</p>
       
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
         {/* Cart Items - Left Column */}
         <div className="lg:col-span-6">
-          <div className="bg-white rounded-lg shadow-card overflow-hidden">
+          <div className="bg-bone-light rounded-lg shadow-card overflow-hidden border border-default">
             <ul className="divide-y divide-stone-200">
               {cart.items.map((item) => (
                 <li key={item.id} className="p-6 flex flex-wrap md:flex-nowrap gap-4">
@@ -143,7 +143,7 @@ const CartPage = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-benchlot-text-secondary">No image</span>
+                            <span className="text-secondary">No image</span>
                           </div>
                         )}
                       </div>
@@ -152,10 +152,10 @@ const CartPage = () => {
                   
                   {/* Item Details */}
                   <div className="flex-grow">
-                    <Link to={`/tools/${item.toolId}`} className="text-xl font-medium text-stone-800 hover:text-benchlot-primary transition-colors">
+                    <Link to={`/tools/${item.toolId}`} className="text-xl font-medium text-dark-teal hover:text-spruce transition-colors">
                       {item.name}
                     </Link>
-                    <div className="text-xl text-benchlot-primary font-medium mt-1 mb-3">
+                    <div className="text-xl text-honey font-medium mt-1 mb-3">
                       {formatPrice(item.price)}
                     </div>
                     
@@ -218,7 +218,7 @@ const CartPage = () => {
               
               <Link
                 to="/marketplace"
-                className="inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+                className="inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-1" />
                 Continue Shopping
@@ -229,9 +229,9 @@ const CartPage = () => {
         
         {/* Order Summary - Right Column */}
         <div className="lg:col-span-4">
-          <div className="bg-white rounded-lg shadow-card overflow-hidden">
+          <div className="bg-bone-light rounded-lg shadow-card overflow-hidden border border-default">
             <div className="p-6 border-b border-stone-200">
-              <h2 className="text-xl font-serif font-semibold text-stone-800 mb-6">Order Summary</h2>
+              <h2 className="text-xl font-display font-semibold text-dark-teal mb-6">Order Summary</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between">
@@ -246,7 +246,7 @@ const CartPage = () => {
                 
                 <div className="flex justify-between pt-3 border-t border-stone-200">
                   <span className="text-stone-800 font-semibold">Total:</span>
-                  <span className="text-xl text-benchlot-primary font-bold">{formatPrice(calculateSubtotal() + calculateEstimatedTax())}</span>
+                  <span className="text-xl text-honey font-bold">{formatPrice(calculateSubtotal() + calculateEstimatedTax())}</span>
                 </div>
               </div>
             </div>
@@ -258,11 +258,11 @@ const CartPage = () => {
                 <button
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
-                  className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex items-center whitespace-nowrap"
+                  className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-honey text-dark-teal hover:bg-honey-light justify-center flex items-center whitespace-nowrap"
                 >
                   {checkoutLoading ? (
                     <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-dark-teal" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -282,11 +282,11 @@ const CartPage = () => {
                   <button
                     onClick={handleCheckout}
                     disabled={checkoutLoading}
-                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-benchlot-primary text-white hover:bg-benchlot-secondary justify-center flex items-center whitespace-nowrap"
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-honey text-dark-teal hover:bg-honey-light justify-center flex items-center whitespace-nowrap"
                   >
                     {checkoutLoading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-dark-teal" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -310,7 +310,7 @@ const CartPage = () => {
                   {/* Sign In Button */}
                   <button
                     onClick={handleLoginForCheckout}
-                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-white border border-benchlot-primary text-benchlot-primary hover:bg-benchlot-accent-light justify-center flex items-center whitespace-nowrap"
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-bone-light border border-spruce text-spruce hover:bg-bone-dark justify-center flex items-center whitespace-nowrap"
                   >
                     <LogIn className="h-4 w-4 mr-2" />
                     Sign In to Checkout
@@ -319,7 +319,7 @@ const CartPage = () => {
                   {/* Create Account Button */}
                   <button
                     onClick={handleSignupForCheckout}
-                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 justify-center flex items-center whitespace-nowrap"
+                    className="w-full py-3 px-8 rounded-md font-medium text-base transition-colors bg-bone-light border border-stone-300 text-dark-teal hover:bg-bone-dark justify-center flex items-center whitespace-nowrap"
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
                     Create an Account
@@ -336,7 +336,7 @@ const CartPage = () => {
                 
                 <div className="flex items-start text-stone-600 text-sm">
                   <span className="text-xs leading-5">
-                    By proceeding to checkout, you agree to Benchlot's terms of service and privacy policy.
+                    By proceeding to checkout, you agree to Rekerf's terms of service and privacy policy.
                     All transactions are processed securely.
                   </span>
                 </div>

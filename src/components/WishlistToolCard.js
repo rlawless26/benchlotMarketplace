@@ -57,7 +57,7 @@ const WishlistToolCard = ({ tool, onRemove }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg">
+    <div className="bg-bone-light rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg border border-default">
       <Link to={`/tools/${tool.id}`} className="block relative">
         <div className="h-48 bg-stone-100">
           {tool.images && tool.images.length > 0 ? (
@@ -75,7 +75,7 @@ const WishlistToolCard = ({ tool, onRemove }) => {
           {/* Badges */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
             {tool.verified && (
-              <span className="bg-benchlot-primary text-white text-xs px-2 py-1 rounded-full flex items-center">
+              <span className="bg-spruce text-bone text-xs px-2 py-1 rounded-full flex items-center">
                 <Check className="h-3 w-3 mr-1" />
                 Verified
               </span>
@@ -93,7 +93,7 @@ const WishlistToolCard = ({ tool, onRemove }) => {
       <div className="p-4">
         <div className="flex justify-between items-start">
           <Link to={`/tools/${tool.id}`} className="block flex-1">
-            <h3 className="font-medium text-stone-800 hover:text-benchlot-primary truncate">{tool.name}</h3>
+            <h3 className="font-medium text-dark-teal hover:text-spruce truncate">{tool.name}</h3>
           </Link>
           <button 
             onClick={() => onRemove(tool.id)}
@@ -112,7 +112,7 @@ const WishlistToolCard = ({ tool, onRemove }) => {
         <div className="flex justify-between items-end">
           <div>
             <div className="flex items-baseline">
-              <span className="text-lg font-medium text-benchlot-primary">
+              <span className="text-lg font-medium text-honey">
                 {formatPrice(getPrice())}
               </span>
               {tool.original_price && getPrice() && tool.original_price > getPrice() && (
@@ -130,7 +130,7 @@ const WishlistToolCard = ({ tool, onRemove }) => {
           
           <button 
             onClick={handleAddToCart}
-            className="text-benchlot-primary hover:text-benchlot-secondary flex items-center text-sm"
+            className="text-spruce hover:text-spruce-light flex items-center text-sm"
             title="Add to cart"
           >
             <ShoppingCart className="h-4 w-4 mr-1" />

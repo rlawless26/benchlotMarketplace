@@ -6,7 +6,7 @@ This document provides instructions for testing the new messaging center.
 
 First, you need to get your Firebase User ID:
 
-1. Open the Benchlot app in your browser
+1. Open the Rekerf app in your browser
 2. Make sure you're logged in
 3. Open the browser console (F12 or Right-click > Inspect > Console)
 4. Copy and paste the content of `get-user-id-browser.js` into the console
@@ -28,7 +28,7 @@ If the script runs successfully, you should see a confirmation message that a te
 
 ## Viewing Your Test Conversation
 
-1. After creating the test conversation, go to the Benchlot app in your browser
+1. After creating the test conversation, go to the Rekerf app in your browser
 2. Navigate to the Messages page
 3. Click on the "Direct Messages" tab
 4. You should see your new test conversation in the list

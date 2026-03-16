@@ -1,4 +1,4 @@
-# Benchlot: The Trusted Marketplace for Tools
+# Rekerf: The Trusted Marketplace for Tools
 ## Connecting Makers with Quality Tools
 
 ### The Problem

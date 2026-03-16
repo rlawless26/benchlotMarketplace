@@ -1,10 +1,10 @@
-# Benchlot Stripe Integration Guide
+# Rekerf Stripe Integration Guide
 
-This comprehensive guide explains the Stripe integration for Benchlot, including architecture, setup process, implementation details, and usage instructions.
+This comprehensive guide explains the Stripe integration for Rekerf, including architecture, setup process, implementation details, and usage instructions.
 
 ## Overview
 
-The Stripe integration in Benchlot uses Firebase Functions as a secure backend for handling Stripe API calls and payment processing. This architecture separates the client-side UI components from the server-side payment processing logic, ensuring security and compliance with payment best practices.
+The Stripe integration in Rekerf uses Firebase Functions as a secure backend for handling Stripe API calls and payment processing. This architecture separates the client-side UI components from the server-side payment processing logic, ensuring security and compliance with payment best practices.
 
 ## Architecture
 

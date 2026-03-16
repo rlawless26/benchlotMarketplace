@@ -94,8 +94,8 @@ const SellerOnboardingPage = () => {
                 const updateResult = await updateConnectAccount(user.uid, {
                   firstName,
                   lastName,
-                  // We'll provide a dummy URL that points to the seller's profile on Benchlot
-                  websiteUrl: `https://benchlot.com/sellers/${user.uid}`
+                  // We'll provide a dummy URL that points to the seller's profile on Rekerf
+                  websiteUrl: `https://rekerf.com/sellers/${user.uid}`
                 });
                 
                 console.log('Successfully updated Stripe account with missing information:', updateResult);
@@ -251,10 +251,10 @@ const SellerOnboardingPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-bone min-h-screen">
         <main className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-spruce"></div>
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </main>
@@ -263,9 +263,9 @@ const SellerOnboardingPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
           <h1 className="text-3xl font-medium text-gray-800 mb-6">Complete Your Seller Onboarding</h1>
           
           {isRefresh && (
@@ -282,7 +282,7 @@ const SellerOnboardingPage = () => {
           
           <div className="space-y-6">
             <p className="text-gray-600">
-              To start selling on Benchlot, we need to set up your payment processing. This allows
+              To start selling on Rekerf, we need to set up your payment processing. This allows
               you to receive payments securely when your tools sell.
             </p>
             
@@ -299,7 +299,7 @@ const SellerOnboardingPage = () => {
                 <p className="mb-6">This information is securely handled by Stripe, our payment processor.</p>
                 <button 
                   onClick={handleRefreshLink}
-                  className="w-full py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium"
+                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
                 >
                   {USE_CUSTOM_ACCOUNTS 
                     ? "Enter Payout Details"
@@ -322,7 +322,7 @@ const SellerOnboardingPage = () => {
                 
                 <button 
                   onClick={handleRefreshLink}
-                  className="w-full py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium"
+                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
                 >
                   Check Status Again
                 </button>
@@ -337,7 +337,7 @@ const SellerOnboardingPage = () => {
                 </p>
                 <button 
                   onClick={() => navigate('/seller/dashboard')}
-                  className="w-full py-3 bg-green-700 text-white rounded-md hover:bg-green-800 font-medium"
+                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
                 >
                   Go to Seller Dashboard
                 </button>

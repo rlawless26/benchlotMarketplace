@@ -614,8 +614,8 @@ const CheckoutPage = () => {
       <div>
         <div className="flex justify-center items-center min-h-[50vh]">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-benchlot-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-benchlot-primary font-medium">Preparing checkout...</p>
+            <div className="w-12 h-12 border-4 border-spruce border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-spruce font-medium">Preparing checkout...</p>
           </div>
         </div>
       </div>
@@ -630,7 +630,7 @@ const CheckoutPage = () => {
         </div>
         <Link
           to="/cart"
-          className="inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+          className="inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-1" />
           Return to Cart
@@ -648,9 +648,9 @@ const CheckoutPage = () => {
       {/* Checkout Progress Indicator */}
       <div className="mb-8">
         <ol className="flex items-center w-full">
-          <li className={`flex items-center text-benchlot-primary ${checkoutStep === 1 ? 'font-semibold' : ''}`}>
+          <li className={`flex items-center text-spruce ${checkoutStep === 1 ? 'font-semibold' : ''}`}>
             <span className={`flex items-center justify-center w-6 h-6 rounded-full ${
-              checkoutStep === 1 ? 'bg-benchlot-primary text-white' : 
+              checkoutStep === 1 ? 'bg-spruce text-bone' : 
               checkoutStep > 1 ? 'bg-green-100 text-green-600' : 'bg-stone-100'
             } mr-2`}>
               {checkoutStep > 1 ? <Check className="w-3 h-3" /> : '1'}
@@ -658,9 +658,9 @@ const CheckoutPage = () => {
             Shipping
           </li>
           <div className="w-24 h-[2px] mx-2 bg-stone-200"></div>
-          <li className={`flex items-center ${checkoutStep === 2 ? 'text-benchlot-primary font-semibold' : 'text-stone-500'}`}>
+          <li className={`flex items-center ${checkoutStep === 2 ? 'text-spruce font-semibold' : 'text-stone-500'}`}>
             <span className={`flex items-center justify-center w-6 h-6 rounded-full ${
-              checkoutStep === 2 ? 'bg-benchlot-primary text-white' : 'bg-stone-100'
+              checkoutStep === 2 ? 'bg-spruce text-bone' : 'bg-stone-100'
             } mr-2`}>
               2
             </span>
@@ -669,16 +669,16 @@ const CheckoutPage = () => {
         </ol>
       </div>
       
-      <p className="text-benchlot-text-secondary mb-6">
+      <p className="text-secondary mb-6">
         {checkoutStep === 1 ? 'Enter your shipping information' : 'Complete your purchase'}
       </p>
       
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
         {/* Order Summary - Left column on larger screens */}
         <div className="lg:col-span-4 order-2 lg:order-1">
-          <div className="bg-white rounded-lg shadow-card overflow-hidden sticky top-8">
+          <div className="bg-bone-light rounded-lg shadow-card overflow-hidden border border-default sticky top-8">
             <div className="p-6 border-b border-stone-200">
-              <h2 className="text-xl font-serif font-semibold text-stone-800 mb-4">Order Summary</h2>
+              <h2 className="text-xl font-display font-semibold text-stone-800 mb-4">Order Summary</h2>
               
               <div className="divide-y divide-stone-100">
                 {cart.items.map((item) => (
@@ -717,7 +717,7 @@ const CheckoutPage = () => {
                   {/* Shipping Address */}
                   <div className="border-b border-stone-200 pb-4 mb-4">
                     <h3 className="text-sm font-medium text-stone-800 mb-2 flex items-center">
-                      <Truck className="h-4 w-4 mr-1.5 text-benchlot-primary" />
+                      <Truck className="h-4 w-4 mr-1.5 text-spruce" />
                       Shipping To:
                     </h3>
                     <div className="text-sm text-stone-600">
@@ -735,7 +735,7 @@ const CheckoutPage = () => {
                   {!billingIsSameAsShipping && (
                     <div className="border-b border-stone-200 pb-4 mb-4">
                       <h3 className="text-sm font-medium text-stone-800 mb-2 flex items-center">
-                        <CreditCardIcon className="h-4 w-4 mr-1.5 text-benchlot-primary" />
+                        <CreditCardIcon className="h-4 w-4 mr-1.5 text-spruce" />
                         Billing Address:
                       </h3>
                       <div className="text-sm text-stone-600">
@@ -754,7 +754,7 @@ const CheckoutPage = () => {
                   {billingIsSameAsShipping && (
                     <div className="border-b border-stone-200 pb-4 mb-4">
                       <h3 className="text-sm font-medium text-stone-800 mb-2 flex items-center">
-                        <CreditCardIcon className="h-4 w-4 mr-1.5 text-benchlot-primary" />
+                        <CreditCardIcon className="h-4 w-4 mr-1.5 text-spruce" />
                         Billing Address:
                       </h3>
                       <div className="text-sm text-stone-600 italic">
@@ -765,7 +765,7 @@ const CheckoutPage = () => {
                   
                   <button 
                     onClick={handleBackToShipping}
-                    className="text-xs text-benchlot-primary hover:text-benchlot-secondary mt-2 inline-flex items-center"
+                    className="text-xs text-spruce hover:text-spruce-light mt-2 inline-flex items-center"
                   >
                     <ChevronLeft className="h-3 w-3 mr-1" />
                     Edit Addresses
@@ -787,7 +787,7 @@ const CheckoutPage = () => {
                 {/* We could add shipping cost here if applicable */}
                 <div className="flex justify-between pt-2 border-t border-stone-200">
                   <span className="text-stone-800 font-semibold">Total:</span>
-                  <span className="text-xl text-benchlot-primary font-bold">{formatPrice(calculateTotal())}</span>
+                  <span className="text-xl text-honey font-bold">{formatPrice(calculateTotal())}</span>
                 </div>
               </div>
               
@@ -795,7 +795,7 @@ const CheckoutPage = () => {
                 {checkoutStep === 1 ? (
                   <Link
                     to="/cart"
-                    className="inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+                    className="inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Back to Cart
@@ -803,7 +803,7 @@ const CheckoutPage = () => {
                 ) : (
                   <button
                     onClick={handleBackToShipping}
-                    className="inline-flex items-center text-benchlot-primary hover:text-benchlot-secondary transition-colors"
+                    className="inline-flex items-center text-spruce hover:text-spruce-light transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Back to Shipping
@@ -818,10 +818,10 @@ const CheckoutPage = () => {
         <div className="lg:col-span-6 order-1 lg:order-2">
           {/* Step 1: Shipping Address Form */}
           {checkoutStep === 1 && (
-            <div className="bg-white rounded-lg shadow-card overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-card overflow-hidden border border-default">
               <div className="p-6 border-b border-stone-200">
-                <h2 className="text-xl font-serif font-semibold text-stone-800 mb-2 flex items-center">
-                  <Truck className="h-5 w-5 mr-2 text-benchlot-primary" />
+                <h2 className="text-xl font-display font-semibold text-stone-800 mb-2 flex items-center">
+                  <Truck className="h-5 w-5 mr-2 text-spruce" />
                   Shipping Address
                 </h2>
                 <p className="text-stone-600 text-sm">Enter your shipping information for delivery</p>
@@ -833,7 +833,7 @@ const CheckoutPage = () => {
                   {/* Contact Information Section - for all users */}
                   <div className="mb-6 border-b border-stone-200 pb-6">
                     <h3 className="text-md font-medium mb-3 text-stone-800 flex items-center">
-                      <User className="h-4 w-4 mr-2 text-benchlot-primary" />
+                      <User className="h-4 w-4 mr-2 text-spruce" />
                       Contact Information
                     </h3>
                     
@@ -955,7 +955,7 @@ const CheckoutPage = () => {
                                 id="createAccount"
                                 name="createAccount"
                                 type="checkbox"
-                                className="h-4 w-4 rounded border-stone-300 text-benchlot-primary focus:ring-benchlot-primary"
+                                className="h-4 w-4 rounded border-stone-300 text-spruce focus:ring-spruce"
                                 checked={createAccount}
                                 onChange={() => setCreateAccount(!createAccount)}
                               />
@@ -990,7 +990,7 @@ const CheckoutPage = () => {
                                 <button
                                   type="button"
                                   onClick={handleCreateAccount}
-                                  className="mt-3 px-4 py-2 bg-benchlot-primary text-white font-medium rounded-md hover:bg-benchlot-secondary transition-colors"
+                                  className="mt-3 px-4 py-2 bg-honey text-dark-teal font-medium rounded-md hover:bg-honey-light transition-colors"
                                 >
                                   Create Account
                                 </button>
@@ -1010,7 +1010,7 @@ const CheckoutPage = () => {
                   {/* Shipping Address Section */}
                   <div>
                     <h3 className="text-md font-medium mb-3 text-stone-800 flex items-center">
-                      <Home className="h-4 w-4 mr-2 text-benchlot-primary" />
+                      <Home className="h-4 w-4 mr-2 text-spruce" />
                       Shipping Address
                     </h3>
                     
@@ -1194,7 +1194,7 @@ const CheckoutPage = () => {
                             <button 
                               type="button"
                               onClick={() => setSelectedSavedAddress(null)}
-                              className="text-xs text-stone-500 hover:text-benchlot-primary"
+                              className="text-xs text-stone-500 hover:text-spruce"
                             >
                               Clear
                             </button>
@@ -1224,7 +1224,7 @@ const CheckoutPage = () => {
                           className="w-full flex justify-between items-center px-4 py-2 border border-stone-300 rounded-md bg-white text-left"
                         >
                           <span className="flex items-center text-stone-800">
-                            <Package className="h-4 w-4 mr-2 text-benchlot-primary" />
+                            <Package className="h-4 w-4 mr-2 text-spruce" />
                             Select from saved addresses
                           </span>
                           <ChevronDown className={`h-4 w-4 transition-transform ${showSavedAddresses ? 'rotate-180' : ''}`} />
@@ -1252,7 +1252,7 @@ const CheckoutPage = () => {
                                           </span>
                                         )}
                                         {address.isDefault && (
-                                          <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-0.5 rounded-full">
+                                          <span className="text-xs bg-honey text-spruce px-2 py-0.5 rounded-full">
                                             Default
                                           </span>
                                         )}
@@ -1281,7 +1281,7 @@ const CheckoutPage = () => {
                       id="saveAddress"
                       name="saveAddress"
                       type="checkbox"
-                      className="h-4 w-4 rounded border-stone-300 text-benchlot-primary focus:ring-benchlot-primary"
+                      className="h-4 w-4 rounded border-stone-300 text-spruce focus:ring-spruce"
                       checked={saveAddress}
                       onChange={() => setSaveAddress(!saveAddress)}
                     />
@@ -1293,7 +1293,7 @@ const CheckoutPage = () => {
                   {/* Billing Address Section */}
                   <div className="mb-8 border-t border-stone-200 pt-6">
                     <h3 className="text-md font-medium mb-3 text-stone-800 flex items-center">
-                      <CreditCardIcon className="h-4 w-4 mr-2 text-benchlot-primary" />
+                      <CreditCardIcon className="h-4 w-4 mr-2 text-spruce" />
                       Billing Address
                     </h3>
                     
@@ -1303,7 +1303,7 @@ const CheckoutPage = () => {
                         id="billingIsSameAsShipping"
                         name="billingIsSameAsShipping"
                         type="checkbox"
-                        className="h-4 w-4 rounded border-stone-300 text-benchlot-primary focus:ring-benchlot-primary"
+                        className="h-4 w-4 rounded border-stone-300 text-spruce focus:ring-spruce"
                         checked={billingIsSameAsShipping}
                         onChange={handleBillingToggle}
                       />
@@ -1329,7 +1329,7 @@ const CheckoutPage = () => {
                                   <button 
                                     type="button"
                                     onClick={() => setSelectedSavedAddress(null)}
-                                    className="text-xs text-stone-500 hover:text-benchlot-primary"
+                                    className="text-xs text-stone-500 hover:text-spruce"
                                   >
                                     Clear
                                   </button>
@@ -1359,7 +1359,7 @@ const CheckoutPage = () => {
                                 className="w-full flex justify-between items-center px-4 py-2 border border-stone-300 rounded-md bg-white text-left"
                               >
                                 <span className="flex items-center text-stone-800">
-                                  <Wallet className="h-4 w-4 mr-2 text-benchlot-primary" />
+                                  <Wallet className="h-4 w-4 mr-2 text-spruce" />
                                   Select from saved billing addresses
                                 </span>
                                 <ChevronDown className={`h-4 w-4 transition-transform ${showSavedAddresses ? 'rotate-180' : ''}`} />
@@ -1387,7 +1387,7 @@ const CheckoutPage = () => {
                                                 </span>
                                               )}
                                               {address.isDefault && (
-                                                <span className="text-xs bg-benchlot-accent text-benchlot-primary px-2 py-0.5 rounded-full">
+                                                <span className="text-xs bg-honey text-spruce px-2 py-0.5 rounded-full">
                                                   Default
                                                 </span>
                                               )}
@@ -1672,7 +1672,7 @@ const CheckoutPage = () => {
                     <button
                       type="button"
                       onClick={handleProceedToPayment}
-                      className="w-full py-3 px-6 bg-benchlot-primary text-white font-medium rounded-md hover:bg-benchlot-secondary transition-colors flex items-center justify-center"
+                      className="w-full py-3 px-6 bg-honey text-dark-teal font-medium rounded-md hover:bg-honey-light transition-colors flex items-center justify-center"
                     >
                       Continue to Payment
                       <ChevronRight className="ml-2 h-5 w-5" />
@@ -1685,10 +1685,10 @@ const CheckoutPage = () => {
           
           {/* Step 2: Payment Form */}
           {checkoutStep === 2 && (
-            <div className="bg-white rounded-lg shadow-card overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-card overflow-hidden border border-default">
               <div className="p-6 border-b border-stone-200">
-                <h2 className="text-xl font-serif font-semibold text-stone-800 mb-2 flex items-center">
-                  <CreditCard className="h-5 w-5 mr-2 text-benchlot-primary" />
+                <h2 className="text-xl font-display font-semibold text-stone-800 mb-2 flex items-center">
+                  <CreditCard className="h-5 w-5 mr-2 text-spruce" />
                   Payment Details
                 </h2>
                 <p className="text-stone-600 text-sm">All transactions are secure and encrypted</p>

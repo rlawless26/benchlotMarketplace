@@ -67,18 +67,18 @@ const MyListings = () => {
 
   if (loading && listings.length === 0) {
     return (
-      <div className="bg-gray-100 min-h-screen py-8">
+      <div className="bg-bone min-h-screen py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">My Tool Listings</h1>
+              <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">My Tool Listings</h1>
               <p className="text-stone-600">Manage your tool listings and track their performance</p>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow-md p-8 flex justify-center min-h-[300px] items-center">
+          <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default flex justify-center min-h-[300px] items-center">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-benchlot-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-spruce border-t-transparent rounded-full animate-spin"></div>
               <p className="mt-4 text-stone-600 font-medium">Loading your listings...</p>
             </div>
           </div>
@@ -88,16 +88,16 @@ const MyListings = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen py-8">
+    <div className="bg-bone min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-serif font-medium text-stone-800 mb-2">My Tool Listings</h1>
+            <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">My Tool Listings</h1>
             <p className="text-stone-600">Manage your tool listings and track their performance</p>
           </div>
           <Link
             to="/tools/new"
-            className="bg-benchlot-primary hover:bg-benchlot-secondary text-white font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
+            className="bg-honey hover:bg-honey-light text-dark-teal font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -113,19 +113,19 @@ const MyListings = () => {
         )}
 
         {listings.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default text-center">
             <div className="mx-auto w-16 h-16 mb-6 text-stone-300">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold mb-4 text-benchlot-primary">No Listings Yet</h2>
+            <h2 className="text-xl font-semibold mb-4 text-spruce">No Listings Yet</h2>
             <p className="text-stone-600 mb-6 max-w-md mx-auto">
               You haven't created any tool listings yet. Get started by adding your first listing!
             </p>
             <Link
               to="/tools/new"
-              className="bg-benchlot-primary hover:bg-benchlot-secondary text-white font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
+              className="bg-honey hover:bg-honey-light text-dark-teal font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -136,7 +136,7 @@ const MyListings = () => {
         ) : (
           <div className="space-y-6">
             {listings.map((tool) => (
-              <div key={tool.id} className="bg-white rounded-lg shadow-md p-4 sm:p-6 flex flex-col sm:flex-row gap-4 transition-all hover:shadow-lg">
+              <div key={tool.id} className="bg-bone-light rounded-lg shadow-md p-4 border border-default sm:p-6 flex flex-col sm:flex-row gap-4 transition-all hover:shadow-lg">
                 {/* Tool Image */}
                 <div className="w-full sm:w-48 h-48 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                   <Link to={`/tools/${tool.id}`} className="block w-full h-full">
@@ -150,7 +150,7 @@ const MyListings = () => {
                 {/* Tool Details */}
                 <div className="flex-grow">
                   <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-                    <Link to={`/tools/${tool.id}`} className="text-xl font-semibold text-benchlot-primary hover:text-benchlot-accent transition-colors">
+                    <Link to={`/tools/${tool.id}`} className="text-xl font-semibold text-spruce hover:text-honey transition-colors">
                       {tool.name}
                     </Link>
                     <div className={`badge ${
@@ -183,7 +183,7 @@ const MyListings = () => {
                     )}
                   </div>
                   
-                  <div className="text-lg font-bold text-benchlot-accent mb-3">
+                  <div className="text-lg font-bold text-honey mb-3">
                     ${tool.current_price ? tool.current_price.toFixed(2) : '0.00'}
                   </div>
                   
@@ -210,7 +210,7 @@ const MyListings = () => {
                     </Link>
                     <Link
                       to={`/tools/edit/${tool.id}`}
-                      className="btn-sm bg-benchlot-accent text-white hover:bg-benchlot-accent-hover inline-flex items-center focus:ring-2 focus:ring-benchlot-accent focus:ring-offset-2 focus:outline-none rounded-md transition-colors"
+                      className="btn-sm bg-honey text-dark-teal hover:bg-honey-light inline-flex items-center focus:ring-2 focus:ring-honey focus:ring-offset-2 focus:outline-none rounded-md transition-colors"
                     >
                       <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -236,8 +236,8 @@ const MyListings = () => {
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-4">
-              <h3 className="text-xl font-bold text-benchlot-primary mb-4">Confirm Deletion</h3>
+            <div className="bg-bone-light p-6 rounded-lg shadow-lg max-w-md mx-4 border border-default">
+              <h3 className="text-xl font-bold text-spruce mb-4">Confirm Deletion</h3>
               <p className="text-gray-600 mb-6">
                 Are you sure you want to delete this listing? This action cannot be undone.
               </p>
@@ -250,7 +250,7 @@ const MyListings = () => {
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="btn-sm bg-benchlot-error text-white hover:bg-red-700 focus:ring-red-500 inline-flex items-center focus:ring-2 focus:ring-offset-2 focus:outline-none rounded-md px-4 py-2 transition-colors"
+                  className="btn-sm bg-error text-bone-light hover:bg-red-700 focus:ring-red-500 inline-flex items-center focus:ring-2 focus:ring-offset-2 focus:outline-none rounded-md px-4 py-2 transition-colors"
                 >
                   Delete Permanently
                 </button>

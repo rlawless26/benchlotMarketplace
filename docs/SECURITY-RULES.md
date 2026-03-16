@@ -1,6 +1,6 @@
 # Firebase Security Rules Documentation
 
-This document outlines the security rules implemented for Benchlot's Firebase services, including Firestore Database and Firebase Storage.
+This document outlines the security rules implemented for Rekerf's Firebase services, including Firestore Database and Firebase Storage.
 
 ## Overview
 

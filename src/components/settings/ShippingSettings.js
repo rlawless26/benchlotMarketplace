@@ -86,8 +86,8 @@ const ShippingSettings = ({ user }) => {
         <button
           id={id}
           type="button"
-          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-benchlot-primary ${
-            checked ? 'bg-benchlot-primary' : 'bg-stone-200'
+          className={`relative inline-flex flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer w-11 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spruce ${
+            checked ? 'bg-spruce' : 'bg-stone-200'
           }`}
           role="switch"
           aria-checked={checked}
@@ -118,7 +118,7 @@ const ShippingSettings = ({ user }) => {
           value={value}
           checked={currentValue === value}
           onChange={onChange}
-          className="h-4 w-4 border-stone-300 text-benchlot-primary focus:ring-benchlot-primary"
+          className="h-4 w-4 border-stone-300 text-spruce focus:ring-spruce"
         />
       </div>
       <div className="ml-3 text-sm">
@@ -129,7 +129,7 @@ const ShippingSettings = ({ user }) => {
   );
   
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Seller Shipping Settings</h2>
         <p className="text-stone-600 text-sm mt-1">Configure your shipping options for buyers</p>
@@ -154,7 +154,7 @@ const ShippingSettings = ({ user }) => {
         {/* Shipping Methods Section */}
         <div className="mb-6">
           <div className="flex items-start mb-4">
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Truck className="h-5 w-5" />
             </div>
             <div className="ml-3">
@@ -171,7 +171,7 @@ const ShippingSettings = ({ user }) => {
                   <input
                     id="method-standard"
                     type="checkbox"
-                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                     checked={shippingPrefs.shippingMethods.includes('standard')}
                     onChange={() => {
                       const methods = [...shippingPrefs.shippingMethods];
@@ -192,7 +192,7 @@ const ShippingSettings = ({ user }) => {
                   <input
                     id="method-express"
                     type="checkbox"
-                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                     checked={shippingPrefs.shippingMethods.includes('express')}
                     onChange={() => {
                       const methods = [...shippingPrefs.shippingMethods];
@@ -213,7 +213,7 @@ const ShippingSettings = ({ user }) => {
                   <input
                     id="method-economy"
                     type="checkbox"
-                    className="h-4 w-4 text-benchlot-primary border-stone-300 rounded focus:ring-benchlot-primary"
+                    className="h-4 w-4 text-spruce border-stone-300 rounded focus:ring-spruce"
                     checked={shippingPrefs.shippingMethods.includes('economy')}
                     onChange={() => {
                       const methods = [...shippingPrefs.shippingMethods];
@@ -233,7 +233,7 @@ const ShippingSettings = ({ user }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-white border border-stone-200 rounded-lg">
+              <div className="p-4 bg-bone-light border border-stone-200 rounded-lg">
                 <h4 className="font-medium mb-2 text-sm">Default Shipping Price</h4>
                 <div className="flex items-center">
                   <span className="text-stone-600 mr-2">$</span>
@@ -241,7 +241,7 @@ const ShippingSettings = ({ user }) => {
                     type="number"
                     min="0"
                     step="0.01"
-                    className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                    className="border-stone-300 focus:ring-spruce focus:border-spruce block w-full sm:text-sm rounded-md"
                     value={shippingPrefs.defaultShippingPrice}
                     onChange={(e) => setShippingPrefs({...shippingPrefs, defaultShippingPrice: parseFloat(e.target.value) || 0})}
                   />
@@ -249,12 +249,12 @@ const ShippingSettings = ({ user }) => {
                 <p className="text-xs text-stone-500 mt-1">Applied when no specific price is set</p>
               </div>
               
-              <div className="p-4 bg-white border border-stone-200 rounded-lg">
+              <div className="p-4 bg-bone-light border border-stone-200 rounded-lg">
                 <h4 className="font-medium mb-2 text-sm">Processing Time (Days)</h4>
                 <input
                   type="number"
                   min="0"
-                  className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                  className="border-stone-300 focus:ring-spruce focus:border-spruce block w-full sm:text-sm rounded-md"
                   value={shippingPrefs.processingTime}
                   onChange={(e) => setShippingPrefs({...shippingPrefs, processingTime: parseInt(e.target.value) || 0})}
                 />
@@ -267,7 +267,7 @@ const ShippingSettings = ({ user }) => {
         {/* Free Shipping Options */}
         <div className="mb-6">
           <div className="flex items-start mb-4">
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Package className="h-5 w-5" />
             </div>
             <div className="ml-3">
@@ -276,7 +276,7 @@ const ShippingSettings = ({ user }) => {
             </div>
           </div>
           
-          <div className="ml-10 bg-white border border-stone-200 rounded-lg overflow-hidden p-4">
+          <div className="ml-10 bg-bone-light border border-stone-200 rounded-lg overflow-hidden p-4">
             <ToggleSwitch
               id="offers-free-shipping"
               checked={shippingPrefs.offersFreeShipping}
@@ -297,7 +297,7 @@ const ShippingSettings = ({ user }) => {
                       type="number"
                       min="0"
                       step="0.01"
-                      className="border-stone-300 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full sm:text-sm rounded-md"
+                      className="border-stone-300 focus:ring-spruce focus:border-spruce block w-full sm:text-sm rounded-md"
                       value={shippingPrefs.freeShippingThreshold}
                       onChange={(e) => setShippingPrefs({...shippingPrefs, freeShippingThreshold: parseFloat(e.target.value) || 0})}
                     />
@@ -336,7 +336,7 @@ const ShippingSettings = ({ user }) => {
         {/* Shipping Policy Information */}
         <div className="bg-stone-50 p-5 rounded-lg border border-stone-200 mb-6">
           <div className="flex">
-            <div className="flex-shrink-0 p-1.5 bg-benchlot-accent-light rounded-full text-benchlot-primary">
+            <div className="flex-shrink-0 p-1.5 bg-bone-dark rounded-full text-spruce">
               <Clock className="h-5 w-5" />
             </div>
             <div className="ml-3">
@@ -351,7 +351,7 @@ const ShippingSettings = ({ user }) => {
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-benchlot-primary text-white rounded-md hover:bg-benchlot-secondary focus:outline-none focus:ring-2 focus:ring-benchlot-primary focus:ring-offset-2 flex items-center"
+            className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-spruce-light focus:outline-none focus:ring-2 focus:ring-spruce focus:ring-offset-2 flex items-center"
             disabled={saving}
           >
             {saving ? (

@@ -337,7 +337,7 @@ const OfferConversation = ({ offer, onClose }) => {
         <div>
           <h3 className="font-medium">{isBuyer ? 'Your offer on:' : 'Offer received:'}</h3>
           <div className="text-stone-600">
-            <Link to={`/tools/${offer.toolId}`} className="hover:text-benchlot-primary flex items-center">
+            <Link to={`/tools/${offer.toolId}`} className="hover:text-spruce flex items-center">
               {offer.toolTitle}
               <ExternalLink className="h-3 w-3 ml-1" />
             </Link>
@@ -355,12 +355,12 @@ const OfferConversation = ({ offer, onClose }) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loading ? (
           <div className="flex justify-center items-center h-full">
-            <Loader className="h-6 w-6 text-benchlot-primary animate-spin" />
+            <Loader className="h-6 w-6 text-spruce animate-spin" />
           </div>
         ) : (
           <>
             {/* Initial offer info */}
-            <div className="bg-benchlot-accent bg-opacity-20 p-4 rounded-lg">
+            <div className="bg-honey bg-opacity-20 p-4 rounded-lg">
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-sm text-stone-600">Original price</span>
@@ -368,7 +368,7 @@ const OfferConversation = ({ offer, onClose }) => {
                 </div>
                 <div className="text-right">
                   <span className="text-sm text-stone-600">Current offer</span>
-                  <div className="font-medium text-lg text-benchlot-primary">{formatPrice(offer.currentPrice)}</div>
+                  <div className="font-medium text-lg text-spruce">{formatPrice(offer.currentPrice)}</div>
                 </div>
               </div>
             </div>
@@ -386,16 +386,16 @@ const OfferConversation = ({ offer, onClose }) => {
                   <div 
                     className={`max-w-[80%] rounded-lg p-3 ${
                       isCurrentUserMessage 
-                        ? 'bg-benchlot-primary text-white rounded-br-none' 
+                        ? 'bg-spruce text-bone rounded-br-none' 
                         : 'bg-stone-100 text-stone-800 rounded-bl-none'
                     }`}
                   >
                     {/* Message header */}
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className={isCurrentUserMessage ? 'text-benchlot-accent-light' : 'text-stone-500'}>
+                      <span className={isCurrentUserMessage ? 'text-bone-dark' : 'text-stone-500'}>
                         {isCurrentUserMessage ? 'You' : (isBuyerMessage ? offer.buyerName || 'Buyer' : offer.sellerName || 'Seller')}
                       </span>
-                      <span className={isCurrentUserMessage ? 'text-benchlot-accent-light' : 'text-stone-500'}>
+                      <span className={isCurrentUserMessage ? 'text-bone-dark' : 'text-stone-500'}>
                         {formatDate(msg.createdAt)}
                       </span>
                     </div>
@@ -454,7 +454,7 @@ const OfferConversation = ({ offer, onClose }) => {
       
       {/* Counter offer form */}
       {showCounterForm && (
-        <div className="p-6 border-t bg-white shadow-inner">
+        <div className="p-6 border-t bg-bone-light shadow-inner">
           <form onSubmit={handleCounterOffer}>
             <h3 className="text-lg font-medium text-stone-800 mb-4">Make a Counter Offer</h3>
             
@@ -490,13 +490,13 @@ const OfferConversation = ({ offer, onClose }) => {
               </label>
               <div className="relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <DollarSign className="h-5 w-5 text-benchlot-primary" />
+                  <DollarSign className="h-5 w-5 text-spruce" />
                 </div>
                 <input
                   type="text"
                   id="counterAmount"
                   ref={messageInputRef}
-                  className="focus:ring-benchlot-primary focus:border-benchlot-primary block w-full pl-10 pr-12 text-lg font-medium border-stone-300 rounded-md py-3"
+                  className="focus:ring-spruce focus:border-spruce block w-full pl-10 pr-12 text-lg font-medium border-stone-300 rounded-md py-3"
                   placeholder="0"
                   value={counterAmount}
                   onChange={(e) => {
@@ -526,7 +526,7 @@ const OfferConversation = ({ offer, onClose }) => {
               <textarea
                 id="counterMessage"
                 rows="3"
-                className="shadow-sm focus:ring-benchlot-primary focus:border-benchlot-primary block w-full border-stone-300 rounded-md"
+                className="shadow-sm focus:ring-spruce focus:border-spruce block w-full border-stone-300 rounded-md"
                 placeholder="Explain why you're offering this price..."
                 value={counterMessage}
                 onChange={(e) => setCounterMessage(e.target.value)}
@@ -544,7 +544,7 @@ const OfferConversation = ({ offer, onClose }) => {
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors disabled:opacity-50"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-bone bg-spruce hover:bg-spruce-light transition-colors disabled:opacity-50"
                 disabled={processingAction}
               >
                 {processingAction ? (
@@ -625,7 +625,7 @@ const OfferConversation = ({ offer, onClose }) => {
           <div className="mb-4">
             <Link 
               to={`/checkout?offerId=${offer.id}`}
-              className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors"
+              className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-bone bg-spruce hover:bg-spruce-light transition-colors"
             >
               Complete Purchase
             </Link>
@@ -657,7 +657,7 @@ const OfferConversation = ({ offer, onClose }) => {
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <input
               type="text"
-              className="flex-1 focus:ring-benchlot-primary focus:border-benchlot-primary block w-full px-4 py-2.5 text-sm border-stone-300 rounded-lg shadow-sm"
+              className="flex-1 focus:ring-spruce focus:border-spruce block w-full px-4 py-2.5 text-sm border-stone-300 rounded-lg shadow-sm"
               placeholder="Type a message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -665,7 +665,7 @@ const OfferConversation = ({ offer, onClose }) => {
             />
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-bone bg-spruce hover:bg-spruce-light transition-colors disabled:opacity-50"
               disabled={!newMessage.trim() || processingAction}
             >
               {processingAction ? (
@@ -692,13 +692,13 @@ const OfferConversation = ({ offer, onClose }) => {
               <div className="mt-3">
                 <Link 
                   to={`/tools/${offer.toolId}`}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-spruce hover:text-spruce-light"
                 >
                   Return to item
                 </Link>
                 <button
                   onClick={() => setShowCounterForm(true)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-benchlot-primary hover:text-benchlot-secondary"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-spruce hover:text-spruce-light"
                 >
                   Make new offer
                 </button>

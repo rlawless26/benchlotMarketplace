@@ -1,5 +1,5 @@
 /**
- * Environment utility for Benchlot
+ * Environment utility for Rekerf
  * Provides environment detection and configuration helpers
  */
 
@@ -19,17 +19,17 @@ export const getEnvironment = () => {
   }
   
   // Check for staging environment explicitly
-  if (hostname.includes('staging.benchlot.com')) {
+  if (hostname.includes('staging.rekerf.com')) {
     return 'staging';
   }
   
   // Check for Vercel preview deployments
-  if (hostname.includes('vercel.app') && !hostname.includes('benchlot-marketplace.vercel.app')) {
+  if (hostname.includes('vercel.app') && !hostname.includes('rekerf-marketplace.vercel.app')) {
     return 'staging';
   }
   
-  // Production domains - explicitly check for exact match on benchlot.com
-  if (hostname === 'benchlot.com' || hostname === 'www.benchlot.com' || hostname === 'benchlot-marketplace.vercel.app') {
+  // Production domains - explicitly check for exact match on rekerf.com
+  if (hostname === 'rekerf.com' || hostname === 'www.rekerf.com' || hostname === 'rekerf-marketplace.vercel.app') {
     return 'production';
   }
   

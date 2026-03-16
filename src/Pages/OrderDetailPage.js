@@ -216,8 +216,8 @@ const OrderDetailPage = () => {
   if (authLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8 flex justify-center">
-          <Loader className="h-8 w-8 text-benchlot-primary animate-spin" />
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-8 flex justify-center">
+          <Loader className="h-8 w-8 text-spruce animate-spin" />
         </div>
       </div>
     );
@@ -227,14 +227,14 @@ const OrderDetailPage = () => {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-8">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-medium text-stone-800 mb-2">Error Loading Order</h2>
             <p className="text-stone-600 mb-6">{error}</p>
             <Link 
               to="/orders"
-              className="text-benchlot-primary hover:text-benchlot-primary-dark font-medium"
+              className="text-spruce hover:text-spruce-dark font-medium"
             >
               Return to Orders
             </Link>
@@ -254,18 +254,18 @@ const OrderDetailPage = () => {
         {/* Header with back button */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
-            <Link to="/orders" className="inline-flex items-center text-stone-600 hover:text-benchlot-primary mb-2">
+            <Link to="/orders" className="inline-flex items-center text-stone-600 hover:text-spruce mb-2">
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back to Orders
             </Link>
-            <h1 className="text-3xl font-serif font-medium text-stone-800">Order #{order.id.slice(-6)}</h1>
+            <h1 className="text-3xl font-display font-medium text-dark-teal">Order #{order.id.slice(-6)}</h1>
           </div>
           
           <div className="flex items-center gap-3">
             <OrderStatusBadge status={order.status} />
             <button
               onClick={handlePrintOrder}
-              className="inline-flex items-center px-3 py-1.5 border border-stone-300 bg-white rounded-md text-stone-700 hover:bg-stone-50 text-sm"
+              className="inline-flex items-center px-3 py-1.5 border border-stone-300 bg-bone-light rounded-md text-dark-teal hover:bg-bone-dark text-sm"
             >
               <Printer className="h-4 w-4 mr-1.5" />
               Print
@@ -278,7 +278,7 @@ const OrderDetailPage = () => {
           {/* Main order info column */}
           <div className="md:col-span-2 space-y-6">
             {/* Order items card */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-200">
                 <h2 className="text-lg font-medium">Order Items</h2>
               </div>
@@ -337,7 +337,7 @@ const OrderDetailPage = () => {
             </div>
             
             {/* Order timeline/status card */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-200">
                 <h2 className="text-lg font-medium">Order Timeline</h2>
               </div>
@@ -469,7 +469,7 @@ const OrderDetailPage = () => {
           {/* Sidebar with summary and actions */}
           <div className="space-y-6">
             {/* Order summary card */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-200">
                 <h2 className="text-lg font-medium">Order Summary</h2>
               </div>
@@ -503,7 +503,7 @@ const OrderDetailPage = () => {
             </div>
             
             {/* Shipping info card */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-200">
                 <h2 className="text-lg font-medium">Shipping Information</h2>
               </div>
@@ -534,7 +534,7 @@ const OrderDetailPage = () => {
             </div>
             
             {/* Order actions card */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-200">
                 <h2 className="text-lg font-medium">Order Actions</h2>
               </div>
@@ -578,7 +578,7 @@ const OrderDetailPage = () => {
                             <button
                               onClick={() => setCancelConfirm(false)}
                               disabled={processingAction}
-                              className="flex-1 px-3 py-1.5 border border-stone-300 bg-white text-stone-700 rounded-md text-sm font-medium hover:bg-stone-50 disabled:opacity-50"
+                              className="flex-1 px-3 py-1.5 border border-stone-300 bg-bone-light text-dark-teal rounded-md text-sm font-medium hover:bg-bone-dark disabled:opacity-50"
                             >
                               No, Keep
                             </button>

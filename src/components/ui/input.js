@@ -13,14 +13,14 @@ const Input = ({
   disabled = false,
   ...rest
 }) => {
-  const inputClasses = `form-input w-full rounded-md shadow-sm border-gray-300 focus:border-benchlot-primary focus:ring focus:ring-benchlot-accent focus:ring-opacity-50 ${
+  const inputClasses = `form-input w-full rounded-md shadow-sm bg-bone-light border border-default focus:border-spruce focus:ring focus:ring-honey focus:ring-opacity-50 font-body ${
     error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
   } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${className}`;
 
   return (
     <div className={`space-y-1 ${containerClassName}`}>
       {label && (
-        <label htmlFor={id} className="form-label block text-sm font-medium text-benchlot-text-primary">
+        <label htmlFor={id} className="form-label block text-sm font-medium text-dark-teal font-body">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}

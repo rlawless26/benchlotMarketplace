@@ -135,14 +135,14 @@ const Marketplace = () => {
     <div className="page-container">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-benchlot-primary mb-2">Tool Marketplace</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-spruce mb-2">Tool Marketplace</h1>
           <p className="text-gray-600 max-w-3xl">
             Find the perfect tools for your next project. Browse our selection of high-quality tools available for rent or purchase.
           </p>
         </header>
         
         {/* Search and Filter */}
-        <div className="bg-white p-5 rounded-card shadow-card mb-8">
+        <div className="bg-bone-light p-5 rounded-card shadow-card mb-8 border border-default">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <form onSubmit={handleSearchSubmit} className="flex-grow">
@@ -185,8 +185,8 @@ const Marketplace = () => {
         {featuredTools.length > 0 && !selectedCategory && !searchQuery && (
           <section className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-benchlot-primary">Featured Tools</h2>
-              <Link to="/?featured=true" className="text-benchlot-accent hover:text-benchlot-accent-hover text-sm font-medium">
+              <h2 className="text-2xl font-bold text-spruce">Featured Tools</h2>
+              <Link to="/?featured=true" className="text-honey hover:text-honey-dark text-sm font-medium">
                 View all featured →
               </Link>
             </div>
@@ -203,7 +203,7 @@ const Marketplace = () => {
         {/* Main Listings */}
         <section>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-benchlot-primary">
+            <h2 className="text-2xl font-bold text-spruce">
               {selectedCategory 
                 ? `${selectedCategory}` 
                 : searchQuery

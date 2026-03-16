@@ -1,5 +1,5 @@
 /**
- * Mock test script for Benchlot SendGrid email integration
+ * Mock test script for Rekerf SendGrid email integration
  * 
  * This script tests the email service functions with mocked SendGrid responses.
  */
@@ -12,7 +12,7 @@ const sgMailMock = {
 // Mock Firebase Functions config
 const functionsMock = {
   config: () => ({
-    app: { url: 'https://benchlot.com' },
+    app: { url: 'https://rekerf.com' },
     sendgrid: { api_key: 'MOCK_API_KEY' }
   })
 };
@@ -29,7 +29,7 @@ jest.mock('firebase-functions', () => functionsMock);
 const emailService = require('./emailService');
 
 // Configuration
-const testEmail = 'test@benchlot.com';
+const testEmail = 'test@rekerf.com';
 
 // Helper function to log test results
 const logResult = (testName, result) => {
@@ -58,7 +58,7 @@ const testPasswordResetEmail = async () => {
   
   const result = await emailService.sendPasswordResetEmail(
     testEmail, 
-    'https://benchlot.com/reset-password?token=sample-token'
+    'https://rekerf.com/reset-password?token=sample-token'
   );
   logResult('Password Reset Email', result);
   return result;
@@ -136,7 +136,7 @@ const testSimpleTestEmail = async () => {
 
 // Run all tests
 const runAllTests = async () => {
-  console.log('🚀 Starting Benchlot SendGrid Email Mock Tests');
+  console.log('🚀 Starting Rekerf SendGrid Email Mock Tests');
   console.log('==============================================');
   
   try {

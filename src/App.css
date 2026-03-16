@@ -1,17 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Mulish:wght@300;400;500;600;700&display=swap');
-
 /* Base styles */
 body {
-  background-color: #F0EEE6;
-  font-family: 'Mulish', sans-serif;
-  color: #44403C;
-  font-size: 1.05rem;
-  line-height: 1.6;
+  background-color: #f2f0eb;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0c1c1e;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 h1, h2, h3 {
-  font-family: 'Spectral', serif;
-  font-weight: 500;
+  font-family: 'Petrona', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
 }
 
 .App {
@@ -31,24 +29,6 @@ h1, h2, h3 {
 /* Override some Tailwind defaults */
 .max-w-7xl {
   max-width: 80rem;
-}
-
-/* Add any custom utility classes */
-.bg-stone-50 {
-  background-color: #F0EEE6;
-}
-
-.bg-benchlot-primary {
-  background-color: #17613F;
-}
-
-.text-benchlot-primary {
-  color: #17613F;
-}
-
-/* For debugging */
-.debug-outline {
-  outline: 1px solid red;
 }
 
 /* Animation for notifications */

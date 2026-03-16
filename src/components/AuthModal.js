@@ -119,7 +119,7 @@ const AuthModal = ({
       {/* Modal */}
       <div 
         ref={modalRef}
-        className={`bg-white rounded-lg max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto transform ${
+        className={`bg-bone-light rounded-lg max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto transform ${
           isVisible ? 'translate-y-0' : 'translate-y-8'
         } transition-transform duration-300`}
       >

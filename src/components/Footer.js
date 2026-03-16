@@ -5,36 +5,39 @@ import { Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-stone-900 text-stone-300 py-12">
+    <footer className="bg-dark-teal text-bone py-12">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-16">
           {/* Column 1: Company Info */}
           <div>
-            <h3 className="text-white font-serif text-lg mb-4">Benchlot</h3>
-            <p className="text-sm mb-6">
+            <h3 className="text-bone font-display text-lg mb-2">Rekerf</h3>
+            <p className="text-sm mb-4 font-display italic" style={{ fontWeight: 500 }}>
+              The second cut.
+            </p>
+            <p className="text-sm mb-6" style={{ color: '#6a8a84' }}>
               The trusted marketplace for woodworking tools
             </p>
-            <p className="text-xs text-stone-400">© {new Date().getFullYear()} Benchlot. All rights reserved.</p>
+            <p className="text-xs" style={{ color: '#6a8a84' }}>&copy; {new Date().getFullYear()} Rekerf. All rights reserved.</p>
           </div>
-          
+
           {/* Column 2: Quick Links */}
           <div>
-            <h3 className="text-white font-serif text-lg mb-4">Quick Links</h3>
+            <h3 className="text-bone font-display text-lg mb-4">Quick Links</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <ul className="space-y-2">
                   <li>
-                    <Link to="/about" className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm">
+                    <Link to="/about" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       About
                     </Link>
                   </li>
                   <li>
-                    <Link to="/help" className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm">
+                    <Link to="/help" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       Help
                     </Link>
                   </li>
                   <li>
-                    <Link to="/categories" className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm">
+                    <Link to="/categories" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       Categories
                     </Link>
                   </li>
@@ -43,22 +46,22 @@ const Footer = () => {
               <div>
                 <ul className="space-y-2">
                   <li>
-                    <a 
-                      href="https://blog.benchlot.com/blog" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm"
+                    <a
+                      href="https://blog.rekerf.com/blog"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}
                     >
                       Updates
                     </a>
                   </li>
                   <li>
-                    <Link to="/" className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm">
+                    <Link to="/" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       Marketplace
                     </Link>
                   </li>
                   <li>
-                    <Link to="/tools/new" className="text-stone-300 hover:text-benchlot-accent transition-colors text-sm">
+                    <Link to="/tools/new" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       List a Tool
                     </Link>
                   </li>
@@ -66,54 +69,54 @@ const Footer = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Column 3: Contact */}
           <div>
-            <h3 className="text-white font-serif text-lg mb-4">Contact</h3>
+            <h3 className="text-bone font-display text-lg mb-4">Contact</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-benchlot-accent" />
-                <a href="mailto:hello@benchlot.com" className="text-stone-300 hover:text-benchlot-accent transition-colors">
-                  hello@benchlot.com
+                <Mail className="h-4 w-4 text-honey" />
+                <a href="mailto:hello@rekerf.com" className="hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
+                  hello@rekerf.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-benchlot-accent" />
-                <a href="tel:7819603998" className="text-stone-300 hover:text-benchlot-accent transition-colors">
+                <Phone className="h-4 w-4 text-honey" />
+                <a href="tel:7819603998" className="hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
                   781-960-3998
                 </a>
               </li>
               <li className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-benchlot-accent mt-1 flex-shrink-0" />
-                <span>Greater Boston Area</span>
+                <MapPin className="h-4 w-4 text-honey mt-1 flex-shrink-0" />
+                <span style={{ color: '#6a8a84' }}>Greater Boston Area</span>
               </li>
               <li className="mt-4">
-                <a 
-                  href="https://www.instagram.com/benchlot/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center gap-2 text-stone-300 hover:text-benchlot-accent transition-colors"
+                <a
+                  href="https://www.instagram.com/rekerf/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}
                 >
                   <Instagram className="h-5 w-5" />
-                  <span className="text-sm">@benchlot</span>
+                  <span className="text-sm">@rekerf</span>
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        
+
         {/* Bottom Links */}
-        <div className="mt-12 pt-6 border-t border-stone-700 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-6 border-t border-dark flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex gap-6">
-            <Link to="/privacy" className="text-xs text-stone-400 hover:text-white transition-colors">
+            <Link to="/privacy" className="text-xs hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-xs text-stone-400 hover:text-white transition-colors">
+            <Link to="/terms" className="text-xs hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
               Terms of Service
             </Link>
           </div>
-          <div className="text-xs text-stone-500">
-            Made with ♥ in Boston
+          <div className="text-xs" style={{ color: '#6a8a84' }}>
+            Made with care in Boston
           </div>
         </div>
       </div>

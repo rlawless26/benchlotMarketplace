@@ -60,16 +60,16 @@ const AddToCartButton = ({ tool, className = '', extraClasses = '', quantity = 1
   // Determine button style based on state
   const getButtonClasses = () => {
     if (inCart) {
-      return 'bg-benchlot-success hover:bg-green-700 text-white';
+      return 'bg-success hover:bg-green-700 text-white';
     }
     if (success) {
-      return 'bg-benchlot-success text-white';
+      return 'bg-success text-white';
     }
     if (extraClasses) {
       return extraClasses;  // Use provided classes if available
     }
     // Explicitly include background color in default case - ensure button is visible
-    return 'bg-benchlot-primary text-white hover:bg-benchlot-secondary';
+    return 'bg-honey text-dark-teal hover:bg-honey-light';
   };
 
   return (

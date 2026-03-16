@@ -90,12 +90,12 @@ const WishlistPage = () => {
     return (
       <div className="bg-stone-50 min-h-screen">
         <main className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-serif mb-6">Saved Tools</h1>
+          <h1 className="text-3xl font-display mb-6">Saved Tools</h1>
           
           <div className="animate-pulse">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div key={item} className="bg-white rounded-lg overflow-hidden shadow-md">
+                <div key={item} className="bg-bone-light rounded-lg overflow-hidden shadow-md">
                   <div className="w-full h-48 bg-stone-200"></div>
                   <div className="p-4">
                     <div className="h-5 bg-stone-200 rounded w-3/4 mb-2"></div>
@@ -118,7 +118,7 @@ const WishlistPage = () => {
     <div className="bg-stone-50 min-h-screen">
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-serif">Saved Tools</h1>
+          <h1 className="text-3xl font-display">Saved Tools</h1>
           <div className="text-sm text-stone-500">
             {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'} saved
           </div>
@@ -133,14 +133,14 @@ const WishlistPage = () => {
 
         {/* Filter and Sort Controls */}
         {wishlistItems.length > 0 && (
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+          <div className="bg-bone-light p-4 rounded-lg shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-default">
             <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search your saved tools..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="border border-stone-300 rounded-md pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
+                className="border border-stone-300 rounded-md pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-spruce"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-stone-400" />
             </div>
@@ -151,7 +151,7 @@ const WishlistPage = () => {
                 id="sortOrder"
                 value={sortOption}
                 onChange={handleSortChange}
-                className="border border-stone-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-benchlot-primary"
+                className="border border-stone-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-spruce"
                 style={{ 
                   height: '40px', 
                   appearance: 'none',
@@ -173,27 +173,27 @@ const WishlistPage = () => {
         )}
 
         {wishlistItems.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-stone-200 shadow-sm">
+          <div className="text-center py-16 bg-bone-light rounded-lg border border-default shadow-sm">
             <Heart className="h-12 w-12 mx-auto text-stone-400 mb-4" />
             <h2 className="text-xl font-medium mb-2">No saved tools yet</h2>
             <p className="text-stone-500 mb-6">When you save tools you like, they'll appear here</p>
             <Link 
               to="/marketplace"
-              className="inline-flex items-center px-4 py-2 bg-benchlot-primary text-white rounded hover:bg-benchlot-secondary transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-honey text-dark-teal rounded hover:bg-honey-light transition-colors"
             >
               <ShoppingBag className="h-4 w-4 mr-2" />
               Browse Tools
             </Link>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-stone-200 shadow-sm">
+          <div className="text-center py-16 bg-bone-light rounded-lg border border-default shadow-sm">
             <Search className="h-12 w-12 mx-auto text-stone-400 mb-4" />
             <h2 className="text-xl font-medium mb-2">No matching tools found</h2>
             <p className="text-stone-500 mb-2">Try adjusting your search term</p>
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm('')}
-                className="text-benchlot-primary hover:text-benchlot-secondary mt-2"
+                className="text-spruce hover:text-spruce-light mt-2"
               >
                 Clear search
               </button>
@@ -246,7 +246,7 @@ const WishlistPage = () => {
                           onClick={() => setCurrentPage(pageNum)}
                           className={`px-3 py-1 border rounded ${
                             currentPage === pageNum
-                              ? 'bg-benchlot-primary text-white border-benchlot-primary'
+                              ? 'bg-spruce text-bone border-spruce'
                               : 'border-stone-300 hover:bg-stone-100'
                           }`}
                         >

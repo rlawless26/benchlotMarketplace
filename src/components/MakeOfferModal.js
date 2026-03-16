@@ -134,10 +134,10 @@ const MakeOfferModal = ({
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
         
-        <div className="relative bg-white rounded-xl max-w-lg w-full mx-auto shadow-xl overflow-hidden">
+        <div className="relative bg-bone-light rounded-xl max-w-lg w-full mx-auto shadow-xl overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center p-6 border-b border-stone-200 bg-stone-50">
-            <h3 className="text-2xl font-serif font-semibold text-stone-900">Make an Offer</h3>
+            <h3 className="text-2xl font-display font-semibold text-dark-teal">Make an Offer</h3>
             <button 
               onClick={onClose}
               className="text-stone-400 hover:text-stone-500 focus:outline-none p-1 rounded-full hover:bg-stone-200 transition-colors"
@@ -165,7 +165,7 @@ const MakeOfferModal = ({
                   </div>
                   <div>
                     <h4 className="font-medium text-lg text-stone-800 mb-1">{tool?.title || tool?.name}</h4>
-                    <div className="text-benchlot-primary text-lg font-medium">Asking: {formatPrice(tool?.price)}</div>
+                    <div className="text-honey text-lg font-medium">Asking: {formatPrice(tool?.price)}</div>
                   </div>
                 </div>
                 
@@ -182,7 +182,7 @@ const MakeOfferModal = ({
                       type="text"
                       name="offerAmount"
                       id="offerAmount"
-                      className="focus:ring-benchlot-primary focus:border-benchlot-primary block w-full pl-10 py-3 text-lg font-medium border border-stone-300 rounded-md shadow-sm"
+                      className="focus:ring-spruce focus:border-spruce block w-full pl-10 py-3 text-lg font-medium border border-stone-300 rounded-md shadow-sm"
                       placeholder="0"
                       autoFocus
                       value={offerAmount}
@@ -199,7 +199,7 @@ const MakeOfferModal = ({
                   </div>
                   
                   {/* Price guidance - similar to Reverb's estimated value */}
-                  <div className="mt-2 bg-stone-50 border-l-4 border-benchlot-primary p-3 rounded-md">
+                  <div className="mt-2 bg-stone-50 border-l-4 border-spruce p-3 rounded-md">
                     <p className="text-stone-700">
                       <span className="font-medium">Suggested offer:</span> {formatPrice(tool?.price * 0.85)} - {formatPrice(tool?.price * 0.95)}
                     </p>
@@ -217,7 +217,7 @@ const MakeOfferModal = ({
                   <textarea
                     id="message"
                     rows="4"
-                    className="shadow-sm focus:ring-benchlot-primary focus:border-benchlot-primary block w-full text-base border border-stone-300 rounded-md"
+                    className="shadow-sm focus:ring-spruce focus:border-spruce block w-full text-base border border-stone-300 rounded-md"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                   />
@@ -238,7 +238,7 @@ const MakeOfferModal = ({
                 <div className="flex justify-between gap-4 mt-8 border-t border-stone-200 pt-6">
                   <button
                     type="button"
-                    className="flex-1 py-3 px-6 font-medium text-base border border-stone-300 rounded-md bg-white text-stone-700 hover:bg-stone-50 transition-colors"
+                    className="flex-1 py-3 px-6 font-medium text-base border border-stone-300 rounded-md bg-bone-light text-dark-teal hover:bg-bone-dark transition-colors"
                     onClick={onClose}
                     disabled={loading}
                   >
@@ -246,7 +246,7 @@ const MakeOfferModal = ({
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 px-6 font-medium text-base border border-transparent rounded-md text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex justify-center items-center"
+                    className="flex-1 py-3 px-6 font-medium text-base border border-transparent rounded-md text-dark-teal bg-honey hover:bg-honey-light transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex justify-center items-center"
                     disabled={loading}
                   >
                     {loading ? (
@@ -277,7 +277,7 @@ const MakeOfferModal = ({
                 <div className="flex justify-center">
                   <button
                     type="button"
-                    className="py-3 px-8 border border-transparent rounded-md text-white bg-benchlot-primary hover:bg-benchlot-secondary transition-colors font-medium text-base"
+                    className="py-3 px-8 border border-transparent rounded-md text-dark-teal bg-honey hover:bg-honey-light transition-colors font-medium text-base"
                     onClick={onClose}
                   >
                     Close

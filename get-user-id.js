@@ -5,7 +5,7 @@ console.log(`
   HOW TO GET YOUR FIREBASE USER ID FROM THE BROWSER
 =================================================================
 
-1. Open the Benchlot app in your browser
+1. Open the Rekerf app in your browser
 2. Make sure you're logged in
 3. Open the browser developer tools (F12 or Right-click > Inspect)
 4. Go to the Console tab
