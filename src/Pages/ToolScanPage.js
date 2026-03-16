@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
-import { Camera, Upload, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
