@@ -58,7 +58,7 @@ const WaitlistLandingPage = () => {
     <div className="min-h-screen bg-bone font-body">
       {/* Header / Logo */}
       <header className="absolute top-0 left-0 right-0 z-20 py-6 px-6">
-        <span className="text-2xl font-display font-medium text-bone">Rekerf</span>
+        <span className="text-2xl font-display font-black text-bone" style={{ letterSpacing: '-1.5px' }}>Rekerf</span>
       </header>
 
       {/* Hero Section */}
@@ -69,10 +69,10 @@ const WaitlistLandingPage = () => {
         <div className="absolute inset-0 bg-spruce bg-opacity-60"></div>
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-display font-medium mb-6 text-bone leading-tight">
+          <h1 className="text-4xl md:text-5xl font-display font-black mb-6 text-bone leading-tight">
             The marketplace for premium used hand tools
           </h1>
-          <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto" style={{ color: '#6aaa98' }}>
+          <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto" style={{ color: '#e8e6e0' }}>
             The second cut. Rekerf is a marketplace for woodworkers and makers to buy and sell quality hand tools,
             power tools, and shop equipment — built by people who actually use them.
           </p>
