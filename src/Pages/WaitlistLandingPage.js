@@ -73,8 +73,7 @@ const WaitlistLandingPage = () => {
             The marketplace for premium used hand tools
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto" style={{ color: '#e8e6e0' }}>
-            The second cut. Rekerf is a marketplace for woodworkers and makers to buy and sell quality hand tools,
-            power tools, and shop equipment — built by people who actually use them.
+            Buy and sell quality hand tools, power tools, and shop equipment — a marketplace made for woodworkers and makers.
           </p>
 
           {/* Inline email signup */}
