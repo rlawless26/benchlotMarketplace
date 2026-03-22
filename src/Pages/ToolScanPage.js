@@ -8,8 +8,8 @@ import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
 import { createTool, uploadToolImage } from '../firebase/models/toolModel';
 
-const API_URL = process.env.REACT_APP_API_URL || getConfig(
-  'http://localhost:5001/benchlot-6d64e/us-central1/api',
+const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
+  'https://api-sed2e4p6ua-uc.a.run.app',
   'https://api-sed2e4p6ua-uc.a.run.app',
   'https://api-sed2e4p6ua-uc.a.run.app'
 );
@@ -189,6 +189,11 @@ const ToolScanPage = () => {
     }
   };
 
+  const handleCorrection = (correction) => {
+    console.log('ToolScan correction recorded:', correction);
+    // TODO: persist to Firestore for accuracy tracking
+  };
+
   const handleReset = () => {
     // Revoke all preview URLs
     previews.forEach(url => URL.revokeObjectURL(url));
@@ -232,16 +237,25 @@ const ToolScanPage = () => {
   return (
     <div className="min-h-screen bg-bone">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="w-8 h-8 text-honey" />
-            <h1 className="text-3xl font-display font-semibold text-spruce">ToolScan</h1>
+        {/* Header — full when uploading, compact when showing results */}
+        {!scanResults ? (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles className="w-8 h-8 text-honey" />
+              <h1 className="text-3xl font-display font-semibold text-spruce">ToolScan</h1>
+            </div>
+            <p className="text-secondary text-lg">
+              Snap a photo of your tools and let AI identify them, generate descriptions, and suggest prices.
+            </p>
           </div>
-          <p className="text-secondary text-lg">
-            Snap a photo of your tools and let AI identify them, generate descriptions, and suggest prices.
-          </p>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2 mb-6 text-secondary font-body">
+            <Sparkles className="w-5 h-5 text-honey" />
+            <span className="font-semibold text-spruce">ToolScan</span>
+            <span className="text-bone-dark">·</span>
+            <span>{scanResults.tools.length} {scanResults.tools.length === 1 ? 'tool' : 'tools'} identified</span>
+          </div>
+        )}
 
         {/* Upload Section -- shown when no results yet */}
         {!scanResults && (
@@ -370,24 +384,6 @@ const ToolScanPage = () => {
         {/* Results Section */}
         {scanResults && (
           <div>
-            {/* Results header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-display font-semibold text-spruce">
-                  {scanResults.tools.length} {scanResults.tools.length === 1 ? 'Tool' : 'Tools'} Identified
-                </h2>
-                {scanResults.general_notes && (
-                  <p className="text-sm text-secondary mt-1">{scanResults.general_notes}</p>
-                )}
-              </div>
-              <button
-                onClick={handleReset}
-                className="px-4 py-2 text-sm border border-stone-300 rounded-lg hover:bg-bone-dark transition-colors"
-              >
-                Scan New Photos
-              </button>
-            </div>
-
             {/* Tool cards */}
             {scanResults.tools.length === 0 ? (
               <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
@@ -400,20 +396,33 @@ const ToolScanPage = () => {
                     key={index}
                     tool={tool}
                     index={index}
+                    scanId={scanId}
+                    previewImage={previews[0]}
                     publishState={publishingTools[index]}
                     onUpdate={(updated) => handleUpdateTool(index, updated)}
                     onDismiss={() => handleDismissTool(index)}
                     onPublish={() => handlePublishTool(index, tool)}
                     onNavigateToListing={(toolId) => navigate(`/tools/edit/${toolId}`)}
+                    onCorrection={handleCorrection}
                   />
                 ))}
               </div>
             )}
 
+            {/* Scan New Photos */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-spruce text-bone rounded-lg font-medium font-body hover:bg-spruce-light transition-colors"
+              >
+                Scan New Photos
+              </button>
+            </div>
+
             {/* Disclaimer */}
-            <div className="mt-8 p-4 bg-bone rounded-lg">
-              <p className="text-xs text-secondary">
-                ToolScan uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing. Confidence levels indicate how certain the AI is about its identification.
+            <div className="mt-6 p-4 bg-bone rounded-lg">
+              <p className="text-sm text-secondary">
+                ToolScan uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
               </p>
             </div>
           </div>

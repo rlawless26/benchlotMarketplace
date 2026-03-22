@@ -11,10 +11,8 @@ const allowedOrigins = [
   'https://www.rekerf.com',
   'https://benchlot-6d64e.web.app',
   'https://benchlot-6d64e.firebaseapp.com',
+  'http://localhost:3000',
 ];
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:3000');
-}
 const cors = require('cors')({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, server-to-server, Stripe webhooks)
