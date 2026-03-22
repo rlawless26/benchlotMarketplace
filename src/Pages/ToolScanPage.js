@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
-import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles, Search, DollarSign, FileText } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
@@ -26,6 +26,7 @@ const ToolScanPage = () => {
   const [previews, setPreviews] = useState([]);
   const [context, setContext] = useState('');
   const [showContext, setShowContext] = useState(false);
+  const [started, setStarted] = useState(false); // tracks whether user has started scanning
 
   // Scan state
   const [scanning, setScanning] = useState(false);
@@ -35,9 +36,10 @@ const ToolScanPage = () => {
 
   // Publishing state
   const [publishingTools, setPublishingTools] = useState({});
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   useEffect(() => {
-    document.title = 'ToolScan | Rekerf';
+    document.title = 'ToolScan — AI Tool Identification | Rekerf';
   }, []);
 
   const handleFileSelect = useCallback((e) => {
@@ -66,6 +68,7 @@ const ToolScanPage = () => {
     setScanError(null);
     setSelectedFiles(prev => [...prev, ...validFiles]);
     setPreviews(prev => [...prev, ...newPreviews]);
+    setStarted(true);
   }, [selectedFiles.length]);
 
   const removeFile = useCallback((index) => {
@@ -74,11 +77,32 @@ const ToolScanPage = () => {
     setPreviews(prev => prev.filter((_, i) => i !== index));
   }, [previews]);
 
+  const [dragging, setDragging] = useState(false);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    // Reuse the same validation logic
+    const fakeEvent = { target: { files } };
+    handleFileSelect(fakeEvent);
+  }, [handleFileSelect]);
+
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        // Strip the data URL prefix to get raw base64
         const base64 = reader.result.split(',')[1];
         resolve(base64);
       };
@@ -95,7 +119,6 @@ const ToolScanPage = () => {
     setScanResults(null);
 
     try {
-      // Convert files to base64
       const images = await Promise.all(
         selectedFiles.map(async (file) => ({
           data: await fileToBase64(file),
@@ -103,16 +126,21 @@ const ToolScanPage = () => {
         }))
       );
 
-      // Get auth token
-      const auth = getAuth();
-      const token = await auth.currentUser.getIdToken();
+      // Include auth token if user is signed in, skip if not
+      const headers = { 'Content-Type': 'application/json' };
+      if (user) {
+        try {
+          const auth = getAuth();
+          const token = await auth.currentUser.getIdToken();
+          headers['Authorization'] = `Bearer ${token}`;
+        } catch (e) {
+          // No auth — proceed without token
+        }
+      }
 
       const response = await fetch(`${API_URL}/toolscan`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ images, context: context.trim() || undefined }),
       });
 
@@ -147,10 +175,15 @@ const ToolScanPage = () => {
   };
 
   const handlePublishTool = async (index, tool) => {
+    // Gate on auth — prompt sign in if not logged in
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+
     setPublishingTools(prev => ({ ...prev, [index]: 'publishing' }));
 
     try {
-      // Map ToolScan fields to the existing tool model
       const toolData = {
         name: tool.suggested_title,
         description: tool.suggested_description,
@@ -159,7 +192,7 @@ const ToolScanPage = () => {
         brand: tool.maker !== 'Unknown' ? tool.maker : '',
         model: tool.model || '',
         condition: mapCondition(tool.condition),
-        current_price: tool.suggested_price_low, // Start at the low end
+        current_price: tool.suggested_price_low,
         price_high: tool.suggested_price_high,
         era: tool.era || '',
         confidence: tool.confidence,
@@ -170,7 +203,6 @@ const ToolScanPage = () => {
 
       const newTool = await createTool(toolData, user.uid);
 
-      // Upload the original scan image as the listing's first image
       if (selectedFiles.length > 0) {
         try {
           await uploadToolImage(selectedFiles[0], newTool.id);
@@ -195,7 +227,6 @@ const ToolScanPage = () => {
   };
 
   const handleReset = () => {
-    // Revoke all preview URLs
     previews.forEach(url => URL.revokeObjectURL(url));
     setSelectedFiles([]);
     setPreviews([]);
@@ -204,9 +235,9 @@ const ToolScanPage = () => {
     setScanId(null);
     setScanError(null);
     setPublishingTools({});
+    setShowAuthPrompt(false);
   };
 
-  // Map ToolScan condition grades to the existing tool model conditions
   const mapCondition = (scanCondition) => {
     const mapping = {
       'Excellent': 'Like New',
@@ -217,38 +248,131 @@ const ToolScanPage = () => {
     return mapping[scanCondition] || 'Good';
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-bone flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-display font-semibold text-spruce mb-4">Sign in to use ToolScan</h2>
-          <p className="text-secondary mb-6">You need an account to scan and list tools.</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-honey text-dark-teal rounded-lg hover:bg-honey-light transition-colors"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-bone">
+      {/* Auth prompt modal */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-teal/50">
+          <div className="bg-bone-light rounded-xl shadow-lg p-8 max-w-md mx-4 text-center">
+            <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
+            <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your listing</h3>
+            <p className="text-secondary font-body mb-6">
+              Your scan results are ready. Sign up or log in to save this as a draft listing on Rekerf.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full py-3 px-6 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
+              >
+                Sign Up / Log In
+              </button>
+              <button
+                onClick={() => setShowAuthPrompt(false)}
+                className="w-full py-3 px-6 border border-[#e4e2dc] rounded-lg text-secondary font-body hover:bg-bone transition-colors"
+              >
+                Continue Reviewing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header — full when uploading, compact when showing results */}
-        {!scanResults ? (
+        {/* Landing hero — shown before user starts */}
+        {!started && !scanResults && (
+          <div className="text-center mb-12 pt-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Sparkles className="w-10 h-10 text-honey" />
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">ToolScan</h1>
+            </div>
+            <p className="text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
+              Snap a photo of any hand tool and get an instant AI-powered identification, condition assessment, and pricing estimate.
+            </p>
+
+            {/* Value props */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-10">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
+                  <Search className="w-6 h-6 text-honey" />
+                </div>
+                <h3 className="font-display font-semibold text-dark-teal mb-1">Instant ID</h3>
+                <p className="text-sm text-secondary font-body">Identifies maker, model, era, and type from a single photo</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
+                  <DollarSign className="w-6 h-6 text-honey" />
+                </div>
+                <h3 className="font-display font-semibold text-dark-teal mb-1">Price Estimate</h3>
+                <p className="text-sm text-secondary font-body">Get a market-based price range so you know what it's worth</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-honey" />
+                </div>
+                <h3 className="font-display font-semibold text-dark-teal mb-1">Listing-Ready</h3>
+                <p className="text-sm text-secondary font-body">Generates a title, description, and category — ready to list</p>
+              </div>
+            </div>
+
+            {/* Drop zone + upload buttons */}
+            <div
+              className={`max-w-xl mx-auto border-2 border-dashed rounded-xl p-8 mb-4 transition-colors ${
+                dragging ? 'border-honey bg-honey/10' : 'border-stone-300'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-14 h-14 rounded-full bg-honey/10 flex items-center justify-center mb-4">
+                  <Camera className="w-7 h-7 text-honey" />
+                </div>
+                <p className="text-dark-teal font-medium font-body mb-1 hidden sm:block">
+                  {dragging ? 'Drop your photo here' : 'Drag a photo here, or'}
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                  <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer sm:hidden">
+                    <Camera className="w-5 h-5" />
+                    Take a Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer">
+                    <Plus className="w-5 h-5" />
+                    <span className="hidden sm:inline">Choose Photos</span>
+                    <span className="sm:hidden">Upload from Library</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
+              </div>
+            </div>
+            <p className="text-sm text-secondary">No account required. Free to try.</p>
+          </div>
+        )}
+
+        {/* Header — compact when uploading or showing results */}
+        {started && !scanResults && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-8 h-8 text-honey" />
               <h1 className="text-3xl font-display font-semibold text-spruce">ToolScan</h1>
             </div>
-            <p className="text-secondary text-lg">
-              Snap a photo of your tools and let AI identify them, generate descriptions, and suggest prices.
-            </p>
           </div>
-        ) : (
+        )}
+
+        {scanResults && (
           <div className="flex items-center gap-2 mb-6 text-secondary font-body">
             <Sparkles className="w-5 h-5 text-honey" />
             <span className="font-semibold text-spruce">ToolScan</span>
@@ -257,16 +381,14 @@ const ToolScanPage = () => {
           </div>
         )}
 
-        {/* Upload Section -- shown when no results yet */}
-        {!scanResults && (
+        {/* Upload Section — shown when user has started but no results yet */}
+        {started && !scanResults && (
           <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-6 mb-6">
-            {/* Image upload area */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-dark-teal mb-3">
+              <label className="block text-base font-medium text-dark-teal mb-3">
                 Upload photos of your tools
               </label>
 
-              {/* Preview grid */}
               {previews.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
                   {previews.map((preview, i) => (
@@ -281,7 +403,6 @@ const ToolScanPage = () => {
                     </div>
                   ))}
 
-                  {/* Add more button */}
                   {previews.length < MAX_IMAGES && (
                     <label className="aspect-square rounded-lg border-2 border-dashed border-stone-300 flex flex-col items-center justify-center cursor-pointer hover:border-honey hover:bg-honey/5 transition-colors">
                       <Plus className="w-8 h-8 text-stone-400" />
@@ -298,20 +419,23 @@ const ToolScanPage = () => {
                 </div>
               )}
 
-              {/* Initial upload drop zone */}
               {previews.length === 0 && (
-                <label className="block border-2 border-dashed border-stone-300 rounded-xl p-12 text-center cursor-pointer hover:border-honey hover:bg-honey/5 transition-colors">
+                <label
+                  className={`block border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${
+                    dragging ? 'border-honey bg-honey/10' : 'border-stone-300 hover:border-honey hover:bg-honey/5'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <div className="flex flex-col items-center">
                     <div className="w-16 h-16 rounded-full bg-bone flex items-center justify-center mb-4">
                       <Camera className="w-8 h-8 text-stone-400" />
                     </div>
                     <p className="text-dark-teal font-medium mb-1">
-                      Drop photos here or tap to upload
+                      {dragging ? 'Drop photos here' : 'Drag photos here or tap to upload'}
                     </p>
                     <p className="text-sm text-secondary">
-                      Single tool, group shot, open toolbox — ToolScan handles it all
-                    </p>
-                    <p className="text-xs text-stone-400 mt-2">
                       JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.
                     </p>
                   </div>
@@ -346,7 +470,6 @@ const ToolScanPage = () => {
               )}
             </div>
 
-            {/* Error display */}
             {scanError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
@@ -354,7 +477,6 @@ const ToolScanPage = () => {
               </div>
             )}
 
-            {/* Scan button */}
             <button
               onClick={handleScan}
               disabled={selectedFiles.length === 0 || scanning}
@@ -384,7 +506,6 @@ const ToolScanPage = () => {
         {/* Results Section */}
         {scanResults && (
           <div>
-            {/* Tool cards */}
             {scanResults.tools.length === 0 ? (
               <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
                 <p className="text-secondary">No tools were identified. Try a clearer photo with better lighting.</p>
@@ -409,7 +530,6 @@ const ToolScanPage = () => {
               </div>
             )}
 
-            {/* Scan New Photos */}
             <div className="mt-8 text-center">
               <button
                 onClick={handleReset}
@@ -419,7 +539,6 @@ const ToolScanPage = () => {
               </button>
             </div>
 
-            {/* Disclaimer */}
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
                 ToolScan uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.

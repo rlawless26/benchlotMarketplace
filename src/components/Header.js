@@ -446,6 +446,7 @@ const Header = () => {
 
             {/* Right side - Utility links */}
             <div className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
+              <Link to="/scan" className="text-honey hover:text-honey-light font-medium">ToolScan</Link>
               <Link to="/help" className="text-secondary hover:text-bone">Help</Link>
               <Link to="/about" className="text-secondary hover:text-bone">About</Link>
               <a

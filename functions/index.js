@@ -103,6 +103,23 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+// Optional auth — sets req.user if token present, but doesn't block
+const optionalAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      req.user = await admin.auth().verifyIdToken(idToken);
+    } catch (error) {
+      // Token invalid — proceed without user
+      req.user = null;
+    }
+  } else {
+    req.user = null;
+  }
+  next();
+};
+
 // Rate limiters
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -3213,7 +3230,7 @@ const toolscanLimiter = rateLimit({
  *
  * Body: { images: [{ data: "base64...", media_type: "image/jpeg" }], context?: string }
  */
-app.post('/toolscan', toolscanLimiter, requireAuth, async (req, res) => {
+app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
   try {
     const { images, context } = req.body;
 
