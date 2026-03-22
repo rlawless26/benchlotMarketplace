@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
-import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles, Search, DollarSign, FileText } from 'lucide-react';
+import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
@@ -393,87 +393,256 @@ const ToolScanPage = () => {
       )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Landing hero — shown before user starts */}
+        {/* Landing page — shown before user starts */}
         {!started && !scanResults && (
-          <div className="text-center mb-12 pt-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Sparkles className="w-10 h-10 text-honey" />
-              <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">ToolScan</h1>
-            </div>
-            <p className="text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-              Snap a photo of any hand tool and get an instant AI-powered identification, condition assessment, and pricing estimate.
-            </p>
+          <div>
+            {/* Section 1: Hero */}
+            <div className="text-center pt-8 mb-16">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Sparkles className="w-10 h-10 text-honey" />
+                <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">ToolScan</h1>
+              </div>
+              <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
+                Point your camera at any hand tool. Get an instant identification, condition grade, and market value — powered by AI that knows a Stanley Type 11 from a Type 19.
+              </p>
 
-            {/* Value props */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-10">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
-                  <Search className="w-6 h-6 text-honey" />
+              {/* Upload area */}
+              <div
+                className={`max-w-xl mx-auto border-2 border-dashed rounded-xl p-8 mb-3 transition-colors ${
+                  dragging ? 'border-honey bg-honey/10' : 'border-stone-300'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-honey/10 flex items-center justify-center mb-4">
+                    <Camera className="w-7 h-7 text-honey" />
+                  </div>
+                  <p className="text-dark-teal font-medium font-body mb-1 hidden sm:block">
+                    {dragging ? 'Drop your photo here' : 'Drag a photo here, or'}
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer sm:hidden">
+                      <Camera className="w-5 h-5" />
+                      Take a Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer">
+                      <Plus className="w-5 h-5" />
+                      <span className="hidden sm:inline">Choose Photos</span>
+                      <span className="sm:hidden">Upload from Library</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
                 </div>
-                <h3 className="font-display font-semibold text-dark-teal mb-1">Instant ID</h3>
-                <p className="text-sm text-secondary font-body">Identifies maker, model, era, and type from a single photo</p>
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
-                  <DollarSign className="w-6 h-6 text-honey" />
+              <p className="text-sm text-secondary font-body">No account needed · Free to try · Results in seconds</p>
+            </div>
+
+            {/* Section 2: Example Result — spruce band with mock ToolScanCard */}
+            <div className="bg-spruce py-16 mb-16" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
+              <div className="max-w-4xl mx-auto px-4 md:px-8">
+                <h2 className="text-2xl font-display font-bold text-bone text-center mb-8">See it in action</h2>
+
+                {/* Static mock matching real ToolScanCard layout */}
+                <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc]">
+                  {/* Card header */}
+                  <div className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden border border-[#e4e2dc]">
+                        <img src="/images/toolscan-example-stanley-no5.jpg" alt="Stanley No. 5 Jack Plane" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-display font-semibold text-spruce">
+                          Stanley No. 5 Jack Plane — Type 11, c. 1910–1918
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-base font-body text-secondary">
+                          <span><strong className="text-dark-teal">Maker:</strong> Stanley</span>
+                          <span><strong className="text-dark-teal">Model:</strong> No. 5</span>
+                          <span><strong className="text-dark-teal">Era:</strong> 1910–1918</span>
+                          <span className="text-honey font-semibold">$75 – $110</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-green-100 text-green-800">High confidence</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-blue-100 text-blue-800">Good</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body bg-purple-100 text-purple-800">Moderate collectibility</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Review fields */}
+                  <div className="px-5 pb-5 border-t border-[#e4e2dc] pt-4">
+                    <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide mb-1">
+                      Review Identification
+                    </h4>
+                    <p className="text-sm font-body text-secondary mb-4">
+                      Verify the details below. Edit any field that doesn't look right, then confirm.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Tool Type</label>
+                        <div className="px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal">Jack Plane</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Maker</label>
+                        <div className="px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal">Stanley</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Model</label>
+                        <div className="px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal">No. 5</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Condition</label>
+                        <div className="px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal">Good</div>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Description</label>
+                        <div className="px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal">
+                          A solid user-grade Stanley No. 5 with a Type 11 frog and original rosewood tote. The iron has plenty of life left and the sole is flat. Some patina on the sides adds character without affecting function.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Analysis */}
+                  <div className="border-t border-[#e4e2dc]">
+                    <div className="px-5 py-3">
+                      <span className="text-base font-semibold font-body text-dark-teal">AI Analysis</span>
+                    </div>
+                    <div className="px-5 pb-5 space-y-3">
+                      <div>
+                        <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Era Reasoning</label>
+                        <p className="text-base font-body text-secondary mt-0.5">Type 11 identified by the "STANLEY" lateral lever marking, kidney-shaped lever cap hole, and rosewood handles with close grain pattern. Patent dates behind the frog consistent with 1910–1918 production.</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Condition Notes</label>
+                        <p className="text-base font-body text-secondary mt-0.5">Tote has a minor chip at the top but is solid. Knob is original with light wear. Iron has been sharpened but retains good length. Japanning is 60% intact. Frog mates well to the bed.</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Collectibility</label>
+                        <p className="text-base font-body text-secondary mt-0.5">Type 11 is a desirable Sweetheart-era plane. Good user value with modest collector interest due to the era and original parts.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="font-display font-semibold text-dark-teal mb-1">Price Estimate</h3>
-                <p className="text-sm text-secondary font-body">Get a market-based price range so you know what it's worth</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-honey/10 flex items-center justify-center mx-auto mb-3">
-                  <FileText className="w-6 h-6 text-honey" />
-                </div>
-                <h3 className="font-display font-semibold text-dark-teal mb-1">Listing-Ready</h3>
-                <p className="text-sm text-secondary font-body">Generates a title, description, and category — ready to list</p>
               </div>
             </div>
 
-            {/* Drop zone + upload buttons */}
-            <div
-              className={`max-w-xl mx-auto border-2 border-dashed rounded-xl p-8 mb-4 transition-colors ${
-                dragging ? 'border-honey bg-honey/10' : 'border-stone-300'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full bg-honey/10 flex items-center justify-center mb-4">
-                  <Camera className="w-7 h-7 text-honey" />
+            {/* Section 3: How It Works */}
+            <div className="mb-16 max-w-3xl mx-auto">
+              <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">How it works</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">1</div>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Snap</h3>
+                  <p className="text-sm text-secondary font-body">Photograph your tool. One clear photo is all it takes.</p>
                 </div>
-                <p className="text-dark-teal font-medium font-body mb-1 hidden sm:block">
-                  {dragging ? 'Drop your photo here' : 'Drag a photo here, or'}
-                </p>
-                <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-                  <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer sm:hidden">
-                    <Camera className="w-5 h-5" />
-                    Take a Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer">
-                    <Plus className="w-5 h-5" />
-                    <span className="hidden sm:inline">Choose Photos</span>
-                    <span className="sm:hidden">Upload from Library</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                  </label>
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">2</div>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Scan</h3>
+                  <p className="text-sm text-secondary font-body">Our AI identifies the maker, model, era, and condition in seconds.</p>
                 </div>
-                <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Decide</h3>
+                  <p className="text-sm text-secondary font-body">Save it to your collection or list it for sale. Your call.</p>
+                </div>
               </div>
             </div>
-            <p className="text-sm text-secondary">No account required. Free to try.</p>
+
+            {/* Section 4: Audience Hooks */}
+            <div className="mb-16 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
+                  <p className="text-base font-body text-secondary mb-4">
+                    You don't need to know what a Stanley No. 62 is. Photograph it, and ToolScan will tell you what it's worth — so you can sell with confidence, not guesswork.
+                  </p>
+                  <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
+                  >
+                    Scan your first tool ↑
+                  </button>
+                </div>
+                <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Ready to list?</h3>
+                  <p className="text-base font-body text-secondary mb-4">
+                    Skip the tedious part. ToolScan writes the title, description, and pricing for you — so you can go from workbench to listing in under a minute.
+                  </p>
+                  <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
+                  >
+                    Scan your first tool ↑
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Second Upload CTA */}
+            <div className="mb-12 text-center">
+              <h2 className="text-2xl font-display font-bold text-spruce mb-6">Ready to find out what you've got?</h2>
+              <div
+                className={`max-w-xl mx-auto border-2 border-dashed rounded-xl p-8 mb-3 transition-colors ${
+                  dragging ? 'border-honey bg-honey/10' : 'border-stone-300'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-honey/10 flex items-center justify-center mb-4">
+                    <Camera className="w-7 h-7 text-honey" />
+                  </div>
+                  <p className="text-dark-teal font-medium font-body mb-1 hidden sm:block">
+                    {dragging ? 'Drop your photo here' : 'Drag a photo here, or'}
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer sm:hidden">
+                      <Camera className="w-5 h-5" />
+                      Take a Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer">
+                      <Plus className="w-5 h-5" />
+                      <span className="hidden sm:inline">Choose Photos</span>
+                      <span className="sm:hidden">Upload from Library</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
+                </div>
+              </div>
+              <p className="text-sm text-secondary font-body">No account needed · Free to try · Results in seconds</p>
+            </div>
           </div>
         )}
 
