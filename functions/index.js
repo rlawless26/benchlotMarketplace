@@ -3317,7 +3317,7 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
 
     // Store the scan session in Firestore
     const scanSession = {
-      userId: req.user.uid,
+      userId: req.user?.uid || 'anonymous',
       imageCount: images.length,
       toolCount: parsed.tools ? parsed.tools.length : 0,
       context: context || null,
