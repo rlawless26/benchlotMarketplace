@@ -168,8 +168,15 @@ const ToolScanCard = ({
     }
   };
 
+  const autoConfirm = () => {
+    if (!confirmed) {
+      handleConfirm(hasChanges());
+    }
+  };
+
   const handleSaveToChestClick = async () => {
     if (!onSaveToChest) return;
+    autoConfirm();
     setPublishError(null);
     setChestSaving(true);
     try {
@@ -184,6 +191,7 @@ const ToolScanCard = ({
   };
 
   const handleListForSaleClick = async () => {
+    autoConfirm();
     if (onListForSale) {
       setPublishError(null);
       try {
@@ -194,7 +202,6 @@ const ToolScanCard = ({
         setPublishError(err.message || 'Failed to save listing');
       }
     } else {
-      // Fallback to legacy onPublish
       handlePublish();
     }
   };
@@ -448,29 +455,11 @@ const ToolScanCard = ({
               </div>
             </div>
 
-            {/* Confirm/Correct buttons */}
-            <div className="flex items-center gap-3 mt-4">
-              <button
-                onClick={() => handleConfirm(false)}
-                className="px-6 py-3 bg-honey text-dark-teal rounded-lg text-base font-medium font-body hover:bg-honey-light transition-colors"
-              >
-                Looks Good
-              </button>
-              {hasChanges() && (
-                <button
-                  onClick={() => handleConfirm(true)}
-                  className="px-6 py-3 bg-spruce text-bone rounded-lg text-base font-medium font-body hover:bg-spruce-light transition-colors"
-                >
-                  I Made Changes
-                </button>
-              )}
-            </div>
           </div>
         )}
 
-        {/* Action buttons — only shown after confirmation */}
-        {confirmed && (
-          <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
+        {/* Action buttons — always visible */}
+        <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
             {chestSaved ? (
               <div className="flex items-center gap-4 w-full">
                 <div className="flex items-center gap-2 text-spruce">
@@ -564,7 +553,6 @@ const ToolScanCard = ({
               </>
             )}
           </div>
-        )}
 
         {publishError && (
           <div className="flex items-start gap-2 p-3 mt-3 bg-red-50 border border-red-200 rounded-lg">

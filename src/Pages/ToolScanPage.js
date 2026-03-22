@@ -370,18 +370,24 @@ const ToolScanPage = () => {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/login?signup=true')}
                 className="w-full py-3 px-6 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
               >
-                Sign Up / Log In
+                Sign Up
               </button>
               <button
-                onClick={() => setShowAuthPrompt(false)}
-                className="w-full py-3 px-6 border border-[#e4e2dc] rounded-lg text-secondary font-body hover:bg-bone transition-colors"
+                onClick={() => navigate('/login')}
+                className="w-full py-3 px-6 bg-spruce text-bone rounded-lg font-medium font-body hover:bg-spruce-light transition-colors"
               >
-                Continue Reviewing
+                Log In
               </button>
             </div>
+            <button
+              onClick={() => setShowAuthPrompt(false)}
+              className="mt-4 text-sm font-body text-secondary hover:text-dark-teal transition-colors underline"
+            >
+              Continue reviewing
+            </button>
           </div>
         </div>
       )}
