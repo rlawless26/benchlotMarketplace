@@ -623,7 +623,150 @@ export const toolStatus = {
   SOLD: 'sold',
   
   // Deleted: Soft-deleted but retained in database
-  DELETED: 'deleted'
+  DELETED: 'deleted',
+
+  // Chest: In user's Tool Chest, not listed for sale
+  CHEST: 'chest'
+};
+
+/**
+ * Add a tool to the user's Tool Chest (from ToolScan).
+ * Does NOT require seller status — any authenticated user can save to chest.
+ * Does NOT send listing published email.
+ * @param {Object} toolData - The tool data from ToolScan
+ * @param {string} userId - The ID of the authenticated user
+ * @returns {Promise<Object>} - The created tool document with its ID
+ */
+export const addToToolChest = async (toolData, userId) => {
+  try {
+    const chestTool = {
+      user_id: userId,
+      status: 'chest',
+      source: toolData.source || 'toolscan',
+      // Tool identification fields
+      name: toolData.name || '',
+      description: toolData.description || '',
+      category: toolData.category || '',
+      subcategory: toolData.subcategory || '',
+      brand: toolData.brand || '',
+      model: toolData.model || '',
+      condition: toolData.condition || '',
+      current_price: parseFloat(toolData.current_price) || 0,
+      price: parseFloat(toolData.current_price) || 0,
+      price_high: toolData.price_high || null,
+      era: toolData.era || '',
+      confidence: toolData.confidence || '',
+      collectibility: toolData.collectibility || '',
+      scanId: toolData.scanId || null,
+      // Preserve the raw AI output for future reference
+      toolscanData: toolData.toolscanData || {},
+      // Timestamps
+      chestAddedAt: serverTimestamp(),
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+      // Images start empty — uploaded separately
+      images: [],
+    };
+
+    const docRef = await addDoc(toolsCollection, chestTool);
+
+    return {
+      id: docRef.id,
+      ...chestTool,
+    };
+  } catch (error) {
+    console.error('Error adding tool to chest:', error);
+    throw error;
+  }
+};
+
+/**
+ * Transition a chest tool to draft listing status.
+ * Requires the user to be the owner.
+ * @param {string} toolId - The ID of the tool to transition
+ * @param {string} userId - The ID of the user requesting the transition
+ * @returns {Promise<Object>} - The updated tool
+ */
+export const listFromToolChest = async (toolId, userId) => {
+  try {
+    const toolRef = doc(db, 'tools', toolId);
+    const toolSnap = await getDoc(toolRef);
+
+    if (!toolSnap.exists()) {
+      throw new Error('Tool not found');
+    }
+
+    const toolData = toolSnap.data();
+
+    if (toolData.user_id !== userId) {
+      throw new Error('You do not own this tool');
+    }
+
+    if (toolData.status !== 'chest') {
+      throw new Error('Tool is not in the Tool Chest');
+    }
+
+    await updateDoc(toolRef, {
+      status: 'draft',
+      updated_at: serverTimestamp(),
+    });
+
+    return {
+      id: toolId,
+      ...toolData,
+      status: 'draft',
+    };
+  } catch (error) {
+    console.error('Error listing tool from chest:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload an image to a tool without changing its status.
+ * Used for Tool Chest items where we don't want the status to flip to 'active'.
+ * @param {File} file - The image file to upload
+ * @param {string} toolId - The ID of the tool
+ * @returns {Promise<Object>} - The uploaded image data
+ */
+export const uploadToolChestImage = async (file, toolId) => {
+  try {
+    const timestamp = Date.now();
+    const fileName = `${toolId}_${timestamp}_${file.name}`;
+    const storagePath = `tools/${toolId}/${fileName}`;
+    const storageRef = ref(storage, storagePath);
+
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+
+    const toolRef = doc(db, 'tools', toolId);
+    const toolSnap = await getDoc(toolRef);
+
+    if (!toolSnap.exists()) {
+      throw new Error('Tool not found');
+    }
+
+    const toolData = toolSnap.data();
+    const images = toolData.images || [];
+
+    const imageData = {
+      url: downloadURL,
+      path: storagePath,
+      filename: fileName,
+      added_at: new Date().toISOString(),
+    };
+
+    // Update images array only — do NOT change status or send emails
+    await updateDoc(toolRef, {
+      images: [...images, imageData],
+      updated_at: serverTimestamp(),
+    });
+
+    return imageData;
+  } catch (error) {
+    console.error('Error uploading tool chest image:', error);
+    throw error;
+  }
 };
 
 const toolModel = {
@@ -635,8 +778,11 @@ const toolModel = {
   getActiveTools,
   getFeaturedTools,
   uploadToolImage,
+  uploadToolChestImage,
   deleteToolImage,
   searchTools,
+  addToToolChest,
+  listFromToolChest,
   toolCategories,
   toolSubcategories,
   toolBrands,

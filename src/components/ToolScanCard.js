@@ -1,5 +1,6 @@
 // src/components/ToolScanCard.js
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronDown,
   ChevronUp,
@@ -11,6 +12,8 @@ import {
   Camera,
   DollarSign,
   Pencil,
+  Archive,
+  ShoppingCart,
 } from 'lucide-react';
 
 const confidenceColors = {
@@ -37,14 +40,20 @@ const ToolScanCard = ({
   onUpdate,
   onDismiss,
   onPublish,
+  onSaveToChest,
+  onListForSale,
   onNavigateToListing,
   onCorrection,
+  user,
+  isSeller,
 }) => {
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [publishedToolId, setPublishedToolId] = useState(null);
   const [publishError, setPublishError] = useState(null);
+  const [chestSaved, setChestSaved] = useState(false);
+  const [chestSaving, setChestSaving] = useState(false);
 
   // Confirm/correct state
   const [confirmed, setConfirmed] = useState(false);
@@ -156,6 +165,37 @@ const ToolScanCard = ({
       // Don't show auth errors in the card — the page handles those with a modal
       if (err.message && err.message.includes('Sign in')) return;
       setPublishError(err.message || 'Failed to save listing');
+    }
+  };
+
+  const handleSaveToChestClick = async () => {
+    if (!onSaveToChest) return;
+    setPublishError(null);
+    setChestSaving(true);
+    try {
+      await onSaveToChest();
+      setChestSaved(true);
+    } catch (err) {
+      if (err.message && err.message.includes('Sign in')) return;
+      setPublishError(err.message || 'Failed to save to Tool Chest');
+    } finally {
+      setChestSaving(false);
+    }
+  };
+
+  const handleListForSaleClick = async () => {
+    if (onListForSale) {
+      setPublishError(null);
+      try {
+        const toolId = await onListForSale();
+        setPublishedToolId(toolId);
+      } catch (err) {
+        if (err.message && err.message.includes('Sign in')) return;
+        setPublishError(err.message || 'Failed to save listing');
+      }
+    } else {
+      // Fallback to legacy onPublish
+      handlePublish();
     }
   };
 
@@ -428,10 +468,24 @@ const ToolScanCard = ({
           </div>
         )}
 
-        {/* Save as Draft / Published — only shown after confirmation */}
+        {/* Action buttons — only shown after confirmation */}
         {confirmed && (
-          <div className="flex items-center gap-3 pt-4 mt-4 border-t border-[#e4e2dc]">
-            {isPublished ? (
+          <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
+            {chestSaved ? (
+              <div className="flex items-center gap-4 w-full">
+                <div className="flex items-center gap-2 text-spruce">
+                  <Check className="w-5 h-5" />
+                  <span className="text-base font-medium font-body">Saved to Tool Chest</span>
+                </div>
+                <Link
+                  to="/tool-chest"
+                  className="flex items-center gap-1.5 text-base font-body text-spruce hover:text-honey transition-colors ml-auto"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View Tool Chest
+                </Link>
+              </div>
+            ) : isPublished ? (
               <div className="flex items-center gap-4 w-full">
                 <div className="flex items-center gap-2 text-spruce">
                   <Check className="w-5 h-5" />
@@ -449,27 +503,64 @@ const ToolScanCard = ({
               </div>
             ) : (
               <>
-                <button
-                  onClick={handlePublish}
-                  disabled={publishState === 'publishing'}
-                  className="flex-1 py-3 px-4 bg-honey text-dark-teal rounded-lg text-base font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  {publishState === 'publishing' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
+                <p className="text-sm font-body text-secondary mb-3">Keep it or sell it -- your call.</p>
+                <div className="flex items-center gap-3">
+                  {/* Primary CTA: Save to Tool Chest */}
+                  <button
+                    onClick={handleSaveToChestClick}
+                    disabled={chestSaving}
+                    className="flex-1 py-3 px-4 bg-honey text-dark-teal rounded-lg text-base font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {chestSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="w-4 h-4" />
+                        Save to Tool Chest
+                      </>
+                    )}
+                  </button>
+
+                  {/* Secondary CTA: List for Sale */}
+                  {isSeller ? (
+                    <button
+                      onClick={handleListForSaleClick}
+                      disabled={publishState === 'publishing'}
+                      className="flex-1 py-3 px-4 bg-spruce text-bone rounded-lg text-base font-medium font-body hover:bg-spruce-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {publishState === 'publishing' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4" />
+                          List for Sale
+                        </>
+                      )}
+                    </button>
                   ) : (
-                    'Save as Draft Listing'
+                    <Link
+                      to="/sell"
+                      className="flex-1 py-3 px-4 bg-spruce text-bone rounded-lg text-base font-medium font-body hover:bg-spruce-light transition-colors flex items-center justify-center gap-2 text-center"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Become a Seller
+                    </Link>
                   )}
-                </button>
-                <button
-                  onClick={onDismiss}
-                  className="p-2.5 border border-[#e4e2dc] rounded-lg hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
-                  title="Dismiss this tool"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+                  <button
+                    onClick={onDismiss}
+                    className="p-2.5 border border-[#e4e2dc] rounded-lg hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors flex-shrink-0"
+                    title="Dismiss this tool"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </>
             )}
           </div>

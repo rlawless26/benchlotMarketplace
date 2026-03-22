@@ -6,7 +6,8 @@ import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles
 import ToolScanCard from '../components/ToolScanCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
-import { createTool, uploadToolImage } from '../firebase/models/toolModel';
+import { createTool, uploadToolImage, addToToolChest, uploadToolChestImage } from '../firebase/models/toolModel';
+import { useSeller } from '../firebase/hooks/useSeller';
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
   'https://api-sed2e4p6ua-uc.a.run.app',
@@ -19,6 +20,7 @@ const MAX_IMAGES = 5;
 
 const ToolScanPage = () => {
   const { user } = useAuth();
+  const { isSeller } = useSeller();
   const navigate = useNavigate();
 
   // Upload state
@@ -37,6 +39,12 @@ const ToolScanPage = () => {
   // Publishing state
   const [publishingTools, setPublishingTools] = useState({});
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  // Email capture state
+  const [emailCollected, setEmailCollected] = useState(false);
+  const [captureEmail, setCaptureEmail] = useState('');
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
     document.title = 'ToolScan — AI Tool Identification | Rekerf';
@@ -221,6 +229,104 @@ const ToolScanPage = () => {
     }
   };
 
+  const handleSaveToChest = async (index, tool) => {
+    // Gate on auth
+    if (!user) {
+      setShowAuthPrompt(true);
+      throw new Error('Sign in required to save to Tool Chest');
+    }
+
+    try {
+      const toolData = {
+        name: tool.suggested_title,
+        description: tool.suggested_description,
+        category: tool.suggested_category,
+        subcategory: tool.suggested_subcategory,
+        brand: tool.maker !== 'Unknown' ? tool.maker : '',
+        model: tool.model || '',
+        condition: mapCondition(tool.condition),
+        current_price: tool.suggested_price_low,
+        price_high: tool.suggested_price_high,
+        era: tool.era || '',
+        confidence: tool.confidence,
+        collectibility: tool.collectibility,
+        source: 'toolscan',
+        scanId: scanId,
+        toolscanData: { ...tool },
+      };
+
+      const newTool = await addToToolChest(toolData, user.uid);
+
+      // Upload the scan image without triggering status change
+      if (selectedFiles.length > 0) {
+        try {
+          await uploadToolChestImage(selectedFiles[0], newTool.id);
+        } catch (imgError) {
+          console.error('Error uploading scan image to chest tool:', imgError);
+        }
+      }
+
+      return newTool.id;
+    } catch (error) {
+      console.error('Error saving to Tool Chest:', error);
+      throw error;
+    }
+  };
+
+  const handleListForSale = async (index, tool) => {
+    // Gate on auth
+    if (!user) {
+      setShowAuthPrompt(true);
+      throw new Error('Sign in required to save listings');
+    }
+
+    // Gate on seller status
+    if (!isSeller) {
+      throw new Error('Become a seller to list tools for sale');
+    }
+
+    // Reuse existing publish flow
+    return handlePublishTool(index, tool);
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    const email = captureEmail.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+
+    setEmailSubmitting(true);
+    setEmailError(null);
+
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+
+      await addDoc(collection(db, 'toolscan_leads'), {
+        email,
+        scanId: scanId || null,
+        toolsIdentified: scanResults?.tools?.length || 0,
+        firstToolName: scanResults?.tools?.[0]?.tool_name || null,
+        source: 'toolscan_email_gate',
+        created_at: serverTimestamp(),
+      });
+
+      setEmailCollected(true);
+    } catch (error) {
+      console.error('Email capture error:', error);
+      // Don't block the user — reveal results even if save fails
+      setEmailCollected(true);
+    } finally {
+      setEmailSubmitting(false);
+    }
+  };
+
+  // Skip email gate if user is already signed in
+  const showEmailGate = scanResults && !emailCollected && !user;
+  const showFullResults = scanResults && (emailCollected || user);
+
   const handleCorrection = (correction) => {
     console.log('ToolScan correction recorded:', correction);
     // TODO: persist to Firestore for accuracy tracking
@@ -236,6 +342,9 @@ const ToolScanPage = () => {
     setScanError(null);
     setPublishingTools({});
     setShowAuthPrompt(false);
+    setEmailCollected(false);
+    setCaptureEmail('');
+    setEmailError(null);
   };
 
   const mapCondition = (scanCondition) => {
@@ -255,9 +364,9 @@ const ToolScanPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-teal/50">
           <div className="bg-bone-light rounded-xl shadow-lg p-8 max-w-md mx-4 text-center">
             <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
-            <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your listing</h3>
+            <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your tools</h3>
             <p className="text-secondary font-body mb-6">
-              Your scan results are ready. Sign up or log in to save this as a draft listing on Rekerf.
+              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Rekerf.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -503,32 +612,113 @@ const ToolScanPage = () => {
           </div>
         )}
 
-        {/* Results Section */}
-        {scanResults && (
+        {/* Teaser + Email Gate — shown when results exist but email not collected (and not signed in) */}
+        {showEmailGate && scanResults.tools.length > 0 && (
           <div>
-            {scanResults.tools.length === 0 ? (
-              <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
-                <p className="text-secondary">No tools were identified. Try a clearer photo with better lighting.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {scanResults.tools.map((tool, index) => (
-                  <ToolScanCard
-                    key={index}
-                    tool={tool}
-                    index={index}
-                    scanId={scanId}
-                    previewImage={previews[0]}
-                    publishState={publishingTools[index]}
-                    onUpdate={(updated) => handleUpdateTool(index, updated)}
-                    onDismiss={() => handleDismissTool(index)}
-                    onPublish={() => handlePublishTool(index, tool)}
-                    onNavigateToListing={(toolId) => navigate(`/tools/edit/${toolId}`)}
-                    onCorrection={handleCorrection}
+            {/* Teaser cards */}
+            <div className="space-y-4 mb-8">
+              {scanResults.tools.map((tool, index) => (
+                <div key={index} className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-5">
+                  <div className="flex items-start gap-4">
+                    {previews[0] && (
+                      <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-[#e4e2dc]">
+                        <img src={previews[0]} alt="Scanned tool" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-display font-semibold text-spruce">{tool.tool_name}</h3>
+                      <div className="flex flex-wrap items-center gap-3 mt-1 text-base font-body text-secondary">
+                        {tool.maker && tool.maker !== 'Unknown' && <span>{tool.maker}</span>}
+                        {tool.model && <span>· {tool.model}</span>}
+                        {tool.era && <span>· {tool.era}</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
+                          tool.confidence === 'High' ? 'bg-green-100 text-green-800' :
+                          tool.confidence === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {tool.confidence} confidence
+                        </span>
+                      </div>
+                      {/* Blurred teaser for price/details */}
+                      <div className="mt-3 flex items-center gap-4 select-none">
+                        <span className="text-honey font-semibold text-lg blur-sm">$XX – $XXX</span>
+                        <span className="text-secondary text-sm blur-sm">Full description and listing details...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Email capture form */}
+            <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6 text-center">
+              <Sparkles className="w-8 h-8 text-honey mx-auto mb-3" />
+              <h3 className="text-xl font-display font-semibold text-spruce mb-2">
+                Your tool has been identified!
+              </h3>
+              <p className="text-secondary font-body mb-5 max-w-md mx-auto">
+                Enter your email to see the full identification, pricing estimate, and listing-ready description.
+              </p>
+              <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={captureEmail}
+                    onChange={(e) => { setCaptureEmail(e.target.value); setEmailError(null); }}
+                    placeholder="you@example.com"
+                    className="flex-1 px-4 py-3 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
+                    required
                   />
-                ))}
-              </div>
-            )}
+                  <button
+                    type="submit"
+                    disabled={emailSubmitting}
+                    className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors whitespace-nowrap"
+                  >
+                    {emailSubmitting ? 'Sending...' : 'See Results'}
+                  </button>
+                </div>
+                {emailError && (
+                  <p className="text-sm text-error mt-2">{emailError}</p>
+                )}
+                <p className="text-xs text-secondary mt-3">We'll send you tips on listing and selling your tools. Unsubscribe anytime.</p>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* No tools found */}
+        {scanResults && scanResults.tools.length === 0 && (
+          <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
+            <p className="text-secondary">No tools were identified. Try a clearer photo with better lighting.</p>
+          </div>
+        )}
+
+        {/* Full Results — shown after email collected or if user is signed in */}
+        {showFullResults && scanResults.tools.length > 0 && (
+          <div>
+            <div className="space-y-6">
+              {scanResults.tools.map((tool, index) => (
+                <ToolScanCard
+                  key={index}
+                  tool={tool}
+                  index={index}
+                  scanId={scanId}
+                  previewImage={previews[0]}
+                  publishState={publishingTools[index]}
+                  onUpdate={(updated) => handleUpdateTool(index, updated)}
+                  onDismiss={() => handleDismissTool(index)}
+                  onPublish={() => handlePublishTool(index, tool)}
+                  onSaveToChest={() => handleSaveToChest(index, tool)}
+                  onListForSale={() => handleListForSale(index, tool)}
+                  onNavigateToListing={(toolId) => navigate(`/tools/edit/${toolId}`)}
+                  onCorrection={handleCorrection}
+                  user={user}
+                  isSeller={isSeller}
+                />
+              ))}
+            </div>
 
             <div className="mt-8 text-center">
               <button

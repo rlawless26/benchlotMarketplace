@@ -84,11 +84,11 @@ service cloud.firestore {
       // Anyone can read tool listings
       allow read;
       
-      // Only authenticated users can create tools
-      // But they must be a seller if we're enforcing seller status
+      // Authenticated users can create tools.
+      // Sellers can create any tool; non-sellers can only create chest items.
       allow create: if isSignedIn() &&
-                    isSeller() &&
                     request.resource.data.user_id == request.auth.uid &&
+                    (isSeller() || request.resource.data.status == 'chest') &&
                     isValidTool();
       
       // Owners and admins can update tools
