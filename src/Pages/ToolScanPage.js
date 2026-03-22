@@ -178,7 +178,7 @@ const ToolScanPage = () => {
     // Gate on auth — prompt sign in if not logged in
     if (!user) {
       setShowAuthPrompt(true);
-      return;
+      throw new Error('Sign in required to save listings');
     }
 
     setPublishingTools(prev => ({ ...prev, [index]: 'publishing' }));

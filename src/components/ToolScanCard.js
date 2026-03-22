@@ -153,6 +153,8 @@ const ToolScanCard = ({
       const toolId = await onPublish();
       setPublishedToolId(toolId);
     } catch (err) {
+      // Don't show auth errors in the card — the page handles those with a modal
+      if (err.message && err.message.includes('Sign in')) return;
       setPublishError(err.message || 'Failed to save listing');
     }
   };
