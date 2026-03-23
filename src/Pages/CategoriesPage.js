@@ -1,20 +1,21 @@
 // src/Pages/CategoriesPage.js
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { toolCategories, toolSubcategories, toolBrands } from '../firebase/models/toolModel';
+import { toolSubcategories, categoryGroups, toolBrands } from '../firebase/models/toolModel';
 
 const CategoriesPage = () => {
   useEffect(() => {
     document.title = 'Categories | Rekerf';
   }, []);
 
-  // Build categories from centralized constants
-  const categories = toolCategories
-    .filter(cat => cat !== 'Other')
-    .map(cat => ({
+  // Build grouped categories from centralized constants
+  const groups = Object.entries(categoryGroups).map(([groupName, categoryNames]) => ({
+    groupName,
+    categories: categoryNames.map(cat => ({
       title: cat,
       subcategories: toolSubcategories[cat] || []
-    }));
+    }))
+  }));
 
   // Function to create URL-friendly category/subcategory parameters
   const createMarketplaceLink = (category, subcategory = null) => {
@@ -30,33 +31,38 @@ const CategoriesPage = () => {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-display font-medium text-dark-teal mb-8">Categories</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {categories.map((category, index) => (
-            <div key={index} className="bg-bone-light rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-display font-medium text-spruce mb-4">
-                <Link
-                  to={createMarketplaceLink(category.title)}
-                  className="hover:text-spruce-light transition-colors"
-                >
-                  {category.title}
-                </Link>
-              </h2>
-
-              <ul className="space-y-2">
-                {category.subcategories.map((subcategory, subIndex) => (
-                  <li key={subIndex}>
+        {groups.map((group, groupIndex) => (
+          <div key={groupIndex} className="mb-12">
+            <h2 className="text-sm font-body font-bold text-secondary uppercase tracking-wider mb-4">{group.groupName}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {group.categories.map((category, index) => (
+                <div key={index} className="bg-bone-light rounded-lg shadow-md p-6">
+                  <h3 className="text-xl font-display font-medium text-spruce mb-4">
                     <Link
-                      to={createMarketplaceLink(category.title, subcategory)}
-                      className="text-secondary hover:text-spruce transition-colors"
+                      to={createMarketplaceLink(category.title)}
+                      className="hover:text-honey transition-colors"
                     >
-                      {subcategory}
+                      {category.title}
                     </Link>
-                  </li>
-                ))}
-              </ul>
+                  </h3>
+
+                  <ul className="space-y-2">
+                    {category.subcategories.map((subcategory, subIndex) => (
+                      <li key={subIndex}>
+                        <Link
+                          to={createMarketplaceLink(category.title, subcategory)}
+                          className="text-secondary hover:text-spruce transition-colors"
+                        >
+                          {subcategory}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
         {/* Popular Brands section */}
         <div className="mb-12">

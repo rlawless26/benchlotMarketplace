@@ -493,6 +493,7 @@ export const searchTools = async (searchQuery) => {
  * Tool categories - focused on hand tool woodworking
  */
 export const toolCategories = [
+  // Hand Tools
   'Hand Planes',
   'Chisels',
   'Hand Saws',
@@ -500,10 +501,21 @@ export const toolCategories = [
   'Sharpening',
   'Workholding',
   'Carving & Turning',
+  // Power Tools & Shop Machines
   'Power Tools',
   'Workshop Equipment',
   'Other'
 ];
+
+/**
+ * Category groupings for UI display (CategoriesPage, etc.)
+ * This is a UI concern only — not stored in the data model.
+ */
+export const categoryGroups = {
+  'Hand Tools': ['Hand Planes', 'Chisels', 'Hand Saws', 'Marking & Measuring', 'Carving & Turning'],
+  'Shop Machines & Power Tools': ['Power Tools'],
+  'Shop Essentials': ['Sharpening', 'Workholding', 'Workshop Equipment'],
+};
 
 /**
  * Subcategories by category
@@ -538,12 +550,14 @@ export const toolSubcategories = {
     'Scorps & Inshaves', 'Adzes'
   ],
   'Power Tools': [
-    'Table Saws', 'Band Saws', 'Routers', 'Drills',
-    'Sanders', 'Planers & Jointers'
+    'Table Saws', 'Bandsaws', 'Track Saws', 'Miter Saws', 'Scroll Saws',
+    'Routers & Router Tables', 'Jointers', 'Planers & Thicknessers',
+    'Drill Presses & Mortisers', 'Lathes & Lathe Accessories',
+    'Sanders (Power)', 'Jigsaws', 'Shapers & Spindle Sanders'
   ],
   'Workshop Equipment': [
-    'Dust Collection', 'Tool Storage', 'Safety Equipment',
-    'Shop Accessories', 'Finishing Supplies'
+    'Dust Collection', 'Sharpening Systems', 'Workbenches',
+    'Tool Storage', 'Safety Equipment', 'Shop Accessories', 'Finishing Supplies'
   ],
   'Other': []
 };
@@ -552,6 +566,7 @@ export const toolSubcategories = {
  * Popular brands in hand tool woodworking
  */
 export const toolBrands = [
+  // Hand tool makers
   'Lie-Nielsen',
   'Veritas',
   'Lee Valley',
@@ -566,13 +581,29 @@ export const toolBrands = [
   'Bad Axe Tool Works',
   'Gramercy Tools',
   'Rob Cosman',
-  'Festool',
   'Shapton',
   'DMT',
   'Norton',
   'King',
   'Matsumura',
   'Tsunesaburo',
+  // Power tool & shop machine makers
+  'Festool',
+  'SawStop',
+  'Laguna',
+  'Powermatic',
+  'Grizzly',
+  'Jet',
+  'Rikon',
+  'Harvey',
+  'Tormek',
+  'Nova/Teknatool',
+  'Bosch',
+  'DeWalt',
+  'Makita',
+  'Ridgid',
+  'Delta',
+  'General International',
   'Other'
 ];
 
@@ -785,6 +816,7 @@ const toolModel = {
   listFromToolChest,
   toolCategories,
   toolSubcategories,
+  categoryGroups,
   toolBrands,
   toolConditions,
   toolStatus

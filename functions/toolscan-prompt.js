@@ -143,6 +143,44 @@ Identify tools into these categories and subcategories:
 
 **Carving & Shaping:** Carving Gouges · Drawknives · Spokeshaves · Adzes · Scorps & Inshaves
 
+**Power Tools:** Table Saws · Bandsaws · Track Saws · Miter Saws · Scroll Saws · Routers & Router Tables · Jointers · Planers & Thicknessers · Drill Presses & Mortisers · Lathes · Sanders (Power) · Jigsaws · Shapers
+
+**Workshop Equipment:** Dust Collection · Sharpening Systems · Workbenches · Tool Storage
+
+## POWER TOOL & SHOP MACHINE IDENTIFICATION
+
+Rekerf also lists premium woodworking power tools and shop machines. ID these by reading the label — brand, model, and form factor are usually visible. Power tool ID is simpler than hand tools: read the nameplate, assess condition, estimate value.
+
+**Premium brands (strong resale — 60-85% of retail):**
+- **Festool:** Track saws (TS 55/75), routers (OF 1010/1400/2200), sanders (Rotex, ETS), dust extractors (CT series), Domino (DF 500/700), Kapex. Green/grey color scheme. Holds value exceptionally well.
+- **SawStop:** Table saws with flesh-detection safety. Jobsite (JSS), Contractor (CNS), Professional (PCS), Industrial (ICS).
+- **Laguna:** Bandsaws (14|BX, 14 SUV, 18BX, Resaw King), lathes (Revo series). Blue/grey machines.
+- **Powermatic:** Yellow machines. Table saws (PM1000/2000), jointers (54A, PJ-882HH), planers, bandsaws, lathes.
+- **Tormek:** Sharpening systems (T-8, T-4). Wet grinder with jig system.
+
+**Quality brands (moderate resale — 50-70% of retail):**
+- **Grizzly:** Green machines. Table saws, bandsaws, jointers, planers, lathes. Budget-premium.
+- **Jet:** White/blue machines. Similar category range to Grizzly.
+- **Rikon:** Bandsaws, lathes, planers. Solid mid-range.
+- **Harvey:** Newer premium brand. Table saws, bandsaws.
+- **Bosch:** Routers (1617 combo is legendary), miter saws, jigsaws.
+- **DeWalt:** DW735 planer (community default benchtop planer, ~$350-450 used), DWS780 miter saw, routers.
+- **Makita:** Track saws (SP6000J), routers, sanders, planers.
+- **Ridgid:** Planers (TP1300), jointers. Lifetime service agreement.
+
+**Vintage collectible machines (variable value — flag as "vintage pricing varies significantly"):**
+- **Delta/Rockwell** (1940s-1970s): Unisaws, 14" bandsaws, shapers. American iron, heavy, often rebuilt.
+- **Powermatic** (vintage): Model 66 table saw, older mortisers. Gold/grey era.
+- **Oliver, Walker-Turner:** Rare vintage industrial machines.
+
+**Power tool condition markers:**
+- Excellent: Clean, original paint intact, all guards/fences/accessories present
+- Good: Normal table wear, light scratches, functional, may be missing minor accessories
+- Fair: Surface rust on cast iron, missing guards, paint worn, needs TLC
+- Project: Heavy rust, missing major components, non-functional or unknown
+
+**Value note:** Heavy machines (200+ lbs) rarely ship economically — this affects resale radius and pricing. Note shipping limitations for large machines.
+
 ## MAKER IDENTIFICATION HEURISTICS
 
 ### Stanley (The Most Common Vintage Maker)

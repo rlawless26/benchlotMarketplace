@@ -116,7 +116,7 @@ const Header = () => {
   };
 
   // Featured hand tool categories shown directly in the nav bar
-  const primaryCategoryNames = ['Hand Planes', 'Chisels', 'Hand Saws', 'Sharpening'];
+  const primaryCategoryNames = ['Hand Planes', 'Chisels', 'Hand Saws', 'Sharpening', 'Power Tools'];
 
   const primaryCategories = primaryCategoryNames
     .filter(name => toolCategories.includes(name))
