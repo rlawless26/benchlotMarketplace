@@ -29,6 +29,10 @@ export const ENABLE_DIRECT_BANK_ACCOUNT = getFeatureFlag('ENABLE_DIRECT_BANK_ACC
 // Flag to use Custom Stripe accounts for ALL sellers (less info required)
 export const USE_CUSTOM_ACCOUNTS = getFeatureFlag('USE_CUSTOM_ACCOUNTS', true);
 
+// Marketplace beta — when false, public visitors only see ToolScan, waitlist, and info pages.
+// When true, the full marketplace is visible to everyone. This is the launch switch.
+export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', false);
+
 // Default path for seller onboarding
 export const SELLER_ENTRY_PATH = '/sell';
 
@@ -37,7 +41,8 @@ export const featureFlags = {
   ENABLE_TOOL_FIRST_FLOW,
   ENABLE_DIRECT_BANK_ACCOUNT,
   USE_CUSTOM_ACCOUNTS,
-  SELLER_ENTRY_PATH
+  SELLER_ENTRY_PATH,
+  MARKETPLACE_BETA
 };
 
 // Auth modal event - create a custom event to trigger the auth modal

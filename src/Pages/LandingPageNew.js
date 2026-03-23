@@ -124,7 +124,7 @@ const LandingPageNew = () => {
                 The marketplace for premium used hand tools
               </h1>
               <p className="text-xl mb-8" style={{ color: '#6aaa98', textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
-                The second cut. Buy and sell premium hand tools from makers who understand their value. Lie-Nielsen, Veritas, vintage Stanley, and more.
+                The woodworker's marketplace. Buy and sell premium hand tools from makers who understand their value. Lie-Nielsen, Veritas, vintage Stanley, and more.
               </p>
             </div>
 

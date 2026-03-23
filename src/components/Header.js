@@ -35,7 +35,7 @@ import { onAuthModalRequested } from '../utils/featureFlags';
 // Import centralized category data
 import { toolCategories, toolSubcategories } from '../firebase/models/toolModel';
 
-const Header = () => {
+const Header = ({ publicMode = false }) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -140,6 +140,34 @@ const Header = () => {
       name,
       subcategories: toolSubcategories[name] || []
     }));
+
+  // Public mode: slim header with logo, ToolScan CTA, and Join Waitlist
+  if (publicMode) {
+    return (
+      <header className="border-b shadow-sm">
+        <div className="bg-dark-teal">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '20px', letterSpacing: '-1.5px' }}>Rekerf</Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/scan"
+                className="text-secondary hover:text-bone font-body font-medium transition-colors"
+                style={{ fontSize: '13px', letterSpacing: '0.3px' }}
+              >
+                Scan a Tool
+              </Link>
+              <Link
+                to="/"
+                className="px-3 py-1.5 bg-honey text-dark-teal rounded-md hover:bg-honey/90 font-body font-medium whitespace-nowrap"
+              >
+                Join Waitlist
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="border-b shadow-sm">

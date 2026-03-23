@@ -1,6 +1,6 @@
 // src/App.js - Firebase Implementation
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
 import { useAuth } from './firebase/hooks/useAuth';
@@ -50,6 +50,9 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
+// Feature flags
+import { MARKETPLACE_BETA } from './utils/featureFlags';
+
 // Styles
 import './styles/design-system.css';
 import './styles/auth.css';
@@ -71,16 +74,29 @@ function SellerStatusFix() {
   return null;
 }
 
+// Route guard — redirects public-mode users away from marketplace routes
+function MarketplaceRoute({ element }) {
+  const { user } = useAuth();
+  if (!MARKETPLACE_BETA && !user) {
+    return <Navigate to="/?gated=1" replace />;
+  }
+  return element;
+}
+
 // Inner layout component that has access to useLocation
 function AppLayout() {
   const location = useLocation();
+  const { user } = useAuth();
   const isWaitlistPage = location.pathname === '/';
+
+  // Public mode: marketplace not yet launched AND user not signed in
+  const isPublicMode = !MARKETPLACE_BETA && !user;
 
   return (
     <div className="App min-h-screen flex flex-col bg-stone-50">
       <ScrollToTop />
       <SellerStatusFix />
-      {!isWaitlistPage && <Header />}
+      {!isWaitlistPage && <Header publicMode={isPublicMode} />}
 
       <main className={!isWaitlistPage ? 'flex-grow' : undefined}>
         <Routes>
@@ -88,57 +104,54 @@ function AppLayout() {
           <Route path="/" element={<WaitlistLandingPage />} />
 
           {/* App Home (previous landing page, preserved) */}
-          <Route path="/app" element={<LandingPageNew />} />
-          <Route path="/old-home" element={<LandingPage />} />
+          <Route path="/app" element={<MarketplaceRoute element={<LandingPageNew />} />} />
+          <Route path="/old-home" element={<MarketplaceRoute element={<LandingPage />} />} />
 
-          {/* Marketplace */}
-          <Route path="/marketplace" element={<MarketplacePage />} />
-          <Route path="/browse" element={<MarketplacePage />} />
+          {/* Marketplace — gated */}
+          <Route path="/marketplace" element={<MarketplaceRoute element={<MarketplacePage />} />} />
+          <Route path="/browse" element={<MarketplaceRoute element={<MarketplacePage />} />} />
 
-          {/* ToolScan */}
+          {/* ToolScan — always public */}
           <Route path="/scan" element={<ToolScanPage />} />
 
-          {/* Tool Routes */}
-          <Route path="/tools/:id" element={<ToolDetailPage />} />
-          <Route path="/tools/new" element={<ToolListingFormPage />} />
-          <Route path="/tools/edit/:id" element={<ToolListingFormPage />} />
+          {/* Tool Routes — gated */}
+          <Route path="/tools/:id" element={<MarketplaceRoute element={<ToolDetailPage />} />} />
+          <Route path="/tools/new" element={<MarketplaceRoute element={<ToolListingFormPage />} />} />
+          <Route path="/tools/edit/:id" element={<MarketplaceRoute element={<ToolListingFormPage />} />} />
 
-          {/* Seller Tool Routes */}
-          <Route path="/seller/tools/new" element={<ToolListingFormPage />} />
+          {/* Seller Tool Routes — gated */}
+          <Route path="/seller/tools/new" element={<MarketplaceRoute element={<ToolListingFormPage />} />} />
 
-          {/* User Routes */}
-          <Route path="/my-listings" element={<MyListingsPage />} />
-          {/* Preserved for backward compatibility but not used by new flows */}
+          {/* User Routes — gated except auth */}
+          <Route path="/my-listings" element={<MarketplaceRoute element={<MyListingsPage />} />} />
           <Route path="/login" element={<AuthPage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/messages/conversation/:conversationId" element={<MessagesPage />} />
+          <Route path="/wishlist" element={<MarketplaceRoute element={<WishlistPage />} />} />
+          <Route path="/settings" element={<MarketplaceRoute element={<SettingsPage />} />} />
+          <Route path="/messages" element={<MarketplaceRoute element={<MessagesPage />} />} />
+          <Route path="/messages/conversation/:conversationId" element={<MarketplaceRoute element={<MessagesPage />} />} />
 
-          {/* Cart Routes */}
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+          {/* Cart Routes — gated */}
+          <Route path="/cart" element={<MarketplaceRoute element={<CartPage />} />} />
+          <Route path="/checkout" element={<MarketplaceRoute element={<CheckoutPage />} />} />
 
-          {/* Order Routes */}
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/orders/:id" element={<OrderDetailPage />} />
-          <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
-          <Route path="/order-complete" element={<OrderConfirmationPage />} />
+          {/* Order Routes — gated */}
+          <Route path="/orders" element={<MarketplaceRoute element={<OrdersPage />} />} />
+          <Route path="/orders/:id" element={<MarketplaceRoute element={<OrderDetailPage />} />} />
+          <Route path="/order-confirmation/:id" element={<MarketplaceRoute element={<OrderConfirmationPage />} />} />
+          <Route path="/order-complete" element={<MarketplaceRoute element={<OrderConfirmationPage />} />} />
 
-          {/* Seller Routes */}
-          <Route path="/sell" element={<SellerLandingPage />} />
-          <Route path="/seller/signup" element={<SellerSignupPage />} />
-          <Route path="/seller/onboarding" element={<SellerOnboardingPage />} />
-          <Route path="/seller/onboarding/refresh" element={<SellerOnboardingPage />} />
-          <Route path="/seller/onboarding/complete" element={<SellerOnboardingPage />} />
-          <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+          {/* Seller Routes — gated */}
+          <Route path="/sell" element={<MarketplaceRoute element={<SellerLandingPage />} />} />
+          <Route path="/seller/signup" element={<MarketplaceRoute element={<SellerSignupPage />} />} />
+          <Route path="/seller/onboarding" element={<MarketplaceRoute element={<SellerOnboardingPage />} />} />
+          <Route path="/seller/onboarding/refresh" element={<MarketplaceRoute element={<SellerOnboardingPage />} />} />
+          <Route path="/seller/onboarding/complete" element={<MarketplaceRoute element={<SellerOnboardingPage />} />} />
+          <Route path="/seller/dashboard" element={<MarketplaceRoute element={<SellerDashboardPage />} />} />
+          <Route path="/seller/onboard-and-list" element={<MarketplaceRoute element={<SellerOnboardAndListPage />} />} />
+          <Route path="/seller/create-pending-listing" element={<MarketplaceRoute element={<CreatePendingListingPage />} />} />
+          <Route path="/seller/bank-details" element={<MarketplaceRoute element={<BankDetailsPage />} />} />
 
-          {/* New Tool-First Seller Flow */}
-          <Route path="/seller/onboard-and-list" element={<SellerOnboardAndListPage />} />
-          <Route path="/seller/create-pending-listing" element={<CreatePendingListingPage />} />
-          <Route path="/seller/bank-details" element={<BankDetailsPage />} />
-
-          {/* About, Help, Legal and Categories */}
+          {/* Always public: About, Help, Legal, Categories */}
           <Route path="/about" element={<AboutPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
@@ -150,7 +163,7 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {!isWaitlistPage && <Footer />}
+      {!isWaitlistPage && <Footer publicMode={isPublicMode} />}
       <EnvironmentDisplay />
       <Analytics />
       <SpeedInsights />

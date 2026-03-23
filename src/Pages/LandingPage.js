@@ -94,7 +94,7 @@ const LandingPage = () => {
               The marketplace for premium used hand tools
             </h1>
             <p className="text-xl mb-8" style={{ color: '#6aaa98' }}>
-              The second cut. Buy and sell premium hand tools from makers who understand their value.</p>
+              The woodworker's marketplace. Buy and sell premium hand tools from makers who understand their value.</p>
             <div className="bg-bone-light rounded-lg shadow-lg p-8 max-w-xl mx-auto">
               <div className="mb-6">
                 <h3 className="text-2xl font-display font-medium mb-2 text-dark-teal">Join Rekerf Today</h3>
