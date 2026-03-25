@@ -19,7 +19,7 @@ const Footer = ({ publicMode = false }) => {
             <div>
               <h3 className="text-bone font-display text-lg mb-4">Links</h3>
               <ul className="space-y-2">
-                <li><Link to="/scan" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>ToolScan</Link></li>
+                <li><Link to="/scan" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>Scan a Tool</Link></li>
                 <li><Link to="/about" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>About</Link></li>
                 <li><Link to="/help" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>Help</Link></li>
               </ul>

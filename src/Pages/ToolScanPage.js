@@ -48,7 +48,7 @@ const ToolScanPage = () => {
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
-    document.title = 'ToolScan — AI Tool Identification | Rekerf';
+    document.title = 'Scan a Tool | Rekerf';
   }, []);
 
   const handleFileSelect = useCallback((e) => {
@@ -401,7 +401,7 @@ const ToolScanPage = () => {
             <div className="text-center pt-8 mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Sparkles className="w-10 h-10 text-honey" />
-                <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">ToolScan</h1>
+                <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
                 Point your camera at any hand tool. Get an instant identification, condition grade, and market value — powered by AI that knows a Stanley Type 11 from a Type 19.
@@ -491,7 +491,7 @@ const ToolScanPage = () => {
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    You don't need to know what a Stanley No. 62 is. Photograph it, and ToolScan will tell you what it's worth — so you can sell with confidence, not guesswork.
+                    You don't need to know what a Stanley No. 62 is. Photograph it, and we'll tell you what it's worth — so you can sell with confidence, not guesswork.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -503,7 +503,7 @@ const ToolScanPage = () => {
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Ready to list?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    Skip the tedious part. ToolScan writes the title, description, and pricing for you — so you can go from workbench to listing in under a minute.
+                    Skip the tedious part. We write the title, description, and pricing for you — so you can go from workbench to listing in under a minute.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -571,7 +571,7 @@ const ToolScanPage = () => {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-8 h-8 text-honey" />
-              <h1 className="text-3xl font-display font-semibold text-spruce">ToolScan</h1>
+              <h1 className="text-3xl font-display font-semibold text-spruce">Scan a Tool</h1>
             </div>
           </div>
         )}
@@ -579,7 +579,7 @@ const ToolScanPage = () => {
         {scanResults && (
           <div className="flex items-center gap-2 mb-6 text-secondary font-body">
             <Sparkles className="w-5 h-5 text-honey" />
-            <span className="font-semibold text-spruce">ToolScan</span>
+            <span className="font-semibold text-spruce">Rekerf</span>
             <span className="text-bone-dark">·</span>
             <span>{scanResults.tools.length} {scanResults.tools.length === 1 ? 'tool' : 'tools'} identified</span>
           </div>
@@ -833,7 +833,7 @@ const ToolScanPage = () => {
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
-                ToolScan uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
+                Rekerf uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
               </p>
             </div>
           </div>

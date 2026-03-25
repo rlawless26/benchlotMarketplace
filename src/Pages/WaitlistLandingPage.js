@@ -67,7 +67,7 @@ const WaitlistLandingPage = () => {
         <nav className="absolute top-0 left-0 right-0 z-20 py-6 px-6 flex items-center justify-between">
           <span className="text-xl font-display font-black text-bone" style={{ letterSpacing: '-1.5px' }}>Rekerf</span>
           <div className="flex items-center gap-5">
-            <Link to="/scan" className="text-bone font-body text-sm font-medium hover:text-honey transition-colors">ToolScan</Link>
+            <Link to="/scan" className="text-bone font-body text-sm font-medium hover:text-honey transition-colors">Scan a Tool</Link>
             <a
               href="#waitlist-bottom"
               className="hidden sm:inline-flex px-4 py-2 bg-honey text-dark-teal rounded-lg text-sm font-medium font-body hover:bg-honey-light transition-colors"
@@ -78,7 +78,6 @@ const WaitlistLandingPage = () => {
         </nav>
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
-          <p className="text-xl font-display font-black text-bone mb-6" style={{ letterSpacing: '-1.5px' }}>Rekerf</p>
           <h1 className="text-4xl md:text-5xl font-display font-black mb-6 text-bone leading-tight">
             The marketplace for premium used hand tools
           </h1>
@@ -86,35 +85,14 @@ const WaitlistLandingPage = () => {
             Buy and sell quality hand tools with people who know the craft.
           </p>
 
-          {/* CTAs */}
-          <div className="max-w-xl mx-auto">
-            <form onSubmit={handleSubmit}>
-              <div className="flex flex-col sm:flex-row gap-3 items-stretch">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-spruce focus:border-transparent font-body"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors whitespace-nowrap font-body"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Joining...' : 'Join Waitlist'}
-                </button>
-                <Link
-                  to="/scan"
-                  className="inline-flex items-center justify-center gap-1 px-5 py-3 border border-bone/30 text-bone rounded-lg font-medium font-body text-sm hover:bg-bone/10 transition-colors whitespace-nowrap"
-                >
-                  Try ToolScan Free →
-                </Link>
-              </div>
-              <StatusMessage />
-            </form>
+          {/* CTA */}
+          <div className="max-w-xl mx-auto text-center">
+            <Link
+              to="/scan"
+              className="inline-flex items-center gap-1 px-8 py-4 bg-honey text-dark-teal rounded-lg text-lg font-medium font-body hover:bg-honey-light transition-colors"
+            >
+              What's your tool worth? &rarr;
+            </Link>
           </div>
         </div>
       </section>
@@ -126,7 +104,7 @@ const WaitlistLandingPage = () => {
             See what your tools are worth
           </h2>
           <p className="text-center mb-10 text-lg font-body max-w-2xl mx-auto" style={{ color: '#6a8a84' }}>
-            ToolScan identifies any hand tool from a photo — maker, model, era, condition, and market value.
+            Identify any hand tool from a photo — maker, model, era, condition, and market value.
           </p>
 
           <ToolScanExampleCard />
@@ -157,7 +135,7 @@ const WaitlistLandingPage = () => {
             <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
               <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
               <p className="text-base font-body text-secondary mb-5">
-                You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and ToolScan tells you what they are and what they're worth.
+                You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and what they're worth.
               </p>
               <Link to="/scan" className="text-honey font-body font-medium hover:text-honey-dark transition-colors">
                 Scan your first tool &rarr;
@@ -179,10 +157,10 @@ const WaitlistLandingPage = () => {
             <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
               <h3 className="text-lg font-display font-semibold text-spruce mb-3">Selling your collection?</h3>
               <p className="text-base font-body text-secondary mb-5">
-                ToolScan does the tedious part — titles, descriptions, pricing. Go from workbench to listing in under a minute.
+                Snap a photo — we identify the maker, model, and price. Go from workbench to listing in under a minute.
               </p>
               <Link to="/scan" className="text-honey font-body font-medium hover:text-honey-dark transition-colors">
-                Try ToolScan free &rarr;
+                Try it free &rarr;
               </Link>
             </div>
           </div>
@@ -202,7 +180,7 @@ const WaitlistLandingPage = () => {
               <div className="w-12 h-12 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-4 font-display font-bold text-lg">1</div>
               <h3 className="text-lg font-display font-semibold text-dark-teal mb-2">Scan</h3>
               <p className="text-base text-secondary font-body">
-                Photograph your tool. ToolScan identifies the maker, model, era, and condition in seconds.
+                Snap a photo — we identify the maker, model, era, and condition in seconds.
               </p>
             </div>
 
@@ -262,7 +240,7 @@ const WaitlistLandingPage = () => {
           </form>
           <p className="mt-4 text-sm text-secondary font-body">
             Or{' '}
-            <Link to="/scan" className="text-honey hover:text-honey-dark font-medium">try ToolScan now &rarr;</Link>
+            <Link to="/scan" className="text-honey hover:text-honey-dark font-medium">scan a tool now &rarr;</Link>
             {' '}&mdash; no account needed.
           </p>
         </div>
