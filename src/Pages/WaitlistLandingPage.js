@@ -89,7 +89,7 @@ const WaitlistLandingPage = () => {
           {/* CTAs */}
           <div className="max-w-xl mx-auto">
             <form onSubmit={handleSubmit}>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch">
                 <input
                   type="email"
                   placeholder="Enter your email"
@@ -106,17 +106,15 @@ const WaitlistLandingPage = () => {
                 >
                   {isSubmitting ? 'Joining...' : 'Join Waitlist'}
                 </button>
+                <Link
+                  to="/scan"
+                  className="inline-flex items-center justify-center gap-1 px-5 py-3 border border-bone/30 text-bone rounded-lg font-medium font-body text-sm hover:bg-bone/10 transition-colors whitespace-nowrap"
+                >
+                  Try ToolScan Free →
+                </Link>
               </div>
               <StatusMessage />
             </form>
-            <div className="mt-4">
-              <Link
-                to="/scan"
-                className="inline-flex items-center gap-1 px-5 py-2.5 border border-bone/30 text-bone rounded-lg font-medium font-body text-sm hover:bg-bone/10 transition-colors"
-              >
-                Try ToolScan Free &rarr;
-              </Link>
-            </div>
           </div>
         </div>
       </section>
