@@ -3356,7 +3356,9 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
       return res.status(429).json({ error: 'AI service rate limit reached. Please try again in a moment.' });
     }
     if (error.status === 400) {
-      return res.status(400).json({ error: 'Image could not be processed. Try a different photo.' });
+      const detail = error.message || 'Image could not be processed.';
+      console.error('Anthropic 400 detail:', detail);
+      return res.status(400).json({ error: `Image could not be processed: ${detail}` });
     }
 
     res.status(500).json({ error: error.message || 'An error occurred during tool scanning.' });

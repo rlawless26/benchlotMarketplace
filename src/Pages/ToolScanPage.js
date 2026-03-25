@@ -129,10 +129,17 @@ const ToolScanPage = () => {
 
     try {
       const images = await Promise.all(
-        selectedFiles.map(async (file) => ({
-          data: await fileToBase64(file),
-          media_type: file.type === 'image/heic' ? 'image/heic' : file.type,
-        }))
+        selectedFiles.map(async (file) => {
+          const data = await fileToBase64(file);
+          // Detect actual image format from base64 header bytes
+          // (browser file.type can be wrong, e.g. reporting jpeg for webp)
+          let media_type = file.type || 'image/jpeg';
+          if (data.startsWith('UklGR')) media_type = 'image/webp';
+          else if (data.startsWith('/9j/')) media_type = 'image/jpeg';
+          else if (data.startsWith('iVBOR')) media_type = 'image/png';
+          if (file.type === 'image/heic') media_type = 'image/heic';
+          return { data, media_type };
+        })
       );
 
       // Include auth token if user is signed in, skip if not
