@@ -534,11 +534,12 @@ const ToolScanPage = () => {
 
             {/* Section 4: Audience Hooks */}
             <div className="mb-16 max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">Built for woodworkers at every stage</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    You don't need to know what a Stanley No. 62 is. Photograph it, and we'll tell you what it's worth — so you can sell with confidence, not guesswork.
+                    You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and what they're worth.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -548,7 +549,19 @@ const ToolScanPage = () => {
                   </button>
                 </div>
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Ready to list?</h3>
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Upgrading your tools?</h3>
+                  <p className="text-base font-body text-secondary mb-4">
+                    Moving from Narex to Lie-Nielsen? List what you're done with, find what you're looking for. A marketplace where every buyer and seller knows the craft.
+                  </p>
+                  <a
+                    href="#scan-waitlist"
+                    className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
+                  >
+                    Join the waitlist →
+                  </a>
+                </div>
+                <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Selling your collection?</h3>
                   <p className="text-base font-body text-secondary mb-4">
                     We'll draft a title, description, and price estimate from your photo. You review it, adjust what needs adjusting, and list.
                   </p>
@@ -556,7 +569,7 @@ const ToolScanPage = () => {
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                   >
-                    Scan your first tool ↑
+                    Try it free ↑
                   </button>
                 </div>
               </div>
