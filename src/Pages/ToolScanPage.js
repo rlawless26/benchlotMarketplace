@@ -1,6 +1,6 @@
 // src/Pages/ToolScanPage.js
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
@@ -317,13 +317,34 @@ const ToolScanPage = () => {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('../firebase/config');
 
+      // Save full scan data to toolscan_leads
+      const tools = scanResults?.tools || [];
       await addDoc(collection(db, 'toolscan_leads'), {
         email,
         scanId: scanId || null,
-        toolsIdentified: scanResults?.tools?.length || 0,
-        firstToolName: scanResults?.tools?.[0]?.tool_name || null,
-        source: 'toolscan_email_gate',
+        toolsIdentified: tools.length,
+        tools: tools.map(t => ({
+          tool_name: t.tool_name,
+          maker: t.maker,
+          model: t.model,
+          era: t.era,
+          condition: t.condition,
+          confidence: t.confidence,
+          suggested_price_low: t.suggested_price_low,
+          suggested_price_high: t.suggested_price_high,
+          suggested_title: t.suggested_title,
+          suggested_description: t.suggested_description,
+          suggested_category: t.suggested_category,
+        })),
+        source: 'scan_email_gate',
         created_at: serverTimestamp(),
+      });
+
+      // Also save to waitlist for HubSpot sync
+      await addDoc(collection(db, 'waitlist'), {
+        email,
+        signed_up_at: serverTimestamp(),
+        source: 'scan_email_gate',
       });
 
       setEmailCollected(true);
@@ -798,7 +819,7 @@ const ToolScanPage = () => {
                 Your tool has been identified!
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see the full identification, pricing estimate, and listing-ready description.
+                Enter your email to see the full pricing, condition report, and listing-ready description. We'll save your results so they're ready when Rekerf launches.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
@@ -859,20 +880,23 @@ const ToolScanPage = () => {
               ))}
             </div>
 
-            <div className="mt-8 text-center">
-              <button
-                onClick={handleReset}
-                className="px-6 py-3 bg-spruce text-bone rounded-lg font-medium font-body hover:bg-spruce-light transition-colors"
-              >
-                Scan New Photos
-              </button>
-            </div>
-
-            <div className="mt-4 text-center">
-              <p className="text-base text-secondary font-body">
-                Want to list this tool? Rekerf is launching soon.{' '}
-                <Link to="/" className="text-honey hover:text-honey-dark font-medium">Join the waitlist &rarr;</Link>
+            {/* Saved confirmation + next actions */}
+            <div className="mt-8 bg-bone-light rounded-xl border border-[#e4e2dc] p-6 text-center">
+              <div className="flex items-center justify-center gap-2 text-spruce mb-2">
+                <Sparkles className="w-5 h-5 text-honey" />
+                <span className="text-base font-semibold font-body">Your results have been saved</span>
+              </div>
+              <p className="text-sm text-secondary font-body mb-6">
+                We'll email you when Rekerf launches and you can list your tools for sale.
               </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={handleReset}
+                  className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
+                >
+                  Scan another tool →
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
