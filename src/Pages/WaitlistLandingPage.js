@@ -104,7 +104,7 @@ const WaitlistLandingPage = () => {
             See what your tools are worth
           </h2>
           <p className="text-center mb-10 text-lg font-body max-w-2xl mx-auto" style={{ color: '#6a8a84' }}>
-            Identify any hand tool from a photo — maker, model, era, condition, and market value.
+            Photograph a hand tool and we'll do our best to tell you what it is, what era it's from, and what it's worth.
           </p>
 
           <ToolScanExampleCard />
@@ -157,7 +157,7 @@ const WaitlistLandingPage = () => {
             <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
               <h3 className="text-lg font-display font-semibold text-spruce mb-3">Selling your collection?</h3>
               <p className="text-base font-body text-secondary mb-5">
-                Snap a photo — we identify the maker, model, and price. Go from workbench to listing in under a minute.
+                We'll draft a title, description, and price estimate from your photo. You review it, adjust what needs adjusting, and list.
               </p>
               <Link to="/scan" className="text-honey font-body font-medium hover:text-honey-dark transition-colors">
                 Try it free &rarr;
@@ -180,7 +180,7 @@ const WaitlistLandingPage = () => {
               <div className="w-12 h-12 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-4 font-display font-bold text-lg">1</div>
               <h3 className="text-lg font-display font-semibold text-dark-teal mb-2">Scan</h3>
               <p className="text-base text-secondary font-body">
-                Snap a photo — we identify the maker, model, era, and condition in seconds.
+                Photograph your tool. We'll take a crack at identifying it.
               </p>
             </div>
 
@@ -212,10 +212,10 @@ const WaitlistLandingPage = () => {
             Built by a wannabe skilled woodworker in Boston.
           </p>
           <h2 className="text-3xl font-display font-bold text-spruce mb-3">
-            Ready to join?
+            Nothing to scan right now?
           </h2>
           <p className="text-secondary font-body mb-8">
-            Sign up for early access. Be the first to buy, sell, and scan when we launch.
+            Join the waitlist and we'll let you know when the marketplace launches.
           </p>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">

@@ -45,6 +45,11 @@ const ToolScanPage = () => {
   const [emailCollected, setEmailCollected] = useState(false);
   const [captureEmail, setCaptureEmail] = useState('');
   const [emailSubmitting, setEmailSubmitting] = useState(false);
+
+  // Bottom waitlist state
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistStatus, setWaitlistStatus] = useState({ type: '', message: '' });
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
@@ -335,6 +340,28 @@ const ToolScanPage = () => {
   const showEmailGate = scanResults && !emailCollected && !user;
   const showFullResults = scanResults && (emailCollected || user);
 
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    const email = waitlistEmail.trim().toLowerCase();
+    if (!email) return;
+    setWaitlistSubmitting(true);
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      await addDoc(collection(db, 'waitlist'), {
+        email,
+        signed_up_at: serverTimestamp(),
+        source: 'scan_page',
+      });
+      setWaitlistStatus({ type: 'success', message: "You're on the list. We'll be in touch." });
+      setWaitlistEmail('');
+    } catch (error) {
+      setWaitlistStatus({ type: 'error', message: 'Something went wrong. Please try again.' });
+    } finally {
+      setWaitlistSubmitting(false);
+    }
+  };
+
   const handleCorrection = (correction) => {
     console.log('ToolScan correction recorded:', correction);
     // TODO: persist to Firestore for accuracy tracking
@@ -411,7 +438,7 @@ const ToolScanPage = () => {
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                Point your camera at any hand tool. Get an instant identification, condition grade, and market value — powered by AI that knows a Stanley Type 11 from a Type 19.
+                Photograph a hand tool and we'll do our best to identify it — maker, model, era, condition, and a rough market value. We're not always right, but we're pretty good.
               </p>
 
               {/* Upload area */}
@@ -458,7 +485,20 @@ const ToolScanPage = () => {
                   <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
                 </div>
               </div>
-              <p className="text-sm text-secondary font-body">No account needed · Free to try · Results in seconds</p>
+              <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
+
+              {/* Waitlist nudge */}
+              <div className="mt-10 max-w-md mx-auto text-center">
+                <p className="text-base text-secondary font-body mb-3">
+                  Nothing to scan right now? Join the waitlist and we'll let you know when the marketplace launches.
+                </p>
+                <a
+                  href="#scan-waitlist"
+                  className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
+                >
+                  Join the waitlist →
+                </a>
+              </div>
             </div>
 
             {/* Section 2: Example Result — spruce band with mock ToolScanCard */}
@@ -482,7 +522,7 @@ const ToolScanPage = () => {
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">2</div>
                   <h3 className="font-display font-semibold text-dark-teal mb-1">Scan</h3>
-                  <p className="text-sm text-secondary font-body">Our AI identifies the maker, model, era, and condition in seconds.</p>
+                  <p className="text-sm text-secondary font-body">Photograph your tool. We'll take a crack at identifying it.</p>
                 </div>
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
@@ -510,7 +550,7 @@ const ToolScanPage = () => {
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Ready to list?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    Skip the tedious part. We write the title, description, and pricing for you — so you can go from workbench to listing in under a minute.
+                    We'll draft a title, description, and price estimate from your photo. You review it, adjust what needs adjusting, and list.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -522,53 +562,37 @@ const ToolScanPage = () => {
               </div>
             </div>
 
-            {/* Section 5: Second Upload CTA */}
-            <div className="mb-12 text-center">
-              <h2 className="text-2xl font-display font-bold text-spruce mb-6">Ready to find out what you've got?</h2>
-              <div
-                className={`max-w-xl mx-auto border-2 border-dashed rounded-xl p-8 mb-3 transition-colors ${
-                  dragging ? 'border-honey bg-honey/10' : 'border-stone-300'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-honey/10 flex items-center justify-center mb-4">
-                    <Camera className="w-7 h-7 text-honey" />
-                  </div>
-                  <p className="text-dark-teal font-medium font-body mb-1 hidden sm:block">
-                    {dragging ? 'Drop your photo here' : 'Drag a photo here, or'}
-                  </p>
-                  <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer sm:hidden">
-                      <Camera className="w-5 h-5" />
-                      Take a Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                      />
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors cursor-pointer">
-                      <Plus className="w-5 h-5" />
-                      <span className="hidden sm:inline">Choose Photos</span>
-                      <span className="sm:hidden">Upload from Library</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileSelect}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                  <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
+            {/* Section 5: Bottom Waitlist */}
+            <div id="scan-waitlist" className="mb-12 text-center max-w-md mx-auto">
+              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Nothing to scan right now?</h2>
+              <p className="text-base text-secondary font-body mb-6">
+                Join the waitlist and we'll let you know when the marketplace launches.
+              </p>
+              <form onSubmit={handleWaitlistSubmit}>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="flex-1 px-4 py-3 border border-[#e4e2dc] rounded-lg focus:outline-none focus:ring-2 focus:ring-spruce focus:border-transparent font-body bg-bone-light"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    required
+                    disabled={waitlistSubmitting}
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors whitespace-nowrap font-body"
+                    disabled={waitlistSubmitting}
+                  >
+                    {waitlistSubmitting ? 'Joining...' : 'Join Waitlist'}
+                  </button>
                 </div>
-              </div>
-              <p className="text-sm text-secondary font-body">No account needed · Free to try · Results in seconds</p>
+                {waitlistStatus.message && (
+                  <p className={`mt-3 text-sm font-body ${waitlistStatus.type === 'success' ? 'text-success' : 'text-error'}`}>
+                    {waitlistStatus.message}
+                  </p>
+                )}
+              </form>
             </div>
           </div>
         )}
