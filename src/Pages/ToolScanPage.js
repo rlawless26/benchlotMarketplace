@@ -232,22 +232,23 @@ const ToolScanPage = () => {
       });
 
       setEmailCollected(true);
-
-      // Send scan results email (don't block on this)
-      const firstTool = tools[0];
-      if (firstTool) {
-        fetch(`${API_URL}/send-scan-results`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, scanResult: firstTool }),
-        }).catch(err => console.error('Scan results email error:', err));
-      }
     } catch (error) {
       console.error('Email capture error:', error);
       // Don't block the user — reveal results even if save fails
       setEmailCollected(true);
     } finally {
       setEmailSubmitting(false);
+
+      // Send scan results email (always fires, non-blocking)
+      const tools = scanResults?.tools || [];
+      const firstTool = tools[0];
+      if (firstTool && email) {
+        fetch(`${API_URL}/send-scan-results`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, scanResult: firstTool }),
+        }).catch(err => console.error('Scan results email error:', err));
+      }
     }
   };
 
