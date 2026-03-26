@@ -9,6 +9,8 @@ import {
   Camera,
   DollarSign,
   Pencil,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 
 const confidenceColors = {
@@ -39,10 +41,12 @@ const ToolScanCard = ({
   onListForSale,
   onNavigateToListing,
   onCorrection,
+  onFeedback,
   user,
   isSeller,
 }) => {
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
+  const [feedbackGiven, setFeedbackGiven] = useState(null); // 'up' | 'down' | null
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [publishedToolId] = useState(null);
@@ -61,6 +65,37 @@ const ToolScanCard = ({
 
   const handleReviewFieldChange = (field, value) => {
     setReviewFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getEdits = () => {
+    const edits = {};
+    if (reviewFields.tool_name !== (tool.tool_name || '')) edits.tool_name = { from: tool.tool_name, to: reviewFields.tool_name };
+    if (reviewFields.maker !== (tool.maker || '')) edits.maker = { from: tool.maker, to: reviewFields.maker };
+    if (reviewFields.model !== (tool.model || '')) edits.model = { from: tool.model, to: reviewFields.model };
+    if (reviewFields.condition !== (tool.condition || 'Good')) edits.condition = { from: tool.condition, to: reviewFields.condition };
+    if (String(reviewFields.suggested_price_low) !== String(tool.suggested_price_low || '')) edits.price_low = { from: tool.suggested_price_low, to: reviewFields.suggested_price_low };
+    if (String(reviewFields.suggested_price_high) !== String(tool.suggested_price_high || '')) edits.price_high = { from: tool.suggested_price_high, to: reviewFields.suggested_price_high };
+    return Object.keys(edits).length > 0 ? edits : null;
+  };
+
+  const handleFeedback = (vote) => {
+    setFeedbackGiven(vote);
+    if (onFeedback) {
+      onFeedback({
+        vote,
+        scanId,
+        originalResult: {
+          tool_name: tool.tool_name,
+          maker: tool.maker,
+          model: tool.model,
+          condition: tool.condition,
+          confidence: tool.confidence,
+          suggested_price_low: tool.suggested_price_low,
+          suggested_price_high: tool.suggested_price_high,
+        },
+        userEdits: getEdits(),
+      });
+    }
   };
 
   const handleEditAfterConfirm = () => {
@@ -348,7 +383,35 @@ const ToolScanCard = ({
           </div>
         )}
 
-        {/* Action buttons removed for pre-launch — page handles CTAs */}
+        {/* Feedback */}
+        <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
+          {feedbackGiven ? (
+            <div className="flex items-center gap-2 text-sm font-body text-secondary">
+              <Check className="w-4 h-4 text-spruce" />
+              <span>{feedbackGiven === 'up' ? 'Thanks — glad we got it right.' : 'Thanks — we\'ll work on it.'}</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-body text-secondary">Did we get this right?</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleFeedback('up')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-secondary border border-[#e4e2dc] hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-colors"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  Yes
+                </button>
+                <button
+                  onClick={() => handleFeedback('down')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-secondary border border-[#e4e2dc] hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  Not quite
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* AI Analysis — era reasoning, condition notes, collectibility */}

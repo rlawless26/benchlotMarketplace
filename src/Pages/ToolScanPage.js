@@ -385,7 +385,25 @@ const ToolScanPage = () => {
 
   const handleCorrection = (correction) => {
     console.log('ToolScan correction recorded:', correction);
-    // TODO: persist to Firestore for accuracy tracking
+  };
+
+  const handleFeedback = async (feedback) => {
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+
+      await addDoc(collection(db, 'scan_feedback'), {
+        vote: feedback.vote,
+        scanId: feedback.scanId || scanId || null,
+        email: captureEmail || null,
+        originalResult: feedback.originalResult,
+        userEdits: feedback.userEdits || null,
+        hasEdits: !!feedback.userEdits,
+        created_at: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Feedback save error:', error);
+    }
   };
 
   const handleReset = () => {
@@ -874,6 +892,7 @@ const ToolScanPage = () => {
                   onListForSale={() => handleListForSale(index, tool)}
                   onNavigateToListing={(toolId) => navigate(`/tools/edit/${toolId}`)}
                   onCorrection={handleCorrection}
+                  onFeedback={handleFeedback}
                   user={user}
                   isSeller={isSeller}
                 />
