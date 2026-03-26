@@ -980,7 +980,7 @@ exports.sendScanResultsEmail = async (to, scanResult) => {
 <tr><td align="center" style="padding:20px 0;">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
 <tr><td align="center" style="padding:20px 20px 30px 20px;">
-<span style="font-family:Georgia,serif;font-weight:700;font-size:24px;color:#1a3030;letter-spacing:-0.5px;">Rekerf</span>
+<img src="https://rekerf.com/images/rekerf-wordmark-spruce.png" alt="Rekerf" width="120" style="display:block;margin:0 auto;" />
 </td></tr>
 <tr><td>
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f6f2;border-radius:8px;border:1px solid #e4e2dc;">
