@@ -268,7 +268,7 @@ const ToolScanCard = ({
         {feedbackState === 'saved_correct' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
             <Check className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-body text-green-800">Thanks — glad we got it right.</span>
+            <span className="text-sm font-body text-green-800">Confirmed. We've sent a copy of these results to your inbox.</span>
           </div>
         )}
 
@@ -283,7 +283,7 @@ const ToolScanCard = ({
         {feedbackState === 'saved_corrected' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
             <Check className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-body text-green-800">Corrections saved — thanks for helping us improve.</span>
+            <span className="text-sm font-body text-green-800">Corrections saved and sent to your inbox. Thanks for helping us get better at this.</span>
           </div>
         )}
 

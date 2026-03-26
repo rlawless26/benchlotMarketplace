@@ -720,7 +720,7 @@ const ToolScanPage = () => {
                 Your tool has been identified
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email and we'll send you the full results — pricing, condition report, and a listing-ready description.
+                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Rekerf launches.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
