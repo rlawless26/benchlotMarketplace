@@ -1,19 +1,14 @@
 // src/components/ToolScanCard.js
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+// Link import removed — not needed for pre-launch card
 import {
   ChevronDown,
   ChevronUp,
-  Trash2,
-  ExternalLink,
   Check,
   AlertTriangle,
-  Loader2,
   Camera,
   DollarSign,
   Pencil,
-  Archive,
-  ShoppingCart,
 } from 'lucide-react';
 
 const confidenceColors = {
@@ -50,10 +45,7 @@ const ToolScanCard = ({
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [publishedToolId, setPublishedToolId] = useState(null);
-  const [publishError, setPublishError] = useState(null);
-  const [chestSaved, setChestSaved] = useState(false);
-  const [chestSaving, setChestSaving] = useState(false);
+  const [publishedToolId] = useState(null);
 
   // Confirm/correct state
   const [confirmed, setConfirmed] = useState(false);
@@ -69,58 +61,6 @@ const ToolScanCard = ({
 
   const handleReviewFieldChange = (field, value) => {
     setReviewFields(prev => ({ ...prev, [field]: value }));
-  };
-
-  const hasChanges = () => {
-    return (
-      reviewFields.tool_name !== (tool.tool_name || '') ||
-      reviewFields.maker !== (tool.maker || '') ||
-      reviewFields.model !== (tool.model || '') ||
-      reviewFields.condition !== (tool.condition || 'Good') ||
-      String(reviewFields.suggested_price_low) !== String(tool.suggested_price_low || '') ||
-      String(reviewFields.suggested_price_high) !== String(tool.suggested_price_high || '') ||
-      reviewFields.suggested_description !== (tool.suggested_description || '')
-    );
-  };
-
-  const handleConfirm = (userMadeChanges) => {
-    const updatedTool = {
-      ...tool,
-      tool_name: reviewFields.tool_name,
-      maker: reviewFields.maker,
-      model: reviewFields.model,
-      condition: reviewFields.condition,
-      suggested_price_low: Number(reviewFields.suggested_price_low) || reviewFields.suggested_price_low,
-      suggested_price_high: Number(reviewFields.suggested_price_high) || reviewFields.suggested_price_high,
-      suggested_description: reviewFields.suggested_description,
-    };
-    onUpdate(updatedTool);
-
-    if (userMadeChanges && onCorrection) {
-      onCorrection({
-        original: {
-          tool_name: tool.tool_name,
-          maker: tool.maker,
-          model: tool.model,
-          condition: tool.condition,
-          suggested_price_low: tool.suggested_price_low,
-          suggested_price_high: tool.suggested_price_high,
-          suggested_description: tool.suggested_description,
-        },
-        corrected: {
-          tool_name: reviewFields.tool_name,
-          maker: reviewFields.maker,
-          model: reviewFields.model,
-          condition: reviewFields.condition,
-          suggested_price_low: Number(reviewFields.suggested_price_low) || reviewFields.suggested_price_low,
-          suggested_price_high: Number(reviewFields.suggested_price_high) || reviewFields.suggested_price_high,
-          suggested_description: reviewFields.suggested_description,
-        },
-        scanId: scanId,
-      });
-    }
-
-    setConfirmed(true);
   };
 
   const handleEditAfterConfirm = () => {
@@ -153,56 +93,6 @@ const ToolScanCard = ({
     }
     if (e.key === 'Escape') {
       cancelEdit();
-    }
-  };
-
-  const handlePublish = async () => {
-    setPublishError(null);
-    try {
-      const toolId = await onPublish();
-      setPublishedToolId(toolId);
-    } catch (err) {
-      // Don't show auth errors in the card — the page handles those with a modal
-      if (err.message && err.message.includes('Sign in')) return;
-      setPublishError(err.message || 'Failed to save listing');
-    }
-  };
-
-  const autoConfirm = () => {
-    if (!confirmed) {
-      handleConfirm(hasChanges());
-    }
-  };
-
-  const handleSaveToChestClick = async () => {
-    if (!onSaveToChest) return;
-    autoConfirm();
-    setPublishError(null);
-    setChestSaving(true);
-    try {
-      await onSaveToChest();
-      setChestSaved(true);
-    } catch (err) {
-      if (err.message && err.message.includes('Sign in')) return;
-      setPublishError(err.message || 'Failed to save to Tool Chest');
-    } finally {
-      setChestSaving(false);
-    }
-  };
-
-  const handleListForSaleClick = async () => {
-    autoConfirm();
-    if (onListForSale) {
-      setPublishError(null);
-      try {
-        const toolId = await onListForSale();
-        setPublishedToolId(toolId);
-      } catch (err) {
-        if (err.message && err.message.includes('Sign in')) return;
-        setPublishError(err.message || 'Failed to save listing');
-      }
-    } else {
-      handlePublish();
     }
   };
 
@@ -458,108 +348,7 @@ const ToolScanCard = ({
           </div>
         )}
 
-        {/* Action buttons — always visible */}
-        <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
-            {chestSaved ? (
-              <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-2 text-spruce">
-                  <Check className="w-5 h-5" />
-                  <span className="text-base font-medium font-body">Saved to Tool Chest</span>
-                </div>
-                <Link
-                  to="/tool-chest"
-                  className="flex items-center gap-1.5 text-base font-body text-spruce hover:text-honey transition-colors ml-auto"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  View Tool Chest
-                </Link>
-              </div>
-            ) : isPublished ? (
-              <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-2 text-spruce">
-                  <Check className="w-5 h-5" />
-                  <span className="text-base font-medium font-body">Saved as draft listing</span>
-                </div>
-                {publishedToolId && (
-                  <button
-                    onClick={() => onNavigateToListing(publishedToolId)}
-                    className="flex items-center gap-1.5 text-base font-body text-spruce hover:text-honey transition-colors ml-auto"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Edit listing
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <p className="text-sm font-body text-secondary mb-3">Keep it or sell it -- your call.</p>
-                <div className="flex items-center gap-3">
-                  {/* Primary CTA: Save to Tool Chest */}
-                  <button
-                    onClick={handleSaveToChestClick}
-                    disabled={chestSaving}
-                    className="flex-1 py-3 px-4 bg-honey text-dark-teal rounded-lg text-base font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {chestSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Archive className="w-4 h-4" />
-                        Save to Tool Chest
-                      </>
-                    )}
-                  </button>
-
-                  {/* Secondary CTA: List for Sale */}
-                  {isSeller ? (
-                    <button
-                      onClick={handleListForSaleClick}
-                      disabled={publishState === 'publishing'}
-                      className="flex-1 py-3 px-4 bg-spruce text-bone rounded-lg text-base font-medium font-body hover:bg-spruce-light disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      {publishState === 'publishing' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4" />
-                          List for Sale
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <Link
-                      to="/sell"
-                      className="flex-1 py-3 px-4 bg-spruce text-bone rounded-lg text-base font-medium font-body hover:bg-spruce-light transition-colors flex items-center justify-center gap-2 text-center"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Become a Seller
-                    </Link>
-                  )}
-
-                  <button
-                    onClick={onDismiss}
-                    className="p-2.5 border border-[#e4e2dc] rounded-lg hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors flex-shrink-0"
-                    title="Dismiss this tool"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-        {publishError && (
-          <div className="flex items-start gap-2 p-3 mt-3 bg-red-50 border border-red-200 rounded-lg">
-            <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-body text-red-700">{publishError}</p>
-          </div>
-        )}
+        {/* Action buttons removed for pre-launch — page handles CTAs */}
       </div>
 
       {/* AI Analysis — era reasoning, condition notes, collectibility */}
