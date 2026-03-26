@@ -10,6 +10,7 @@
  * - Offer notifications
  */
 const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 const functions = require('firebase-functions');
 
 // API key is set within each function call to ensure it's available
@@ -963,15 +964,15 @@ function formatAddress(address) {
  * @returns {Promise<Object>}
  */
 exports.sendScanResultsEmail = async (to, scanResult) => {
-  const apiKey = getConfig('sendgrid.api_key', 'SENDGRID_API_KEY', null);
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error('SendGrid API key not found');
-    return { success: false, error: { message: 'API key not configured' } };
+    console.error('Resend API key not found');
+    return { success: false, error: { message: 'Resend API key not configured' } };
   }
 
-  sgMail.setApiKey(apiKey);
-
+  const resend = new Resend(apiKey);
   const tool = scanResult || {};
+
   const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family:Arial,sans-serif;color:#0c1c1e;background-color:#f2f0eb;margin:0;padding:0;line-height:1.6;">
@@ -1016,14 +1017,20 @@ ${tool.suggested_description ? `<div style="margin-bottom:24px;"><span style="fo
 </body></html>`;
 
   try {
-    const response = await sgMail.send({
-      to,
-      from: 'notifications@rekerf.com',
+    const { data, error } = await resend.emails.send({
+      from: 'Rekerf <notifications@rekerf.com>',
+      to: [to],
       subject: `Your scan results: ${tool.suggested_title || tool.tool_name || 'Hand Tool'}`,
       html,
     });
-    console.log(`✅ Scan results email sent to ${to}`);
-    return { success: true, statusCode: response[0].statusCode };
+
+    if (error) {
+      console.error('Resend error:', error);
+      return { success: false, error: { message: error.message || 'Resend send failed' } };
+    }
+
+    console.log(`✅ Scan results email sent to ${to} via Resend (id: ${data?.id})`);
+    return { success: true, id: data?.id };
   } catch (error) {
     console.error('Error sending scan results email:', error.message);
     return { success: false, error: { message: error.message } };
