@@ -488,7 +488,7 @@ const ToolScanPage = () => {
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
 
               {/* Waitlist nudge */}
-              <div className="mt-10 max-w-md mx-auto text-center">
+              <div className="mt-16 max-w-md mx-auto text-center">
                 <p className="text-base text-secondary font-body mb-3">
                   Nothing to scan right now? Join the waitlist and we'll let you know when the marketplace launches.
                 </p>
