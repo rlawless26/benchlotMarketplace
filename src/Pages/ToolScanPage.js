@@ -7,8 +7,7 @@ import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
-import { createTool, uploadToolImage, addToToolChest, uploadToolChestImage } from '../firebase/models/toolModel';
-import { useSeller } from '../firebase/hooks/useSeller';
+// Tool model imports preserved for future marketplace features
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
   'https://api-sed2e4p6ua-uc.a.run.app',
@@ -21,7 +20,7 @@ const MAX_IMAGES = 5;
 
 const ToolScanPage = () => {
   const { user } = useAuth();
-  const { isSeller } = useSeller();
+  // const { isSeller } = useSeller(); // Preserved for marketplace launch
   const navigate = useNavigate();
 
   // Upload state
@@ -37,8 +36,7 @@ const ToolScanPage = () => {
   const [scanResults, setScanResults] = useState(null);
   const [scanId, setScanId] = useState(null);
 
-  // Publishing state
-  const [publishingTools, setPublishingTools] = useState({});
+  // Auth state
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   // Email capture state
@@ -188,120 +186,6 @@ const ToolScanPage = () => {
     }));
   };
 
-  const handleDismissTool = (index) => {
-    setScanResults(prev => ({
-      ...prev,
-      tools: prev.tools.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handlePublishTool = async (index, tool) => {
-    // Gate on auth — prompt sign in if not logged in
-    if (!user) {
-      setShowAuthPrompt(true);
-      throw new Error('Sign in required to save listings');
-    }
-
-    setPublishingTools(prev => ({ ...prev, [index]: 'publishing' }));
-
-    try {
-      const toolData = {
-        name: tool.suggested_title,
-        description: tool.suggested_description,
-        category: tool.suggested_category,
-        subcategory: tool.suggested_subcategory,
-        brand: tool.maker !== 'Unknown' ? tool.maker : '',
-        model: tool.model || '',
-        condition: mapCondition(tool.condition),
-        current_price: tool.suggested_price_low,
-        price_high: tool.suggested_price_high,
-        era: tool.era || '',
-        confidence: tool.confidence,
-        collectibility: tool.collectibility,
-        source: 'toolscan',
-        scanId: scanId,
-      };
-
-      const newTool = await createTool(toolData, user.uid);
-
-      if (selectedFiles.length > 0) {
-        try {
-          await uploadToolImage(selectedFiles[0], newTool.id);
-        } catch (imgError) {
-          console.error('Error uploading scan image to listing:', imgError);
-        }
-      }
-
-      setPublishingTools(prev => ({ ...prev, [index]: 'done' }));
-
-      return newTool.id;
-    } catch (error) {
-      console.error('Error publishing tool:', error);
-      setPublishingTools(prev => ({ ...prev, [index]: 'error' }));
-      throw error;
-    }
-  };
-
-  const handleSaveToChest = async (index, tool) => {
-    // Gate on auth
-    if (!user) {
-      setShowAuthPrompt(true);
-      throw new Error('Sign in required to save to Tool Chest');
-    }
-
-    try {
-      const toolData = {
-        name: tool.suggested_title,
-        description: tool.suggested_description,
-        category: tool.suggested_category,
-        subcategory: tool.suggested_subcategory,
-        brand: tool.maker !== 'Unknown' ? tool.maker : '',
-        model: tool.model || '',
-        condition: mapCondition(tool.condition),
-        current_price: tool.suggested_price_low,
-        price_high: tool.suggested_price_high,
-        era: tool.era || '',
-        confidence: tool.confidence,
-        collectibility: tool.collectibility,
-        source: 'toolscan',
-        scanId: scanId,
-        toolscanData: { ...tool },
-      };
-
-      const newTool = await addToToolChest(toolData, user.uid);
-
-      // Upload the scan image without triggering status change
-      if (selectedFiles.length > 0) {
-        try {
-          await uploadToolChestImage(selectedFiles[0], newTool.id);
-        } catch (imgError) {
-          console.error('Error uploading scan image to chest tool:', imgError);
-        }
-      }
-
-      return newTool.id;
-    } catch (error) {
-      console.error('Error saving to Tool Chest:', error);
-      throw error;
-    }
-  };
-
-  const handleListForSale = async (index, tool) => {
-    // Gate on auth
-    if (!user) {
-      setShowAuthPrompt(true);
-      throw new Error('Sign in required to save listings');
-    }
-
-    // Gate on seller status
-    if (!isSeller) {
-      throw new Error('Become a seller to list tools for sale');
-    }
-
-    // Reuse existing publish flow
-    return handlePublishTool(index, tool);
-  };
-
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     const email = captureEmail.trim().toLowerCase();
@@ -383,20 +267,17 @@ const ToolScanPage = () => {
     }
   };
 
-  const handleCorrection = (correction) => {
-    console.log('ToolScan correction recorded:', correction);
-  };
-
   const handleFeedback = async (feedback) => {
     try {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('../firebase/config');
 
       await addDoc(collection(db, 'scan_feedback'), {
-        vote: feedback.vote,
+        vote: feedback.vote,              // 'correct' | 'corrected'
         scanId: feedback.scanId || scanId || null,
         email: captureEmail || null,
         originalResult: feedback.originalResult,
+        correctedResult: feedback.correctedResult || null,
         userEdits: feedback.userEdits || null,
         hasEdits: !!feedback.userEdits,
         created_at: serverTimestamp(),
@@ -414,22 +295,14 @@ const ToolScanPage = () => {
     setScanResults(null);
     setScanId(null);
     setScanError(null);
-    setPublishingTools({});
     setShowAuthPrompt(false);
     setEmailCollected(false);
     setCaptureEmail('');
     setEmailError(null);
   };
 
-  const mapCondition = (scanCondition) => {
-    const mapping = {
-      'Excellent': 'Like New',
-      'Good': 'Good',
-      'Fair': 'Fair',
-      'Project': 'Poor',
-    };
-    return mapping[scanCondition] || 'Good';
-  };
+  // mapCondition preserved for marketplace launch
+  // const mapCondition = (c) => ({ 'Excellent': 'Like New', 'Good': 'Good', 'Fair': 'Fair', 'Project': 'Poor' }[c] || 'Good');
 
   return (
     <div className="min-h-screen bg-bone">
@@ -884,38 +757,23 @@ const ToolScanPage = () => {
                   index={index}
                   scanId={scanId}
                   previewImage={previews[0]}
-                  publishState={publishingTools[index]}
                   onUpdate={(updated) => handleUpdateTool(index, updated)}
-                  onDismiss={() => handleDismissTool(index)}
-                  onPublish={() => handlePublishTool(index, tool)}
-                  onSaveToChest={() => handleSaveToChest(index, tool)}
-                  onListForSale={() => handleListForSale(index, tool)}
-                  onNavigateToListing={(toolId) => navigate(`/tools/edit/${toolId}`)}
-                  onCorrection={handleCorrection}
                   onFeedback={handleFeedback}
-                  user={user}
-                  isSeller={isSeller}
                 />
               ))}
             </div>
 
-            {/* Saved confirmation + next actions */}
-            <div className="mt-8 bg-bone-light rounded-xl border border-[#e4e2dc] p-6 text-center">
-              <div className="flex items-center justify-center gap-2 text-spruce mb-2">
-                <Sparkles className="w-5 h-5 text-honey" />
-                <span className="text-base font-semibold font-body">Your results have been saved</span>
-              </div>
-              <p className="text-sm text-secondary font-body mb-6">
+            {/* Next actions */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
+              >
+                Scan another tool →
+              </button>
+              <p className="text-sm text-secondary font-body mt-3">
                 We'll email you when Rekerf launches and you can list your tools for sale.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
-                >
-                  Scan another tool →
-                </button>
-              </div>
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">

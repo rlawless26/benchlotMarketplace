@@ -1,6 +1,5 @@
 // src/components/ToolScanCard.js
 import React, { useState } from 'react';
-// Link import removed — not needed for pre-launch card
 import {
   ChevronDown,
   ChevronUp,
@@ -9,8 +8,6 @@ import {
   Camera,
   DollarSign,
   Pencil,
-  ThumbsUp,
-  ThumbsDown,
 } from 'lucide-react';
 
 const confidenceColors = {
@@ -33,26 +30,16 @@ const ToolScanCard = ({
   index,
   scanId,
   previewImage,
-  publishState,
   onUpdate,
-  onDismiss,
-  onPublish,
-  onSaveToChest,
-  onListForSale,
-  onNavigateToListing,
-  onCorrection,
   onFeedback,
-  user,
-  isSeller,
 }) => {
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
-  const [feedbackGiven, setFeedbackGiven] = useState(null); // 'up' | 'down' | null
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [publishedToolId] = useState(null);
 
-  // Confirm/correct state
-  const [confirmed, setConfirmed] = useState(false);
+  // Feedback state: null → 'correcting' → 'saved_correct' | 'saved_corrected'
+  const [feedbackState, setFeedbackState] = useState(null);
+
   const [reviewFields, setReviewFields] = useState({
     tool_name: tool.tool_name || '',
     maker: tool.maker || '',
@@ -78,11 +65,11 @@ const ToolScanCard = ({
     return Object.keys(edits).length > 0 ? edits : null;
   };
 
-  const handleFeedback = (vote) => {
-    setFeedbackGiven(vote);
+  const handleLooksRight = () => {
+    setFeedbackState('saved_correct');
     if (onFeedback) {
       onFeedback({
-        vote,
+        vote: 'correct',
         scanId,
         originalResult: {
           tool_name: tool.tool_name,
@@ -93,14 +80,45 @@ const ToolScanCard = ({
           suggested_price_low: tool.suggested_price_low,
           suggested_price_high: tool.suggested_price_high,
         },
+        correctedResult: null,
+        userEdits: null,
+      });
+    }
+  };
+
+  const handleStartCorrecting = () => {
+    setFeedbackState('correcting');
+  };
+
+  const handleSaveCorrections = () => {
+    setFeedbackState('saved_corrected');
+    if (onFeedback) {
+      onFeedback({
+        vote: 'corrected',
+        scanId,
+        originalResult: {
+          tool_name: tool.tool_name,
+          maker: tool.maker,
+          model: tool.model,
+          condition: tool.condition,
+          confidence: tool.confidence,
+          suggested_price_low: tool.suggested_price_low,
+          suggested_price_high: tool.suggested_price_high,
+        },
+        correctedResult: {
+          tool_name: reviewFields.tool_name,
+          maker: reviewFields.maker,
+          model: reviewFields.model,
+          condition: reviewFields.condition,
+          suggested_price_low: reviewFields.suggested_price_low,
+          suggested_price_high: reviewFields.suggested_price_high,
+        },
         userEdits: getEdits(),
       });
     }
   };
 
-  const handleEditAfterConfirm = () => {
-    setConfirmed(false);
-  };
+  const isConfirmed = feedbackState === 'saved_correct' || feedbackState === 'saved_corrected';
 
   // Title inline edit helpers
   const startEdit = (field, value) => {
@@ -131,12 +149,8 @@ const ToolScanCard = ({
     }
   };
 
-  const isPublished = publishState === 'done' || publishedToolId;
-
   return (
-    <div className={`bg-bone-light rounded-xl shadow-sm border transition-colors ${
-      isPublished ? 'border-green-300 bg-green-50/30' : 'border-[#e4e2dc]'
-    }`}>
+    <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc]">
       {/* Card Header — photo + title + info */}
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -195,12 +209,6 @@ const ToolScanCard = ({
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${conditionColors[tool.condition] || 'bg-gray-100 text-gray-800'}`}>
                 {tool.condition}
               </span>
-              {confirmed && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <Check className="w-3 h-3" />
-                  Confirmed
-                </span>
-              )}
               {tool.collectibility && tool.collectibility !== 'None' && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                   {tool.collectibility} collectibility
@@ -210,8 +218,8 @@ const ToolScanCard = ({
           </div>
         </div>
 
-        {/* "Want a better ID?" hint — above the fold */}
-        {tool.next_photo_hint && !confirmed && (
+        {/* "Want a better ID?" hint */}
+        {tool.next_photo_hint && !isConfirmed && (
           <div className="flex items-start gap-3 p-3 mt-4 bg-blue-50 border border-blue-100 rounded-lg">
             <Camera className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -221,34 +229,83 @@ const ToolScanCard = ({
           </div>
         )}
 
-        {/* Low confidence warning — above the fold */}
-        {tool.confidence === 'Low' && !confirmed && (
+        {/* Low confidence warning */}
+        {tool.confidence === 'Low' && !isConfirmed && (
           <div className="flex items-start gap-3 p-3 mt-4 bg-amber-50 border border-amber-100 rounded-lg">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold font-body text-amber-800">Low confidence identification</p>
               <p className="text-sm font-body text-amber-700">
-                {tool.confidence_reasoning || 'The AI is not confident about this identification. Review carefully before publishing.'}
+                {tool.confidence_reasoning || 'We\'re not very confident about this one. Review carefully.'}
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Review Identification Section */}
-      <div className="px-5 pb-5 border-t border-[#e4e2dc] pt-4">
-        <div className="mb-4">
-          <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide">
+      {/* How'd we do? — prominent, above review fields */}
+      <div className="px-5 pb-4 border-t border-[#e4e2dc] pt-4">
+        {feedbackState === null && (
+          <div className="bg-bone rounded-lg p-4 mb-4">
+            <p className="text-base font-body font-semibold text-dark-teal mb-3">How'd we do?</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLooksRight}
+                className="px-5 py-2.5 bg-honey text-dark-teal rounded-lg text-sm font-medium font-body hover:bg-honey-light transition-colors"
+              >
+                Looks right
+              </button>
+              <button
+                onClick={handleStartCorrecting}
+                className="px-5 py-2.5 bg-spruce text-bone rounded-lg text-sm font-medium font-body hover:bg-spruce-light transition-colors"
+              >
+                I'll make some corrections
+              </button>
+            </div>
+          </div>
+        )}
+
+        {feedbackState === 'saved_correct' && (
+          <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+            <Check className="w-5 h-5 text-green-600" />
+            <span className="text-sm font-body text-green-800">Thanks — glad we got it right.</span>
+          </div>
+        )}
+
+        {feedbackState === 'correcting' && (
+          <div className="bg-bone rounded-lg p-4 mb-4">
+            <p className="text-sm font-body text-dark-teal">
+              Edit the fields below to correct our identification. Hit <strong>Save corrections</strong> when you're done.
+            </p>
+          </div>
+        )}
+
+        {feedbackState === 'saved_corrected' && (
+          <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+            <Check className="w-5 h-5 text-green-600" />
+            <span className="text-sm font-body text-green-800">Corrections saved — thanks for helping us improve.</span>
+          </div>
+        )}
+
+        {/* Review Identification Section */}
+        <div>
+          <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide mb-1">
             Review Identification
           </h4>
-          {!confirmed && (
-            <p className="text-sm font-body text-secondary mt-1">
-              Verify the details below. Edit any field that doesn't look right, then confirm.
+          {!isConfirmed && feedbackState !== 'correcting' && (
+            <p className="text-sm font-body text-secondary mt-1 mb-4">
+              Verify the details below.
+            </p>
+          )}
+          {feedbackState === 'correcting' && (
+            <p className="text-sm font-body text-secondary mt-1 mb-4">
+              Make your corrections below.
             </p>
           )}
         </div>
 
-        {confirmed ? (
+        {isConfirmed ? (
+          /* Read-only confirmed view */
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
@@ -281,7 +338,7 @@ const ToolScanCard = ({
 
             <div className="flex items-center gap-3 mt-4">
               <button
-                onClick={handleEditAfterConfirm}
+                onClick={() => setFeedbackState('correcting')}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium font-body border border-[#e4e2dc] rounded-lg text-secondary hover:bg-bone hover:text-dark-teal transition-colors"
               >
                 <Pencil className="w-3.5 h-3.5" />
@@ -290,12 +347,11 @@ const ToolScanCard = ({
             </div>
           </div>
         ) : (
+          /* Editable review fields */
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Tool Type
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Tool Type</label>
                 <input
                   type="text"
                   value={reviewFields.tool_name}
@@ -304,9 +360,7 @@ const ToolScanCard = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Maker
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Maker</label>
                 <input
                   type="text"
                   value={reviewFields.maker}
@@ -315,9 +369,7 @@ const ToolScanCard = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Model
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Model</label>
                 <input
                   type="text"
                   value={reviewFields.model}
@@ -326,9 +378,7 @@ const ToolScanCard = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Condition
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Condition</label>
                 <select
                   value={reviewFields.condition}
                   onChange={(e) => handleReviewFieldChange('condition', e.target.value)}
@@ -340,9 +390,7 @@ const ToolScanCard = ({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Price Low
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Price Low</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-secondary">$</span>
                   <input
@@ -354,9 +402,7 @@ const ToolScanCard = ({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Price High
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Price High</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-secondary">$</span>
                   <input
@@ -368,9 +414,7 @@ const ToolScanCard = ({
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Description</label>
                 <textarea
                   value={reviewFields.suggested_description}
                   onChange={(e) => handleReviewFieldChange('suggested_description', e.target.value)}
@@ -380,38 +424,19 @@ const ToolScanCard = ({
               </div>
             </div>
 
-          </div>
-        )}
-
-        {/* Feedback */}
-        <div className="pt-4 mt-4 border-t border-[#e4e2dc]">
-          {feedbackGiven ? (
-            <div className="flex items-center gap-2 text-sm font-body text-secondary">
-              <Check className="w-4 h-4 text-spruce" />
-              <span>{feedbackGiven === 'up' ? 'Thanks — glad we got it right.' : 'Thanks — we\'ll work on it.'}</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-body text-secondary">Did we get this right?</span>
-              <div className="flex items-center gap-2">
+            {/* Save corrections button — only in correcting mode */}
+            {feedbackState === 'correcting' && (
+              <div className="mt-4">
                 <button
-                  onClick={() => handleFeedback('up')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-secondary border border-[#e4e2dc] hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-colors"
+                  onClick={handleSaveCorrections}
+                  className="px-6 py-3 bg-honey text-dark-teal rounded-lg text-base font-medium font-body hover:bg-honey-light transition-colors"
                 >
-                  <ThumbsUp className="w-4 h-4" />
-                  Yes
-                </button>
-                <button
-                  onClick={() => handleFeedback('down')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-secondary border border-[#e4e2dc] hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                  Not quite
+                  Save corrections
                 </button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* AI Analysis — era reasoning, condition notes, collectibility */}
