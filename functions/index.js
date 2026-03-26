@@ -3372,6 +3372,37 @@ exports.api = functions.https.onRequest(app);
 // Maintain backward compatibility with previous stripeApi endpoint
 exports.stripeApi = exports.api;
 
+/**
+ * POST /send-scan-results
+ * Sends scan results to a user's email. Public endpoint, rate-limited.
+ * Body: { email, scanResult: { tool_name, maker, model, era, condition, confidence,
+ *         suggested_price_low, suggested_price_high, suggested_title, suggested_description } }
+ */
+app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
+  try {
+    const { email, scanResult } = req.body;
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email is required.' });
+    }
+    if (!scanResult) {
+      return res.status(400).json({ error: 'Scan result data is required.' });
+    }
+
+    const result = await emailService.sendScanResultsEmail(email, scanResult);
+
+    if (result.success) {
+      res.json({ success: true });
+    } else {
+      console.error('Failed to send scan results email:', result.error);
+      res.status(500).json({ error: 'Failed to send email. Results are still saved.' });
+    }
+  } catch (error) {
+    console.error('Send scan results error:', error.message);
+    res.status(500).json({ error: 'Failed to send email.' });
+  }
+});
+
 // Note: Email test functions have been removed after successful testing
 
 /**

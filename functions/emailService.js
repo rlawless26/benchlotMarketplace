@@ -956,6 +956,80 @@ function formatAddress(address) {
   return parts.join('<br>');
 }
 
+/**
+ * Send scan results email with inline HTML (no SendGrid template needed)
+ * @param {string} to - Recipient email
+ * @param {Object} scanResult - The scan result data
+ * @returns {Promise<Object>}
+ */
+exports.sendScanResultsEmail = async (to, scanResult) => {
+  const apiKey = getConfig('sendgrid.api_key', 'SENDGRID_API_KEY', null);
+  if (!apiKey) {
+    console.error('SendGrid API key not found');
+    return { success: false, error: { message: 'API key not configured' } };
+  }
+
+  sgMail.setApiKey(apiKey);
+
+  const tool = scanResult || {};
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family:Arial,sans-serif;color:#0c1c1e;background-color:#f2f0eb;margin:0;padding:0;line-height:1.6;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2f0eb;">
+<tr><td align="center" style="padding:20px 0;">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+<tr><td align="center" style="padding:20px 20px 30px 20px;">
+<span style="font-family:Georgia,serif;font-weight:700;font-size:24px;color:#1a3030;letter-spacing:-0.5px;">Rekerf</span>
+</td></tr>
+<tr><td>
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f6f2;border-radius:8px;border:1px solid #e4e2dc;">
+<tr><td style="padding:30px;">
+<h1 style="font-family:Georgia,serif;color:#1a3030;font-size:24px;margin:0 0 8px 0;">Your scan results</h1>
+<p style="color:#4a5a54;margin:0 0 24px 0;font-size:15px;">Here's what we found.</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2f0eb;border-radius:6px;border:1px solid #e4e2dc;margin-bottom:24px;">
+<tr><td style="padding:20px;">
+<h2 style="font-family:Georgia,serif;color:#1a3030;font-size:20px;margin:0 0 12px 0;">${tool.suggested_title || tool.tool_name || 'Hand Tool'}</h2>
+<table width="100%" cellpadding="0" cellspacing="0">
+${tool.maker ? `<tr><td style="padding:4px 0;font-size:14px;"><strong style="color:#1a3030;">Maker:</strong> <span style="color:#4a5a54;">${tool.maker}</span></td></tr>` : ''}
+${tool.model ? `<tr><td style="padding:4px 0;font-size:14px;"><strong style="color:#1a3030;">Model:</strong> <span style="color:#4a5a54;">${tool.model}</span></td></tr>` : ''}
+${tool.era ? `<tr><td style="padding:4px 0;font-size:14px;"><strong style="color:#1a3030;">Era:</strong> <span style="color:#4a5a54;">${tool.era}</span></td></tr>` : ''}
+${tool.condition ? `<tr><td style="padding:4px 0;font-size:14px;"><strong style="color:#1a3030;">Condition:</strong> <span style="color:#4a5a54;">${tool.condition}</span></td></tr>` : ''}
+${tool.confidence ? `<tr><td style="padding:4px 0;font-size:14px;"><strong style="color:#1a3030;">Confidence:</strong> <span style="color:#4a5a54;">${tool.confidence}</span></td></tr>` : ''}
+</table>
+<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e4e2dc;">
+<span style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4a5a54;">Estimated Value</span>
+<p style="font-family:Georgia,serif;font-size:22px;color:#d4aa60;font-weight:700;margin:4px 0 0 0;">$${tool.suggested_price_low || '?'} – $${tool.suggested_price_high || '?'}</p>
+</div>
+</td></tr></table>
+${tool.suggested_description ? `<div style="margin-bottom:24px;"><span style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4a5a54;">Description</span><p style="color:#4a5a54;font-size:14px;margin:8px 0 0 0;line-height:1.6;">${tool.suggested_description}</p></div>` : ''}
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 0 0;">
+<a href="https://rekerf.com/scan" style="display:inline-block;background-color:#d4aa60;color:#0c1c1e;font-family:Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:6px;">Scan another tool</a>
+</td></tr></table>
+</td></tr></table>
+</td></tr>
+<tr><td align="center" style="padding:24px 20px;">
+<p style="font-family:Georgia,serif;font-style:italic;color:#4a5a54;font-size:13px;margin:0 0 8px 0;">The woodworker's marketplace.</p>
+<p style="color:#8a8a80;font-size:12px;margin:0 0 4px 0;">We'll let you know when Rekerf launches and you can list your tools for sale.</p>
+<p style="color:#8a8a80;font-size:11px;margin:12px 0 0 0;">&copy; 2026 Rekerf. Built in New England.</p>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
+
+  try {
+    const response = await sgMail.send({
+      to,
+      from: 'notifications@rekerf.com',
+      subject: `Your scan results: ${tool.suggested_title || tool.tool_name || 'Hand Tool'}`,
+      html,
+    });
+    console.log(`✅ Scan results email sent to ${to}`);
+    return { success: true, statusCode: response[0].statusCode };
+  } catch (error) {
+    console.error('Error sending scan results email:', error.message);
+    return { success: false, error: { message: error.message } };
+  }
+};
+
 module.exports = {
   ...exports,
   sendEmail

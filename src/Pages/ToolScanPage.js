@@ -232,6 +232,16 @@ const ToolScanPage = () => {
       });
 
       setEmailCollected(true);
+
+      // Send scan results email (don't block on this)
+      const firstTool = tools[0];
+      if (firstTool) {
+        fetch(`${API_URL}/send-scan-results`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, scanResult: firstTool }),
+        }).catch(err => console.error('Scan results email error:', err));
+      }
     } catch (error) {
       console.error('Email capture error:', error);
       // Don't block the user — reveal results even if save fails
@@ -707,10 +717,10 @@ const ToolScanPage = () => {
             <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6 text-center">
               <Sparkles className="w-8 h-8 text-honey mx-auto mb-3" />
               <h3 className="text-xl font-display font-semibold text-spruce mb-2">
-                Your tool has been identified!
+                Your tool has been identified
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see the full pricing, condition report, and listing-ready description. We'll save your results so they're ready when Rekerf launches.
+                Enter your email and we'll send you the full results — pricing, condition report, and a listing-ready description.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
