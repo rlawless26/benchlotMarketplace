@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const AboutPage = () => {
   useEffect(() => {
-    document.title = 'About | Rekerf';
+    document.title = 'About | Benchlot';
   }, []);
 
   return (
@@ -14,10 +14,10 @@ const AboutPage = () => {
         {/* Hero Section */}
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-display font-medium text-spruce mb-4">
-            About Rekerf
+            About Benchlot
           </h1>
           <p className="text-xl text-secondary max-w-3xl mx-auto">
-            The marketplace for premium used hand tools
+            A marketplace for used hand tools
           </p>
         </div>
 
@@ -43,7 +43,7 @@ const AboutPage = () => {
 
               <div className="space-y-6 text-secondary">
                 <p>
-                  Rekerf was born out of a personal journey. As a lifelong builder in both software and woodworking,
+                  Benchlot was born out of a personal journey. As a lifelong builder in both software and woodworking,
                   I found myself increasingly invested in quality tools after purchasing a home in 2018.
                 </p>
 
@@ -65,7 +65,7 @@ const AboutPage = () => {
                 </p>
 
                 <p>
-                  That question led to the founding of Rekerf in early 2025 — a marketplace built specifically for
+                  That question led to the founding of Benchlot in early 2025 — a marketplace built specifically for
                   the unique needs of tool buyers and sellers. We're not just another listing site; we're creating
                   a new standard for the tool market.
                 </p>
@@ -91,7 +91,7 @@ const AboutPage = () => {
         {/* Key Features Section */}
         <div className="mb-20">
           <h2 className="text-3xl font-display font-medium text-spruce mb-10 text-center">
-            What Makes Rekerf Different
+            What Makes Benchlot Different
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -136,14 +136,14 @@ const AboutPage = () => {
               <TimelineItem
                 year="2024"
                 title="Concept Development"
-                description="After years of collecting tools and experiencing the frustrations of existing marketplaces, the concept for Rekerf begins to take shape."
+                description="After years of collecting tools and experiencing the frustrations of existing marketplaces, the concept for Benchlot begins to take shape."
                 align="right"
               />
 
               <TimelineItem
                 year="Early 2025"
-                title="Rekerf Launches"
-                description="Rekerf officially launches with a mission to transform how quality tools are bought and sold in the maker community."
+                title="Benchlot Launches"
+                description="Benchlot officially launches with a mission to transform how quality tools are bought and sold in the maker community."
                 align="left"
               />
 
@@ -165,7 +165,7 @@ const AboutPage = () => {
 
           <p className="text-lg text-secondary mb-8 max-w-2xl mx-auto">
             Whether you're looking to find quality tools without the premium price tag,
-            or hoping to find a new home for tools you no longer need, Rekerf is building
+            or hoping to find a new home for tools you no longer need, Benchlot is building
             the community for you.
           </p>
 

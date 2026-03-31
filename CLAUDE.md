@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
-Rekerf — The marketplace for premium used hand tools. Formerly "Benchlot".
+Benchlot — A marketplace for used hand tools.
 
 ## Build/Test Commands
 - `npm start` - Start the React development server
@@ -21,7 +21,7 @@ Rekerf — The marketplace for premium used hand tools. Formerly "Benchlot".
 - **Error Handling**: Use try/catch with detailed console.error for debugging
 - **Documentation**: Use JSDoc for functions, especially in model files
 - **Firebase**: Abstract Firebase operations into model files and custom hooks
-- **Styling**: Use Tailwind CSS with Rekerf design system (see tailwind.config.js)
+- **Styling**: Use Tailwind CSS with Benchlot design system (see tailwind.config.js)
 - **Context**: Use React Context for app-wide state management
 
 ## Brand / Design System

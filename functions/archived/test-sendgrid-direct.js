@@ -23,7 +23,7 @@ const testEmail = process.argv[2] || 'test@example.com';
 // Create a simple test message
 const msg = {
   to: testEmail,
-  from: 'notifications@rekerf.com', // Replace with your verified sender
+  from: 'notifications@benchlot.com', // Replace with your verified sender
   subject: 'SendGrid Direct Test',
   text: 'This is a direct test of the SendGrid API',
   html: '<strong>This is a direct test of the SendGrid API</strong>',

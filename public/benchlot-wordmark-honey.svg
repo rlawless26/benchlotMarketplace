@@ -1,14 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Benchlot">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 60" role="img" aria-label="Benchlot">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Petrona:wght@900&amp;display=swap');
   </style>
   <text
-    x="16"
-    y="26"
+    x="180"
+    y="46"
     text-anchor="middle"
     font-family="'Petrona', serif"
     font-weight="900"
-    font-size="28"
-    fill="#f2f0eb"
-  >B</text>
+    font-size="48"
+    fill="#d4aa60"
+    letter-spacing="0.02em"
+  >Benchlot</text>
 </svg>

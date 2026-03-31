@@ -1,6 +1,6 @@
-# Rekerf Documentation
+# Benchlot Documentation
 
-This directory contains all documentation for the Rekerf project.
+This directory contains all documentation for the Benchlot project.
 
 ## Available Documentation
 

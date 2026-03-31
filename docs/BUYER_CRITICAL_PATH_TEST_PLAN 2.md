@@ -1,13 +1,13 @@
-# Rekerf Buyer Journey Critical Path Test Plan
+# Benchlot Buyer Journey Critical Path Test Plan
 
-This document outlines the critical path for testing the core buyer functionality on Rekerf. The focus is on ensuring that the essential buyer journey works correctly, rather than optimizing the user experience at this stage.
+This document outlines the critical path for testing the core buyer functionality on Benchlot. The focus is on ensuring that the essential buyer journey works correctly, rather than optimizing the user experience at this stage.
 
 ## Critical Path Overview
 
-The critical path for a Rekerf buyer consists of the following key stages:
+The critical path for a Benchlot buyer consists of the following key stages:
 
 1. **Account Creation & Authentication**
-   - Sign up as a new Rekerf user
+   - Sign up as a new Benchlot user
    - Verify email address
    - Log in successfully
    - View and manage profile information

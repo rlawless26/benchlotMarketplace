@@ -94,8 +94,8 @@ const SellerOnboardingPage = () => {
                 const updateResult = await updateConnectAccount(user.uid, {
                   firstName,
                   lastName,
-                  // We'll provide a dummy URL that points to the seller's profile on Rekerf
-                  websiteUrl: `https://rekerf.com/sellers/${user.uid}`
+                  // We'll provide a dummy URL that points to the seller's profile on Benchlot
+                  websiteUrl: `https://benchlot.com/sellers/${user.uid}`
                 });
                 
                 console.log('Successfully updated Stripe account with missing information:', updateResult);
@@ -282,7 +282,7 @@ const SellerOnboardingPage = () => {
           
           <div className="space-y-6">
             <p className="text-gray-600">
-              To start selling on Rekerf, we need to set up your payment processing. This allows
+              To start selling on Benchlot, we need to set up your payment processing. This allows
               you to receive payments securely when your tools sell.
             </p>
             

@@ -336,7 +336,7 @@ const CartPage = () => {
                 
                 <div className="flex items-start text-stone-600 text-sm">
                   <span className="text-xs leading-5">
-                    By proceeding to checkout, you agree to Rekerf's terms of service and privacy policy.
+                    By proceeding to checkout, you agree to Benchlot's terms of service and privacy policy.
                     All transactions are processed securely.
                   </span>
                 </div>

@@ -1,6 +1,6 @@
-# Rekerf Development Guidelines
+# Benchlot Development Guidelines
 
-This document outlines the development standards and practices for the Rekerf project.
+This document outlines the development standards and practices for the Benchlot project.
 
 ## Project Structure
 

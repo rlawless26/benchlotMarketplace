@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const HelpPage = () => {
   useEffect(() => {
-    document.title = 'Help | Rekerf';
+    document.title = 'Help | Benchlot';
   }, []);
 
   return (
@@ -14,7 +14,7 @@ const HelpPage = () => {
         {/* Main heading */}
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-display font-medium mb-6 text-dark-teal">
-            Contact Rekerf Support
+            Contact Benchlot Support
           </h1>
           <p className="text-xl text-secondary mb-8">
             Even master craftspeople sometimes forget to measure twice before making a cut.
@@ -44,7 +44,7 @@ const HelpPage = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-dark-teal">Email Us</h3>
-                  <p className="text-spruce font-medium">hello@rekerf.com</p>
+                  <p className="text-spruce font-medium">hello@benchlot.com</p>
                 </div>
               </div>
 
@@ -88,7 +88,7 @@ const HelpPage = () => {
             <div className="bg-bone-light p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-medium mb-3 text-dark-teal">What are your fees?</h3>
               <p className="text-secondary">
-                Listing tools on Rekerf is completely free. We charge a 5% transaction fee for sellers when a tool sells, plus a 3% payment processing fee. There are no hidden costs or subscription fees.
+                Listing tools on Benchlot is completely free. We charge a 5% transaction fee for sellers when a tool sells, plus a 3% payment processing fee. There are no hidden costs or subscription fees.
               </p>
             </div>
 
@@ -112,7 +112,7 @@ const HelpPage = () => {
               </div>
               <h3 className="text-xl font-medium mb-3 text-dark-teal">Terms of Service</h3>
               <p className="text-secondary text-center mb-4">
-                Our Terms of Service outline the rules and guidelines for using the Rekerf platform.
+                Our Terms of Service outline the rules and guidelines for using the Benchlot platform.
               </p>
               <Link
                 to="/terms"

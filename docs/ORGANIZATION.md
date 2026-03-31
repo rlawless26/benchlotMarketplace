@@ -1,13 +1,13 @@
-# Rekerf Documentation Organization
+# Benchlot Documentation Organization
 
 ## Overview
 
-This document explains how the Rekerf project documentation is organized and where to find specific information.
+This document explains how the Benchlot project documentation is organized and where to find specific information.
 
 ## Directory Structure
 
 ```
-/rekerf
+/benchlot
 ├── README.md              # Project overview and getting started guide
 ├── docs/                  # Documentation directory
 │   ├── README.md          # Documentation index

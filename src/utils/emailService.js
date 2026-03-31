@@ -1,5 +1,5 @@
 // Client-side email service that forwards requests to Firebase Functions
-// This handles all email-related functionality for the Rekerf frontend
+// This handles all email-related functionality for the Benchlot frontend
 
 // Import environment utilities
 import { getConfig } from './environment';
@@ -8,7 +8,7 @@ import { getAuth } from 'firebase/auth';
 // Base API URL - environment-specific configuration
 const API_URL = process.env.REACT_APP_API_URL || getConfig(
   // Development
-  'http://localhost:5001/rekerf/us-central1/api',
+  'http://localhost:5001/benchlot/us-central1/api',
   // Staging
   'https://api-sed2e4p6ua-uc.a.run.app',
   // Production

@@ -357,7 +357,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
           {/* Sign In Form */}
           {authMode === 'signin' && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-spruce mb-5">Log in to your Rekerf account</h3>
+              <h3 className="text-xl font-semibold text-spruce mb-5">Log in to your Benchlot account</h3>
               <form onSubmit={handleSignIn} className="space-y-5">
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">
@@ -463,7 +463,7 @@ const AuthForm = ({ isModal = false, onClose, initialMode }) => {
           {/* Sign Up Form */}
           {authMode === 'signup' && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-spruce mb-5">Create a free Rekerf account</h3>
+              <h3 className="text-xl font-semibold text-spruce mb-5">Create a free Benchlot account</h3>
               <form onSubmit={handleSignUp} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-group">

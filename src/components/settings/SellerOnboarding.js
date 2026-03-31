@@ -11,7 +11,7 @@ const SellerOnboarding = () => {
     <div className="bg-bone-light rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
         <h2 className="text-xl font-medium text-stone-800">Become a Seller</h2>
-        <p className="text-stone-600 text-sm mt-1">Start selling your tools on Rekerf</p>
+        <p className="text-stone-600 text-sm mt-1">Start selling your tools on Benchlot</p>
       </div>
       
       <div className="p-6">
@@ -21,7 +21,7 @@ const SellerOnboarding = () => {
           </div>
           <h3 className="text-xl font-medium text-stone-800 mb-2">Ready to Start Selling?</h3>
           <p className="text-stone-600 mb-6 max-w-lg">
-            Turn your extra tools into income by renting or selling them on Rekerf. 
+            Turn your extra tools into income by renting or selling them on Benchlot. 
             Our platform connects you with people who need quality tools for their projects.
           </p>
           

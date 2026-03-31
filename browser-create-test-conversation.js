@@ -1,6 +1,6 @@
 // BROWSER CONSOLE VERSION FOR FIREBASE V9
 // Copy and paste this entire script into your browser console
-// while logged into the Rekerf app
+// while logged into the Benchlot app
 
 (async function() {
   try {

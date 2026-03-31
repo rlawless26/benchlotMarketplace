@@ -1,6 +1,6 @@
-# Rekerf Firebase Implementation - Project Structure
+# Benchlot Firebase Implementation - Project Structure
 
-This folder contains the source code for the Rekerf application. The project follows a structured organization pattern to maintain clean code separation and reusability.
+This folder contains the source code for the Benchlot application. The project follows a structured organization pattern to maintain clean code separation and reusability.
 
 ## Directory Structure
 
@@ -33,7 +33,7 @@ This folder contains the source code for the Rekerf application. The project fol
 
 ## Styling Approach
 
-The project uses Tailwind CSS with custom extensions to match the Rekerf design system:
+The project uses Tailwind CSS with custom extensions to match the Benchlot design system:
 
 - **Colors**: Forest green primary (#17613F) with complimentary palette
 - **Typography**: Spectral (serif) for headings, Montserrat (sans-serif) for body text

@@ -1,5 +1,5 @@
 /**
- * SendGrid Email Test Function for Rekerf
+ * SendGrid Email Test Function for Benchlot
  * 
  * This is a minimal, dedicated function for testing SendGrid email integration
  * with Firebase Functions.
@@ -34,14 +34,14 @@ exports.sendEmailTest = functions.https.onCall(async (data, context) => {
     console.log("SendGrid initialized with API key");
     
     // Step 3: Send a simple email without templates
-    const recipient = data.email || 'test@rekerf.com';
+    const recipient = data.email || 'test@benchlot.com';
     
     const msg = {
       to: recipient,
-      from: 'notifications@rekerf.com',
-      subject: 'Rekerf Firebase Functions Test',
-      text: 'This is a test email from Rekerf Firebase Functions',
-      html: '<strong>This is a test email from Rekerf Firebase Functions</strong>'
+      from: 'notifications@benchlot.com',
+      subject: 'Benchlot Firebase Functions Test',
+      text: 'This is a test email from Benchlot Firebase Functions',
+      html: '<strong>This is a test email from Benchlot Firebase Functions</strong>'
     };
     
     console.log(`Attempting to send email to ${recipient}`);
@@ -126,10 +126,10 @@ exports.sendEmailTestHttp = functions.https.onRequest(async (req, res) => {
     // Send a simple email
     const msg = {
       to: email,
-      from: 'notifications@rekerf.com',
-      subject: 'Rekerf Firebase Functions Test (HTTP)',
-      text: 'This is a test email from Rekerf Firebase Functions (HTTP endpoint)',
-      html: '<strong>This is a test email from Rekerf Firebase Functions (HTTP endpoint)</strong>'
+      from: 'notifications@benchlot.com',
+      subject: 'Benchlot Firebase Functions Test (HTTP)',
+      text: 'This is a test email from Benchlot Firebase Functions (HTTP endpoint)',
+      html: '<strong>This is a test email from Benchlot Firebase Functions (HTTP endpoint)</strong>'
     };
     
     console.log(`Attempting to send email to ${email} via HTTP endpoint`);

@@ -9,7 +9,7 @@ import { getConfig } from './environment';
 // API URL for Firebase Functions - environment specific
 const API_URL = process.env.REACT_APP_FIREBASE_API_URL || getConfig(
   // Dev - use localhost if running emulator, otherwise use production
-  'http://localhost:5001/rekerf/us-central1/api',
+  'http://localhost:5001/benchlot/us-central1/api',
   // Staging
   'https://stripeapi-sed2e4p6ua-uc.a.run.app',
   // Production

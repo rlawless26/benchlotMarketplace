@@ -17,7 +17,7 @@
         "npm --prefix \"$RESOURCE_DIR\" install"
       ],
       "environment": {
-        "APP_URL": "https://rekerf.com"
+        "APP_URL": "https://benchlot.com"
       }
     }
   ],

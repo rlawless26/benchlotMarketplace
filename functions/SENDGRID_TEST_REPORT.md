@@ -2,7 +2,7 @@
 
 ## Summary
 
-We have successfully integrated SendGrid email service with the Rekerf Firebase Functions. All the necessary components are in place for sending transactional emails to users. This report summarizes the implementation and test results.
+We have successfully integrated SendGrid email service with the Benchlot Firebase Functions. All the necessary components are in place for sending transactional emails to users. This report summarizes the implementation and test results.
 
 ## Implementation Details
 
@@ -120,7 +120,7 @@ The following SendGrid templates are being used:
 
 4. **Rate Limiting**: Consider implementing rate limiting to prevent abuse of the email endpoints.
 
-5. **Sender Verification**: Ensure the sender email (notifications@rekerf.com) is verified in SendGrid.
+5. **Sender Verification**: Ensure the sender email (notifications@benchlot.com) is verified in SendGrid.
 
 ## Conclusion
 

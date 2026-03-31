@@ -1,7 +1,7 @@
 {
-  "name": "Rekerf",
-  "short_name": "Rekerf",
-  "description": "The marketplace for premium used hand tools",
+  "name": "Benchlot",
+  "short_name": "Benchlot",
+  "description": "A marketplace for used hand tools",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

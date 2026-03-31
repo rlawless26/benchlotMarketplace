@@ -11,7 +11,7 @@ const WaitlistLandingPage = () => {
   const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
 
   useEffect(() => {
-    document.title = 'Rekerf — The Marketplace for Premium Used Hand Tools';
+    document.title = 'Benchlot — A Marketplace for Used Hand Tools';
   }, []);
 
   const handleSubmit = async (e) => {
@@ -27,7 +27,7 @@ const WaitlistLandingPage = () => {
 
       setSubmitStatus({
         type: 'success',
-        message: "You're on the list! We'll notify you when Rekerf is ready."
+        message: "You're on the list! We'll notify you when Benchlot is ready."
       });
       setEmail('');
     } catch (error) {
@@ -65,7 +65,7 @@ const WaitlistLandingPage = () => {
 
         {/* Nav */}
         <nav className="absolute top-0 left-0 right-0 z-20 py-6 px-6 flex items-center justify-between">
-          <span className="text-xl font-display font-black text-bone" style={{ letterSpacing: '-1.5px' }}>Rekerf</span>
+          <span className="text-xl font-display font-black text-bone" style={{ letterSpacing: '-1.5px' }}>Benchlot</span>
           <div className="flex items-center gap-5">
             <Link to="/scan" className="text-bone font-body text-sm font-medium hover:text-honey transition-colors">Scan a Tool</Link>
             <a
@@ -79,10 +79,10 @@ const WaitlistLandingPage = () => {
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-display font-black mb-6 text-bone leading-tight">
-            The marketplace for premium used hand tools
+            A marketplace for used hand tools
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto" style={{ color: '#e8e6e0' }}>
-            Buy and sell quality hand tools with people who know the craft.
+            Marketplace coming soon. Scan a tool or join the waitlist to be first in when we launch.
           </p>
 
           {/* CTA */}
@@ -91,7 +91,7 @@ const WaitlistLandingPage = () => {
               to="/scan"
               className="inline-flex items-center gap-1 px-8 py-4 bg-honey text-dark-teal rounded-lg text-lg font-medium font-body hover:bg-honey-light transition-colors"
             >
-              What's your tool worth? &rarr;
+              Scan your tools &rarr;
             </Link>
           </div>
         </div>
@@ -101,10 +101,10 @@ const WaitlistLandingPage = () => {
       <section className="bg-spruce py-16">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
           <h2 className="text-3xl font-display font-bold text-bone text-center mb-3">
-            See what your tools are worth
+            Know your tools
           </h2>
           <p className="text-center mb-10 text-lg font-body max-w-2xl mx-auto" style={{ color: '#6a8a84' }}>
-            Photograph a hand tool and we'll do our best to tell you what it is, what era it's from, and what it's worth.
+            Photograph a hand tool and we'll do our best to tell you what it is, what era it's from, and what it's story is.
           </p>
 
           <ToolScanExampleCard />
@@ -127,15 +127,15 @@ const WaitlistLandingPage = () => {
       <section className="py-20 bg-bone">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-3xl font-display font-bold text-spruce text-center mb-12">
-            Built for woodworkers at every stage
+            Build your shop
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Card 1 */}
             <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-              <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
+              <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a tool?</h3>
               <p className="text-base font-body text-secondary mb-5">
-                You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and what they're worth.
+                You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and where they came from.
               </p>
               <Link to="/scan" className="text-honey font-body font-medium hover:text-honey-dark transition-colors">
                 Scan your first tool &rarr;
@@ -144,9 +144,9 @@ const WaitlistLandingPage = () => {
 
             {/* Card 2 */}
             <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-              <h3 className="text-lg font-display font-semibold text-spruce mb-3">Upgrading your tools?</h3>
+              <h3 className="text-lg font-display font-semibold text-spruce mb-3">Oldie but a goodie?</h3>
               <p className="text-base font-body text-secondary mb-5">
-                Moving from Narex to Lie-Nielsen? List what you're done with, find what you're looking for. A marketplace where every buyer and seller knows the craft.
+                Give your tools a second life. List what you've outgrown, find what you've been searching for.
               </p>
               <a href="#waitlist-bottom" className="text-honey font-body font-medium hover:text-honey-dark transition-colors">
                 Join the waitlist &rarr;
@@ -208,9 +208,6 @@ const WaitlistLandingPage = () => {
       {/* Section 5: Bottom CTA */}
       <section id="waitlist-bottom" className="py-20 bg-bone">
         <div className="max-w-xl mx-auto px-4 text-center">
-          <p className="text-sm text-secondary font-body mb-4">
-            Built by a wannabe skilled woodworker in Boston.
-          </p>
           <h2 className="text-3xl font-display font-bold text-spruce mb-3">
             Nothing to scan right now?
           </h2>
@@ -252,7 +249,7 @@ const WaitlistLandingPage = () => {
           Built in New England for the hand tool community.
         </p>
         <p className="text-stone-500 text-xs mt-2 font-body">
-          &copy; {new Date().getFullYear()} Rekerf. All rights reserved.
+          &copy; {new Date().getFullYear()} Benchlot. All rights reserved.
         </p>
       </footer>
     </div>

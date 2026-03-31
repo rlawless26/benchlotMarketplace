@@ -22,7 +22,7 @@ const LandingPageNew = () => {
   const { isAuthenticated, user } = useAuth();
 
   React.useEffect(() => {
-    document.title = 'Home | Rekerf';
+    document.title = 'Home | Benchlot';
   }, []);
 
   // Function to handle search submissions
@@ -121,7 +121,7 @@ const LandingPageNew = () => {
             {/* Hero text */}
             <div className="w-full text-left mb-8">
               <h1 className="text-4xl md:text-6xl font-display font-medium mb-6 text-bone" style={{ textShadow: '0 3px 6px rgba(0,0,0,0.8)' }}>
-                The marketplace for premium used hand tools
+                A marketplace for used hand tools
               </h1>
               <p className="text-xl mb-8" style={{ color: '#6aaa98', textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
                 The woodworker's marketplace. Buy and sell premium hand tools from makers who understand their value. Lie-Nielsen, Veritas, vintage Stanley, and more.
@@ -265,7 +265,7 @@ const LandingPageNew = () => {
       <section className="py-16 bg-bone">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">How Rekerf Works</h2>
+            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">How Benchlot Works</h2>
             <p className="text-secondary">Built for the hand tool community, by the hand tool community</p>
           </div>
 
@@ -359,7 +359,7 @@ const LandingPageNew = () => {
                 </div>
               </div>
               <p className="text-secondary mb-4">
-                "My father left behind a shop full of quality hand tools. Rekerf helped me find them good homes instead of selling them for pennies at an estate sale."
+                "My father left behind a shop full of quality hand tools. Benchlot helped me find them good homes instead of selling them for pennies at an estate sale."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center mr-3">

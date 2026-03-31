@@ -20,7 +20,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
       <div className="bg-spruce px-6 py-4 flex justify-between items-center">
         <div className="flex items-center">
           <span className="text-2xl mr-2">🎉</span>
-          <h2 className="text-xl font-bold text-bone">Welcome to Rekerf Sellers!</h2>
+          <h2 className="text-xl font-bold text-bone">Welcome to Benchlot Sellers!</h2>
         </div>
         {onClose && (
           <button
@@ -38,7 +38,7 @@ const NewSellerWelcome = ({ accountStatus, onClose }) => {
       {/* Main content */}
       <div className="p-6">
         <p className="text-gray-700 mb-6">
-          You've successfully created your seller account. You're now ready to start listing tools and earning money on Rekerf!
+          You've successfully created your seller account. You're now ready to start listing tools and earning money on Benchlot!
         </p>
 
         {/* Verification status */}

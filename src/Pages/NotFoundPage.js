@@ -4,7 +4,7 @@ import { Home, Search } from 'lucide-react';
 
 const NotFoundPage = () => {
   useEffect(() => {
-    document.title = '404 Not Found | Rekerf';
+    document.title = '404 Not Found | Benchlot';
   }, []);
 
   return (

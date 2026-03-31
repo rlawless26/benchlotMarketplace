@@ -30,7 +30,7 @@ describe('AuthForm', () => {
   describe('Sign In mode', () => {
     it('renders the sign-in form by default', () => {
       renderWithProviders(<AuthForm />);
-      expect(screen.getByText('Log in to your Rekerf account')).toBeInTheDocument();
+      expect(screen.getByText('Log in to your Benchlot account')).toBeInTheDocument();
       expect(screen.getByLabelText('Email')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
     });
@@ -79,7 +79,7 @@ describe('AuthForm', () => {
   describe('Sign Up mode', () => {
     it('renders sign-up form when initialMode is signup', () => {
       renderWithProviders(<AuthForm initialMode="signup" />);
-      expect(screen.getByText('Create a free Rekerf account')).toBeInTheDocument();
+      expect(screen.getByText('Create a free Benchlot account')).toBeInTheDocument();
       expect(screen.getByLabelText('First Name')).toBeInTheDocument();
       expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
     });
@@ -144,7 +144,7 @@ describe('AuthForm', () => {
 
       await userEvent.click(screen.getByText('Sign Up'));
 
-      expect(screen.getByText('Create a free Rekerf account')).toBeInTheDocument();
+      expect(screen.getByText('Create a free Benchlot account')).toBeInTheDocument();
     });
 
     it('switches to reset password from sign-in', async () => {

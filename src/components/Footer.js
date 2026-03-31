@@ -12,7 +12,7 @@ const Footer = ({ publicMode = false }) => {
           Built in New England for the hand tool community.
         </p>
         <p className="text-stone-500 text-xs mt-2 font-body">
-          &copy; {new Date().getFullYear()} Rekerf. All rights reserved.
+          &copy; {new Date().getFullYear()} Benchlot. All rights reserved.
         </p>
       </footer>
     );
@@ -24,14 +24,14 @@ const Footer = ({ publicMode = false }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-16">
           {/* Column 1: Company Info */}
           <div>
-            <h3 className="text-bone font-display text-lg mb-2">Rekerf</h3>
+            <h3 className="text-bone font-display text-lg mb-2">Benchlot</h3>
             <p className="text-sm mb-4 font-display italic" style={{ fontWeight: 500 }}>
               The woodworker's marketplace.
             </p>
             <p className="text-sm mb-6" style={{ color: '#6a8a84' }}>
               The trusted marketplace for woodworking tools
             </p>
-            <p className="text-xs" style={{ color: '#6a8a84' }}>&copy; {new Date().getFullYear()} Rekerf. All rights reserved.</p>
+            <p className="text-xs" style={{ color: '#6a8a84' }}>&copy; {new Date().getFullYear()} Benchlot. All rights reserved.</p>
           </div>
 
           {/* Column 2: Quick Links */}
@@ -61,7 +61,7 @@ const Footer = ({ publicMode = false }) => {
                 <ul className="space-y-2">
                   <li>
                     <a
-                      href="https://blog.rekerf.com/blog"
+                      href="https://blog.benchlot.com/blog"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}
@@ -90,8 +90,8 @@ const Footer = ({ publicMode = false }) => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-honey" />
-                <a href="mailto:hello@rekerf.com" className="hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
-                  hello@rekerf.com
+                <a href="mailto:hello@benchlot.com" className="hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}>
+                  hello@benchlot.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-sm">
@@ -106,13 +106,13 @@ const Footer = ({ publicMode = false }) => {
               </li>
               <li className="mt-4">
                 <a
-                  href="https://www.instagram.com/rekerf/"
+                  href="https://www.instagram.com/benchlot/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 hover:text-bone transition-colors font-body" style={{ color: '#6a8a84' }}
                 >
                   <Instagram className="h-5 w-5" />
-                  <span className="text-sm">@rekerf</span>
+                  <span className="text-sm">@benchlot</span>
                 </a>
               </li>
             </ul>

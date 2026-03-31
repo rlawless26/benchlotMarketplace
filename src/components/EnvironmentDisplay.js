@@ -4,8 +4,8 @@ import { getEnvironment } from '../utils/environment';
 const EnvironmentDisplay = () => {
   const environment = getEnvironment();
   
-  // Only show the badge if environment is not production on rekerf.com
-  if (environment === 'production' && window.location.hostname === 'rekerf.com') {
+  // Only show the badge if environment is not production on benchlot.com
+  if (environment === 'production' && window.location.hostname === 'benchlot.com') {
     return null;
   }
   

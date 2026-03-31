@@ -5,7 +5,7 @@ import { toolSubcategories, categoryGroups, toolBrands } from '../firebase/model
 
 const CategoriesPage = () => {
   useEffect(() => {
-    document.title = 'Categories | Rekerf';
+    document.title = 'Categories | Benchlot';
   }, []);
 
   // Build grouped categories from centralized constants
@@ -137,7 +137,7 @@ const CategoriesPage = () => {
                 <span className="text-xl font-display text-spruce">Verified Tools</span>
               </div>
               <div className="p-4 group-hover:bg-bone-dark transition-colors">
-                <h3 className="font-medium text-dark-teal">Rekerf Verified</h3>
+                <h3 className="font-medium text-dark-teal">Benchlot Verified</h3>
                 <p className="text-sm text-secondary">Expert-verified condition and authenticity</p>
               </div>
             </Link>

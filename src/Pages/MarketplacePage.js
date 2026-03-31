@@ -35,7 +35,7 @@ const MarketplacePage = () => {
   const [toolListings, setToolListings] = useState([]);
 
   useEffect(() => {
-    document.title = 'Marketplace | Rekerf';
+    document.title = 'Marketplace | Benchlot';
   }, []);
 
   // Filter categories with subcategories - sourced from toolModel

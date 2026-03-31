@@ -8,7 +8,7 @@ import AuthForm from '../components/AuthForm';
  */
 const AuthPage = () => {
   useEffect(() => {
-    document.title = 'Account | Rekerf';
+    document.title = 'Account | Benchlot';
   }, []);
 
   return (

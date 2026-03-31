@@ -51,7 +51,7 @@ const ToolScanPage = () => {
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
-    document.title = 'Scan a Tool | Rekerf';
+    document.title = 'Scan a Tool | Benchlot';
   }, []);
 
   const handleFileSelect = useCallback((e) => {
@@ -324,7 +324,7 @@ const ToolScanPage = () => {
             <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
             <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your tools</h3>
             <p className="text-secondary font-body mb-6">
-              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Rekerf.
+              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Benchlot.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -361,7 +361,7 @@ const ToolScanPage = () => {
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                Photograph a hand tool and we'll do our best to identify it — maker, model, era, condition, and a rough market value. We're not always right, but we're pretty good.
+                Photograph a hand tool and we'll do our best to identify it — maker, model, era, and condition. We're not always right, but we're pretty good.
               </p>
 
               {/* Upload area */}
@@ -457,12 +457,12 @@ const ToolScanPage = () => {
 
             {/* Section 4: Audience Hooks */}
             <div className="mb-16 max-w-4xl mx-auto">
-              <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">Built for woodworkers at every stage</h2>
+              <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">Build your shop</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a workshop?</h3>
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Inherited a tool?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and what they're worth.
+                    You don't need to become an expert in someone else's hobby to understand what they left behind. Photograph the tools, and we'll tell you what they are and where they came from.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -472,9 +472,9 @@ const ToolScanPage = () => {
                   </button>
                 </div>
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Upgrading your tools?</h3>
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Oldie but a goodie?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    Moving from Narex to Lie-Nielsen? List what you're done with, find what you're looking for. A marketplace where every buyer and seller knows the craft.
+                    Give your tools a second life. List what you've outgrown, find what you've been searching for.
                   </p>
                   <a
                     href="#scan-waitlist"
@@ -546,7 +546,7 @@ const ToolScanPage = () => {
         {scanResults && (
           <div className="flex items-center gap-2 mb-6 text-secondary font-body">
             <Sparkles className="w-5 h-5 text-honey" />
-            <span className="font-semibold text-spruce">Rekerf</span>
+            <span className="font-semibold text-spruce">Benchlot</span>
             <span className="text-bone-dark">·</span>
             <span>{scanResults.tools.length} {scanResults.tools.length === 1 ? 'tool' : 'tools'} identified</span>
           </div>
@@ -721,7 +721,7 @@ const ToolScanPage = () => {
                 Your tool has been identified
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Rekerf launches.
+                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Benchlot launches.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
@@ -783,13 +783,13 @@ const ToolScanPage = () => {
                 Scan another tool →
               </button>
               <p className="text-sm text-secondary font-body mt-3">
-                We'll email you when Rekerf launches and you can list your tools for sale.
+                We'll email you when Benchlot launches and you can list your tools for sale.
               </p>
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
-                Rekerf uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
+                Benchlot uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
               </p>
             </div>
           </div>

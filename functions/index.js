@@ -1,5 +1,5 @@
 /**
- * Firebase Functions for Rekerf
+ * Firebase Functions for Benchlot
  * Handles Stripe integration, payment processing, and email notifications
  */
 const functions = require('firebase-functions');
@@ -7,8 +7,8 @@ const admin = require('firebase-admin');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const allowedOrigins = [
-  'https://rekerf.com',
-  'https://www.rekerf.com',
+  'https://benchlot.com',
+  'https://www.benchlot.com',
   'https://benchlot-6d64e.web.app',
   'https://benchlot-6d64e.firebaseapp.com',
   'http://localhost:3000',
@@ -654,7 +654,7 @@ app.post('/confirm-payment', async (req, res) => {
  * Stripe Connected Accounts API
  * 
  * These endpoints handle seller account creation, onboarding, 
- * and management for the Rekerf marketplace.
+ * and management for the Benchlot marketplace.
  */
 
 /**
@@ -688,7 +688,7 @@ app.post('/create-connected-account', async (req, res) => {
       if (userDoc.exists && userDoc.data().stripeAccountId) {
         
         // Create a new account link for continuing onboarding
-        const appUrl = process.env.APP_URL || 'https://rekerf.com';
+        const appUrl = process.env.APP_URL || 'https://benchlot.com';
         const accountLink = await stripe.accountLinks.create({
           account: userDoc.data().stripeAccountId,
           refresh_url: `${appUrl}/seller/onboarding/refresh`,
@@ -777,7 +777,7 @@ app.post('/create-connected-account', async (req, res) => {
       // Add URL to business profile (required before first transfer)
       accountParams.business_profile = {
         ...accountParams.business_profile,
-        url: `https://rekerf.com/sellers/${userId}`
+        url: `https://benchlot.com/sellers/${userId}`
       };
       
       // Add the optional but helpful DOB fields if we have them
@@ -810,7 +810,7 @@ app.post('/create-connected-account', async (req, res) => {
     
     // Add business_profile.url for all accounts to satisfy Stripe requirements
     accountParams.business_profile = {
-      url: `https://rekerf.com/sellers/${userId}`
+      url: `https://benchlot.com/sellers/${userId}`
     };
     
     // IMPORTANT NOTE: We're using a "full" service agreement (default) with only the "transfers" capability.
@@ -925,7 +925,7 @@ app.post('/create-connected-account', async (req, res) => {
     }
     
     // Handle account setup for ALL sellers - bypass Stripe hosted onboarding completely
-    const appUrl = process.env.APP_URL || 'https://rekerf.com';
+    const appUrl = process.env.APP_URL || 'https://benchlot.com';
     
     // Skip Stripe hosted onboarding completely
     // Route everyone to our bank account collection UI
@@ -1035,7 +1035,7 @@ app.get('/refresh-account-link', async (req, res) => {
     }
     
     // Create a new account link
-    const appUrl = process.env.APP_URL || 'https://rekerf.com';
+    const appUrl = process.env.APP_URL || 'https://benchlot.com';
     const accountLink = await stripe.accountLinks.create({
       account: userData.stripeAccountId,
       refresh_url: `${appUrl}/seller/onboarding/refresh`,
@@ -2618,8 +2618,8 @@ app.post('/update-connect-account', async (req, res) => {
       }
     }
     
-    // Add business profile URL - use a placeholder Rekerf URL if not provided
-    const effectiveUrl = websiteUrl || `https://rekerf.com/sellers/${userId}`;
+    // Add business profile URL - use a placeholder Benchlot URL if not provided
+    const effectiveUrl = websiteUrl || `https://benchlot.com/sellers/${userId}`;
     updateParams.business_profile = {
       url: effectiveUrl
     };

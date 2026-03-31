@@ -1,5 +1,5 @@
 /**
- * Test script for Rekerf Email API
+ * Test script for Benchlot Email API
  * 
  * This script tests the updated API endpoints for sending email
  */
@@ -7,7 +7,7 @@
 const axios = require('axios');
 
 // Configuration
-const testEmail = process.argv[2] || 'test@rekerf.com'; // Use email from command line or default
+const testEmail = process.argv[2] || 'test@benchlot.com'; // Use email from command line or default
 const apiUrl = 'https://api-sed2e4p6ua-uc.a.run.app'; // The URL from deployment
 
 // Helper function to log test results
@@ -47,7 +47,7 @@ const callEndpoint = async (endpoint, data) => {
 const testPasswordReset = async () => {
   const result = await callEndpoint('send-password-reset', {
     email: testEmail,
-    resetLink: 'https://rekerf.com/reset-password?token=test-token-123'
+    resetLink: 'https://benchlot.com/reset-password?token=test-token-123'
   });
   logResult('Password Reset Email', result.success, result.error);
   return result;
@@ -64,7 +64,7 @@ const testSimpleTestEmail = async () => {
 
 // Run the tests
 const runTests = async () => {
-  console.log('🚀 Testing Rekerf Email API');
+  console.log('🚀 Testing Benchlot Email API');
   console.log('============================');
   console.log(`Using email: ${testEmail}`);
   console.log(`API URL: ${apiUrl}`);

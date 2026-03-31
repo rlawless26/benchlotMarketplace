@@ -658,7 +658,7 @@ const PaymentSettings = ({ user }) => {
             <div className="ml-3">
               <h3 className="text-sm font-medium text-stone-800">Secure Payment Processing</h3>
               <p className="text-xs text-stone-500 mt-1">
-                Rekerf uses secure encryption to protect your payment information. Your card details are never stored on our servers and are securely processed by our payment provider.
+                Benchlot uses secure encryption to protect your payment information. Your card details are never stored on our servers and are securely processed by our payment provider.
               </p>
             </div>
           </div>

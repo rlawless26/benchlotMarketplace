@@ -979,7 +979,7 @@ const SellerDashboardPage = () => {
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-blue-800">How earnings work</h4>
                         <p className="text-xs text-blue-700 mt-1">
-                          Rekerf charges a 5% platform fee on each sale. When a buyer purchases your item,
+                          Benchlot charges a 5% platform fee on each sale. When a buyer purchases your item,
                           the payment is processed and your earnings (minus the fee) are transferred to your
                           connected bank account. Transfers typically arrive within 2-3 business days.
                         </p>

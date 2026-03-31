@@ -1,6 +1,6 @@
 /**
  * Tool Listing Card Component
- * Displays a tool listing in card format with Rekerf styling
+ * Displays a tool listing in card format with Benchlot styling
  */
 import React from 'react';
 import { Link } from 'react-router-dom';

@@ -1,6 +1,6 @@
-# Rekerf Price Guide Data Collector
+# Benchlot Price Guide Data Collector
 
-Two scrapers to build pricing data for the Rekerf hand tool marketplace.
+Two scrapers to build pricing data for the Benchlot hand tool marketplace.
 
 ## Setup
 
@@ -51,7 +51,7 @@ python jimbode_scraper.py --limit 5
 - `data/jimbode_sold.csv` — All sold tools with prices, categories, brands
 - `data/jimbode_sold.json` — Same data in JSON for Firebase import
 
-## The Rekerf Top 40 Tool List
+## The Benchlot Top 40 Tool List
 
 ### Bench Planes
 | Tool | Brand | New Price | Notes |
@@ -127,7 +127,7 @@ The combined eBay + Jim Bode data gives you:
 1. **eBay**: Current market prices for both vintage and modern tools, with actual transaction dates and buyer behavior (auction vs buy-it-now, shipping preferences)
 2. **Jim Bode**: Historical sold prices for premium/collector-grade vintage tools, establishing the upper end of the market
 
-Together, these create a pricing database that no other marketplace in this space has. This becomes Rekerf's version of Kelley Blue Book — users come to check what their tool is worth, and stay to buy/sell.
+Together, these create a pricing database that no other marketplace in this space has. This becomes Benchlot's version of Kelley Blue Book — users come to check what their tool is worth, and stay to buy/sell.
 
 ## Loading into Firebase
 

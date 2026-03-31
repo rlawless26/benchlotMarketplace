@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const PrivacyPage = () => {
   useEffect(() => {
-    document.title = 'Privacy Policy | Rekerf';
+    document.title = 'Privacy Policy | Benchlot';
   }, []);
 
   return (
@@ -17,7 +17,7 @@ const PrivacyPage = () => {
           <div className="prose prose-stone max-w-none">
             <h2>1. Introduction</h2>
             <p>
-              At Rekerf, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose,
+              At Benchlot, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose,
               and safeguard your information when you use our website, mobile application, and services
               (collectively, the "Services").
             </p>
@@ -51,7 +51,7 @@ const PrivacyPage = () => {
             <h3>2.3. Information from Third Parties</h3>
             <p>We may receive information about you from third parties, including:</p>
             <ul>
-              <li><strong>Social Media Platforms:</strong> If you choose to link your social media accounts to Rekerf, we may collect information from those accounts, such as your name, email address, and friends list.</li>
+              <li><strong>Social Media Platforms:</strong> If you choose to link your social media accounts to Benchlot, we may collect information from those accounts, such as your name, email address, and friends list.</li>
               <li><strong>Payment Processors:</strong> When you make a purchase, our payment processors (such as Stripe) provide us with information necessary to process your payment.</li>
               <li><strong>Identity Verification Services:</strong> We may use third-party services to verify your identity and prevent fraud.</li>
             </ul>
@@ -81,7 +81,7 @@ const PrivacyPage = () => {
             <h3>3.3. Security and Protection</h3>
             <ul>
               <li>To detect, investigate, and prevent fraudulent transactions and other illegal activities</li>
-              <li>To protect the rights, safety, and property of Rekerf, our users, and others</li>
+              <li>To protect the rights, safety, and property of Benchlot, our users, and others</li>
               <li>To enforce our Terms of Service and other policies</li>
               <li>To verify your identity and prevent unauthorized access to your account</li>
             </ul>
@@ -130,7 +130,7 @@ const PrivacyPage = () => {
 
             <h3>4.4. Business Transfers</h3>
             <p>
-              If Rekerf is involved in a merger, acquisition, or sale of all or a portion of its assets, your information may be transferred as part of that transaction. We will notify you via email and/or a prominent notice on our Services of any change in ownership or uses of your information, as well as any choices you may have regarding your information.
+              If Benchlot is involved in a merger, acquisition, or sale of all or a portion of its assets, your information may be transferred as part of that transaction. We will notify you via email and/or a prominent notice on our Services of any change in ownership or uses of your information, as well as any choices you may have regarding your information.
             </p>
 
             <h2>5. Your Choices and Rights</h2>
@@ -192,7 +192,7 @@ const PrivacyPage = () => {
 
             <h2>9. International Data Transfers</h2>
             <p>
-              Rekerf operates primarily in the United States. If you are accessing our Services from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States, where our servers are located. By using our Services, you consent to the transfer of your information to the United States, which may have different data protection rules than those of your country.
+              Benchlot operates primarily in the United States. If you are accessing our Services from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States, where our servers are located. By using our Services, you consent to the transfer of your information to the United States, which may have different data protection rules than those of your country.
             </p>
 
             <h2>10. Changes to This Privacy Policy</h2>
@@ -205,8 +205,8 @@ const PrivacyPage = () => {
               If you have any questions about this Privacy Policy, please contact us at:
             </p>
             <p>
-              <strong>Email:</strong> privacy@rekerf.com<br />
-              <strong>Address:</strong> Rekerf, Inc.<br />
+              <strong>Email:</strong> privacy@benchlot.com<br />
+              <strong>Address:</strong> Benchlot, Inc.<br />
               123 Tool Street<br />
               Boston, MA 02108
             </p>

@@ -1,6 +1,6 @@
 # Guest Checkout Implementation
 
-This document explains how guest checkout works in Rekerf.
+This document explains how guest checkout works in Benchlot.
 
 ## Overview
 
@@ -11,7 +11,7 @@ Guest checkout allows users to purchase tools without creating an account. The c
 ### Client-Side (React)
 
 1. **Guest Cart Storage**:
-   - Guest carts are stored in localStorage with the key `rekerf_guest_cart`
+   - Guest carts are stored in localStorage with the key `benchlot_guest_cart`
    - The cart has an ID of `'guest-cart'` and an `isGuestCart: true` flag
    - All cart operations (add, update, remove) are performed on the localStorage data
 

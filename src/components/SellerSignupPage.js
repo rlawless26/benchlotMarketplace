@@ -117,7 +117,7 @@ const SellerSignupPage = () => {
     <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
-          <h1 className="text-3xl font-medium text-gray-800 mb-6">Start Selling on Rekerf</h1>
+          <h1 className="text-3xl font-medium text-gray-800 mb-6">Start Selling on Benchlot</h1>
           <p className="text-gray-600 mb-6">Complete your seller profile to begin listing tools.</p>
           
           {error && (
@@ -264,7 +264,7 @@ const SellerSignupPage = () => {
                 <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md mb-6">
                   <p className="font-medium">After submitting this form:</p>
                   <p className="mt-1 text-sm">You'll be directed to Stripe (our payment processor) to verify your identity and set up payments. This is required to receive payouts as a seller.</p>
-                  <p className="mt-1 text-sm">Once complete, you'll be returned to Rekerf to start listing your tools.</p>
+                  <p className="mt-1 text-sm">Once complete, you'll be returned to Benchlot to start listing your tools.</p>
                 </div>
               
                 <button

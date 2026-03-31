@@ -1,8 +1,8 @@
-# Rekerf Settings Page - Incremental Implementation Plan
+# Benchlot Settings Page - Incremental Implementation Plan
 
 ## Overview
 
-This document outlines an incremental approach to implementing the User Profile System for Rekerf, using the existing SettingsPage.jsx as a foundation. The goal is to build a MVP (Minimum Viable Product) version of the settings system that supports both regular users and sellers, while setting the stage for more advanced features as the product matures.
+This document outlines an incremental approach to implementing the User Profile System for Benchlot, using the existing SettingsPage.jsx as a foundation. The goal is to build a MVP (Minimum Viable Product) version of the settings system that supports both regular users and sellers, while setting the stage for more advanced features as the product matures.
 
 ## Analysis of Existing SettingsPage.jsx
 

@@ -391,6 +391,18 @@ function fuzzyTypeMatch(expected, got) {
     'adze': ['hand adze', 'carpenter adze'],
     'forstner bit set': ['forstner bits', 'forstner'],
     'spade bit set': ['spade bits', 'paddle bits'],
+    // Power tools
+    'track saw': ['track saw', 'plunge saw', 'circular saw'],
+    'bandsaw': ['band saw', 'bandsaws'],
+    'thickness planer': ['planer', 'benchtop planer', 'portable planer', 'thickness planer'],
+    'router': ['plunge router', 'fixed base router', 'fixed-base router'],
+    'table saw': ['tablesaw', 'jobsite table saw', 'contractor saw', 'cabinet saw'],
+    'drill press': ['floor drill press', 'benchtop drill press'],
+    'bench vise': ['vise', 'woodworking vise', 'bench vise'],
+    'sharpening system': ['wet grinder', 'sharpening machine', 'sharpener'],
+    'chisel set': ['bench chisel set', 'bevel edge set'],
+    'bench chisel': ['chisel', 'bevel edge chisel', 'bevel-edge chisel'],
+    'japanese chisel': ['oire nomi', 'nomi', 'bench chisel'],
   };
 
   const expectedSynonyms = synonyms[expected] || [];

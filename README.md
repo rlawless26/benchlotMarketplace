@@ -1,10 +1,10 @@
-# Rekerf - Firebase Implementation
+# Benchlot - Firebase Implementation
 
 A modern tool rental marketplace built with Firebase and React, featuring Stripe payment processing.
 
 ## Overview
 
-Rekerf is a platform that allows users to:
+Benchlot is a platform that allows users to:
 - List tools for rental
 - Browse available tools in the marketplace
 - Add items to cart and complete checkout with Stripe
@@ -83,7 +83,7 @@ npm start
 
 ## Firebase Functions
 
-Rekerf uses Firebase Functions for secure Stripe payment processing. The function is deployed at:
+Benchlot uses Firebase Functions for secure Stripe payment processing. The function is deployed at:
 ```
 https://stripeapi-sed2e4p6ua-uc.a.run.app
 ```

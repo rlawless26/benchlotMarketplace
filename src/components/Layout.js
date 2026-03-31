@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
             {/* Logo and brand */}
             <div className="flex-shrink-0">
               <Link to="/" className="logo-container">
-                <span className="logo">Rekerf</span>
+                <span className="logo">Benchlot</span>
               </Link>
             </div>
 

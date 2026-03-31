@@ -83,7 +83,7 @@ const CheckoutForm = ({
       let guestCartData = null;
       if (isGuestCheckout && cartId === 'guest-cart') {
         try {
-          const rawCartData = localStorage.getItem('rekerf_guest_cart');
+          const rawCartData = localStorage.getItem('benchlot_guest_cart');
           if (rawCartData) {
             guestCartData = JSON.parse(rawCartData);
           }
@@ -250,7 +250,7 @@ const CheckoutForm = ({
         country: 'US',
         currency: 'usd',
         total: {
-          label: 'Rekerf Purchase',
+          label: 'Benchlot Purchase',
           amount: Math.round(amount * 100), // Convert to cents
         },
         requestPayerName: true,
@@ -573,7 +573,7 @@ const StripeCheckout = ({
         // If this is a guest checkout, we need to pass actual cart information
         if (isGuestCheckout && cartId === 'guest-cart') {
           try {
-            const rawGuestCart = localStorage.getItem('rekerf_guest_cart');
+            const rawGuestCart = localStorage.getItem('benchlot_guest_cart');
             if (rawGuestCart) {
               console.log('Raw guest cart data:', rawGuestCart);
               

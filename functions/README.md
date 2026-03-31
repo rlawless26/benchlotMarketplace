@@ -1,6 +1,6 @@
-# Firebase Functions for Rekerf
+# Firebase Functions for Benchlot
 
-This directory contains Firebase Cloud Functions that power the server-side functionality for the Rekerf application, particularly for payment processing with Stripe.
+This directory contains Firebase Cloud Functions that power the server-side functionality for the Benchlot application, particularly for payment processing with Stripe.
 
 ## Functions Overview
 

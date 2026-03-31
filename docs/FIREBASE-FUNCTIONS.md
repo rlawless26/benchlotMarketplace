@@ -1,10 +1,10 @@
 # Firebase Functions Guide
 
-This document explains the Firebase Functions implementation for Rekerf, with a focus on the Stripe payment processing API.
+This document explains the Firebase Functions implementation for Benchlot, with a focus on the Stripe payment processing API.
 
 ## Overview
 
-Firebase Functions provide the server-side functionality for Rekerf, handling sensitive operations like payment processing through Stripe. The main function (`stripeApi`) exposes several REST endpoints that the client-side React application can call.
+Firebase Functions provide the server-side functionality for Benchlot, handling sensitive operations like payment processing through Stripe. The main function (`stripeApi`) exposes several REST endpoints that the client-side React application can call.
 
 ## Deployed Endpoint
 

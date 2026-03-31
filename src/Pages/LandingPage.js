@@ -14,7 +14,7 @@ const LandingPage = () => {
   const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
 
   useEffect(() => {
-    document.title = 'Home | Rekerf';
+    document.title = 'Home | Benchlot';
   }, []);
 
   const handleSubmit = async (e) => {
@@ -91,13 +91,13 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-display font-medium mb-6 text-bone">
-              The marketplace for premium used hand tools
+              A marketplace for used hand tools
             </h1>
             <p className="text-xl mb-8" style={{ color: '#6aaa98' }}>
               The woodworker's marketplace. Buy and sell premium hand tools from makers who understand their value.</p>
             <div className="bg-bone-light rounded-lg shadow-lg p-8 max-w-xl mx-auto">
               <div className="mb-6">
-                <h3 className="text-2xl font-display font-medium mb-2 text-dark-teal">Join Rekerf Today</h3>
+                <h3 className="text-2xl font-display font-medium mb-2 text-dark-teal">Join Benchlot Today</h3>
                 <p className="text-secondary text-sm">We're building the new standard for buying and selling tools</p>
               </div>
               <form onSubmit={handleSubmit}>
@@ -138,8 +138,8 @@ const LandingPage = () => {
       <section className="py-20 bg-bone-light">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">How Rekerf Works</h2>
-            <p className="text-secondary">The marketplace for premium used hand tools</p>
+            <h2 className="text-3xl font-display font-medium mb-4 text-dark-teal">How Benchlot Works</h2>
+            <p className="text-secondary">A marketplace for used hand tools</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">

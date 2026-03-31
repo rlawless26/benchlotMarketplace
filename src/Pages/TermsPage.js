@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const TermsPage = () => {
   useEffect(() => {
-    document.title = 'Terms of Service | Rekerf';
+    document.title = 'Terms of Service | Benchlot';
   }, []);
 
   return (
@@ -17,7 +17,7 @@ const TermsPage = () => {
           <div className="prose prose-stone max-w-none">
             <h2>1. Agreement to Terms</h2>
             <p>
-              Welcome to Rekerf. These Terms of Service ("Terms") govern your access to and use of the Rekerf website,
+              Welcome to Benchlot. These Terms of Service ("Terms") govern your access to and use of the Benchlot website,
               mobile applications, and services (collectively, the "Services"). Please read these Terms carefully.
             </p>
             <p>
@@ -28,7 +28,7 @@ const TermsPage = () => {
             <h2>2. Definitions</h2>
             <p>In these Terms:</p>
             <ul>
-              <li>"Rekerf," "we," "us," and "our" refer to Rekerf, Inc.</li>
+              <li>"Benchlot," "we," "us," and "our" refer to Benchlot, Inc.</li>
               <li>"User," "you," and "your" refer to any individual or entity using our Services.</li>
               <li>"Seller" refers to a User who lists tools for sale, rent, or trade on our Services.</li>
               <li>"Buyer" refers to a User who purchases, rents, or acquires tools listed on our Services.</li>
@@ -87,7 +87,7 @@ const TermsPage = () => {
             <h2>5. Fees and Payments</h2>
             <h3>5.1. Platform Fees</h3>
             <p>
-              Rekerf charges a 5% platform fee on each successful transaction. This fee covers our service,
+              Benchlot charges a 5% platform fee on each successful transaction. This fee covers our service,
               payment processing, and ongoing platform improvements. There are no listing fees or monthly
               subscription costs for basic sellers.
             </p>
@@ -116,7 +116,7 @@ const TermsPage = () => {
             <h3>6.1. Ownership</h3>
             <p>
               You retain ownership of any Content you submit, post, or display on or through our Services. By
-              submitting Content, you grant Rekerf a worldwide, non-exclusive, royalty-free license to use,
+              submitting Content, you grant Benchlot a worldwide, non-exclusive, royalty-free license to use,
               reproduce, modify, adapt, publish, translate, and distribute the Content for the purpose of providing
               and promoting our Services.
             </p>
@@ -143,32 +143,32 @@ const TermsPage = () => {
 
             <h2>7. Intellectual Property</h2>
             <p>
-              The Rekerf name, logo, and all related names, logos, product and service names, designs, and slogans
-              are trademarks of Rekerf or its affiliates. You may not use such marks without our prior written permission.
+              The Benchlot name, logo, and all related names, logos, product and service names, designs, and slogans
+              are trademarks of Benchlot or its affiliates. You may not use such marks without our prior written permission.
             </p>
             <p>
               Our Services and their entire contents, features, and functionality (including but not limited to all
               information, software, text, displays, images, video, and audio, and the design, selection, and
-              arrangement thereof) are owned by Rekerf, its licensors, or other providers of such material and are
+              arrangement thereof) are owned by Benchlot, its licensors, or other providers of such material and are
               protected by copyright, trademark, patent, trade secret, and other intellectual property or proprietary
               rights laws.
             </p>
 
             <h2>8. Disputes Between Users</h2>
             <p>
-              Rekerf is not responsible for resolving disputes between Users. However, we may, at our discretion,
+              Benchlot is not responsible for resolving disputes between Users. However, we may, at our discretion,
               provide assistance in resolving disputes. If you have a dispute with another User, we encourage you to
               first attempt to resolve the issue directly with the other User.
             </p>
             <p>
-              If you are unable to resolve the dispute directly, you may report the issue to Rekerf. We may, at our
+              If you are unable to resolve the dispute directly, you may report the issue to Benchlot. We may, at our
               discretion, review the dispute and take appropriate action, which may include mediation, refunds, or
               account suspension.
             </p>
 
             <h2>9. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, Rekerf shall not be liable for any indirect, incidental,
+              To the maximum extent permitted by law, Benchlot shall not be liable for any indirect, incidental,
               special, consequential, or punitive damages, including without limitation, loss of profits, data, use,
               goodwill, or other intangible losses, resulting from:
             </p>
@@ -179,13 +179,13 @@ const TermsPage = () => {
               <li>Unauthorized access, use, or alteration of your transmissions or content</li>
             </ul>
             <p>
-              In no event shall Rekerf's total liability to you for all claims exceed the amount you have paid to
-              Rekerf in the last six months.
+              In no event shall Benchlot's total liability to you for all claims exceed the amount you have paid to
+              Benchlot in the last six months.
             </p>
 
             <h2>10. Indemnification</h2>
             <p>
-              You agree to defend, indemnify, and hold harmless Rekerf, its affiliates, and their respective
+              You agree to defend, indemnify, and hold harmless Benchlot, its affiliates, and their respective
               officers, directors, employees, and agents from and against any claims, liabilities, damages, judgments,
               awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) arising out of or
               relating to your violation of these Terms or your use of our Services.
@@ -221,8 +221,8 @@ const TermsPage = () => {
               If you have any questions about these Terms, please contact us at:
             </p>
             <p>
-              <strong>Email:</strong> legal@rekerf.com<br />
-              <strong>Address:</strong> Rekerf, Inc.<br />
+              <strong>Email:</strong> legal@benchlot.com<br />
+              <strong>Address:</strong> Benchlot, Inc.<br />
               123 Tool Street<br />
               Boston, MA 02108
             </p>

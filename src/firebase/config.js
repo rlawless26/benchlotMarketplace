@@ -1,5 +1,5 @@
 /**
- * Firebase configuration for Rekerf
+ * Firebase configuration for Benchlot
  * Initializes and exports Firebase services
  */
 import { initializeApp } from 'firebase/app';

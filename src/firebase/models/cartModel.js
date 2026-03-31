@@ -22,7 +22,7 @@ import { db } from '../config';
 const cartsCollection = collection(db, 'carts');
 
 // Local storage key for guest cart
-const GUEST_CART_KEY = 'rekerf_guest_cart';
+const GUEST_CART_KEY = 'benchlot_guest_cart';
 
 /**
  * Get or create a cart for a user (authenticated or guest)

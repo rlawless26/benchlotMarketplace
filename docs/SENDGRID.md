@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rekerf uses SendGrid to send transactional emails for various user interactions. This document describes the implementation, configuration, and usage of the SendGrid integration.
+Benchlot uses SendGrid to send transactional emails for various user interactions. This document describes the implementation, configuration, and usage of the SendGrid integration.
 
 ## Email Types
 
@@ -37,14 +37,14 @@ The system supports the following email types:
 The integration uses the following SendGrid components:
 
 1. **API Key**: Used for authentication with the SendGrid API
-   - Name: `rekerf-firebase-functions`
+   - Name: `benchlot-firebase-functions`
    - Permissions: Mail Send (Full Access), Template Engine (Read Access)
 
 2. **Email Templates**: Dynamic templates for each email type
    - Template IDs are stored in the `TEMPLATE_IDS` object
    - Templates use SendGrid's Dynamic Templates feature
 
-3. **Sender Identity**: All emails are sent from `notifications@rekerf.com`
+3. **Sender Identity**: All emails are sent from `notifications@benchlot.com`
    - This email is verified in SendGrid
 
 ## Usage Guide

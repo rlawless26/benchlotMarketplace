@@ -240,9 +240,9 @@ const SellerOnboardAndListPage = () => {
         throw new Error('No Stripe URL received. Please try again.');
       }
       
-      // Fix URL for local development - intercept rekerf.com URLs and redirect to localhost
+      // Fix URL for local development - intercept benchlot.com URLs and redirect to localhost
       let redirectUrl = sellerAccountResult.url;
-      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('rekerf.com')) {
+      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('benchlot.com')) {
         // Extract the path and query params
         const urlObj = new URL(redirectUrl);
         const pathWithQuery = urlObj.pathname + urlObj.search;
@@ -321,7 +321,7 @@ const SellerOnboardAndListPage = () => {
         <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 md:p-8">
           {/* Header */}
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
-            {formStep === 1 ? 'Start Selling on Rekerf' : 
+            {formStep === 1 ? 'Start Selling on Benchlot' : 
              formStep === 2 ? 'Tell us about your tool' : 
              formStep === 3 ? 'Set up your payment details' :
              'Review your listing'}
@@ -389,7 +389,7 @@ const SellerOnboardAndListPage = () => {
                 Verify your email to continue
               </h2>
               <p className="mb-4">
-                We need to verify your email address before you can list tools on Rekerf.
+                We need to verify your email address before you can list tools on Benchlot.
                 Please check your inbox for a verification email from us.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">

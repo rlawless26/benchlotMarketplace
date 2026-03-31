@@ -107,7 +107,7 @@ return (
         }
         message={
           authMode === 'signin' ? 'Welcome back! Sign in to continue.' :
-          authMode === 'signup' ? 'Join the Rekerf community today.' :
+          authMode === 'signup' ? 'Join the Benchlot community today.' :
           'Enter your email to receive password reset instructions.'
         }
       />

@@ -1,10 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Benchlot — The woodworker's marketplace">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Petrona:wght@500;900&amp;display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&amp;display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Petrona:wght@900&amp;display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400&amp;display=swap');
   </style>
-  <rect width="1200" height="630" fill="#1a3030"/>
-  <text x="600" y="290" text-anchor="middle" font-family="'Petrona', serif" font-weight="900" font-size="120" letter-spacing="-2" fill="#f2f0eb">Rekerf</text>
-  <text x="600" y="350" text-anchor="middle" font-family="'Petrona', serif" font-weight="500" font-style="italic" font-size="28" fill="#d4aa60" letter-spacing="1">The woodworker's marketplace.</text>
-  <text x="600" y="420" text-anchor="middle" font-family="'Outfit', sans-serif" font-weight="400" font-size="18" fill="#6aaa98">The marketplace for premium used hand tools</text>
+  <rect width="1200" height="630" fill="#0c1c1e"/>
+  <text
+    x="600"
+    y="285"
+    text-anchor="middle"
+    font-family="'Petrona', serif"
+    font-weight="900"
+    font-size="96"
+    fill="#f2f0eb"
+    letter-spacing="0.02em"
+  >Benchlot</text>
+  <text
+    x="600"
+    y="360"
+    text-anchor="middle"
+    font-family="'Outfit', sans-serif"
+    font-weight="400"
+    font-size="32"
+    fill="#d4aa60"
+    letter-spacing="0.05em"
+  >The woodworker's marketplace.</text>
 </svg>

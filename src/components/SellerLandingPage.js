@@ -94,7 +94,7 @@ const SellerLandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-medium text-gray-800 mb-4">
-              How selling works on Rekerf
+              How selling works on Benchlot
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Our straightforward process helps you turn unused tools into cash quickly and safely.
@@ -144,12 +144,12 @@ const SellerLandingPage = () => {
         </div>
       </section>
       
-      {/* Why Sell on Rekerf Section */}
+      {/* Why Sell on Benchlot Section */}
       <section className="py-16 md:py-24 bg-stone-50 border-y border-stone-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-medium text-gray-800 mb-4">
-              Why sell on Rekerf?
+              Why sell on Benchlot?
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Your tools deserve buyers who appreciate them.
@@ -228,7 +228,7 @@ const SellerLandingPage = () => {
               What sellers are saying
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Hear from makers who have successfully sold tools on Rekerf
+              Hear from makers who have successfully sold tools on Benchlot
             </p>
           </div>
           
@@ -284,7 +284,7 @@ const SellerLandingPage = () => {
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
               <p className="text-gray-600 mb-4">
-                "I inherited my grandfather's tool chest full of Stanley Bedrock planes. Rekerf
+                "I inherited my grandfather's tool chest full of Stanley Bedrock planes. Benchlot
                 helped me find them homes with people who'd actually put them to work."
               </p>
               <div className="flex items-center">
