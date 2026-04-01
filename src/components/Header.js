@@ -147,7 +147,7 @@ const Header = ({ publicMode = false }) => {
       <header className="border-b shadow-sm">
         <div className="bg-dark-teal">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '20px', letterSpacing: '-1.5px' }}>Benchlot</Link>
+            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
             <div className="flex items-center gap-4">
               <Link
                 to="/scan"
@@ -185,7 +185,7 @@ const Header = ({ publicMode = false }) => {
 
           {/* Logo */}
           <div className="mr-6 flex-shrink-0">
-            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '20px', letterSpacing: '-1.5px' }}>Benchlot</Link>
+            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
           </div>
 
           {/* Search bar - centered and expanded */}

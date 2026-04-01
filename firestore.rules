@@ -202,6 +202,16 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // ToolScan leads (email capture from scan results modal)
+    match /toolscan_leads/{docId} {
+      // Anyone can create a toolscan lead (no auth required)
+      allow create: if request.resource.data.keys().hasAll(['email'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() > 0;
+      // Only admins can read/update/delete
+      allow read, update, delete: if isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();
