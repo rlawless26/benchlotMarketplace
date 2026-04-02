@@ -1,6 +1,7 @@
 // src/App.js - Firebase Implementation
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
 import { useAuth } from './firebase/hooks/useAuth';
@@ -171,19 +172,40 @@ function AppLayout() {
   );
 }
 
+function SentryFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-8">
+      <div className="text-center max-w-md">
+        <h1 className="text-2xl font-display text-spruce mb-4">Something went wrong</h1>
+        <p className="text-dark-teal/70 mb-6">
+          We've been notified and are looking into it. Please try refreshing the page.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey/90 transition-colors"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <SellerProvider>
-          <NotificationProvider>
-            <Router>
-              <AppLayout />
-            </Router>
-          </NotificationProvider>
-        </SellerProvider>
-      </CartProvider>
-    </AuthProvider>
+    <Sentry.ErrorBoundary fallback={SentryFallback}>
+      <AuthProvider>
+        <CartProvider>
+          <SellerProvider>
+            <NotificationProvider>
+              <Router>
+                <AppLayout />
+              </Router>
+            </NotificationProvider>
+          </SellerProvider>
+        </CartProvider>
+      </AuthProvider>
+    </Sentry.ErrorBoundary>
   );
 }
 

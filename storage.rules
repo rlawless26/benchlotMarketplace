@@ -67,11 +67,10 @@ service firebase.storage {
     match /tools/{toolId}/{allPaths=**} {
       // Anyone can view tool images
       allow read;
-      
-      // Allow any authenticated user to upload images if the content type is valid
-      // This simpler rule resolves permission issues with newly created tools
-      allow write: if isSignedIn() && 
-                   isImageTypeValid() && 
+
+      // Only tool owner or admin can upload/modify tool images
+      allow write: if (isToolOwner(toolId) || isAdmin()) &&
+                   isImageTypeValid() &&
                    isFileSizeValid();
     }
     
