@@ -212,6 +212,15 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // ToolScan feedback (accuracy votes from scan results)
+    match /scan_feedback/{docId} {
+      // Anyone can submit feedback (scan is public, no auth required)
+      allow create: if request.resource.data.keys().hasAll(['vote', 'created_at'])
+                    && request.resource.data.vote in ['correct', 'corrected'];
+      // Only admins can read/update/delete
+      allow read, update, delete: if isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();
