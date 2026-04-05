@@ -216,7 +216,7 @@ const Header = ({ publicMode = false }) => {
               <>
                 {/* Sell your tools button */}
                 <Link
-                  to={user?.isSeller || user?.profile?.isSeller ? "/seller/dashboard" : "/sell"}
+                  to={user?.isSeller || user?.profile?.isSeller || user?.seller?.isSeller ? "/seller/dashboard" : "/sell"}
                   className="hidden md:flex items-center px-3 py-1.5 bg-honey text-dark-teal rounded-md hover:bg-honey/90 font-body font-medium whitespace-nowrap ml-4"
                 >
                   <Hammer className="h-4 w-4 mr-1.5" />
@@ -344,7 +344,7 @@ const Header = ({ publicMode = false }) => {
                           <span className="text-xs font-body font-medium text-secondary">SELLING</span>
                         </div>
 
-                        {user?.isSeller || user?.profile?.isSeller ? (
+                        {user?.isSeller || user?.profile?.isSeller || user?.seller?.isSeller ? (
                           <>
                             <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                               <List className="h-4 w-4" />
@@ -661,7 +661,7 @@ const Header = ({ publicMode = false }) => {
                       SELLING
                     </div>
 
-                    {user?.isSeller || user?.profile?.isSeller ? (
+                    {user?.isSeller || user?.profile?.isSeller || user?.seller?.isSeller ? (
                       <>
                         <Link
                           to="/my-listings"

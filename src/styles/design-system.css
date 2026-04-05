@@ -113,12 +113,14 @@
   }
 
   .btn-sm {
+    @apply cursor-pointer;
     font-size: 11px;
     padding: 8px 18px;
     border-radius: 6px;
   }
 
   .btn-lg {
+    @apply cursor-pointer;
     font-size: 13px;
     padding: 14px 32px;
     border-radius: 8px;

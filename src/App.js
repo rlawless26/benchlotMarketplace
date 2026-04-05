@@ -88,7 +88,7 @@ function MarketplaceRoute({ element }) {
 function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
-  const isWaitlistPage = location.pathname === '/';
+  const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA;
 
   // Public mode: marketplace not yet launched AND user not signed in
   const isPublicMode = !MARKETPLACE_BETA && !user;
@@ -101,8 +101,8 @@ function AppLayout() {
 
       <main className={!isWaitlistPage ? 'flex-grow' : undefined}>
         <Routes>
-          {/* Waitlist Landing Page (Home) */}
-          <Route path="/" element={<WaitlistLandingPage />} />
+          {/* Home: marketplace landing when launched, waitlist otherwise */}
+          <Route path="/" element={MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />} />
 
           {/* App Home (previous landing page, preserved) */}
           <Route path="/app" element={<MarketplaceRoute element={<LandingPageNew />} />} />

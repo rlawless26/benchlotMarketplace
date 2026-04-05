@@ -123,8 +123,8 @@ const LandingPageNew = () => {
               <h1 className="text-4xl md:text-6xl font-display font-medium mb-6 text-bone" style={{ textShadow: '0 3px 6px rgba(0,0,0,0.8)' }}>
                 A marketplace for used hand tools
               </h1>
-              <p className="text-xl mb-8" style={{ color: '#6aaa98', textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
-                The woodworker's marketplace. Buy and sell premium hand tools from makers who understand their value. Lie-Nielsen, Veritas, vintage Stanley, and more.
+              <p className="text-xl mb-8 text-bone" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.7)' }}>
+                Buy and sell premium used hand tools
               </p>
             </div>
 

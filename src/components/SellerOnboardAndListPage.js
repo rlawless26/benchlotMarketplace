@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-// useNavigate, useLocation removed - not currently used
 import {
   ArrowRight,
   CheckCircle,
   ChevronRight,
-  Check,
-  X,
-  AlertTriangle
+  AlertTriangle,
+  Camera,
+  X
 } from 'lucide-react';
-import { sendEmailVerification } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useSeller } from '../firebase/hooks/useSeller';
-import { toolCategories, toolConditions } from '../firebase/models/toolModel';
-import {
-  openAuthModal
-} from '../utils/featureFlags';
+import { toolCategories, toolConditions, createTool, uploadToolImage } from '../firebase/models/toolModel';
+import { openAuthModal } from '../utils/featureFlags';
 
 // US state options for dropdown
 const stateOptions = [
@@ -75,31 +71,35 @@ const stateOptions = [
 
 /**
  * SellerOnboardAndListPage Component
- * 
- * Combined form for seller signup and listing creation
- * This implements the tool-first flow for seller onboarding
+ *
+ * Combined form for seller signup and listing creation.
+ * 3-step flow: Seller Profile → Tool Details → Photos & Publish
+ * Payout details are deferred until the tool sells.
  */
 const SellerOnboardAndListPage = () => {
   const { user } = useAuth();
   const { createSellerAccount } = useSeller();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [formStep, setFormStep] = useState(1); // 1 = seller info, 2 = tool details, 3 = payout details, 4 = review & publish
+  const [formStep, setFormStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  
+
+  // Photo state
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+
   // Combined form data
   const [formData, setFormData] = useState({
     // Seller profile
     sellerName: '',
     sellerType: 'individual',
-    // Replaced single location with city and state
     city: '',
     state: '',
     contactEmail: '',
     contactPhone: '',
-    
+
     // Tool details
     toolName: '',
     description: '',
@@ -115,16 +115,14 @@ const SellerOnboardAndListPage = () => {
     shipping_price: '',
     free_shipping: false,
   });
-  
-  // Load draft tool name and populate user data
-  // Scroll to top when component mounts
+
+  // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [formStep]);
 
   useEffect(() => {
     if (user) {
-      // Pre-populate with user data
       setFormData(prev => ({
         ...prev,
         sellerName: user.displayName || '',
@@ -133,89 +131,103 @@ const SellerOnboardAndListPage = () => {
       }));
       setLoading(false);
     } else {
-      // Check if authentication is still in progress
       if (!loading) {
-        // If not loading and no user, open auth modal instead of redirecting to login page
         openAuthModal('signup', '/seller/onboard-and-list');
       }
     }
   }, [user, loading]);
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  // Handle seller profile form submission (step 1)
+
+  // Handle seller profile form submission (step 1 → step 2)
   const handleSellerProfileSubmit = (e) => {
     e.preventDefault();
-    
-    // Validate seller profile form
     if (!formData.sellerName || !formData.contactEmail) {
       setError('Please fill out all required fields');
       return;
     }
-    
-    // Proceed to tool listing details
     setError(null);
     setFormStep(2);
   };
-  
-  // Handle tool listing form validation
-  const validateToolListing = () => {
+
+  // Handle tool listing validation (step 2 → step 3)
+  const handleToolDetailsSubmit = () => {
     const requiredFields = ['toolName', 'description', 'category', 'condition', 'current_price'];
     const missingFields = requiredFields.filter(field => !formData[field]);
-    
+
     if (missingFields.length > 0) {
       setError(`Please fill out all required fields: ${missingFields.join(', ')}`);
-      return false;
-    }
-    
-    return true;
-  };
-  
-  // Handle final submission (directly from Step 2)
-  const handleFinalSubmit = async () => {
-    // First validate the tool listing data
-    if (!validateToolListing()) {
       return;
     }
-    
+
+    setError(null);
+    setFormStep(3);
+  };
+
+  // Handle image selection
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const totalImages = imageFiles.length + files.length;
+
+    if (totalImages > 5) {
+      setError('Maximum 5 images allowed');
+      return;
+    }
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`${file.name} exceeds 5MB limit`);
+        return;
+      }
+    }
+
+    setError(null);
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImageFiles(prev => [...prev, ...files]);
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  // Remove an image
+  const handleRemoveImage = (index) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle final publish
+  const handlePublish = async () => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
-      // We don't block progression based on email verification status
-      // Users can proceed regardless, but we show them the status in the UI
-      
-      // Create Stripe Connect account with seller data
+      // Step 1: Create seller account (sets isSeller flags + creates Stripe account in background)
       const sellerAccountResult = await createSellerAccount({
         sellerName: formData.sellerName,
         sellerType: formData.sellerType,
-        // Create a formatted location string from city and state
         location: `${formData.city}, ${formData.state}`,
-        // Also pass the individual fields
         businessCity: formData.city,
         businessState: formData.state,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        // Explicitly add seller status flags to ensure they're set correctly
         isSeller: true,
         'profile.isSeller': true
       });
-      
+
       if (!sellerAccountResult.success) {
         console.error('Seller account creation failed:', sellerAccountResult.error);
-        // If the error includes "NOT_FOUND", it's likely a missing document error
         if (sellerAccountResult.error && sellerAccountResult.error.includes("NOT_FOUND")) {
           setError("There was a problem with your account setup. Please try again.");
         } else {
           throw new Error(sellerAccountResult.error || 'Failed to create seller account');
         }
-        return; // Exit early to prevent further processing
+        setIsSubmitting(false);
+        return;
       }
-      
-      // Store tool data in localStorage for creation after Stripe onboarding
+
+      // Step 2: Create the tool listing directly
       const toolData = {
         name: formData.toolName,
         description: formData.description,
@@ -230,78 +242,39 @@ const SellerOnboardAndListPage = () => {
         age: formData.age,
         shipping_price: parseFloat(formData.shipping_price) || 0,
         free_shipping: formData.free_shipping || false,
-        shipping_location: `${formData.city}, ${formData.state}`
+        shipping_location: formData.city && formData.state ? `${formData.city}, ${formData.state}` : ''
       };
-      
-      localStorage.setItem('pendingToolListing', JSON.stringify(toolData));
-      
-      // Check if we received a URL
-      if (!sellerAccountResult.url) {
-        throw new Error('No Stripe URL received. Please try again.');
+
+      const newTool = await createTool(toolData, user.uid);
+
+      // Step 3: Upload photos if any
+      if (imageFiles.length > 0) {
+        for (const file of imageFiles) {
+          await uploadToolImage(file, newTool.id);
+        }
       }
-      
-      // Fix URL for local development - intercept benchlot.com URLs and redirect to localhost
-      let redirectUrl = sellerAccountResult.url;
-      if (process.env.NODE_ENV === 'development' && redirectUrl.includes('benchlot.com')) {
-        // Extract the path and query params
-        const urlObj = new URL(redirectUrl);
-        const pathWithQuery = urlObj.pathname + urlObj.search;
-        // Replace with localhost URL
-        redirectUrl = `${window.location.origin}${pathWithQuery}`;
-        console.log("Redirecting to local version instead:", redirectUrl);
-      }
-      
-      // Redirect to bank details page
-      window.location.href = redirectUrl;
-      
+
+      // Clean up
+      localStorage.removeItem('draftToolName');
+      localStorage.removeItem('pendingToolListing');
+
+      // Clean up image preview URLs
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+
+      setSuccessMessage('Your listing has been created!');
+
+      // Redirect to the tool detail page
+      setTimeout(() => {
+        navigate(`/tools/${newTool.id}${imageFiles.length === 0 ? '?action=add-photos' : ''}`);
+      }, 1000);
+
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setIsSubmitting(false);
-      console.error('Error in final submission:', err);
+      console.error('Error publishing listing:', err);
     }
   };
-  
-  // Handle send verification email
-  const handleSendVerificationEmail = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setError('You must be logged in to verify your email.');
-        return;
-      }
 
-      await sendEmailVerification(currentUser);
-      setSuccessMessage('Verification email sent. Please check your inbox.');
-
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-    } catch (err) {
-      console.error('Error sending verification email:', err);
-      if (err.code === 'auth/too-many-requests') {
-        setError('Too many requests. Please wait a few minutes and try again.');
-      } else {
-        setError('Failed to send verification email. Please try again.');
-      }
-    }
-  };
-  
-  // Handle checking email verification status
-  const handleCheckVerification = () => {
-    // Hide email verification overlay and proceed with onboarding
-    setShowEmailVerification(false);
-    
-    // Since we have a placeholder text to verify email,
-    // for now we'll just proceed directly to Stripe onboarding
-    handleFinalSubmit();
-    
-    // In a production environment, you would want to:
-    // 1. Refresh the user's auth token to check verification status
-    // 2. Only proceed if email is verified
-    // 3. Show an error if not verified
-  };
-  
-  // Render loading state
   if (loading) {
     return (
       <div className="bg-bone min-h-screen">
@@ -314,25 +287,23 @@ const SellerOnboardAndListPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 md:p-8">
           {/* Header */}
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
-            {formStep === 1 ? 'Start Selling on Benchlot' : 
-             formStep === 2 ? 'Tell us about your tool' : 
-             formStep === 3 ? 'Set up your payment details' :
-             'Review your listing'}
+            {formStep === 1 ? 'Start Selling on Benchlot' :
+             formStep === 2 ? 'Tell us about your tool' :
+             'Add photos & publish'}
           </h1>
           <p className="text-gray-600 mb-6">
             {formStep === 1 ? 'Complete your seller profile to begin listing tools.' :
              formStep === 2 ? 'Provide details about the tool you want to sell.' :
-             formStep === 3 ? 'Set up how you\'ll get paid when your tool sells.' :
-             'Review your listing before publishing.'}
+             'Add photos to help your tool sell faster, then publish your listing.'}
           </p>
-          
+
           {/* Success message */}
           {successMessage && (
             <div className="bg-green-50 border border-green-200 text-spruce px-4 py-3 rounded-md mb-6 flex items-start">
@@ -340,8 +311,8 @@ const SellerOnboardAndListPage = () => {
               <p>{successMessage}</p>
             </div>
           )}
-          
-          {/* Progress Steps */}
+
+          {/* Progress Steps — 3 steps */}
           <div className="mb-8">
             <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -365,520 +336,524 @@ const SellerOnboardAndListPage = () => {
               }`}>
                 3
               </div>
-              <div className={`flex-1 h-1 mx-2 ${
-                formStep >= 4 ? 'bg-spruce' : 'bg-gray-200'
-              }`}></div>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                formStep >= 4 ? 'bg-honey text-dark-teal' : 'bg-gray-200'
-              }`}>
-                4
-              </div>
             </div>
             <div className="flex justify-between mt-2 text-sm text-gray-600">
               <span>Seller Profile</span>
               <span>Tool Details</span>
-              <span>Payout Details</span>
-              <span>Review & Publish</span>
+              <span>Photos & Publish</span>
             </div>
           </div>
-          
-          {/* Email Verification Overlay */}
-          {showEmailVerification ? (
-            <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
-              <h2 className="text-lg font-medium text-yellow-800 mb-2">
-                Verify your email to continue
-              </h2>
-              <p className="mb-4">
-                We need to verify your email address before you can list tools on Benchlot.
-                Please check your inbox for a verification email from us.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+
+          {/* Step 1: Seller Profile Form */}
+          {formStep === 1 && (
+            <form onSubmit={handleSellerProfileSubmit} className="space-y-6">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1" htmlFor="sellerName">
+                  Seller Name*
+                </label>
+                <input
+                  type="text"
+                  id="sellerName"
+                  name="sellerName"
+                  value={formData.sellerName}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">This is how you'll appear to buyers</p>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  I'm selling as:
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="sellerType"
+                      value="individual"
+                      checked={formData.sellerType === 'individual'}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    <span>Individual</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="sellerType"
+                      value="business"
+                      checked={formData.sellerType === 'business'}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    <span>Business</span>
+                  </label>
+                </div>
+                {formData.sellerType === 'individual' && (
+                  <p className="text-sm text-spruce mt-1">
+                    Recommended: Faster verification for individuals
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1" htmlFor="city">
+                    City*
+                  </label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                    required
+                    placeholder="Enter your city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1" htmlFor="state">
+                    State*
+                  </label>
+                  <select
+                    id="state"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
+                    required
+                  >
+                    <option value="">Select a state</option>
+                    {stateOptions.map(state => (
+                      <option key={state.value} value={state.value}>{state.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1" htmlFor="contactEmail">
+                  Contact Email*
+                </label>
+                <input
+                  type="email"
+                  id="contactEmail"
+                  name="contactEmail"
+                  value={formData.contactEmail}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-1" htmlFor="contactPhone">
+                  Contact Phone
+                </label>
+                <input
+                  type="tel"
+                  id="contactPhone"
+                  name="contactPhone"
+                  value={formData.contactPhone}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                />
+                <p className="text-sm text-gray-500 mt-1">Optional, but helps with local pickup</p>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="pt-4">
                 <button
-                  onClick={handleSendVerificationEmail}
-                  className="px-4 py-2 border border-yellow-600 text-yellow-800 rounded-md"
+                  type="submit"
+                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center justify-center cursor-pointer"
                 >
-                  Resend Verification Email
-                </button>
-                <button
-                  onClick={handleCheckVerification}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-md"
-                >
-                  I've Verified My Email
+                  <span>Continue to Tool Details</span>
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </button>
               </div>
-            </div>
-          ) : (
-            <>
-              {/* Step 1: Seller Profile Form */}
-              {formStep === 1 && (
-                <form onSubmit={handleSellerProfileSubmit} className="space-y-6">
+            </form>
+          )}
+
+          {/* Step 2: Tool Details */}
+          {formStep === 2 && (
+            <div className="space-y-6">
+              {/* Tool Information */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Tool Information</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1" htmlFor="sellerName">
-                      Seller Name*
+                    <label htmlFor="toolName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tool Name*
                     </label>
                     <input
                       type="text"
-                      id="sellerName"
-                      name="sellerName"
-                      value={formData.sellerName}
+                      id="toolName"
+                      name="toolName"
+                      value={formData.toolName}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                      placeholder="e.g., Lie-Nielsen No. 4 Smoothing Plane"
                       required
                     />
-                    <p className="text-sm text-gray-500 mt-1">This is how you'll appear to buyers</p>
                   </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">
-                      I'm selling as:
-                    </label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="sellerType"
-                          value="individual"
-                          checked={formData.sellerType === 'individual'}
-                          onChange={handleChange}
-                          className="mr-2"
-                        />
-                        <span>Individual</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="sellerType"
-                          value="business"
-                          checked={formData.sellerType === 'business'}
-                          onChange={handleChange}
-                          className="mr-2"
-                        />
-                        <span>Business</span>
-                      </label>
-                    </div>
-                    {formData.sellerType === 'individual' && (
-                      <p className="text-sm text-spruce mt-1">
-                        Recommended: Faster verification for individuals
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* City */}
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1" htmlFor="city">
-                        City*
-                      </label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
-                        required
-                        placeholder="Enter your city"
-                      />
-                    </div>
 
-                    {/* State */}
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1" htmlFor="state">
-                        State*
-                      </label>
-                      <select
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                        required
-                      >
-                        <option value="">Select a state</option>
-                        {stateOptions.map(state => (
-                          <option key={state.value} value={state.value}>{state.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1" htmlFor="contactEmail">
-                      Contact Email*
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                      Category*
                     </label>
-                    <input
-                      type="email"
-                      id="contactEmail"
-                      name="contactEmail"
-                      value={formData.contactEmail}
+                    <select
+                      id="category"
+                      name="category"
+                      value={formData.category}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
                       required
-                    />
+                    >
+                      <option value="">Select a category</option>
+                      {toolCategories.map(category => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  
+
                   <div>
-                    <label className="block text-gray-700 font-medium mb-1" htmlFor="contactPhone">
-                      Contact Phone
+                    <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
+                      Condition*
+                    </label>
+                    <select
+                      id="condition"
+                      name="condition"
+                      value={formData.condition}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
+                      required
+                    >
+                      <option value="">Select condition</option>
+                      {toolConditions.map(condition => (
+                        <option key={condition} value={condition}>
+                          {condition}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                      Brand
                     </label>
                     <input
-                      type="tel"
-                      id="contactPhone"
-                      name="contactPhone"
-                      value={formData.contactPhone}
+                      type="text"
+                      id="brand"
+                      name="brand"
+                      value={formData.brand}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                      placeholder="e.g., Lie-Nielsen, Stanley, Veritas"
                     />
-                    <p className="text-sm text-gray-500 mt-1">Optional, but helps with local pickup</p>
                   </div>
-                  
-                  {/* Error message */}
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
-                      <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{error}</span>
-                    </div>
-                  )}
-                  
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center justify-center"
-                    >
-                      <span>Continue to Tool Details</span>
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </button>
-                  </div>
-                </form>
-              )}
-              
-              {/* Step 2: Tool Listing Form */}
-              {formStep === 2 && (
-                <div className="space-y-6">
-                  {/* Tool Information Section */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-800 mb-4">Tool Information</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Tool Name */}
-                      <div>
-                        <label htmlFor="toolName" className="block text-sm font-medium text-gray-700 mb-1">
-                          Tool Name*
-                        </label>
-                        <input
-                          type="text"
-                          id="toolName"
-                          name="toolName"
-                          value={formData.toolName}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
-                          placeholder="e.g., Milwaukee M18 Drill"
-                          required
-                        />
-                      </div>
-                      
-                      {/* Category */}
-                      <div>
-                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                          Category*
-                        </label>
-                        <select
-                          id="category"
-                          name="category"
-                          value={formData.category}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                          required
-                        >
-                          <option value="">Select a category</option>
-                          {toolCategories.map(category => (
-                            <option key={category} value={category}>
-                              {category}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {/* Condition */}
-                      <div>
-                        <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-                          Condition*
-                        </label>
-                        <select
-                          id="condition"
-                          name="condition"
-                          value={formData.condition}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                          required
-                        >
-                          <option value="">Select condition</option>
-                          {toolConditions.map(condition => (
-                            <option key={condition} value={condition}>
-                              {condition}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {/* Brand */}
-                      <div>
-                        <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                          Brand
-                        </label>
-                        <input
-                          type="text"
-                          id="brand"
-                          name="brand"
-                          value={formData.brand}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
-                          placeholder="e.g., Milwaukee, DeWalt, Makita"
-                        />
-                      </div>
-                      
-                      {/* Model */}
-                      <div>
-                        <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
-                          Model
-                        </label>
-                        <input
-                          type="text"
-                          id="model"
-                          name="model"
-                          value={formData.model}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
-                          placeholder="e.g., M18 FUEL"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Description */}
-                    <div className="mt-4">
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                        Description*
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
-                        placeholder="Provide details about your tool..."
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Pricing */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-800 mb-4">Pricing</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Current Price */}
-                      <div>
-                        <label htmlFor="current_price" className="block text-sm font-medium text-gray-700 mb-1">
-                          Price*
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            id="current_price"
-                            name="current_price"
-                            value={formData.current_price}
-                            onChange={handleChange}
-                            min="0"
-                            step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
-                            placeholder="0"
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Original Price */}
-                      <div>
-                        <label htmlFor="original_price" className="block text-sm font-medium text-gray-700 mb-1">
-                          Original Price (if discounted)
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            id="original_price"
-                            name="original_price"
-                            value={formData.original_price}
-                            onChange={handleChange}
-                            min="0"
-                            step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Shipping Options */}
-                    <h4 className="text-sm font-medium text-gray-700 mt-4 mb-2">Shipping</h4>
-                    <div className="flex items-center mb-3">
-                      <input
-                        type="checkbox"
-                        id="free_shipping"
-                        name="free_shipping"
-                        checked={formData.free_shipping}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            free_shipping: e.target.checked,
-                            shipping_price: e.target.checked ? '0' : formData.shipping_price
-                          });
-                        }}
-                        className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
-                      />
-                      <label htmlFor="free_shipping" className="ml-2 block text-sm text-gray-700">
-                        Offer free shipping
-                      </label>
-                    </div>
-                    
-                    {!formData.free_shipping && (
-                      <div>
-                        <label htmlFor="shipping_price" className="block text-sm font-medium text-gray-700 mb-1">
-                          Shipping Price
-                        </label>
-                        <div className="relative w-1/2">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            id="shipping_price"
-                            name="shipping_price"
-                            value={formData.shipping_price}
-                            onChange={handleChange}
-                            min="0"
-                            step="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Next Steps Information */}
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-6">
-                    <div className="mb-4">
-                      <div>
-                        <h3 className="font-medium text-blue-700">Here's what comes next:</h3>
-                      </div>
-                      
-                      <div className="mt-4">
-                        <div className="flex">
-                          {/* Status Icons Column */}
-                          <div className="flex flex-col mr-2 space-y-4">
-                            <div>
-                              {user?.emailVerified ? (
-                                <div className="bg-green-100 text-spruce rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
-                                  <Check className="h-3.5 w-3.5" />
-                                </div>
-                              ) : (
-                                <div className="bg-red-100 text-red-500 rounded-full p-0.5 h-5 w-5 flex items-center justify-center">
-                                  <X className="h-3.5 w-3.5" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="h-5 w-5"></div>
-                            <div className="h-5 w-5"></div>
-                          </div>
-                          
-                          {/* Numbers Column */}
-                          <div className="flex flex-col items-center mr-2 space-y-4">
-                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
-                              <span className="text-xs font-medium">1</span>
-                            </div>
-                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
-                              <span className="text-xs font-medium">2</span>
-                            </div>
-                            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full h-5 w-5 flex items-center justify-center">
-                              <span className="text-xs font-medium">3</span>
-                            </div>
-                          </div>
-                          
-                          {/* Text Column */}
-                          <div className="flex flex-col space-y-4">
-                            <div className="text-sm">
-                              {user?.emailVerified ? (
-                                <span className="text-spruce font-medium">Email verified</span>
-                              ) : (
-                                <div>
-                                  <span className="text-blue-700">Verify your email address</span>{" "}
-                                  <button 
-                                    onClick={handleSendVerificationEmail}
-                                    className="text-blue-800 underline hover:text-blue-900 focus:outline-none"
-                                  >
-                                    Resend verification email
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-sm text-blue-700">
-                              Set up your seller account and provide your payout details so you can get paid when your tool sells
-                            </div>
-                            <div className="text-sm text-blue-700">
-                              Add photos, review your new listing and go live!
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Error message */}
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
-                      <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{error}</span>
-                    </div>
-                  )}
-                  
-                  {/* Navigation Buttons */}
-                  <div className="flex justify-between pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormStep(1)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleFinalSubmit}
-                      disabled={isSubmitting}
-                      className="px-6 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <span>Payout Details</span>
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </button>
+
+                  <div>
+                    <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
+                      Model
+                    </label>
+                    <input
+                      type="text"
+                      id="model"
+                      name="model"
+                      value={formData.model}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                      placeholder="e.g., No. 4, No. 62"
+                    />
                   </div>
                 </div>
+
+                <div className="mt-4">
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description*
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce"
+                    placeholder="Describe your tool's condition, history, and any included accessories..."
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Pricing</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="current_price" className="block text-sm font-medium text-gray-700 mb-1">
+                      Price*
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        id="current_price"
+                        name="current_price"
+                        value={formData.current_price}
+                        onChange={handleChange}
+                        min="0"
+                        step="1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="original_price" className="block text-sm font-medium text-gray-700 mb-1">
+                      Original Price (if discounted)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        id="original_price"
+                        name="original_price"
+                        value={formData.original_price}
+                        onChange={handleChange}
+                        min="0"
+                        step="1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <h4 className="text-sm font-medium text-gray-700 mt-4 mb-2">Shipping</h4>
+                <div className="flex items-center mb-3">
+                  <input
+                    type="checkbox"
+                    id="free_shipping"
+                    name="free_shipping"
+                    checked={formData.free_shipping}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        free_shipping: e.target.checked,
+                        shipping_price: e.target.checked ? '0' : formData.shipping_price
+                      });
+                    }}
+                    className="h-4 w-4 text-spruce focus:ring-spruce border-gray-300 rounded"
+                  />
+                  <label htmlFor="free_shipping" className="ml-2 block text-sm text-gray-700">
+                    Offer free shipping
+                  </label>
+                </div>
+
+                {!formData.free_shipping && (
+                  <div>
+                    <label htmlFor="shipping_price" className="block text-sm font-medium text-gray-700 mb-1">
+                      Shipping Price
+                    </label>
+                    <div className="relative w-1/2">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        id="shipping_price"
+                        name="shipping_price"
+                        value={formData.shipping_price}
+                        onChange={handleChange}
+                        min="0"
+                        step="1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
               )}
-            </>
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={() => setFormStep(1)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToolDetailsSubmit}
+                  className="px-6 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center cursor-pointer"
+                >
+                  <span>Add Photos & Publish</span>
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Photos & Publish */}
+          {formStep === 3 && (
+            <div className="space-y-6">
+              {/* Photo Upload */}
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div className="flex items-center mb-4">
+                  <Camera className="h-5 w-5 text-gray-600 mr-2" />
+                  <h3 className="text-lg font-medium text-gray-800">Photos</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add up to 5 photos of your tool. Listings with photos get significantly more interest.
+                  You can also add photos later from your listing page.
+                </p>
+
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={preview}
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 cursor-pointer"
+                          title="Remove image"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {imagePreviews.length < 5 && (
+                  <div>
+                    <label
+                      htmlFor="photos"
+                      className="inline-flex items-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-sm text-gray-600 hover:border-spruce hover:text-spruce cursor-pointer transition-colors"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      {imagePreviews.length === 0 ? 'Choose Photos' : 'Add More Photos'}
+                    </label>
+                    <input
+                      type="file"
+                      id="photos"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Maximum 5 images, 5MB each. JPG, PNG, or GIF.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Listing Summary */}
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Listing Summary</h3>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  <div className="text-gray-500">Tool</div>
+                  <div className="text-gray-800 font-medium">{formData.toolName}</div>
+                  <div className="text-gray-500">Category</div>
+                  <div className="text-gray-800">{formData.category}</div>
+                  <div className="text-gray-500">Condition</div>
+                  <div className="text-gray-800">{formData.condition}</div>
+                  <div className="text-gray-500">Price</div>
+                  <div className="text-honey font-medium">${parseFloat(formData.current_price).toFixed(2)}</div>
+                  {formData.brand && (
+                    <>
+                      <div className="text-gray-500">Brand</div>
+                      <div className="text-gray-800">{formData.brand}</div>
+                    </>
+                  )}
+                  <div className="text-gray-500">Shipping</div>
+                  <div className="text-gray-800">
+                    {formData.free_shipping ? 'Free shipping' : `$${parseFloat(formData.shipping_price || 0).toFixed(2)}`}
+                  </div>
+                  <div className="text-gray-500">Photos</div>
+                  <div className="text-gray-800">
+                    {imageFiles.length > 0 ? `${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}` : 'None yet — you can add later'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payout info note */}
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg text-sm text-blue-700">
+                <strong>When do I get paid?</strong> You'll be prompted to set up your payout details when your tool sells.
+                You can also add them anytime from your Seller Dashboard.
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={() => setFormStep(2)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={isSubmitting}
+                  className="px-8 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="h-4 w-4 border-2 border-dark-teal border-t-transparent rounded-full animate-spin mr-2"></span>
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <span>{imageFiles.length > 0 ? 'Publish Listing' : 'List My Tool'}</span>
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </main>

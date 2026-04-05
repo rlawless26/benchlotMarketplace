@@ -25,11 +25,8 @@ const Footer = ({ publicMode = false }) => {
           {/* Column 1: Company Info */}
           <div>
             <h3 className="text-bone font-display text-lg mb-2">Benchlot</h3>
-            <p className="text-sm mb-4 font-display italic" style={{ fontWeight: 500 }}>
-              The woodworker's marketplace.
-            </p>
-            <p className="text-sm mb-6" style={{ color: '#6a8a84' }}>
-              The trusted marketplace for woodworking tools
+            <p className="text-sm mb-6 font-display italic" style={{ fontWeight: 500 }}>
+              A marketplace for used hand tools
             </p>
             <p className="text-xs" style={{ color: '#6a8a84' }}>&copy; {new Date().getFullYear()} Benchlot. All rights reserved.</p>
           </div>

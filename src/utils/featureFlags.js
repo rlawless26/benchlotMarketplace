@@ -31,7 +31,7 @@ export const USE_CUSTOM_ACCOUNTS = getFeatureFlag('USE_CUSTOM_ACCOUNTS', true);
 
 // Marketplace beta — when false, public visitors only see ToolScan, waitlist, and info pages.
 // When true, the full marketplace is visible to everyone. This is the launch switch.
-export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', false);
+export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', true);
 
 // Default path for seller onboarding
 export const SELLER_ENTRY_PATH = '/sell';

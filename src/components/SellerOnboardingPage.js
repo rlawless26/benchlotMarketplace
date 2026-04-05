@@ -19,6 +19,7 @@ const SellerOnboardingPage = () => {
   const [accountStatus, setAccountStatus] = useState(null);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [staleAccount, setStaleAccount] = useState(false);
   
   // Check if this is a refresh from Stripe
   const isRefresh = new URLSearchParams(location.search).get('refresh') === 'true';
@@ -111,26 +112,49 @@ const SellerOnboardingPage = () => {
           }
         } catch (statusError) {
           console.error('Error fetching account status:', statusError);
-          
+
+          const errorMsg = statusError.message || '';
+          const isStaleAccount = errorMsg.includes('does not have access') ||
+                                 errorMsg.includes('account does not exist') ||
+                                 errorMsg.includes('been revoked');
+
+          // Stale Stripe Connect account — clear it so the user can start fresh
+          if (isStaleAccount) {
+            console.log('Detected stale Stripe Connect account, clearing stripeAccountId');
+            try {
+              const { updateDoc } = await import('firebase/firestore');
+              const userRef = doc(db, 'users', user.uid);
+              await updateDoc(userRef, {
+                stripeAccountId: null,
+                needsBankDetails: true
+              });
+            } catch (clearError) {
+              console.error('Error clearing stale stripeAccountId:', clearError);
+            }
+            setStaleAccount(true);
+            setLoading(false);
+            return;
+          }
+
           // If we're coming back from the Stripe redirect and getting an error
           // It might mean we need to wait for the webhook to update the user data
           if (isComplete) {
             console.log('Coming back from Stripe redirect - handling potential timing issue');
-            
+
             // Check if there's a pending tool listing to create
             const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
-            
+
             if (pendingToolListingJSON) {
               // There's a pending tool listing - redirect to create it
               navigate('/seller/create-pending-listing');
               return;
             } else {
-              // No pending listing - redirect to dashboard 
+              // No pending listing - redirect to dashboard
               navigate('/seller/dashboard?newSeller=true');
               return;
             }
           }
-          
+
           // If not from Stripe redirect, check for bank account redirect
           if (ENABLE_DIRECT_BANK_ACCOUNT && userData && userData.needsBankDetails) {
             // User needs to enter bank details directly
@@ -138,7 +162,7 @@ const SellerOnboardingPage = () => {
             navigate(`/seller/bank-details?accountId=${userData.stripeAccountId}`);
             return;
           }
-          
+
           // Otherwise show the error
           setError(statusError.message || 'Failed to get account status');
           setLoading(false);
@@ -274,7 +298,7 @@ const SellerOnboardingPage = () => {
             </div>
           )}
           
-          {error && (
+          {error && !staleAccount && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
               {error}
             </div>
@@ -286,8 +310,28 @@ const SellerOnboardingPage = () => {
               you to receive payments securely when your tools sell.
             </p>
             
+            {/* Stale Stripe account — cleared, user needs to re-onboard */}
+            {staleAccount && (
+              <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+                <h2 className="text-lg font-medium text-gray-800 mb-4">Payment Setup Needs Refresh</h2>
+                <p className="mb-4">
+                  Your previous payment account is no longer accessible. This can happen after system updates.
+                  We've cleared the old connection — please set up your payout details again to continue selling.
+                </p>
+                <button
+                  onClick={() => navigate('/seller/onboard-and-list')}
+                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
+                >
+                  Set Up Payout Details
+                </button>
+                <p className="text-sm text-gray-500 mt-3 text-center">
+                  You can still <button onClick={() => navigate('/tools/new')} className="underline text-spruce hover:text-spruce-dark">list tools</button> while your payout setup is in progress.
+                </p>
+              </div>
+            )}
+
             {/* Default state when no account status is available or details not submitted */}
-            {(!accountStatus || !accountStatus.detailsSubmitted) && (
+            {!staleAccount && (!accountStatus || !accountStatus.detailsSubmitted) && (
               <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
                 <h2 className="text-lg font-medium text-gray-800 mb-4">Complete Stripe Onboarding</h2>
                 <p className="mb-4">You'll need to complete the following steps:</p>
