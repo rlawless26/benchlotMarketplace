@@ -3,6 +3,7 @@
  * Handles the checkout process with shipping address collection and payment
  */
 import React, { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../firebase';
 import { useAuth } from '../firebase';
@@ -84,9 +85,11 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (!loading && (!cart || !cart.items || cart.items.length === 0)) {
       navigate('/cart');
+    } else if (cart?.items?.length > 0) {
+      posthog.capture('checkout_started', { itemCount: cart.items.length });
     }
   }, [cart, loading, navigate]);
-  
+
   // Load saved addresses from user profile
   useEffect(() => {
     if (user && user.profile && user.profile.addresses) {

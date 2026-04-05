@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
+import posthog from 'posthog-js';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -13,6 +14,17 @@ if (process.env.REACT_APP_SENTRY_DSN) {
     tracesSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
     replaysSessionSampleRate: 0,
+  });
+}
+
+// Initialize PostHog product analytics
+if (process.env.REACT_APP_POSTHOG_KEY) {
+  posthog.init(process.env.REACT_APP_POSTHOG_KEY, {
+    api_host: 'https://us.i.posthog.com',
+    autocapture: true,
+    capture_pageview: true,
+    capture_pageleave: true,
+    session_recording: { recordCrossDomainIFrames: false },
   });
 }
 

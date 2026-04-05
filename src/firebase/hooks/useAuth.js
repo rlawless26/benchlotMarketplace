@@ -13,6 +13,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config';
 import * as emailService from '../../utils/emailService';
+import posthog from 'posthog-js';
 
 // Create context for authentication
 const AuthContext = createContext();
@@ -91,9 +92,17 @@ export function AuthProvider({ children }) {
           };
           
           setUser(userData);
+
+          // Identify user in PostHog for analytics
+          posthog.identify(userData.uid, {
+            email: userData.email,
+            name: userData.displayName,
+            isSeller: userData.isSeller || userData.seller?.isSeller || false,
+          });
         } else {
           setUser(null);
           setProfile(null);
+          posthog.reset();
         }
       } catch (err) {
         console.error("Auth state change error:", err);

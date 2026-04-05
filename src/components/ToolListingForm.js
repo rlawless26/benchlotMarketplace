@@ -3,6 +3,7 @@
  * Create or edit tool listings
  */
 import React, { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../firebase';
 import {
@@ -365,6 +366,7 @@ const ToolListingForm = ({ hideTitle = false }) => {
       }
       
       // Success!
+      posthog.capture('tool_listed', { toolId, name: formData.name, category: formData.category, price: formData.price });
       setSuccess('Tool listing saved successfully!');
       
       // Redirect after a short delay

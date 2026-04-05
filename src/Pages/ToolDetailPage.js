@@ -1,5 +1,6 @@
 // src/Pages/ToolDetailPage.js
 import React, { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   ChevronLeft,
@@ -313,7 +314,9 @@ const ToolDetailPage = () => {
         
         setTool(toolData);
         setError(null);
-        
+
+        posthog.capture('listing_viewed', { toolId: toolData.id, toolName: toolData.name, category: toolData.category, price: toolData.current_price || toolData.price });
+
         // After loading tool data successfully, fetch related data
         if (toolData) {
           // Fetch similar tools after loading the tool data

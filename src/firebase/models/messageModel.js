@@ -16,6 +16,7 @@ import {
   doc
 } from 'firebase/firestore';
 import { db } from '../config';
+import posthog from 'posthog-js';
 
 // Collection references
 const conversationsCollection = collection(db, 'conversations');
@@ -224,7 +225,9 @@ export const sendMessage = async (conversationId, messageData) => {
     });
     
     const messageSnap = await getDoc(messageRef);
-    
+
+    posthog.capture('message_sent', { conversationId });
+
     return {
       id: messageRef.id,
       conversationId,

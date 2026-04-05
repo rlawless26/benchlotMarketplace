@@ -2,7 +2,8 @@
  * Firebase Offer Model
  * Handles offer and negotiation operations with Firestore
  */
-import { 
+import posthog from 'posthog-js';
+import {
   collection,
   doc,
   getDoc,
@@ -137,6 +138,8 @@ export const createOffer = async (offerData) => {
 
     // Get the offer with ID
     const offerSnap = await getDoc(offerRef);
+
+    posthog.capture('offer_created', { toolId, toolTitle, price, originalPrice: offerData.originalPrice || price });
 
     return {
       id: offerRef.id,
@@ -405,6 +408,8 @@ export const acceptOffer = async (offerId, accepterId) => {
       throw new Error(`Cannot accept an offer with status: ${offer.status}`);
     }
     
+    posthog.capture('offer_accepted', { offerId, toolId: offer.toolId, price: offer.currentPrice });
+
     return updateOfferStatus(offerId, OfferStatus.ACCEPTED, {
       senderId: accepterId,
       systemMessage: 'Offer accepted'
@@ -437,6 +442,8 @@ export const counterOffer = async (offerId, countererId, price, message = '') =>
       throw new Error(`Cannot counter an offer with status: ${offer.status}`);
     }
     
+    posthog.capture('offer_countered', { offerId, toolId: offer.toolId, price, previousPrice: offer.currentPrice });
+
     return updateOfferStatus(offerId, OfferStatus.COUNTERED, {
       senderId: countererId,
       price,
@@ -469,6 +476,8 @@ export const declineOffer = async (offerId, declinerId, reason = '') => {
       throw new Error(`Cannot decline an offer with status: ${offer.status}`);
     }
     
+    posthog.capture('offer_declined', { offerId, toolId: offer.toolId, price: offer.currentPrice });
+
     return updateOfferStatus(offerId, OfferStatus.DECLINED, {
       senderId: declinerId,
       systemMessage: reason || 'Offer declined'
