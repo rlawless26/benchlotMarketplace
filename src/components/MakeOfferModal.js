@@ -99,24 +99,51 @@ const MakeOfferModal = ({
     try {
       setLoading(true);
       setError('');
-      
+
+      const sellerId = tool.sellerId || tool.user_id;
+
+      // Bridge: find or create a conversation linked to this offer
+      const { getOrCreateConversation, sendMessage: sendConvoMessage } = await import('../firebase/models/messageModel');
+      const conversation = await getOrCreateConversation(user.uid, sellerId, {
+        participantNames: {
+          [user.uid]: user.displayName || 'Buyer',
+          [sellerId]: tool.sellerName || tool.seller?.displayName || tool.seller?.username || 'Seller'
+        },
+        metadata: {
+          topic: `About: ${tool.title || tool.name}`,
+          toolId: tool.id,
+          toolName: tool.title || tool.name,
+          toolImage: tool.images?.[0]?.url || tool.images?.[0] || null,
+          toolPrice: tool.price
+        }
+      });
+
       const offerData = {
         toolId: tool.id,
-        toolTitle: tool.title,
-        sellerId: tool.sellerId,
+        toolTitle: tool.title || tool.name,
+        sellerId,
         originalPrice: tool.price,
         price: amount,
-        message: message.trim()
+        message: message.trim(),
+        conversationId: conversation.id
       };
-      
+
       await createOffer(offerData);
-      
+
+      // If user included a personal message, also send it as a text message in the conversation
+      if (message.trim()) {
+        await sendConvoMessage(conversation.id, {
+          senderId: user.uid,
+          text: message.trim()
+        });
+      }
+
       setSuccess(true);
-      
+
       // Close modal after success if callback provided
       if (onSuccess) {
         setTimeout(() => {
-          onSuccess();
+          onSuccess(conversation.id);
         }, 1500);
       }
     } catch (err) {

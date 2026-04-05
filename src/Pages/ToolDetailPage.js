@@ -9,10 +9,12 @@ import {
   MapPin,
   Star,
   Check,
+  CheckCircle,
   Loader,
   AlertCircle,
   Truck,
-  MessageCircle
+  MessageCircle,
+  X
 } from 'lucide-react';
 import { 
   getToolById, 
@@ -41,6 +43,10 @@ const ToolDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
   const [similarTools, setSimilarTools] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   
@@ -54,24 +60,32 @@ const ToolDetailPage = () => {
   const params = new URLSearchParams(location.search);
   const action = params.get('action');
   
-  // Contact seller
-  const contactSeller = async () => {
+  // Contact seller — opens modal
+  const contactSeller = () => {
     if (!isAuthenticated()) {
       openAuthModal('signin', `/tools/${id}`);
       return;
     }
-    
-    // Check if seller ID exists
-    if (!tool?.sellerId) {
+    setContactMessage('');
+    setContactSuccess(false);
+    setShowContactModal(true);
+  };
+
+  // Send contact message
+  const handleSendContactMessage = async () => {
+    if (!contactMessage.trim()) return;
+
+    const sellerId = tool?.user_id || tool?.sellerId;
+    if (!sellerId) {
       console.error("Seller ID not found");
       return;
     }
-    
+
+    setContactSending(true);
+
     try {
-      // Import useMessages hook functionality directly to avoid React hooks rules
-      const { getOrCreateConversation, findConversationBetweenUsers } = await import('../firebase/models/messageModel');
-      
-      // Create conversation metadata with context about this tool
+      const { getOrCreateConversation, findConversationBetweenUsers, sendMessage } = await import('../firebase/models/messageModel');
+
       const metadata = {
         topic: `About: ${tool.name}`,
         toolId: tool.id,
@@ -79,24 +93,29 @@ const ToolDetailPage = () => {
         toolImage: tool.images?.[0]?.url || null,
         participantNames: {
           [user.uid]: user.displayName || 'You',
-          [tool.sellerId]: tool.seller?.displayName || tool.seller?.username || 'Seller'
+          [sellerId]: tool.seller?.displayName || tool.seller?.username || 'Seller'
         }
       };
-      
-      // Check if conversation already exists
-      let conversation = await findConversationBetweenUsers(user.uid, tool.sellerId);
-      
-      // If no conversation exists, create one
+
+      let conversation = await findConversationBetweenUsers(user.uid, sellerId);
       if (!conversation) {
-        conversation = await getOrCreateConversation(user.uid, tool.sellerId, metadata);
+        conversation = await getOrCreateConversation(user.uid, sellerId, metadata);
       }
-      
-      // Redirect to the conversation
-      navigate(`/messages/conversation/${conversation.id}`);
-    } catch (error) {
-      console.error("Error creating conversation:", error);
-      // Fallback to standard messages page
-      navigate('/messages');
+
+      await sendMessage(conversation.id, {
+        senderId: user.uid,
+        text: contactMessage.trim()
+      });
+
+      setContactSuccess(true);
+      setContactSending(false);
+
+      setTimeout(() => {
+        setShowContactModal(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setContactSending(false);
     }
   };
   
@@ -110,12 +129,15 @@ const ToolDetailPage = () => {
     setShowOfferModal(true);
   };
   
-  // Handle offer success
-  const handleOfferSuccess = () => {
+  // Handle offer success — navigate to the linked conversation
+  const handleOfferSuccess = (conversationId) => {
     setTimeout(() => {
       setShowOfferModal(false);
-      // Could navigate to messages page
-      navigate('/messages');
+      if (conversationId) {
+        navigate(`/messages/conversation/${conversationId}`);
+      } else {
+        navigate('/messages');
+      }
     }, 1500);
   };
   
@@ -176,54 +198,41 @@ const ToolDetailPage = () => {
   }, [tool?.id]);
   
   // Load recently viewed items
-  const loadRecentlyViewed = async () => {
-    // Return early if tool isn't loaded yet
-    if (!tool || !tool.id) return;
-    
-    console.log("Loading recently viewed items...");
+  const loadRecentlyViewed = async (currentToolId) => {
+    const toolId = currentToolId || tool?.id;
+    if (!toolId) return;
+
     const storedItems = localStorage.getItem('recentlyViewedTools');
-    console.log("Stored items from localStorage:", storedItems);
-    
+
     if (storedItems) {
       try {
         const itemIds = JSON.parse(storedItems);
-        console.log("Parsed item IDs:", itemIds);
-        
+
         // Filter out the current tool ID
-        const filteredIds = itemIds.filter(id => id !== tool.id);
-        console.log("Filtered IDs (without current tool):", filteredIds);
+        const filteredIds = itemIds.filter(id => id !== toolId);
         
-        if (filteredIds.length === 0) {
-          console.log("No other tools have been viewed");
-          return;
-        }
-        
+        if (filteredIds.length === 0) return;
+
         const tools = [];
-        
+
         // Load tool data for each ID (limited to first 6 that aren't current tool)
         let count = 0;
         for (const id of filteredIds) {
           try {
-            console.log(`Fetching tool with ID: ${id}`);
             const toolData = await getToolById(id);
-            console.log(`Successfully loaded tool: ${toolData.name}`);
             tools.push(toolData);
             count++;
-            if (count >= 6) break; // Limit to 6 items
+            if (count >= 6) break;
           } catch (err) {
             console.error(`Error loading recently viewed tool with ID ${id}:`, err);
           }
         }
-        
-        console.log(`Setting ${tools.length} recently viewed tools`);
+
         setRecentlyViewed(tools);
       } catch (parseError) {
         console.error("Error parsing stored items:", parseError);
-        // If there's an error parsing, reset the localStorage
         localStorage.setItem('recentlyViewedTools', JSON.stringify([]));
       }
-    } else {
-      console.log("No recently viewed tools in localStorage");
     }
   };
   
@@ -308,11 +317,8 @@ const ToolDetailPage = () => {
         // After loading tool data successfully, fetch related data
         if (toolData) {
           // Fetch similar tools after loading the tool data
-          setTimeout(() => {
-            fetchSimilarTools();
-            // Now that tool data is set, we can safely load recently viewed
-            loadRecentlyViewed();
-          }, 100);
+          fetchSimilarTools();
+          loadRecentlyViewed(toolData.id);
         }
       } catch (err) {
         console.error('Error loading tool:', err);
@@ -667,9 +673,13 @@ const ToolDetailPage = () => {
                     <MapPin className="h-3.5 w-3.5 mr-1 text-stone-400" />
                     <span>
                       Ships from: {
-                        tool.shipping_location || 
-                        (tool.seller && tool.seller.businessCity && tool.seller.businessState ? 
-                          `${tool.seller.businessCity}, ${tool.seller.businessState}` : 
+                        tool.shipping_location ||
+                        (tool.seller && tool.seller.businessCity && tool.seller.businessState ?
+                          `${tool.seller.businessCity}, ${tool.seller.businessState}` :
+                          tool.seller && tool.seller.city && tool.seller.state ?
+                          `${tool.seller.city}, ${tool.seller.state}` :
+                          tool.seller && tool.seller.location ?
+                          tool.seller.location :
                           "Location not specified")
                       }
                     </span>
@@ -921,14 +931,6 @@ const ToolDetailPage = () => {
               <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
                 <h2 className="text-xl font-medium text-stone-800 mb-4">About the Seller</h2>
                 
-                {/* Debug output to see what seller data we have - set to visible */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mb-4 p-2 bg-gray-100 text-xs overflow-auto max-h-32">
-                    <p>Seller Data: {JSON.stringify(tool.seller || {})}</p>
-                    <p>User ID: {tool.user_id}</p>
-                    <p>Seller ID: {tool.sellerId}</p>
-                  </div>
-                )}
                 
                 {/* Seller Profile */}
                 {/* Basic seller info section - shown even if seller data is minimal */}
@@ -965,8 +967,12 @@ const ToolDetailPage = () => {
                         <div className="flex items-center text-sm text-stone-600 mt-1">
                           <MapPin className="h-3.5 w-3.5 text-stone-400 mr-1" />
                           <span>
-                            {tool.seller && tool.seller.businessCity && tool.seller.businessState ? 
+                            {tool.seller && tool.seller.businessCity && tool.seller.businessState ?
                               `${tool.seller.businessCity}, ${tool.seller.businessState}` :
+                              tool.seller && tool.seller.city && tool.seller.state ?
+                              `${tool.seller.city}, ${tool.seller.state}` :
+                              tool.seller && tool.seller.location ?
+                              tool.seller.location :
                               (tool.shipping_location || "Location not specified")
                             }
                           </span>
@@ -1109,13 +1115,6 @@ const ToolDetailPage = () => {
             <div className="bg-bone-light rounded-lg p-6 shadow-md border border-default">
               <h2 className="text-xl font-medium text-stone-800 mb-4">Recently Viewed</h2>
               
-              {/* Debug info */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mb-4 p-2 bg-gray-100 text-xs overflow-auto max-h-32">
-                  <p>Recently Viewed Count: {recentlyViewed.length}</p>
-                  <p>Local Storage Key: {localStorage.getItem('recentlyViewedTools') ? 'Exists' : 'Missing'}</p>
-                </div>
-              )}
               
               {recentlyViewed.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -1189,6 +1188,62 @@ const ToolDetailPage = () => {
         tool={tool}
         onSuccess={handleOfferSuccess}
       />
+
+      {/* Contact Seller Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => !contactSending && setShowContactModal(false)}>
+          <div className="bg-bone-light rounded-lg shadow-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
+            {contactSuccess ? (
+              <div className="text-center py-6">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-gray-800 mb-1">Message sent!</h3>
+                <p className="text-sm text-gray-600">
+                  You can view the seller's reply in your <button onClick={() => navigate('/messages')} className="text-spruce underline">Messages</button>.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-medium text-gray-800">Contact Seller</h3>
+                  <button onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Tool context */}
+                <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3 mb-4 border border-gray-200">
+                  {tool?.images?.[0]?.url ? (
+                    <img src={tool.images[0].url} alt={tool.name} className="w-12 h-12 object-cover rounded" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">No img</div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{tool?.name}</p>
+                    <p className="text-sm text-honey">{formatPrice(tool?.current_price || tool?.price)}</p>
+                  </div>
+                </div>
+
+                <textarea
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:border-spruce"
+                  placeholder={`Hi, I'm interested in your ${tool?.name}. Is it still available?`}
+                  autoFocus
+                />
+
+                <button
+                  onClick={handleSendContactMessage}
+                  disabled={contactSending || !contactMessage.trim()}
+                  className="w-full py-2.5 bg-spruce text-bone rounded-md hover:bg-spruce/90 font-medium disabled:opacity-50 cursor-pointer"
+                >
+                  {contactSending ? 'Sending...' : 'Send Message'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

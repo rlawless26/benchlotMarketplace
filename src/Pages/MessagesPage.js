@@ -92,34 +92,52 @@ const MessagesPage = () => {
   
   // Combine offers and direct messages into a single list and apply filters
   useEffect(() => {
-    // First, prepare offer items
-    let offerItems = activeOffers.map(offer => {
-      const isBuyer = user?.uid === offer.buyerId;
-      const hasUnreadMessages = isBuyer 
-        ? offer.hasUnreadMessagesBuyer 
-        : offer.hasUnreadMessagesSeller;
-      
-      return {
-        id: offer.id,
-        type: 'offer',
-        title: offer.toolTitle,
-        price: offer.currentPrice,
-        originalPrice: offer.originalPrice,
-        status: offer.status,
-        timestamp: offer.updatedAt,
-        hasUnread: hasUnreadMessages,
-        data: offer,
-        otherPartyName: isBuyer ? (offer.sellerName || 'Seller') : (offer.buyerName || 'Buyer'),
-        isBuyer: isBuyer,
-        previewText: `${isBuyer ? 'Your' : 'Their'} offer: ${formatPrice(offer.currentPrice)}`
-      };
+    // Collect conversation IDs that are linked to offers (for de-duplication)
+    const bridgedConversationIds = new Set();
+    const bridgedOffersByConvo = {};
+
+    activeOffers.forEach(offer => {
+      if (offer.conversationId) {
+        bridgedConversationIds.add(offer.conversationId);
+        // Track the most recent active offer per conversation for enrichment
+        if (!bridgedOffersByConvo[offer.conversationId] || offer.isActive) {
+          bridgedOffersByConvo[offer.conversationId] = offer;
+        }
+      }
     });
-    
-    // Then, prepare conversation items
+
+    // Only include standalone offers (no conversationId) as separate sidebar items.
+    // Bridged offers are folded into their linked conversation item.
+    let offerItems = activeOffers
+      .filter(offer => !offer.conversationId)
+      .map(offer => {
+        const isBuyer = user?.uid === offer.buyerId;
+        const hasUnreadMessages = isBuyer
+          ? offer.hasUnreadMessagesBuyer
+          : offer.hasUnreadMessagesSeller;
+
+        return {
+          id: offer.id,
+          type: 'offer',
+          title: offer.toolTitle,
+          price: offer.currentPrice,
+          originalPrice: offer.originalPrice,
+          status: offer.status,
+          timestamp: offer.updatedAt,
+          hasUnread: hasUnreadMessages,
+          data: offer,
+          otherPartyName: isBuyer ? (offer.sellerName || 'Seller') : (offer.buyerName || 'Buyer'),
+          isBuyer: isBuyer,
+          previewText: `${isBuyer ? 'Your' : 'Their'} offer: ${formatPrice(offer.currentPrice)}`
+        };
+      });
+
+    // Prepare conversation items — enrich with linked offer data when available
     let conversationItems = conversations.map(convo => {
       const otherParticipant = convo.participants.find(id => id !== user?.uid);
-      
-      return {
+      const linkedOffer = bridgedOffersByConvo[convo.id];
+
+      const item = {
         id: convo.id,
         type: 'conversation',
         title: convo.participantNames?.[otherParticipant] || "User",
@@ -129,8 +147,27 @@ const MessagesPage = () => {
         otherPartyName: convo.participantNames?.[otherParticipant] || "User",
         previewText: convo.lastMessageText || "No messages yet"
       };
+
+      // Enrich with linked offer metadata
+      if (linkedOffer) {
+        const isBuyer = user?.uid === linkedOffer.buyerId;
+        const offerUnread = isBuyer
+          ? linkedOffer.hasUnreadMessagesBuyer
+          : linkedOffer.hasUnreadMessagesSeller;
+        item.linkedOffer = linkedOffer;
+        item.hasUnread = item.hasUnread || offerUnread;
+        // Use offer info as preview if it's more recent than last message
+        const offerTime = linkedOffer.updatedAt?.seconds ? linkedOffer.updatedAt.seconds * 1000 : 0;
+        const convoTime = item.timestamp?.seconds ? item.timestamp.seconds * 1000 : (item.timestamp?.getTime ? item.timestamp.getTime() : 0);
+        if (offerTime > convoTime) {
+          item.previewText = `Offer: ${formatPrice(linkedOffer.currentPrice)} — ${linkedOffer.status.charAt(0).toUpperCase() + linkedOffer.status.slice(1)}`;
+          item.timestamp = linkedOffer.updatedAt;
+        }
+      }
+
+      return item;
     });
-    
+
     // Combine both lists
     let combined = [...offerItems, ...conversationItems];
     
@@ -448,12 +485,13 @@ const MessagesPage = () => {
                   <ul className="divide-y divide-stone-200">
                     {filteredMessages.map((item) => {
                       const isOffer = item.type === 'offer';
-                      const isSelected = isOffer 
+                      const hasLinkedOffer = !isOffer && item.linkedOffer;
+                      const isSelected = isOffer
                         ? selectedOfferId === item.id
                         : selectedConversationId === item.id;
-                        
+
                       return (
-                        <li 
+                        <li
                           key={item.id}
                           className={`hover:bg-stone-50 cursor-pointer ${
                             isSelected ? 'bg-bone-dark' : ''
@@ -480,6 +518,11 @@ const MessagesPage = () => {
                                         Offer
                                       </span>
                                     )}
+                                    {hasLinkedOffer && (
+                                      <span className="ml-2 text-xs px-1.5 py-0.5 rounded-sm font-normal bg-amber-100 text-amber-800">
+                                        Offer
+                                      </span>
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -491,14 +534,19 @@ const MessagesPage = () => {
                             <div className="text-sm text-stone-600 line-clamp-1 mb-1">
                               {/* With who or what */}
                               <span className="mr-1 text-xs text-stone-500">
-                                {isOffer 
-                                  ? (item.isBuyer ? 'To: ' : 'From: ') 
+                                {isOffer
+                                  ? (item.isBuyer ? 'To: ' : 'From: ')
                                   : ''}
                               </span>
                               {item.otherPartyName}
                               {isOffer && (
                                 <span className="inline-block ml-2">
                                   {getStatusBadge(item.status)}
+                                </span>
+                              )}
+                              {hasLinkedOffer && (
+                                <span className="inline-block ml-2">
+                                  {getStatusBadge(item.linkedOffer.status)}
                                 </span>
                               )}
                             </div>

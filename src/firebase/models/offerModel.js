@@ -36,20 +36,59 @@ export const OfferStatus = {
 };
 
 /**
+ * Write an offer_activity marker message into a linked conversation.
+ * This bridges the offer system with the messaging system so offer
+ * lifecycle events appear inline in the conversation timeline.
+ * @param {string} conversationId - The conversation to write to
+ * @param {Object} params - Marker data
+ */
+const writeOfferActivityToConversation = async (conversationId, { senderId, offerId, status, currentPrice, originalPrice, text }) => {
+  try {
+    const convMessagesCol = collection(db, 'conversations', conversationId, 'messages');
+    await addDoc(convMessagesCol, {
+      senderId,
+      type: 'offer_activity',
+      text: text || `Offer: $${currentPrice}`,
+      offerId,
+      offerSnapshot: { status, currentPrice, originalPrice },
+      createdAt: serverTimestamp()
+    });
+
+    // Update conversation metadata
+    const conversationRef = doc(db, 'conversations', conversationId);
+    const convSnap = await getDoc(conversationRef);
+    if (convSnap.exists()) {
+      const convData = convSnap.data();
+      const unreadByUsers = convData.participants.filter(id => id !== senderId);
+      await updateDoc(conversationRef, {
+        lastMessageAt: serverTimestamp(),
+        lastMessageText: text || `Offer: $${currentPrice}`,
+        unreadByUsers,
+        updatedAt: serverTimestamp()
+      });
+    }
+  } catch (error) {
+    console.error('Error writing offer activity to conversation:', error);
+    // Non-fatal — the offer itself was already created
+  }
+};
+
+/**
  * Create a new offer
  * @param {Object} offerData - The offer data
+ * @param {string} [offerData.conversationId] - Optional linked conversation ID
  * @returns {Promise<Object>} - The created offer
  */
 export const createOffer = async (offerData) => {
   try {
-    const { toolId, toolTitle, sellerId, buyerId, price, message } = offerData;
-    
+    const { toolId, toolTitle, sellerId, buyerId, price, message, conversationId } = offerData;
+
     if (!toolId || !sellerId || !buyerId || !price) {
       throw new Error('Missing required fields for offer');
     }
-    
+
     // Create offer document
-    const offerRef = await addDoc(offersCollection, {
+    const offerDoc = {
       toolId,
       toolTitle: toolTitle || 'Tool',
       sellerId,
@@ -63,11 +102,18 @@ export const createOffer = async (offerData) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       expiresAt: Timestamp.fromDate(new Date(Date.now() + (7 * 24 * 60 * 60 * 1000))) // 7 days expiration
-    });
-    
-    // Create initial message
-    const messagesCollection = collection(db, 'offers', offerRef.id, 'messages');
-    await addDoc(messagesCollection, {
+    };
+
+    // Link to conversation if provided
+    if (conversationId) {
+      offerDoc.conversationId = conversationId;
+    }
+
+    const offerRef = await addDoc(offersCollection, offerDoc);
+
+    // Create initial message in offer's own messages subcollection
+    const offerMessagesCol = collection(db, 'offers', offerRef.id, 'messages');
+    await addDoc(offerMessagesCol, {
       senderId: buyerId,
       recipientId: sellerId,
       messageType: 'offer', // Types: offer, counter, message, system
@@ -76,10 +122,22 @@ export const createOffer = async (offerData) => {
       createdAt: serverTimestamp(),
       isRead: false
     });
-    
+
+    // Bridge: write offer_activity marker to linked conversation
+    if (conversationId) {
+      await writeOfferActivityToConversation(conversationId, {
+        senderId: buyerId,
+        offerId: offerRef.id,
+        status: OfferStatus.PENDING,
+        currentPrice: price,
+        originalPrice: offerData.originalPrice || price,
+        text: `Offer: $${price}`
+      });
+    }
+
     // Get the offer with ID
     const offerSnap = await getDoc(offerRef);
-    
+
     return {
       id: offerRef.id,
       ...offerSnap.data()
@@ -244,28 +302,28 @@ export const updateOfferStatus = async (offerId, status, options = {}) => {
   try {
     const offerRef = doc(offersCollection, offerId);
     const offerSnap = await getDoc(offerRef);
-    
+
     if (!offerSnap.exists()) {
       throw new Error('Offer not found');
     }
-    
+
     const offerData = offerSnap.data();
     const { price, systemMessage } = options;
     const updateObj = {
       status,
       updatedAt: serverTimestamp()
     };
-    
+
     // If price is changed in a counter offer
     if (price && status === OfferStatus.COUNTERED) {
       updateObj.currentPrice = price;
     }
-    
+
     // If offer is no longer active
     if ([OfferStatus.ACCEPTED, OfferStatus.DECLINED, OfferStatus.EXPIRED, OfferStatus.COMPLETED, OfferStatus.CANCELLED].includes(status)) {
       updateObj.isActive = false;
     }
-    
+
     // Mark as unread for the other party
     if (options.senderId === offerData.buyerId) {
       updateObj.hasUnreadMessagesSeller = true;
@@ -274,12 +332,12 @@ export const updateOfferStatus = async (offerId, status, options = {}) => {
       updateObj.hasUnreadMessagesBuyer = true;
       updateObj.hasUnreadMessagesSeller = false;
     }
-    
+
     await updateDoc(offerRef, updateObj);
-    
+
     // Add a message to the offer thread
     if (options.senderId) {
-      const messagesCollection = collection(db, 'offers', offerId, 'messages');
+      const offerMessagesCol = collection(db, 'offers', offerId, 'messages');
       const messageData = {
         senderId: options.senderId,
         recipientId: options.senderId === offerData.buyerId ? offerData.sellerId : offerData.buyerId,
@@ -287,18 +345,39 @@ export const updateOfferStatus = async (offerId, status, options = {}) => {
         createdAt: serverTimestamp(),
         isRead: false
       };
-      
+
       if (price && status === OfferStatus.COUNTERED) {
         messageData.price = price;
       }
-      
+
       if (systemMessage) {
         messageData.message = systemMessage;
       }
-      
-      await addDoc(messagesCollection, messageData);
+
+      await addDoc(offerMessagesCol, messageData);
     }
-    
+
+    // Bridge: write offer_activity marker to linked conversation
+    if (offerData.conversationId && options.senderId) {
+      const currentPrice = price || offerData.currentPrice;
+      const activityTextMap = {
+        [OfferStatus.ACCEPTED]: 'Offer accepted',
+        [OfferStatus.COUNTERED]: `Counter offer: $${price}`,
+        [OfferStatus.DECLINED]: 'Offer declined',
+        [OfferStatus.CANCELLED]: 'Offer cancelled',
+        [OfferStatus.EXPIRED]: 'Offer expired'
+      };
+
+      await writeOfferActivityToConversation(offerData.conversationId, {
+        senderId: options.senderId,
+        offerId,
+        status,
+        currentPrice,
+        originalPrice: offerData.originalPrice,
+        text: activityTextMap[status] || `Offer updated: ${status}`
+      });
+    }
+
     return getOfferById(offerId);
   } catch (error) {
     console.error('Error updating offer status:', error);
@@ -604,6 +683,36 @@ export const markOfferMessagesAsRead = async (offerId, userId) => {
 };
 
 /**
+ * Get offers linked to a specific conversation
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<Array>} - Array of offer objects
+ */
+export const getOffersByConversation = async (conversationId) => {
+  try {
+    const q = query(
+      offersCollection,
+      where('conversationId', '==', conversationId),
+      orderBy('updatedAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    const offers = [];
+    querySnapshot.forEach(doc => {
+      offers.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return offers;
+  } catch (error) {
+    console.error('Error getting offers by conversation:', error);
+    throw error;
+  }
+};
+
+/**
  * Check if the offers collection exists
  * @returns {Promise<boolean>} - True if collection exists with documents
  */
@@ -673,6 +782,7 @@ const offerModel = {
   getUserBuyerOffers,
   getUserSellerOffers,
   getToolOffers,
+  getOffersByConversation,
   updateOfferStatus,
   acceptOffer,
   counterOffer,

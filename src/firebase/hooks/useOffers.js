@@ -193,6 +193,41 @@ const useOffers = (toolId = null) => {
     }
   }, []);
   
+  // Create an offer from within a conversation (bridge function)
+  const createOfferFromConversation = useCallback(async (conversationId, price, message, conversationData) => {
+    if (!user?.uid) throw new Error('You must be logged in to make an offer');
+    if (!conversationData?.metadata?.toolId) throw new Error('This conversation is not linked to a listing');
+
+    const { metadata, participants } = conversationData;
+    const otherUserId = participants.find(id => id !== user.uid);
+
+    const offerData = {
+      toolId: metadata.toolId,
+      toolTitle: metadata.toolName || metadata.topic?.replace('About: ', '') || 'Tool',
+      sellerId: otherUserId,
+      buyerId: user.uid,
+      originalPrice: metadata.toolPrice || price, // fallback if price not in metadata
+      price,
+      message: message || '',
+      conversationId
+    };
+
+    return await offerModel.createOffer({
+      ...offerData,
+      buyerId: user.uid
+    });
+  }, [user]);
+
+  // Get offers linked to a conversation
+  const getOffersForConversation = useCallback(async (conversationId) => {
+    try {
+      return await offerModel.getOffersByConversation(conversationId);
+    } catch (err) {
+      console.error('Error getting offers for conversation:', err);
+      return [];
+    }
+  }, []);
+
   // Mark an offer as read
   const markOfferAsRead = useCallback(async (offerId) => {
     if (!user?.uid) return;
@@ -353,6 +388,8 @@ const useOffers = (toolId = null) => {
     loadActiveOffers,
     loadToolOffers,
     createOffer,
+    createOfferFromConversation,
+    getOffersForConversation,
     acceptOffer,
     counterOffer,
     declineOffer,

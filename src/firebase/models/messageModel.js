@@ -23,7 +23,8 @@ const conversationsCollection = collection(db, 'conversations');
 // Message and conversation types
 export const MessageType = {
   TEXT: 'text',
-  SYSTEM: 'system'
+  SYSTEM: 'system',
+  OFFER_ACTIVITY: 'offer_activity'
 };
 
 export const ConversationStatus = {

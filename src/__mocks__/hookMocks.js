@@ -135,6 +135,82 @@ export const createMockMessagesValue = (overrides = {}) => ({
   ...overrides,
 });
 
+// --- Offers hook ---
+
+export const createMockOffersValue = (overrides = {}) => ({
+  loading: false,
+  error: null,
+  buyerOffers: [],
+  sellerOffers: [],
+  toolOffers: [],
+  activeOffers: [],
+  createOffer: jest.fn().mockResolvedValue({ id: 'offer-1' }),
+  createOfferFromConversation: jest.fn().mockResolvedValue({ id: 'offer-1' }),
+  getOffersForConversation: jest.fn().mockResolvedValue([]),
+  acceptOffer: jest.fn().mockResolvedValue({}),
+  counterOffer: jest.fn().mockResolvedValue({}),
+  declineOffer: jest.fn().mockResolvedValue({}),
+  cancelOffer: jest.fn().mockResolvedValue({}),
+  addMessage: jest.fn().mockResolvedValue({}),
+  getMessages: jest.fn().mockResolvedValue([]),
+  markOfferAsRead: jest.fn().mockResolvedValue({}),
+  hasUnreadOffers: false,
+  OfferStatus: {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    COUNTERED: 'countered',
+    DECLINED: 'declined',
+    EXPIRED: 'expired',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+  },
+  ...overrides,
+});
+
+// --- Offer data ---
+
+export const createMockOffer = (overrides = {}) => ({
+  id: 'offer-1',
+  toolId: 'tool-1',
+  toolTitle: 'Stanley No. 4 Smoothing Plane',
+  buyerId: 'user-123',
+  sellerId: 'seller-456',
+  originalPrice: 150,
+  currentPrice: 120,
+  status: 'pending',
+  isActive: true,
+  hasUnreadMessagesBuyer: false,
+  hasUnreadMessagesSeller: true,
+  conversationId: null,
+  createdAt: { seconds: Date.now() / 1000 },
+  updatedAt: { seconds: Date.now() / 1000 },
+  ...overrides,
+});
+
+// --- Conversation data ---
+
+export const createMockConversation = (overrides = {}) => ({
+  id: 'convo-1',
+  participants: ['user-123', 'seller-456'],
+  participantNames: {
+    'user-123': 'Test User',
+    'seller-456': 'Seller User',
+  },
+  metadata: {
+    topic: 'About: Stanley No. 4 Smoothing Plane',
+    toolId: 'tool-1',
+    toolName: 'Stanley No. 4 Smoothing Plane',
+    toolImage: 'https://example.com/plane.jpg',
+    toolPrice: 150,
+  },
+  lastMessageAt: { seconds: Date.now() / 1000 },
+  lastMessageText: 'Is this still available?',
+  unreadByUsers: [],
+  hasUnread: false,
+  status: 'active',
+  ...overrides,
+});
+
 // --- Notification Context ---
 
 export const createMockNotificationContextValue = (overrides = {}) => ({
