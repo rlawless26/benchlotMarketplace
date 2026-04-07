@@ -7,6 +7,7 @@ import { openAuthModal } from '../utils/featureFlags';
 import { Check, Loader, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
 import { updateSellerSettings } from '../firebase/models/userModel';
 import MyListings from './MyListings';
+import StripeStatusBanner from './StripeStatusBanner';
 
 /**
  * Seller Dashboard Page
@@ -141,29 +142,10 @@ const SellerDashboardPage = () => {
               topLevelBankAccount: !!user.hasBankAccount
             });
               
-            // Check both new and old data locations for bank account verification
-            const hasVerifiedBankAccount = 
-              (user.seller?.hasBankAccount === true && user.seller?.verified === true) ||
-              (user.hasBankAccount === true && user.verified === true);
-              
-            // Only redirect to onboarding if we're in a truly problematic state
-            // If we only have non-critical requirements or have verified bank details, allow dashboard access
-            if (!status.detailsSubmitted && 
-                !isRestrictedButComplete && 
-                !onlyNonCriticalRequirements && 
-                !hasVerifiedBankAccount && 
-                !location.search.includes('newSeller=true')) {
-              
-              console.log('Redirecting to onboarding - account not ready:', { 
-                detailsSubmitted: status.detailsSubmitted,
-                isRestrictedButComplete,
-                onlyNonCriticalRequirements,
-                hasVerifiedBankAccount
-              });
-              
-              navigate('/seller/onboarding');
-              return;
-            }
+            // Note: previously this block redirected sellers with incomplete Stripe
+            // setup to /seller/onboarding. We now let them land on the dashboard
+            // and surface the prompt via <StripeStatusBanner /> instead, so sellers
+            // can manage their (already-published) listings while finishing payouts.
           } else {
             console.log('No account status returned from Stripe, checking user record');
             // Handle null status by checking user record
@@ -188,11 +170,8 @@ const SellerDashboardPage = () => {
                 detailsSubmitted: true,
                 payoutsEnabled: true
               });
-            } else if (!location.search.includes('newSeller=true')) {
-              // If no direct bank details and no newSeller param, redirect to onboarding
-              navigate('/seller/onboarding');
-              return;
             }
+            // If no bank account is verified, fall through and let StripeStatusBanner prompt them.
           }
         } catch (statusError) {
           console.error('Error fetching Stripe account status:', statusError);
@@ -219,11 +198,8 @@ const SellerDashboardPage = () => {
               detailsSubmitted: true,
               payoutsEnabled: true
             });
-          } else if (!location.search.includes('newSeller=true')) {
-            // If no direct bank details and no newSeller param, redirect to onboarding
-            navigate('/seller/onboarding');
-            return;
           }
+          // If no bank account is verified, fall through and let StripeStatusBanner prompt them.
         }
         
         // Check if this is a new seller (from the query parameter)
@@ -642,7 +618,9 @@ const SellerDashboardPage = () => {
                 {error}
               </div>
             )}
-            
+
+            <StripeStatusBanner className="mb-6" />
+
             {/* New Seller Welcome Banner */}
             {showWelcome && accountStatus && (
               <NewSellerWelcome 

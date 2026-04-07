@@ -12,6 +12,7 @@ import { useAuth } from '../firebase/hooks/useAuth';
 import { useSeller } from '../firebase/hooks/useSeller';
 import { toolCategories, toolConditions, createTool, uploadToolImage } from '../firebase/models/toolModel';
 import { openAuthModal } from '../utils/featureFlags';
+import StripeStatusBanner from './StripeStatusBanner';
 
 // US state options for dropdown
 const stateOptions = [
@@ -84,11 +85,14 @@ const SellerOnboardAndListPage = () => {
   const [formStep, setFormStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // Photo state
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+
+  // Post-publish state (for step 4 success screen — see Fix 6)
+  const [publishedTool, setPublishedTool] = useState(null);
+  const [stripeFailed, setStripeFailed] = useState(false);
 
   // Combined form data
   const [formData, setFormData] = useState({
@@ -199,11 +203,22 @@ const SellerOnboardAndListPage = () => {
 
   // Handle final publish
   const handlePublish = async () => {
+    // Defensive guard: UI prevents this, but bail loudly if anything bypasses it.
+    if (imageFiles.length === 0) {
+      setError('At least one photo is required to publish your listing.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+    setStripeFailed(false);
 
     try {
-      // Step 1: Create seller account (sets isSeller flags + creates Stripe account in background)
+      // Step 1: Create seller account.
+      // useSeller.createSellerAccount sets isSeller=true on the user doc BEFORE
+      // calling Stripe, so even if the Stripe API call fails, the user is marked
+      // as a seller and can publish + retry payouts later. We treat Stripe failures
+      // as non-blocking and surface them via the post-publish step 4 screen.
       const sellerAccountResult = await createSellerAccount({
         sellerName: formData.sellerName,
         sellerType: formData.sellerType,
@@ -217,17 +232,14 @@ const SellerOnboardAndListPage = () => {
       });
 
       if (!sellerAccountResult.success) {
-        console.error('Seller account creation failed:', sellerAccountResult.error);
-        if (sellerAccountResult.error && sellerAccountResult.error.includes("NOT_FOUND")) {
-          setError("There was a problem with your account setup. Please try again.");
-        } else {
-          throw new Error(sellerAccountResult.error || 'Failed to create seller account');
-        }
-        setIsSubmitting(false);
-        return;
+        console.error('[publish] Stripe account setup failed (non-blocking):', {
+          userId: user.uid,
+          error: sellerAccountResult.error,
+        });
+        setStripeFailed(true);
       }
 
-      // Step 2: Create the tool listing directly
+      // Step 2: Create the tool listing
       const toolData = {
         name: formData.toolName,
         description: formData.description,
@@ -247,32 +259,51 @@ const SellerOnboardAndListPage = () => {
 
       const newTool = await createTool(toolData, user.uid);
 
-      // Step 3: Upload photos if any
-      if (imageFiles.length > 0) {
-        for (const file of imageFiles) {
-          await uploadToolImage(file, newTool.id);
-        }
+      // Step 3: Upload photos
+      for (const file of imageFiles) {
+        await uploadToolImage(file, newTool.id);
       }
 
       // Clean up
       localStorage.removeItem('draftToolName');
       localStorage.removeItem('pendingToolListing');
-
-      // Clean up image preview URLs
       imagePreviews.forEach(url => URL.revokeObjectURL(url));
 
-      setSuccessMessage('Your listing has been created!');
-
-      // Redirect to the tool detail page
-      setTimeout(() => {
-        navigate(`/tools/${newTool.id}${imageFiles.length === 0 ? '?action=add-photos' : ''}`);
-      }, 1000);
-
+      // Render the step 4 success screen instead of redirecting
+      setPublishedTool(newTool);
+      setFormStep(4);
+      setIsSubmitting(false);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setIsSubmitting(false);
       console.error('Error publishing listing:', err);
     }
+  };
+
+  // Reset the form to publish another tool — keeps seller profile intact.
+  const handleListAnother = () => {
+    setFormData(prev => ({
+      ...prev,
+      toolName: '',
+      description: '',
+      category: '',
+      condition: '',
+      brand: '',
+      model: '',
+      current_price: '',
+      original_price: '',
+      material: '',
+      dimensions: '',
+      age: '',
+      shipping_price: '',
+      free_shipping: false,
+    }));
+    setImageFiles([]);
+    setImagePreviews([]);
+    setPublishedTool(null);
+    setStripeFailed(false);
+    setError(null);
+    setFormStep(2);
   };
 
   if (loading) {
@@ -296,23 +327,18 @@ const SellerOnboardAndListPage = () => {
           <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
             {formStep === 1 ? 'Start Selling on Benchlot' :
              formStep === 2 ? 'Tell us about your tool' :
-             'Add photos & publish'}
+             formStep === 3 ? 'Add photos & publish' :
+             'Your listing is live!'}
           </h1>
           <p className="text-gray-600 mb-6">
             {formStep === 1 ? 'Complete your seller profile to begin listing tools.' :
              formStep === 2 ? 'Provide details about the tool you want to sell.' :
-             'Add photos to help your tool sell faster, then publish your listing.'}
+             formStep === 3 ? 'Add photos to help your tool sell faster, then publish your listing.' :
+             'Buyers can find your tool on the marketplace right now.'}
           </p>
 
-          {/* Success message */}
-          {successMessage && (
-            <div className="bg-green-50 border border-green-200 text-spruce px-4 py-3 rounded-md mb-6 flex items-start">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-              <p>{successMessage}</p>
-            </div>
-          )}
-
-          {/* Progress Steps — 3 steps */}
+          {/* Progress Steps — 3 steps (hidden after publish) */}
+          {formStep <= 3 && (
           <div className="mb-8">
             <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -343,6 +369,7 @@ const SellerOnboardAndListPage = () => {
               <span>Photos & Publish</span>
             </div>
           </div>
+          )}
 
           {/* Step 1: Seller Profile Form */}
           {formStep === 1 && (
@@ -732,8 +759,7 @@ const SellerOnboardAndListPage = () => {
                   <h3 className="text-lg font-medium text-gray-800">Photos</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add up to 5 photos of your tool. Listings with photos get significantly more interest.
-                  You can also add photos later from your listing page.
+                  Add up to 5 photos of your tool. At least one photo is required to publish.
                 </p>
 
                 {/* Image Previews */}
@@ -806,8 +832,8 @@ const SellerOnboardAndListPage = () => {
                     {formData.free_shipping ? 'Free shipping' : `$${parseFloat(formData.shipping_price || 0).toFixed(2)}`}
                   </div>
                   <div className="text-gray-500">Photos</div>
-                  <div className="text-gray-800">
-                    {imageFiles.length > 0 ? `${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}` : 'None yet — you can add later'}
+                  <div className={imageFiles.length > 0 ? 'text-gray-800' : 'text-red-700'}>
+                    {imageFiles.length > 0 ? `${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}` : 'Required — add at least one photo above'}
                   </div>
                 </div>
               </div>
@@ -826,31 +852,114 @@ const SellerOnboardAndListPage = () => {
               )}
 
               {/* Navigation */}
-              <div className="flex justify-between pt-4">
+              <div className="pt-4">
+                {imageFiles.length === 0 && (
+                  <p className="text-sm text-gray-600 mb-3 text-right">
+                    Add at least one photo to publish your listing.
+                  </p>
+                )}
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setFormStep(2)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePublish}
+                    disabled={isSubmitting || imageFiles.length === 0}
+                    className="px-8 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-200"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="h-4 w-4 border-2 border-dark-teal border-t-transparent rounded-full animate-spin mr-2"></span>
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <span>Publish Listing</span>
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Post-publish success */}
+          {formStep === 4 && publishedTool && (
+            <div className="space-y-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 flex items-start">
+                <CheckCircle className="h-8 w-8 text-green-600 mr-4 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-medium text-spruce mb-1">
+                    {publishedTool.name} is live on Benchlot
+                  </h2>
+                  <p className="text-gray-700">
+                    Your listing is visible to buyers right now.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-3">What happens next</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start">
+                    <span className="text-spruce mr-2">•</span>
+                    <span>Buyers can find your listing on the marketplace right now.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-spruce mr-2">•</span>
+                    <span>You'll get an email when someone makes an offer or buys.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-spruce mr-2">•</span>
+                    <span>You can manage this listing anytime from <strong>My Listings</strong>.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Stripe payout warning — shown if either creation failed OR onboarding still incomplete */}
+              {stripeFailed ? (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-md px-5 py-4 flex items-start">
+                  <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5 mr-3" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">We couldn't set up your payout account</p>
+                    <p className="text-sm text-red-700 mt-1">
+                      Your listing is live, but we hit an error setting up Stripe Connect.
+                      Set up payouts now so you can get paid when your tool sells.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/seller/onboarding')}
+                      className="inline-flex items-center mt-2 text-sm font-medium underline hover:no-underline"
+                    >
+                      Set Up Payouts →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <StripeStatusBanner />
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setFormStep(2)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => navigate(`/tools/${publishedTool.id}`)}
+                  className="flex-1 px-6 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center justify-center cursor-pointer"
                 >
-                  Back
+                  View Your Listing
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
                 <button
                   type="button"
-                  onClick={handlePublish}
-                  disabled={isSubmitting}
-                  className="px-8 py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium flex items-center cursor-pointer disabled:opacity-50"
+                  onClick={handleListAnother}
+                  className="flex-1 px-6 py-3 border border-spruce text-spruce rounded-md hover:bg-spruce hover:text-bone font-medium flex items-center justify-center cursor-pointer transition-colors"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <span className="h-4 w-4 border-2 border-dark-teal border-t-transparent rounded-full animate-spin mr-2"></span>
-                      Publishing...
-                    </>
-                  ) : (
-                    <>
-                      <span>{imageFiles.length > 0 ? 'Publish Listing' : 'List My Tool'}</span>
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
+                  List Another Tool
                 </button>
               </div>
             </div>

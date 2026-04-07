@@ -7,7 +7,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase';
 import { getToolsByUserId, deleteTool } from '../firebase/models/toolModel';
 import ToolImage from './ToolImage';
+import Badge from './ui/badge';
+import StripeStatusBanner from './StripeStatusBanner';
 import { openAuthModal } from '../utils/featureFlags';
+
+// Map tool status → badge variant + display label
+const STATUS_BADGE = {
+  active:         { variant: 'success', label: 'Live' },
+  draft:          { variant: 'default', label: 'Draft' },
+  pending_images: { variant: 'warning', label: 'Needs Photos' },
+  pending_review: { variant: 'info',    label: 'In Review' },
+  paused:         { variant: 'neutral', label: 'Paused' },
+  sold:           { variant: 'primary', label: 'Sold' },
+  deleted:        { variant: 'neutral', label: 'Archived' },
+  chest:          { variant: 'neutral', label: 'In Chest' },
+};
 
 const MyListings = () => {
   const { user, isAuthenticated } = useAuth();
@@ -106,6 +120,8 @@ const MyListings = () => {
           </Link>
         </div>
 
+        <StripeStatusBanner className="mb-6" />
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
             <p>{error}</p>
@@ -153,12 +169,23 @@ const MyListings = () => {
                     <Link to={`/tools/${tool.id}`} className="text-xl font-semibold text-spruce hover:text-honey transition-colors">
                       {tool.name}
                     </Link>
-                    <div className={`badge ${
-                      tool.status === 'active' ? 'badge-success' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {tool.status === 'active' ? 'Active' : tool.status}
-                    </div>
+                    {(() => {
+                      const badge = STATUS_BADGE[tool.status] || { variant: 'neutral', label: tool.status || 'Unknown' };
+                      return <Badge variant={badge.variant}>{badge.label}</Badge>;
+                    })()}
                   </div>
+
+                  {tool.status === 'pending_images' && (
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded-md mb-3 text-sm flex items-center justify-between gap-2">
+                      <span>This listing won't appear in the marketplace until you add at least one photo.</span>
+                      <Link
+                        to={`/tools/edit/${tool.id}`}
+                        className="font-medium underline whitespace-nowrap hover:text-yellow-900"
+                      >
+                        Add Photos
+                      </Link>
+                    </div>
+                  )}
                   
                   <div className="text-sm text-gray-600 mb-3">
                     <span className="inline-flex items-center mr-3">
