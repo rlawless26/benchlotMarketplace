@@ -2566,3 +2566,308 @@ exports.onToolActivated = onDocumentUpdated('tools/{toolId}', async (event) => {
   return null;
 });
 
+/**
+ * Template 3: Welcome (Full Account Creation).
+ * Fires on users/{uid} onCreate. Skips users created via the scan flow
+ * (those get Template 1 from the /send-scan-results endpoint instead).
+ */
+exports.onUserCreated = onDocumentCreated('users/{uid}', async (event) => {
+  const snap = event.data;
+  if (!snap) return null;
+  const user = snap.data();
+  if (!user || !user.email) return null;
+
+  // Scan-flow users get Template 1 from the /send-scan-results endpoint.
+  if (user.source === 'scan') return null;
+
+  const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+  const displayName = user.profile?.firstName || user.displayName || user.sellerName || '';
+
+  try {
+    await sendEmail({
+      templateId: '03-welcome-full-account',
+      to: user.email,
+      vars: {
+        displayName,
+        marketplaceUrl: `${baseUrl}/marketplace`,
+        scanUrl: `${baseUrl}/scan`,
+        listToolUrl: `${baseUrl}/seller/onboard-and-list`,
+      },
+    });
+  } catch (err) {
+    console.error(`[onUserCreated] error sending welcome email to ${user.email}:`, err.message);
+  }
+  return null;
+});
+
+/**
+ * Template 7: Shipping Confirmation.
+ * Fires on orders/{orderId} onUpdate when trackingNumber transitions from
+ * empty/unset → set. Buyer-facing.
+ */
+exports.onOrderShipped = onDocumentUpdated('orders/{orderId}', async (event) => {
+  const before = event.data?.before?.data();
+  const after = event.data?.after?.data();
+  if (!before || !after) return null;
+
+  const hadTracking = !!before.trackingNumber;
+  const hasTracking = !!after.trackingNumber;
+  if (hadTracking || !hasTracking) return null;
+
+  const orderId = event.params.orderId;
+  const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+
+  // Resolve buyer email — guest orders store userEmail directly; registered
+  // orders store userId and we look up the email.
+  let buyerEmail = after.userEmail;
+  let buyerName = '';
+  if (!buyerEmail && after.userId && after.userId !== 'guest') {
+    try {
+      const buyerDoc = await db.collection('users').doc(after.userId).get();
+      if (buyerDoc.exists) {
+        const buyerData = buyerDoc.data();
+        buyerEmail = buyerData.email;
+        buyerName = buyerData.profile?.firstName || buyerData.displayName || '';
+      }
+    } catch (err) {
+      console.warn(`[onOrderShipped] could not look up buyer ${after.userId}:`, err.message);
+    }
+  }
+  if (!buyerEmail) {
+    console.warn(`[onOrderShipped] order ${orderId} has no buyer email`);
+    return null;
+  }
+
+  // Pick the first item as the representative tool (matches Template 5/6 pattern).
+  const firstItem = Array.isArray(after.items) && after.items[0] ? after.items[0] : null;
+  const toolTitle = firstItem ? (firstItem.name || firstItem.title || '') : '';
+
+  try {
+    await sendEmail({
+      templateId: '07-shipping-confirmation',
+      to: buyerEmail,
+      vars: {
+        buyerName,
+        toolTitle,
+        trackingNumber: after.trackingNumber || '',
+        trackingUrl: after.trackingUrl || '',
+        carrier: after.carrier || '',
+        orderUrl: `${baseUrl}/account/orders/${orderId}`,
+      },
+    });
+  } catch (err) {
+    console.error(`[onOrderShipped] error sending shipping email for order ${orderId}:`, err.message);
+  }
+  return null;
+});
+
+/**
+ * Template 8: Offer Notification (Seller).
+ * Fires on offers/{offerId} onCreate.
+ */
+exports.onOfferCreated = onDocumentCreated('offers/{offerId}', async (event) => {
+  const snap = event.data;
+  if (!snap) return null;
+  const offer = snap.data();
+  if (!offer || !offer.sellerId || !offer.buyerId) return null;
+
+  const offerId = event.params.offerId;
+  const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+
+  try {
+    const [sellerDoc, buyerDoc] = await Promise.all([
+      db.collection('users').doc(offer.sellerId).get(),
+      db.collection('users').doc(offer.buyerId).get(),
+    ]);
+    if (!sellerDoc.exists) return null;
+
+    const seller = sellerDoc.data();
+    const sellerEmail = seller.email || seller.contactEmail;
+    if (!sellerEmail) return null;
+
+    const buyer = buyerDoc.exists ? buyerDoc.data() : {};
+    const buyerName = buyer.profile?.firstName || buyer.displayName || 'A buyer';
+
+    // Look up tool image
+    let toolImageUrl = '';
+    if (offer.toolId) {
+      try {
+        const toolDoc = await db.collection('tools').doc(offer.toolId).get();
+        if (toolDoc.exists) {
+          const tool = toolDoc.data();
+          toolImageUrl = Array.isArray(tool.images) && tool.images[0] ? tool.images[0].url : '';
+        }
+      } catch (err) {
+        console.warn(`[onOfferCreated] could not look up tool ${offer.toolId}:`, err.message);
+      }
+    }
+
+    const formatPrice = (n) => (typeof n === 'number' ? `$${n.toFixed(2)}` : '');
+
+    await sendEmail({
+      templateId: '08-offer-notification',
+      to: sellerEmail,
+      vars: {
+        sellerName: seller.profile?.firstName || seller.sellerName || seller.displayName || '',
+        toolTitle: offer.toolTitle || '',
+        toolImageUrl,
+        listingPrice: formatPrice(offer.originalPrice),
+        offerAmount: formatPrice(offer.currentPrice),
+        buyerName,
+        offerUrl: `${baseUrl}/messages?offer=${offerId}`,
+      },
+    });
+  } catch (err) {
+    console.error(`[onOfferCreated] error sending offer notification for ${offerId}:`, err.message);
+  }
+  return null;
+});
+
+/**
+ * Template 9: Offer Status Update (Buyer).
+ * Fires on offers/{offerId} onUpdate when status changes to one of
+ * accepted/countered/declined.
+ */
+exports.onOfferStatusChanged = onDocumentUpdated('offers/{offerId}', async (event) => {
+  const before = event.data?.before?.data();
+  const after = event.data?.after?.data();
+  if (!before || !after) return null;
+
+  if (before.status === after.status) return null;
+  if (!['accepted', 'countered', 'declined'].includes(after.status)) return null;
+
+  const offerId = event.params.offerId;
+  const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+
+  try {
+    const buyerDoc = await db.collection('users').doc(after.buyerId).get();
+    if (!buyerDoc.exists) return null;
+    const buyer = buyerDoc.data();
+    if (!buyer.email) return null;
+
+    const formatPrice = (n) => (typeof n === 'number' ? `$${n.toFixed(2)}` : '');
+
+    // For 'countered', after.currentPrice is the seller's counter.
+    // For 'accepted'/'declined', the buyer's last offer is what was on the
+    // doc just before the status change (before.currentPrice).
+    const originalOffer = formatPrice(before.currentPrice);
+    const counterAmount = after.status === 'countered' ? formatPrice(after.currentPrice) : '';
+
+    await sendEmail({
+      templateId: '09-offer-status-update',
+      to: buyer.email,
+      vars: {
+        buyerName: buyer.profile?.firstName || buyer.displayName || '',
+        toolTitle: after.toolTitle || '',
+        offerStatus: after.status,
+        originalOffer,
+        counterAmount,
+        offerUrl: `${baseUrl}/messages?offer=${offerId}`,
+        checkoutUrl: `${baseUrl}/checkout?offer=${offerId}`,
+      },
+    });
+  } catch (err) {
+    console.error(`[onOfferStatusChanged] error sending status email for ${offerId}:`, err.message);
+  }
+  return null;
+});
+
+/**
+ * Template 10: Message Notification.
+ * Fires on conversations/{cid}/messages/{mid} onCreate.
+ *
+ * Throttled: maximum 1 email per recipient per conversation per 60 minutes.
+ * State is stored on the parent conversation doc as
+ * lastEmailAt[recipientUid] (Firestore Timestamp).
+ *
+ * Skips system + offer_activity messages — only user-typed messages trigger.
+ */
+const MESSAGE_EMAIL_THROTTLE_MS = 60 * 60 * 1000;
+
+exports.onConversationMessageCreated = onDocumentCreated(
+  'conversations/{conversationId}/messages/{messageId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return null;
+    const message = snap.data();
+    if (!message || !message.senderId) return null;
+
+    // Only typed user messages — skip system pings and offer-activity bridge messages.
+    if (message.type && message.type !== 'text') return null;
+
+    const conversationId = event.params.conversationId;
+
+    try {
+      const convoRef = db.collection('conversations').doc(conversationId);
+      const convoSnap = await convoRef.get();
+      if (!convoSnap.exists) return null;
+      const convo = convoSnap.data();
+
+      const participants = Array.isArray(convo.participants) ? convo.participants : [];
+      const recipientId = participants.find((id) => id !== message.senderId);
+      if (!recipientId) return null;
+
+      // Throttle check
+      const lastEmailAt = convo.lastEmailAt || {};
+      const lastForRecipient = lastEmailAt[recipientId];
+      if (lastForRecipient && lastForRecipient.toMillis) {
+        const elapsed = Date.now() - lastForRecipient.toMillis();
+        if (elapsed < MESSAGE_EMAIL_THROTTLE_MS) {
+          console.log(`[onMessageCreated] throttled — ${conversationId} → ${recipientId} (${Math.round(elapsed / 1000)}s ago)`);
+          return null;
+        }
+      }
+
+      const [recipientDoc, senderDoc] = await Promise.all([
+        db.collection('users').doc(recipientId).get(),
+        db.collection('users').doc(message.senderId).get(),
+      ]);
+      if (!recipientDoc.exists) return null;
+      const recipient = recipientDoc.data();
+      if (!recipient.email) return null;
+      const sender = senderDoc.exists ? senderDoc.data() : {};
+
+      // Find a tool title from the conversation context if available.
+      // Conversations may carry a toolId in either userConversations[uid].toolId
+      // or directly on the doc — best-effort lookup.
+      let toolTitle = convo.toolTitle || '';
+      if (!toolTitle && convo.toolId) {
+        try {
+          const toolDoc = await db.collection('tools').doc(convo.toolId).get();
+          if (toolDoc.exists) toolTitle = toolDoc.data().name || '';
+        } catch (_) { /* best effort */ }
+      }
+
+      // Truncate preview to 100 chars, strip newlines.
+      const rawText = String(message.text || '').replace(/\s+/g, ' ').trim();
+      const messagePreview = rawText.length > 100 ? `${rawText.slice(0, 100)}...` : rawText;
+
+      const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+
+      await sendEmail({
+        templateId: '10-message-notification',
+        to: recipient.email,
+        vars: {
+          recipientName: recipient.profile?.firstName || recipient.displayName || '',
+          senderName: sender.profile?.firstName || sender.displayName || sender.sellerName || 'A buyer',
+          toolTitle,
+          messagePreview,
+          conversationUrl: `${baseUrl}/messages/${conversationId}`,
+        },
+      });
+
+      // Update throttle marker — failures here are non-fatal.
+      try {
+        await convoRef.update({
+          [`lastEmailAt.${recipientId}`]: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (updateErr) {
+        console.warn(`[onMessageCreated] could not update lastEmailAt for ${conversationId}:`, updateErr.message);
+      }
+    } catch (err) {
+      console.error(`[onMessageCreated] error sending message email for ${conversationId}:`, err.message);
+    }
+    return null;
+  }
+);
+
