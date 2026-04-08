@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CheckCircle,
   ChevronRight,
+  ChevronDown,
   AlertTriangle,
   Camera,
   X
@@ -112,7 +113,6 @@ const SellerOnboardAndListPage = () => {
     brand: '',
     model: '',
     current_price: '',
-    original_price: '',
     material: '',
     dimensions: '',
     age: '',
@@ -248,7 +248,6 @@ const SellerOnboardAndListPage = () => {
         brand: formData.brand,
         model: formData.model,
         current_price: parseFloat(formData.current_price) || 0,
-        original_price: parseFloat(formData.original_price) || null,
         material: formData.material,
         dimensions: formData.dimensions,
         age: formData.age,
@@ -445,19 +444,22 @@ const SellerOnboardAndListPage = () => {
                   <label className="block text-gray-700 font-medium mb-1" htmlFor="state">
                     State*
                   </label>
-                  <select
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                    required
-                  >
-                    <option value="">Select a state</option>
-                    {stateOptions.map(state => (
-                      <option key={state.value} value={state.value}>{state.label}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="w-full appearance-none px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
+                      required
+                    >
+                      <option value="">Select a state</option>
+                      {stateOptions.map(state => (
+                        <option key={state.value} value={state.value}>{state.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
@@ -538,42 +540,48 @@ const SellerOnboardAndListPage = () => {
                     <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
                       Category*
                     </label>
-                    <select
-                      id="category"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                      required
-                    >
-                      <option value="">Select a category</option>
-                      {toolCategories.map(category => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full appearance-none px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
+                        required
+                      >
+                        <option value="">Select a category</option>
+                        {toolCategories.map(category => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div>
                     <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
                       Condition*
                     </label>
-                    <select
-                      id="condition"
-                      name="condition"
-                      value={formData.condition}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
-                      required
-                    >
-                      <option value="">Select condition</option>
-                      {toolConditions.map(condition => (
-                        <option key={condition} value={condition}>
-                          {condition}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        id="condition"
+                        name="condition"
+                        value={formData.condition}
+                        onChange={handleChange}
+                        className="w-full appearance-none px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:border-spruce bg-white"
+                        required
+                      >
+                        <option value="">Select condition</option>
+                        {toolConditions.map(condition => (
+                          <option key={condition} value={condition}>
+                            {condition}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div>
@@ -628,50 +636,26 @@ const SellerOnboardAndListPage = () => {
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <h3 className="text-lg font-medium text-gray-800 mb-4">Pricing</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="current_price" className="block text-sm font-medium text-gray-700 mb-1">
-                      Price*
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        id="current_price"
-                        name="current_price"
-                        value={formData.current_price}
-                        onChange={handleChange}
-                        min="0"
-                        step="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
-                        placeholder="0"
-                        required
-                      />
+                <div>
+                  <label htmlFor="current_price" className="block text-sm font-medium text-gray-700 mb-1">
+                    Price*
+                  </label>
+                  <div className="relative w-full md:w-1/2">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">$</span>
                     </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="original_price" className="block text-sm font-medium text-gray-700 mb-1">
-                      Original Price (if discounted)
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        id="original_price"
-                        name="original_price"
-                        value={formData.original_price}
-                        onChange={handleChange}
-                        min="0"
-                        step="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
-                        placeholder="0"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      id="current_price"
+                      name="current_price"
+                      value={formData.current_price}
+                      onChange={handleChange}
+                      min="0"
+                      step="1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md pl-7 focus:outline-none focus:border-spruce"
+                      placeholder="0"
+                      required
+                    />
                   </div>
                 </div>
 

@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext, createContext } from 'react';
-import { 
-  onAuthStateChanged, 
+import { useState, useEffect, useRef, useContext, createContext } from 'react';
+import {
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -10,7 +10,7 @@ import {
   OAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../config';
 import posthog from 'posthog-js';
 
@@ -24,93 +24,120 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Set up auth state listener
-  useEffect(() => {
-    // Set loading to true when initializing
-    setLoading(true);
-    
-    const unsubscribe = onAuthStateChange();
-    
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+  // Holds the active onSnapshot unsubscribe so it can be torn down on auth
+  // state changes (sign out, account swap) and provider unmount.
+  const unsubscribeUserDocRef = useRef(null);
 
-  // Listen for Firebase auth state changes
-  const onAuthStateChange = () => {
-    return onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
+  // Set up auth state listener + per-user-doc snapshot listener.
+  //
+  // We use onSnapshot (not getDoc) so any update to users/{uid} — e.g.
+  // createSellerAccount flipping isSeller, or the Stripe webhook setting
+  // chargesEnabled — propagates into React state in real time. The previous
+  // one-time getDoc left React state stale until the next page refresh.
+  useEffect(() => {
+    setLoading(true);
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Tear down any prior user-doc listener — we may be switching accounts.
+      if (unsubscribeUserDocRef.current) {
+        unsubscribeUserDocRef.current();
+        unsubscribeUserDocRef.current = null;
+      }
+
+      if (!firebaseUser) {
+        setUser(null);
+        setProfile(null);
+        posthog.reset();
+        setLoading(false);
+        return;
+      }
+
+      const userRef = doc(db, 'users', firebaseUser.uid);
+
+      // First-time-user check: if the doc doesn't exist yet, create it. The
+      // subsequent onSnapshot subscription will deliver the freshly-written
+      // doc and populate React state.
       try {
-        if (firebaseUser) {
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userRef);
-          
-          let userProfile = null;
-          
-          if (userSnap.exists()) {
-            userProfile = userSnap.data();
-          } else {
-            // Create a basic profile with role field to satisfy security rules
-            userProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-              photoURL: firebaseUser.photoURL || null,
-              createdAt: new Date().toISOString(),
-              // Add a default role field to satisfy security rules
-              role: 'user',
-              // Add a profile object for structured user data
-              profile: {
-                // Default empty values that will be populated through settings
-                fullName: '',
-                bio: '',
-                location: ''
-              }
-            };
-            
-            try {
-              await setDoc(userRef, userProfile);
-            } catch (err) {
-              console.error("Error creating user profile:", err);
-            }
+        const initialSnap = await getDoc(userRef);
+        if (!initialSnap.exists()) {
+          const newProfile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            photoURL: firebaseUser.photoURL || null,
+            createdAt: new Date().toISOString(),
+            role: 'user',
+            profile: {
+              fullName: '',
+              bio: '',
+              location: '',
+            },
+          };
+          try {
+            await setDoc(userRef, newProfile);
+          } catch (err) {
+            console.error("Error creating user profile:", err);
           }
-          
-          // Merge auth and profile data - use the Firestore data as the source of truth
+        }
+      } catch (err) {
+        console.error("Error checking for user profile:", err);
+      }
+
+      // Subscribe for real-time updates. Each delivery merges Firebase Auth
+      // user fields with the Firestore user doc and updates React state.
+      unsubscribeUserDocRef.current = onSnapshot(
+        userRef,
+        (snap) => {
+          if (!snap.exists()) {
+            // Edge case: doc was deleted while we were subscribed.
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+
+          const userProfile = snap.data();
+
+          // Merge auth and Firestore data — Firestore is source of truth
+          // for profile fields, Firebase Auth is source of truth for the
+          // session identity (uid, email, emailVerified).
           const userData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             emailVerified: firebaseUser.emailVerified,
-            // Use Firestore values if available, fallback to auth values
             displayName: userProfile.displayName || firebaseUser.displayName,
             photoURL: userProfile.photoURL || firebaseUser.photoURL,
-            // Include the role from Firestore
             role: userProfile.role,
-            // Spread the actual Firestore document
             ...userProfile,
-            // Make sure profile is included
-            profile: userProfile.profile || {}
+            profile: userProfile.profile || {},
           };
-          
-          setUser(userData);
 
-          // Identify user in PostHog for analytics
+          setUser(userData);
+          setLoading(false);
+
+          // Re-identify with PostHog on every snapshot — keeps analytics in
+          // sync with profile changes (becoming a seller, etc.).
           posthog.identify(userData.uid, {
             email: userData.email,
             name: userData.displayName,
             isSeller: userData.isSeller || userData.seller?.isSeller || false,
           });
-        } else {
-          setUser(null);
-          setProfile(null);
-          posthog.reset();
+        },
+        (err) => {
+          console.error("User doc snapshot error:", err);
+          setError(err.message);
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Auth state change error:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+      );
     });
-  };
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeUserDocRef.current) {
+        unsubscribeUserDocRef.current();
+        unsubscribeUserDocRef.current = null;
+      }
+    };
+  }, []);
 
   // Sign in with email and password
   const signIn = async (email, password) => {

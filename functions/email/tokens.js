@@ -27,7 +27,6 @@ module.exports = {
   contentMaxWidth: '600px',
   cardPadding: '32px',
   cardRadius: '8px',
-  ctaHeight: '48px',
   ctaRadius: '8px',
 
   // Fonts (with web-safe fallbacks — Google Fonts requested via <link> in shell)

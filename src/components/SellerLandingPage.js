@@ -79,9 +79,9 @@ const SellerLandingPage = () => {
               </form>
             </div>
             <div className="hidden md:block">
-              <img 
-                src="https://images.unsplash.com/photo-1607675331274-2d41b9f3a860?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="Craftsman with woodworking tools" 
+              <img
+                src="/images/pexels-kordanalev-274126666-13600871.jpg"
+                alt="A workshop bench with hand tools and a lathe"
                 className="rounded-lg shadow-lg object-cover w-full h-auto"
               />
             </div>
@@ -380,9 +380,9 @@ const SellerLandingPage = () => {
               </div>
             </div>
             <div className="hidden md:block">
-              <img 
-                src="https://images.unsplash.com/photo-1586864387789-628af9feed72?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
-                alt="Setting up a seller account" 
+              <img
+                src="/images/pexels-kordanalev-274126666-13600871.jpg"
+                alt="A craftsman's workshop with hand tools"
                 className="rounded-lg shadow-lg object-cover w-full"
               />
             </div>

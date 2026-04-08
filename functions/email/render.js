@@ -64,15 +64,20 @@ function url(path) {
 
 /**
  * Render a primary CTA button (Honey bg, Dark Teal text).
- * Always full-width on mobile via inline styles.
+ *
+ * Uses the bulletproof email-button pattern: a TD provides the padding +
+ * background color, and the inner <a> is a bare text link. This avoids the
+ * stretching issue some clients (notably Apple Mail) cause when an
+ * inline-block <a> has both padding AND min-height. Natural button height
+ * is padding (24px) + line-height (20px) ≈ 44px.
  */
 function primaryButton({ label, href }) {
   return `
-    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="margin: 24px 0;">
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="margin: 24px auto;">
       <tr>
-        <td align="center" bgcolor="${tokens.honey}" style="border-radius: ${tokens.ctaRadius}; background-color: ${tokens.honey};">
+        <td align="center" bgcolor="${tokens.honey}" style="border-radius: ${tokens.ctaRadius}; background-color: ${tokens.honey}; padding: 12px 28px;">
           <a href="${escapeHtml(href)}"
-             style="display: inline-block; padding: 14px 32px; font-family: ${tokens.bodyFont}; font-size: 16px; font-weight: 700; color: ${tokens.darkTeal}; text-decoration: none; border-radius: ${tokens.ctaRadius}; min-height: ${tokens.ctaHeight}; line-height: 20px;">
+             style="font-family: ${tokens.bodyFont}; font-size: 16px; font-weight: 700; color: ${tokens.darkTeal}; text-decoration: none; line-height: 20px; mso-line-height-rule: exactly;">
             ${escapeHtml(label)}
           </a>
         </td>
