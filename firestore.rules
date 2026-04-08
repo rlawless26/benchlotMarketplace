@@ -225,6 +225,13 @@ service cloud.firestore {
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();
     }
+
+    // Email send log — written by Cloud Functions email module on every send.
+    // Service account can write; admins can read for observability.
+    match /email_log/{logId} {
+      allow read: if isAdmin();
+      allow write: if isServiceAccount() || isAdmin();
+    }
     
     // Feedback or reviews (if implemented)
     match /reviews/{reviewId} {

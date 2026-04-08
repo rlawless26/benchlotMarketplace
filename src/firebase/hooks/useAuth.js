@@ -12,7 +12,6 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config';
-import * as emailService from '../../utils/emailService';
 import posthog from 'posthog-js';
 
 // Create context for authentication
@@ -148,15 +147,10 @@ export function AuthProvider({ children }) {
       
       const userRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userRef, userProfile);
-      
-      // Send welcome email
-      try {
-        await emailService.sendAccountCreationEmail(email, userProfile.displayName);
-      } catch (emailError) {
-        // Don't fail signup if email fails
-        console.error("Error sending welcome email:", emailError);
-      }
-      
+
+      // Welcome email is sent by the users/{uid} onCreate Cloud Function trigger
+      // (Template 3: Welcome Full Account). No direct email call here.
+
       setError(null); // Clear any previous errors
       return { user: userCredential.user, error: null };
     } catch (err) {
@@ -181,26 +175,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Reset password
+  // Reset password — use Firebase Auth's built-in email (no Resend involvement).
   const resetPassword = async (email) => {
     try {
-      // First, use Firebase's built-in password reset
       await firebaseSendPasswordResetEmail(auth, email);
-      
-      // Also send our customized email with more detailed instructions
-      try {
-        const resetLink = `${window.location.origin}/reset-password?email=${encodeURIComponent(email)}`;
-        await emailService.sendPasswordResetEmail(email, resetLink);
-      } catch (emailError) {
-        // Don't fail the password reset if our custom email fails
-        console.error("Error sending custom password reset email:", emailError);
-      }
-      
-      setError(null); // Clear any previous errors
+      setError(null);
       return { success: true };
     } catch (err) {
       console.error("Password reset error:", err.message);
-      // Don't set error in the hook state
       return { success: false, error: err.message };
     }
   };
@@ -236,12 +218,7 @@ export function AuthProvider({ children }) {
         const userRef = doc(db, 'users', result.user.uid);
         await setDoc(userRef, userProfile);
         
-        // Send welcome email for new users
-        try {
-          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
-        } catch (emailError) {
-          console.error("Error sending welcome email:", emailError);
-        }
+        // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
       }
       
       setError(null); // Clear any previous errors
@@ -286,12 +263,7 @@ export function AuthProvider({ children }) {
         const userRef = doc(db, 'users', result.user.uid);
         await setDoc(userRef, userProfile);
         
-        // Send welcome email
-        try {
-          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
-        } catch (emailError) {
-          console.error("Error sending welcome email:", emailError);
-        }
+        // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
       }
       
       setError(null); // Clear any previous errors
@@ -340,12 +312,7 @@ export function AuthProvider({ children }) {
         const userRef = doc(db, 'users', result.user.uid);
         await setDoc(userRef, userProfile);
         
-        // Send welcome email
-        try {
-          await emailService.sendAccountCreationEmail(result.user.email, userProfile.displayName);
-        } catch (emailError) {
-          console.error("Error sending welcome email:", emailError);
-        }
+        // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
       }
       
       setError(null); // Clear any previous errors
