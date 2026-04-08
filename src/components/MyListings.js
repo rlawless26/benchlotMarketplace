@@ -23,7 +23,14 @@ const STATUS_BADGE = {
   chest:          { variant: 'neutral', label: 'In Chest' },
 };
 
-const MyListings = () => {
+/**
+ * @param {Object} props
+ * @param {boolean} [props.embedded=false] - When true, skip the outer page wrapper
+ *   and the StripeStatusBanner (the parent surface provides those). Used by
+ *   SellerDashboardPage to render My Listings inside the dashboard layout
+ *   without nesting redundant page chrome.
+ */
+const MyListings = ({ embedded = false }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
@@ -79,50 +86,59 @@ const MyListings = () => {
     }
   };
 
-  if (loading && listings.length === 0) {
+  // Conditionally wrap content in the standalone page chrome.
+  // Embedded mode (e.g. inside SellerDashboardPage) skips the outer Bone
+  // background + max-width container so the dashboard's own layout takes over.
+  const wrapInPage = (inner) => {
+    if (embedded) return inner;
     return (
       <div className="bg-bone min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">My Tool Listings</h1>
-              <p className="text-stone-600">Manage your tool listings and track their performance</p>
-            </div>
-          </div>
-          
-          <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default flex justify-center min-h-[300px] items-center">
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-spruce border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-stone-600 font-medium">Loading your listings...</p>
-            </div>
+        <div className="max-w-7xl mx-auto px-4">{inner}</div>
+      </div>
+    );
+  };
+
+  const header = (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">My Tool Listings</h1>
+        <p className="text-stone-600">Manage your tool listings and track their performance</p>
+      </div>
+      <Link
+        to="/tools/new"
+        className="bg-honey hover:bg-honey-light text-dark-teal font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        Add New Listing
+      </Link>
+    </div>
+  );
+
+  if (loading && listings.length === 0) {
+    return wrapInPage(
+      <>
+        {header}
+        <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default flex justify-center min-h-[300px] items-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-spruce border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-stone-600 font-medium">Loading your listings...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  return (
-    <div className="bg-bone min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-display font-medium text-stone-800 mb-2">My Tool Listings</h1>
-            <p className="text-stone-600">Manage your tool listings and track their performance</p>
-          </div>
-          <Link
-            to="/tools/new"
-            className="bg-honey hover:bg-honey-light text-dark-teal font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add New Listing
-          </Link>
-        </div>
+  return wrapInPage(
+    <>
+      {header}
 
-        <StripeStatusBanner className="mb-6" />
+      {/* Stripe banner only renders when standalone — embedded mode relies on
+          the parent surface (SellerDashboardPage) to show it once at the top. */}
+      {!embedded && <StripeStatusBanner className="mb-6" />}
 
-        {error && (
+      {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
             <p>{error}</p>
           </div>
@@ -151,7 +167,14 @@ const MyListings = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {listings.map((tool) => (
+            {listings.map((tool) => {
+              // Normalize the status string defensively (whitespace, case) so a stray
+              // value still maps to a known badge instead of falling through to "Unknown".
+              const rawStatus = (tool.status || '').toString().trim().toLowerCase();
+              const statusBadge = STATUS_BADGE[rawStatus] || { variant: 'neutral', label: rawStatus || 'Unknown' };
+              const needsPhotos = rawStatus === 'pending_images';
+
+              return (
               <div key={tool.id} className="bg-bone-light rounded-lg shadow-md p-4 border border-default sm:p-6 flex flex-col sm:flex-row gap-4 transition-all hover:shadow-lg">
                 {/* Tool Image */}
                 <div className="w-full sm:w-48 h-48 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
@@ -162,20 +185,17 @@ const MyListings = () => {
                     />
                   </Link>
                 </div>
-                
+
                 {/* Tool Details */}
                 <div className="flex-grow">
                   <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                     <Link to={`/tools/${tool.id}`} className="text-xl font-semibold text-spruce hover:text-honey transition-colors">
                       {tool.name}
                     </Link>
-                    {(() => {
-                      const badge = STATUS_BADGE[tool.status] || { variant: 'neutral', label: tool.status || 'Unknown' };
-                      return <Badge variant={badge.variant}>{badge.label}</Badge>;
-                    })()}
+                    <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                   </div>
 
-                  {tool.status === 'pending_images' && (
+                  {needsPhotos && (
                     <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded-md mb-3 text-sm flex items-center justify-between gap-2">
                       <span>This listing won't appear in the marketplace until you add at least one photo.</span>
                       <Link
@@ -256,7 +276,8 @@ const MyListings = () => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -285,8 +306,7 @@ const MyListings = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 };
 

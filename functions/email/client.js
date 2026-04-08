@@ -14,7 +14,9 @@
 const admin = require('firebase-admin');
 const { Resend } = require('resend');
 
-const FROM_ADDRESS = process.env.RESEND_FROM_ADDRESS || 'hello@benchlot.com';
+// Default sender matches what was already verified in Resend for the
+// scan-results emails. Override via RESEND_FROM_ADDRESS if needed.
+const FROM_ADDRESS = process.env.RESEND_FROM_ADDRESS || 'Benchlot <notifications@benchlot.com>';
 const REPLY_TO = process.env.RESEND_REPLY_TO || 'rob@benchlot.com';
 const RETRY_DELAYS_MS = [1000, 5000, 30000];
 

@@ -630,10 +630,10 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'dashboard' && (
-              <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 mb-6">
+              <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-medium">Seller Dashboard</h2>
-                  <Link 
+                  <h2 className="text-2xl font-display font-medium text-stone-800">Seller Dashboard</h2>
+                  <Link
                     to="/tools/new"
                     className="bg-honey text-dark-teal px-4 py-2 rounded-md text-sm font-medium hover:bg-honey-light"
                   >
@@ -805,33 +805,17 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'listings' && (
-              <div className="bg-bone-light rounded-lg shadow-md border border-default">
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-medium text-stone-800">My Listings</h2>
-                    <Link 
-                      to="/tools/new"
-                      className="bg-honey text-dark-teal px-4 py-2 rounded-md text-sm font-medium hover:bg-honey-light"
-                    >
-                      + New Listing
-                    </Link>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <MyListings />
-                </div>
-              </div>
+              <MyListings embedded />
             )}
             
             {activeMainTab === 'orders' && (
-              <div className="bg-bone-light rounded-lg shadow-md border border-default">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-xl font-medium text-stone-800">Orders</h2>
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-display font-medium text-stone-800">Orders</h2>
                   <p className="text-stone-600 text-sm mt-1">Manage and track orders from your customers</p>
                 </div>
-                
-                <div className="p-6">
+
+                <div>
                   {/* Filter and search controls */}
                   <div className="flex flex-col md:flex-row gap-4 mb-6">
                     <div className="relative flex-1">
@@ -924,13 +908,13 @@ const SellerDashboardPage = () => {
             )}
             
             {activeMainTab === 'earnings' && (
-              <div className="bg-bone-light rounded-lg shadow-md border border-default">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-xl font-medium text-stone-800">Earnings & Payouts</h2>
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-display font-medium text-stone-800">Earnings & Payouts</h2>
                   <p className="text-stone-600 text-sm mt-1">Track your earnings, transfers, and available balance</p>
                 </div>
 
-                <div className="p-6">
+                <div>
                   {/* Balance cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-5">
@@ -1018,9 +1002,9 @@ const SellerDashboardPage = () => {
             )}
 
             {activeMainTab === 'settings' && (
-              <div className="bg-bone-light rounded-lg shadow-md border border-default overflow-hidden">
-                <div className="p-6 border-b">
-                  <h2 className="text-xl font-medium text-stone-800">Seller Settings</h2>
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-display font-medium text-stone-800">Seller Settings</h2>
                   <p className="text-stone-600 text-sm mt-1">Manage your seller profile, policies, and preferences</p>
                 </div>
                 

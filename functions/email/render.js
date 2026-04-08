@@ -54,10 +54,10 @@ function formatDate(input) {
 
 /**
  * Build an absolute Benchlot URL from a relative path.
- * Uses BENCHLOT_BASE_URL env var, defaults to https://benchlot.com.
+ * Falls back through BENCHLOT_BASE_URL → APP_URL (the existing var) → prod.
  */
 function url(path) {
-  const base = (process.env.BENCHLOT_BASE_URL || 'https://benchlot.com').replace(/\/$/, '');
+  const base = (process.env.BENCHLOT_BASE_URL || process.env.APP_URL || 'https://benchlot.com').replace(/\/$/, '');
   if (!path) return base;
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }

@@ -11,11 +11,12 @@
 const tokens = require('./tokens');
 const { escapeHtml, url } = require('./render');
 
-// TODO(rob): host the Benchlot wordmark SVG on a public CDN and paste the URL here.
-// Until then, the header falls back to a text wordmark in Petrona.
-const WORDMARK_URL = process.env.BENCHLOT_WORDMARK_URL || '';
+// Wordmark — defaults to the same hosted PNG already used by the scan-results
+// email. Override via BENCHLOT_WORDMARK_URL if you ever swap to an SVG / CDN.
+const WORDMARK_URL = process.env.BENCHLOT_WORDMARK_URL || 'https://benchlot.com/images/benchlot-wordmark-spruce.png';
 
-// TODO(rob): physical mailing address required by CAN-SPAM. Set BENCHLOT_MAILING_ADDRESS env var.
+// TODO(rob): real physical mailing address for CAN-SPAM footer.
+// Set BENCHLOT_MAILING_ADDRESS env var.
 const MAILING_ADDRESS = process.env.BENCHLOT_MAILING_ADDRESS || 'Benchlot, Boston, MA';
 
 /**

@@ -348,7 +348,7 @@ const Header = ({ publicMode = false }) => {
                           <>
                             <Link to="/my-listings" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                               <List className="h-4 w-4" />
-                              My Tools
+                              My Tool Listings
                             </Link>
                             <Link to="/seller/dashboard" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                               <Package className="h-4 w-4" />
@@ -669,7 +669,7 @@ const Header = ({ publicMode = false }) => {
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <List className="h-5 w-5" />
-                          My Tools
+                          My Tool Listings
                         </Link>
                         <Link
                           to="/seller/dashboard"

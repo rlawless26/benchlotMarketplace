@@ -59,6 +59,24 @@ const db = admin.firestore();
 const { sendEmail } = require('./email');
 
 /**
+ * Pull a usable first name from a user document for email greetings.
+ *
+ * Deliberately does NOT fall back to `displayName` because useAuth seeds
+ * displayName from the email prefix on signup (e.g. "rlawless3+sl"), which
+ * produces ugly greetings like "Hi rlawless3+sl,". We only trust:
+ *   1. profile.firstName  — set explicitly or by OAuth providers (Google, etc.)
+ *   2. sellerName         — set explicitly during seller signup (real name or business)
+ *
+ * Returns '' if neither is available — templates handle the empty greeting case.
+ */
+function getGreetingName(userDoc, { includeSellerName = false } = {}) {
+  if (!userDoc) return '';
+  if (userDoc.profile?.firstName) return userDoc.profile.firstName;
+  if (includeSellerName && userDoc.sellerName) return userDoc.sellerName;
+  return '';
+}
+
+/**
  * Format a Stripe shipping address object into a multi-line string.
  * Returns '' if no usable fields.
  */
@@ -126,8 +144,7 @@ async function sendOrderEmails({ orderId, orderTotal, items, shippingAddress, bu
       try {
         const s = await db.collection('users').doc(firstItem.sellerId).get();
         if (s.exists) {
-          const sd = s.data();
-          sellerName = sd.sellerName || sd.displayName || '';
+          sellerName = getGreetingName(s.data(), { includeSellerName: true });
         }
       } catch (err) {
         console.warn(`[order-emails] could not look up seller ${firstItem.sellerId}: ${err.message}`);
@@ -167,7 +184,7 @@ async function sendOrderEmails({ orderId, orderTotal, items, shippingAddress, bu
         templateId: '06-new-order-seller',
         to: sellerEmail,
         vars: {
-          sellerName: seller.profile?.firstName || seller.sellerName || seller.displayName || '',
+          sellerName: getGreetingName(seller, { includeSellerName: true }),
           toolTitle: item.name || item.title || '',
           toolImageUrl: imageUrlFromItem(item),
           salePrice: formatPriceUsd(itemTotal),
@@ -551,7 +568,8 @@ app.post('/confirm-payment', async (req, res) => {
               items: cartItems,
               shippingAddress: shippingAddress || {},
               buyerEmail: guestEmail,
-              buyerName: guestEmail.split('@')[0],
+              // No name available for guest checkouts — templates handle the empty case.
+              buyerName: '',
             });
           }
         } catch (emailError) {
@@ -608,7 +626,6 @@ app.post('/confirm-payment', async (req, res) => {
         const userDoc = await db.collection('users').doc(cart.userId).get();
         if (userDoc.exists) {
           const userEmail = userDoc.data().email;
-          const userName = userDoc.data().displayName || userDoc.data().firstName || '';
 
           if (userEmail) {
             await sendOrderEmails({
@@ -617,7 +634,7 @@ app.post('/confirm-payment', async (req, res) => {
               items: cart.items,
               shippingAddress: shippingAddress || {},
               buyerEmail: userEmail,
-              buyerName: userName || userEmail.split('@')[0],
+              buyerName: getGreetingName(userDoc.data()),
             });
           }
         }
@@ -2551,7 +2568,7 @@ exports.onToolActivated = onDocumentUpdated('tools/{toolId}', async (event) => {
       templateId: '04-listing-published',
       to: sellerEmail,
       vars: {
-        sellerName: seller.profile?.firstName || seller.sellerName || seller.displayName || '',
+        sellerName: getGreetingName(seller, { includeSellerName: true }),
         toolTitle: after.name || '',
         toolPrice: formattedPrice,
         toolUrl: `${baseUrl}/tools/${toolId}`,
@@ -2581,7 +2598,7 @@ exports.onUserCreated = onDocumentCreated('users/{uid}', async (event) => {
   if (user.source === 'scan') return null;
 
   const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
-  const displayName = user.profile?.firstName || user.displayName || user.sellerName || '';
+  const displayName = getGreetingName(user, { includeSellerName: true });
 
   try {
     await sendEmail({
@@ -2627,7 +2644,7 @@ exports.onOrderShipped = onDocumentUpdated('orders/{orderId}', async (event) => 
       if (buyerDoc.exists) {
         const buyerData = buyerDoc.data();
         buyerEmail = buyerData.email;
-        buyerName = buyerData.profile?.firstName || buyerData.displayName || '';
+        buyerName = getGreetingName(buyerData);
       }
     } catch (err) {
       console.warn(`[onOrderShipped] could not look up buyer ${after.userId}:`, err.message);
@@ -2686,7 +2703,7 @@ exports.onOfferCreated = onDocumentCreated('offers/{offerId}', async (event) => 
     if (!sellerEmail) return null;
 
     const buyer = buyerDoc.exists ? buyerDoc.data() : {};
-    const buyerName = buyer.profile?.firstName || buyer.displayName || 'A buyer';
+    const buyerName = getGreetingName(buyer) || 'A buyer';
 
     // Look up tool image
     let toolImageUrl = '';
@@ -2708,7 +2725,7 @@ exports.onOfferCreated = onDocumentCreated('offers/{offerId}', async (event) => 
       templateId: '08-offer-notification',
       to: sellerEmail,
       vars: {
-        sellerName: seller.profile?.firstName || seller.sellerName || seller.displayName || '',
+        sellerName: getGreetingName(seller, { includeSellerName: true }),
         toolTitle: offer.toolTitle || '',
         toolImageUrl,
         listingPrice: formatPrice(offer.originalPrice),
@@ -2757,7 +2774,7 @@ exports.onOfferStatusChanged = onDocumentUpdated('offers/{offerId}', async (even
       templateId: '09-offer-status-update',
       to: buyer.email,
       vars: {
-        buyerName: buyer.profile?.firstName || buyer.displayName || '',
+        buyerName: getGreetingName(buyer),
         toolTitle: after.toolTitle || '',
         offerStatus: after.status,
         originalOffer,
@@ -2848,8 +2865,8 @@ exports.onConversationMessageCreated = onDocumentCreated(
         templateId: '10-message-notification',
         to: recipient.email,
         vars: {
-          recipientName: recipient.profile?.firstName || recipient.displayName || '',
-          senderName: sender.profile?.firstName || sender.displayName || sender.sellerName || 'A buyer',
+          recipientName: getGreetingName(recipient),
+          senderName: getGreetingName(sender, { includeSellerName: true }) || 'A buyer',
           toolTitle,
           messagePreview,
           conversationUrl: `${baseUrl}/messages/${conversationId}`,

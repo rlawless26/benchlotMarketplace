@@ -26,7 +26,6 @@ module.exports = {
   render(vars) {
     const {
       displayName = '',
-      marketplaceUrl = url('/marketplace'),
       scanUrl = url('/scan'),
       listToolUrl = url('/seller/onboard-and-list'),
     } = vars;
@@ -36,16 +35,16 @@ module.exports = {
     const bodyHtml = `
       ${greeting}
       ${paragraph("Welcome to Benchlot — the woodworker's marketplace.")}
-      ${paragraph("Here's what you can do right now:")}
-      ${primaryButton({ label: 'Browse the Marketplace', href: marketplaceUrl })}
-      ${secondaryLink({ label: 'Scan a tool — get an instant ID and value estimate from a photo', href: scanUrl })}
-      ${secondaryLink({ label: 'List a tool for sale — about 5 minutes, no listing fees', href: listToolUrl })}
+      ${paragraph("We're recruiting our first sellers. Got a tool sitting in the shop you'd be willing to part with? List it in about 5 minutes — no listing fees, you set the price.")}
+      ${primaryButton({ label: 'List a Tool for Sale', href: listToolUrl })}
+      ${paragraph("Not sure what a tool is worth? Snap a photo and our scanner will identify it and give you a value estimate:")}
+      ${secondaryLink({ label: 'Scan a tool', href: scanUrl })}
       ${paragraph("We're early and growing. If you have feedback, ideas, or just want to talk shop, reply to this email.")}
       ${paragraph('— Rob, Benchlot')}
     `.trim();
 
     const html = renderShell({
-      preheader: 'Welcome to Benchlot — the woodworker\'s marketplace.',
+      preheader: "Welcome to Benchlot. List a tool in about 5 minutes — no listing fees.",
       bodyHtml,
     });
 
