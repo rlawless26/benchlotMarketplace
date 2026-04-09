@@ -201,18 +201,30 @@ async function sendOrderEmails({ orderId, orderTotal, items, shippingAddress, bu
   }
 }
 
-// Initialize Stripe with error handling
+// Initialize Stripe with error handling.
+//
+// When running locally (Firebase Functions emulator) we prefer the test-mode
+// key so dev never accidentally hits the live Stripe account. In deployed
+// production we always use the live key. The test variants are optional —
+// if they're not set we fall back to the live key with a warning.
 let stripe;
+const isFunctionsEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
 try {
-  // Get Stripe key from environment variables
-  const stripeKey = process.env.STRIPE_SECRET || 
-                    process.env.STRIPE_SECRET_KEY;
-  
+  const liveKey = process.env.STRIPE_SECRET || process.env.STRIPE_SECRET_KEY;
+  const testKey = process.env.STRIPE_SECRET_TEST;
+  const stripeKey = isFunctionsEmulator && testKey ? testKey : liveKey;
+
   if (stripeKey) {
-    console.log('Stripe initialized in', stripeKey.startsWith('sk_live') ? 'LIVE' : 'TEST', 'mode');
+    const mode = stripeKey.startsWith('sk_live') ? 'LIVE' : 'TEST';
+    const ctx = isFunctionsEmulator ? 'emulator' : 'deployed';
+    if (isFunctionsEmulator && !testKey) {
+      console.warn(`⚠️  Stripe initialized in ${mode} mode in the emulator. Set STRIPE_SECRET_TEST in functions/.env to use test mode locally.`);
+    } else {
+      console.log(`Stripe initialized in ${mode} mode (${ctx})`);
+    }
     stripe = require('stripe')(stripeKey);
   } else {
-    console.error('❌ STRIPE_SECRET environment variable is not set. Stripe will not work.');
+    console.error('❌ No Stripe key configured. Set STRIPE_SECRET (and optionally STRIPE_SECRET_TEST for local dev).');
     console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', '));
     // Do not initialize stripe — endpoints will return errors if called without it
     stripe = null;
@@ -964,9 +976,14 @@ app.post('/stripe-webhook', async (req, res) => {
   let event;
 
   try {
-    // Get both webhook secrets from environment variables
-    const paymentWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    const connectWebhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
+    // Prefer test webhook secrets when running in the emulator, fall back
+    // to live secrets in production. Mirrors the Stripe key selection above.
+    const paymentWebhookSecret = (isFunctionsEmulator && process.env.STRIPE_WEBHOOK_SECRET_TEST)
+      ? process.env.STRIPE_WEBHOOK_SECRET_TEST
+      : process.env.STRIPE_WEBHOOK_SECRET;
+    const connectWebhookSecret = (isFunctionsEmulator && process.env.STRIPE_CONNECT_WEBHOOK_SECRET_TEST)
+      ? process.env.STRIPE_CONNECT_WEBHOOK_SECRET_TEST
+      : process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
 
     if (!paymentWebhookSecret && !connectWebhookSecret) {
       console.error('No webhook secrets configured. Set STRIPE_WEBHOOK_SECRET and/or STRIPE_CONNECT_WEBHOOK_SECRET.');
