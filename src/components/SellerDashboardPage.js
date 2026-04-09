@@ -934,6 +934,26 @@ const SellerDashboardPage = () => {
                     </div>
                   </div>
 
+                  {/* Set up payouts contextual CTA — shown when Stripe Connect is incomplete */}
+                  {accountStatus && !accountStatus.payoutsEnabled && (
+                    <div className="bg-honey-light border border-honey rounded-lg p-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-base font-medium text-dark-teal mb-1">
+                          Set up payouts to start receiving earnings
+                        </h3>
+                        <p className="text-sm text-dark-teal/80">
+                          You'll be redirected to Stripe to verify your identity and connect a bank account. Takes about 3 minutes.
+                        </p>
+                      </div>
+                      <Link
+                        to="/seller/onboarding"
+                        className="bg-honey text-dark-teal px-5 py-2.5 rounded-md text-sm font-medium hover:bg-honey-light whitespace-nowrap border border-dark-teal/10"
+                      >
+                        Set Up Payouts →
+                      </Link>
+                    </div>
+                  )}
+
                   {/* Fee explanation */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
                     <div className="flex">

@@ -264,41 +264,6 @@ export const getPayouts = async (userId) => {
 };
 
 /**
- * Add a bank account to a Custom Connect account for individual sellers
- * This is used when sellers skip Stripe hosted onboarding
- * @param {string} userId User ID
- * @param {object} bankData Bank account details
- * @returns {Promise<object>} Response with bank account information
- */
-export const addBankAccount = async (userId, bankData) => {
-  try {
-    const response = await fetch(`${API_URL}/add-bank-account`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        accountNumber: bankData.accountNumber,
-        routingNumber: bankData.routingNumber,
-        accountHolderName: bankData.accountHolderName,
-        accountHolderType: 'individual', // Default for individual sellers
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to add bank account');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error adding bank account:', error);
-    throw error;
-  }
-};
-
-/**
  * Update Stripe Connect account with required information
  * @param {string} userId User ID
  * @param {object} accountData Account details including personal information
@@ -341,8 +306,7 @@ const stripeService = {
   getSellerOrders,
   createRefund,
   getPayouts,
-  addBankAccount,
-  updateConnectAccount
+  updateConnectAccount,
 };
 
 export default stripeService;

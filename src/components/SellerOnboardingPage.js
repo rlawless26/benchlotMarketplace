@@ -1,393 +1,142 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../firebase/hooks/useAuth';
-import { getConnectAccountStatus, refreshConnectAccountLink } from '../utils/stripeService';
-import { ENABLE_DIRECT_BANK_ACCOUNT, USE_CUSTOM_ACCOUNTS, openAuthModal } from '../utils/featureFlags';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
-
 /**
  * Seller Onboarding Page
- * Manages the Stripe Connect onboarding process
- * Shows status and provides options to continue/refresh onboarding
+ *
+ * Thin wrapper around Stripe Connect Express hosted onboarding. Three modes
+ * keyed off the route:
+ *
+ *   /seller/onboarding          → generate a fresh Stripe accountLinks URL
+ *                                 and window.location.href to it. The user
+ *                                 completes ID verification, business info,
+ *                                 and bank account collection on Stripe's
+ *                                 hosted pages.
+ *
+ *   /seller/onboarding/refresh  → the previous Stripe link expired. Regenerate
+ *                                 and bounce the user back to Stripe.
+ *
+ *   /seller/onboarding/complete → the user just finished Stripe onboarding.
+ *                                 Fetch their fresh account status (which
+ *                                 also pushes chargesEnabled / payoutsEnabled
+ *                                 to Firestore), then redirect to the
+ *                                 dashboard with a success flag.
+ *
+ * The page deliberately renders almost no UI of its own — just a centered
+ * spinner with a status message. All the actual onboarding happens on
+ * stripe.com.
  */
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Loader, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../firebase/hooks/useAuth';
+import { getConnectAccountStatus, refreshConnectAccountLink } from '../utils/stripeService';
+import { openAuthModal } from '../utils/featureFlags';
+
 const SellerOnboardingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [accountStatus, setAccountStatus] = useState(null);
+  const { user, loading: authLoading } = useAuth();
   const [error, setError] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [staleAccount, setStaleAccount] = useState(false);
-  
-  // Check if this is a refresh from Stripe
-  const isRefresh = new URLSearchParams(location.search).get('refresh') === 'true';
+  const [statusMessage, setStatusMessage] = useState('Connecting you to Stripe…');
 
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const isCompleteReturn = location.pathname.includes('/complete');
 
-  // Get current user and check their Stripe account status
   useEffect(() => {
-    const checkUserAndStatus = async () => {
+    // Wait for auth to resolve before doing anything
+    if (authLoading) return;
+
+    if (!user) {
+      openAuthModal('signin', '/seller/onboarding');
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
       try {
-        // Check if still loading authentication state
-        if (loading && !user) {
-          return;
-        }
-        
-        if (!user) {
-          // Use auth modal instead of redirect to login page
-          openAuthModal('signin', '/seller/onboarding' + location.search);
-          return;
-        }
-        
-        // Get user data from Firestore to check for needsBankDetails flag
-        try {
-          // Get user data from Firestore using Firebase v9 syntax
-          const userRef = doc(db, 'users', user.uid);
-          const userDocSnap = await getDoc(userRef);
-          if (userDocSnap.exists()) {
-            const userDataFromFirestore = userDocSnap.data();
-            setUserData(userDataFromFirestore);
-            
-            // Check if this user needs to add bank details
-            if (ENABLE_DIRECT_BANK_ACCOUNT && userDataFromFirestore.needsBankDetails) {
-              navigate(`/seller/bank-details?accountId=${userDataFromFirestore.stripeAccountId}`);
-              return;
-            }
-          }
-        } catch (userDataError) {
-          console.error('Error fetching user data:', userDataError);
-          // Continue with account status check even if user data fetch fails
-        }
-        
-        // Check if this is a return from Stripe onboarding complete
-        const isComplete = location.pathname.includes('/complete');
-        
-        // Check account status
-        try {
-          const status = await getConnectAccountStatus(user.uid);
-          setAccountStatus(status);
-          
-          // If account is restricted and has pending requirements that match our known fixable ones
-          // (first_name, last_name, business_profile.url), attempt to fix it automatically
-          if (status && (status.status === 'restricted' || !status.detailsSubmitted) && status.requirements) {
-            const needsFirstName = status.requirements.currently_due?.includes('individual.first_name');
-            const needsLastName = status.requirements.currently_due?.includes('individual.last_name');
-            const needsUrl = status.requirements.currently_due?.includes('business_profile.url');
-            
-            if (needsFirstName || needsLastName || needsUrl) {
-              console.log('Detected fixable restrictions, attempting to update account:', {
-                needsFirstName, needsLastName, needsUrl
-              });
-              
-              try {
-                const { updateConnectAccount } = await import('../utils/stripeService');
-                
-                // Get first/last name from the user data
-                const firstName = user.firstName || (user.displayName ? user.displayName.split(' ')[0] : '');
-                const lastName = user.lastName || (user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '');
-                
-                // Update the account with missing information
-                const updateResult = await updateConnectAccount(user.uid, {
-                  firstName,
-                  lastName,
-                  // We'll provide a dummy URL that points to the seller's profile on Benchlot
-                  websiteUrl: `https://benchlot.com/sellers/${user.uid}`
-                });
-                
-                console.log('Successfully updated Stripe account with missing information:', updateResult);
-                
-                // Get a fresh status
-                const updatedStatus = await getConnectAccountStatus(user.uid);
-                setAccountStatus(updatedStatus);
-              } catch (updateError) {
-                console.error('Error fixing restricted account:', updateError);
-                // Continue with the flow, don't block on this error
-              }
-            }
-          }
-        } catch (statusError) {
-          console.error('Error fetching account status:', statusError);
-
-          const errorMsg = statusError.message || '';
-          const isStaleAccount = errorMsg.includes('does not have access') ||
-                                 errorMsg.includes('account does not exist') ||
-                                 errorMsg.includes('been revoked');
-
-          // Stale Stripe Connect account — clear it so the user can start fresh
-          if (isStaleAccount) {
-            console.log('Detected stale Stripe Connect account, clearing stripeAccountId');
-            try {
-              const { updateDoc } = await import('firebase/firestore');
-              const userRef = doc(db, 'users', user.uid);
-              await updateDoc(userRef, {
-                stripeAccountId: null,
-                needsBankDetails: true
-              });
-            } catch (clearError) {
-              console.error('Error clearing stale stripeAccountId:', clearError);
-            }
-            setStaleAccount(true);
-            setLoading(false);
-            return;
-          }
-
-          // If we're coming back from the Stripe redirect and getting an error
-          // It might mean we need to wait for the webhook to update the user data
-          if (isComplete) {
-            console.log('Coming back from Stripe redirect - handling potential timing issue');
-
-            // Check if there's a pending tool listing to create
-            const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
-
-            if (pendingToolListingJSON) {
-              // There's a pending tool listing - redirect to create it
-              navigate('/seller/create-pending-listing');
-              return;
-            } else {
-              // No pending listing - redirect to dashboard
-              navigate('/seller/dashboard?newSeller=true');
-              return;
-            }
-          }
-
-          // If not from Stripe redirect, check for bank account redirect
-          if (ENABLE_DIRECT_BANK_ACCOUNT && userData && userData.needsBankDetails) {
-            // User needs to enter bank details directly
-            console.log('User needs to enter bank details directly');
-            navigate(`/seller/bank-details?accountId=${userData.stripeAccountId}`);
-            return;
-          }
-
-          // Otherwise show the error
-          setError(statusError.message || 'Failed to get account status');
-          setLoading(false);
-          return;
-        }
-        
-        // Check if there's a pending tool listing to create
-        const pendingToolListingJSON = localStorage.getItem('pendingToolListing');
-        
-        // If completed onboarding or account is active, update user document and redirect
-        if (isComplete || 
-            (accountStatus && accountStatus.detailsSubmitted && accountStatus.payoutsEnabled) ||
-            // Also consider the account complete if it was restricted but we've addressed all requirements
-            (accountStatus && accountStatus.status === 'restricted' && 
-             (!accountStatus.requirements || 
-              !accountStatus.requirements.currently_due || 
-              accountStatus.requirements.currently_due.length === 0)
-            )) {
-          // Update the user document to explicitly mark them as a seller
+        if (isCompleteReturn) {
+          // ── Return path from Stripe ──────────────────────────────────────
+          // Pull the latest account status. The /get-account-status endpoint
+          // also writes chargesEnabled / payoutsEnabled / detailsSubmitted to
+          // the user doc, which the realtime useAuth snapshot listener picks
+          // up immediately, so the dashboard banner reacts on its own.
+          setStatusMessage('Finalizing your account…');
           try {
-            // Import necessary functions from firebase/firestore
-            const { updateDoc } = await import('firebase/firestore');
-            
-            // Reference to the user document
-            const userRef = doc(db, 'users', user.uid);
-            
-            // First check current user data to handle structure safely
-            const userSnapshot = await getDoc(userRef);
-            const userData = userSnapshot.data() || {};
-            
-            // Prepare update data with consistent structure
-            const updateData = {
-              // Keep top-level isSeller for backward compatibility
-              isSeller: true,
-              
-              // Create a structured seller object
-              seller: {
-                isSeller: true,
-                stripeStatus: 'active',
-                verified: true,
-                sellerSince: new Date().toISOString()
-              }
-            };
-            
-            // If we already have seller info, merge it rather than overwrite
-            if (userData.seller) {
-              updateData.seller = {
-                ...userData.seller,
-                ...updateData.seller
-              };
-            }
-            
-            // Update the document with the structured data
-            await updateDoc(userRef, updateData);
-            
-            console.log('User document updated with seller status after onboarding completion');
-          } catch (updateError) {
-            console.error('Error updating user seller status:', updateError);
-            // Continue with redirect even if update fails
+            await getConnectAccountStatus(user.uid);
+          } catch (statusErr) {
+            // Non-fatal — the webhook will eventually update the user doc.
+            console.warn('[onboarding/complete] could not fetch account status:', statusErr.message);
           }
-          
-          if (pendingToolListingJSON) {
-            // There's a pending tool listing - redirect to create it
-            navigate('/seller/create-pending-listing');
-          } else {
-            // No pending listing - redirect to dashboard
-            navigate('/seller/dashboard?newSeller=true');
-          }
+          if (cancelled) return;
+          navigate('/seller/dashboard?onboardingComplete=true');
           return;
         }
-        
-        setLoading(false);
+
+        // ── Outbound to Stripe (normal entry OR refresh) ───────────────────
+        setStatusMessage('Connecting you to Stripe…');
+        const result = await refreshConnectAccountLink(user.uid);
+        if (cancelled) return;
+
+        if (!result || !result.url) {
+          throw new Error('Could not generate a Stripe onboarding link. Please try again.');
+        }
+
+        // Full-page redirect to Stripe's hosted onboarding
+        window.location.href = result.url;
       } catch (err) {
-        console.error('Error checking account status:', err);
-        setError(err.message || 'Failed to check account status. Please try again.');
-        setLoading(false);
+        console.error('[onboarding] error:', err);
+        if (!cancelled) {
+          setError(err.message || 'Something went wrong. Please try again.');
+        }
       }
     };
-    
-    checkUserAndStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, navigate, loading, location]);
-  
-  // Handle refreshing the onboarding link
-  const handleRefreshLink = async () => {
-    try {
-      setLoading(true);
-      
-      if (!user) {
-        throw new Error('User information is missing');
-      }
-      
-      // Get a new onboarding link
-      const result = await refreshConnectAccountLink(user.uid);
-      
-      if (!result.url) {
-        throw new Error('No Stripe URL returned');
-      }
-      
-      // Open the Stripe URL in a new tab
-      window.open(result.url, '_blank');
-      setLoading(false);
-      
-    } catch (err) {
-      console.error('Error refreshing onboarding link:', err);
-      setError(err.message || 'Failed to refresh onboarding link. Please try again.');
-      setLoading(false);
-    }
-  };
 
-  if (loading) {
-    return (
-      <div className="bg-bone min-h-screen">
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-spruce"></div>
-            <span className="ml-2 text-gray-600">Loading...</span>
-          </div>
-        </main>
-      </div>
-    );
-  }
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, isCompleteReturn]);
 
   return (
     <div className="bg-bone min-h-screen">
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default">
-          <h1 className="text-3xl font-medium text-gray-800 mb-6">Complete Your Seller Onboarding</h1>
-          
-          {isRefresh && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md mb-6">
-              Your Stripe session has expired. Please continue onboarding to complete your seller account setup.
-            </div>
-          )}
-          
-          {error && !staleAccount && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-              {error}
-            </div>
-          )}
-          
-          <div className="space-y-6">
-            <p className="text-gray-600">
-              To start selling on Benchlot, we need to set up your payment processing. This allows
-              you to receive payments securely when your tools sell.
-            </p>
-            
-            {/* Stale Stripe account — cleared, user needs to re-onboard */}
-            {staleAccount && (
-              <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Payment Setup Needs Refresh</h2>
-                <p className="mb-4">
-                  Your previous payment account is no longer accessible. This can happen after system updates.
-                  We've cleared the old connection — please set up your payout details again to continue selling.
-                </p>
+      <main className="max-w-md mx-auto px-4 py-16">
+        <div className="bg-bone-light rounded-lg shadow-md border border-default p-8 text-center">
+          {error ? (
+            <>
+              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+              <h1 className="text-xl font-display font-medium text-spruce mb-2">
+                Onboarding hit a snag
+              </h1>
+              <p className="text-gray-700 mb-6">{error}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-honey text-dark-teal rounded-md font-medium hover:bg-honey-light"
+              >
+                Try Again
+              </button>
+              <p className="text-sm text-gray-500 mt-4">
+                Or{' '}
                 <button
-                  onClick={() => navigate('/seller/onboard-and-list')}
-                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
-                >
-                  Set Up Payout Details
-                </button>
-                <p className="text-sm text-gray-500 mt-3 text-center">
-                  You can still <button onClick={() => navigate('/tools/new')} className="underline text-spruce hover:text-spruce-dark">list tools</button> while your payout setup is in progress.
-                </p>
-              </div>
-            )}
-
-            {/* Default state when no account status is available or details not submitted */}
-            {!staleAccount && (!accountStatus || !accountStatus.detailsSubmitted) && (
-              <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Complete Stripe Onboarding</h2>
-                <p className="mb-4">You'll need to complete the following steps:</p>
-                <ul className="list-disc pl-5 mb-6 space-y-2">
-                  <li>Verify your identity</li>
-                  <li>Connect a bank account</li>
-                  <li>Provide business information (if applicable)</li>
-                </ul>
-                <p className="mb-6">This information is securely handled by Stripe, our payment processor.</p>
-                <button 
-                  onClick={handleRefreshLink}
-                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
-                >
-                  {USE_CUSTOM_ACCOUNTS 
-                    ? "Enter Payout Details"
-                    : "Continue Onboarding"
-                  }
-                </button>
-              </div>
-            )}
-            
-            {accountStatus && accountStatus.detailsSubmitted && !accountStatus.payoutsEnabled && (
-              <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Onboarding in Progress</h2>
-                <p className="mb-4">
-                  Thanks for submitting your information! Stripe is currently reviewing your account.
-                  This usually takes 1-2 business days.
-                </p>
-                <p className="mb-6">
-                  We'll notify you when your account is ready to start accepting payments.
-                </p>
-                
-                <button 
-                  onClick={handleRefreshLink}
-                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
-                >
-                  Check Status Again
-                </button>
-              </div>
-            )}
-            
-            {accountStatus && accountStatus.detailsSubmitted && accountStatus.payoutsEnabled && (
-              <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
-                <h2 className="text-lg font-medium text-green-800 mb-4">Onboarding Complete!</h2>
-                <p className="mb-4">
-                  Your account has been verified and is ready to receive payments.
-                </p>
-                <button 
+                  type="button"
                   onClick={() => navigate('/seller/dashboard')}
-                  className="w-full py-3 bg-honey text-dark-teal rounded-md hover:bg-honey-light font-medium"
+                  className="underline text-spruce hover:text-spruce-dark"
                 >
-                  Go to Seller Dashboard
+                  return to your dashboard
                 </button>
-              </div>
-            )}
-          </div>
+                .
+              </p>
+            </>
+          ) : (
+            <>
+              <Loader className="h-10 w-10 text-spruce animate-spin mx-auto mb-4" />
+              <h1 className="text-xl font-display font-medium text-spruce mb-2">
+                {isCompleteReturn ? 'Almost done…' : 'Setting up payouts'}
+              </h1>
+              <p className="text-gray-700">{statusMessage}</p>
+            </>
+          )}
         </div>
       </main>
     </div>

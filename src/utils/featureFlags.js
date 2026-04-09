@@ -1,12 +1,10 @@
 /**
  * Feature Flags
  * Central place to manage feature flags for the application
- * 
+ *
  * You can override these in localStorage during development:
  * localStorage.setItem('ENABLE_TOOL_FIRST_FLOW', 'false')
- * localStorage.setItem('ENABLE_DIRECT_BANK_ACCOUNT', 'false')
- * localStorage.setItem('USE_CUSTOM_ACCOUNTS', 'false')
- * 
+ *
  * This file also includes authentication utilities for showing the auth modal
  */
 
@@ -23,12 +21,6 @@ const getFeatureFlag = (key, defaultValue) => {
 // Flag that enables the tool-first seller onboarding flow
 export const ENABLE_TOOL_FIRST_FLOW = getFeatureFlag('ENABLE_TOOL_FIRST_FLOW', true);
 
-// Flag for direct bank account collection (bypassing Stripe onboarding)
-export const ENABLE_DIRECT_BANK_ACCOUNT = getFeatureFlag('ENABLE_DIRECT_BANK_ACCOUNT', true);
-
-// Flag to use Custom Stripe accounts for ALL sellers (less info required)
-export const USE_CUSTOM_ACCOUNTS = getFeatureFlag('USE_CUSTOM_ACCOUNTS', true);
-
 // Marketplace beta — when false, public visitors only see ToolScan, waitlist, and info pages.
 // When true, the full marketplace is visible to everyone. This is the launch switch.
 export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', true);
@@ -39,10 +31,8 @@ export const SELLER_ENTRY_PATH = '/sell';
 // Export all feature flags as an object for debugging
 export const featureFlags = {
   ENABLE_TOOL_FIRST_FLOW,
-  ENABLE_DIRECT_BANK_ACCOUNT,
-  USE_CUSTOM_ACCOUNTS,
   SELLER_ENTRY_PATH,
-  MARKETPLACE_BETA
+  MARKETPLACE_BETA,
 };
 
 // Auth modal event - create a custom event to trigger the auth modal

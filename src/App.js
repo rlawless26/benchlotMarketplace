@@ -43,7 +43,6 @@ import SellerDashboardPage from './components/SellerDashboardPage';
 import SellerLandingPage from './components/SellerLandingPage';
 import SellerOnboardAndListPage from './components/SellerOnboardAndListPage';
 import CreatePendingListingPage from './components/CreatePendingListingPage';
-import BankDetailsPage from './components/BankDetailsPage';
 
 // Component imports
 import Header from './components/Header';
@@ -150,7 +149,6 @@ function AppLayout() {
           <Route path="/seller/dashboard" element={<MarketplaceRoute element={<SellerDashboardPage />} />} />
           <Route path="/seller/onboard-and-list" element={<MarketplaceRoute element={<SellerOnboardAndListPage />} />} />
           <Route path="/seller/create-pending-listing" element={<MarketplaceRoute element={<CreatePendingListingPage />} />} />
-          <Route path="/seller/bank-details" element={<MarketplaceRoute element={<BankDetailsPage />} />} />
 
           {/* Always public: About, Help, Legal, Categories */}
           <Route path="/about" element={<AboutPage />} />

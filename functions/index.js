@@ -688,235 +688,87 @@ app.post('/confirm-payment', async (req, res) => {
  */
 app.post('/create-connected-account', async (req, res) => {
   try {
-    const { 
-      userId, 
-      email, 
-      firstName, 
+    const {
+      userId,
+      email,
+      firstName,
       lastName,
-      sellerName, 
-      sellerType, 
-      location, 
-      contactEmail, 
-      contactPhone, 
-      sellerBio 
+      sellerName,
+      sellerType,
+      location,
+      contactEmail,
+      contactPhone,
+      sellerBio,
     } = req.body;
-    
+
     if (!userId || !email) {
       return res.status(400).json({ error: 'Missing userId or email' });
     }
 
     console.log(`create-connected-account: user=${userId}`);
-    
-    // Check if user already has a Stripe account
+
+    const appUrl = process.env.APP_URL || process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
+
+    // If the user already has a Stripe account, just generate a fresh
+    // hosted-onboarding link for it (handles the "they came back to finish setup" case).
     try {
       const userDoc = await db.collection('users').doc(userId).get();
       if (userDoc.exists && userDoc.data().stripeAccountId) {
-        
-        // Create a new account link for continuing onboarding
-        const appUrl = process.env.APP_URL || 'https://benchlot.com';
         const accountLink = await stripe.accountLinks.create({
           account: userDoc.data().stripeAccountId,
           refresh_url: `${appUrl}/seller/onboarding/refresh`,
           return_url: `${appUrl}/seller/onboarding/complete`,
-          type: 'account_onboarding'
+          type: 'account_onboarding',
         });
-        
-        return res.json({ 
+
+        return res.json({
           url: accountLink.url,
           accountId: userDoc.data().stripeAccountId,
-          exists: true
+          exists: true,
         });
       }
     } catch (checkError) {
       console.error('Error checking existing Stripe account:', checkError);
       // Continue with account creation
     }
-    
-    // Create a connected account with Stripe
-    
-    // Define common account parameters
-    const accountParams = {
+
+    // Create a new Stripe Express connected account.
+    // We deliberately let Stripe collect ID verification, business info, and
+    // bank account details via their hosted onboarding flow — that's the
+    // whole point of Express. We only seed the bare minimum fields here.
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'US',
       email,
+      capabilities: {
+        transfers: { requested: true },
+      },
+      business_type: sellerType === 'business' ? 'company' : 'individual',
+      business_profile: {
+        url: `${appUrl}/sellers/${userId}`,
+      },
+      settings: {
+        payouts: {
+          // Platform controls when sellers get paid
+          schedule: { interval: 'manual' },
+        },
+      },
       metadata: {
         userId,
-        location,
-        sellerName
+        location: location || '',
+        sellerName: sellerName || '',
+        purpose: 'destination_only',
       },
-      // Use the newer controller parameters instead of the legacy type parameter
-      // The controller parameters provide more control and are the recommended approach
-      controller: {
-        stripe_dashboard: { type: 'none' },        // No access to Stripe Dashboard
-        fees: { payer: 'application' },            // Platform pays the fees
-        losses: { payments: 'application' },       // Platform covers any losses
-        requirement_collection: 'application'      // Platform collects all required info
-      },
-      // Set business type - note we don't set 'type' parameter anymore
-      business_type: sellerType === 'business' ? 'company' : 'individual'
-    };
-    
-    // Explicitly accept TOS on behalf of all sellers - CRITICAL to skip TOS screen
-    accountParams.tos_acceptance = {
-      date: Math.floor(Date.now() / 1000),
-      ip: req.ip || '127.0.0.1'  // Use request IP or fallback
-      // Letting Stripe default to "full" service agreement for US-to-US transfers
-    };
-    
-    // Only request the transfers capability - minimum needed for our use case
-    // We don't need card_payments since all charges go through our platform account
-    accountParams.capabilities = {
-      transfers: { requested: true }
-    };
-    
-    // Specify platform-controlled payouts schedule - applies to all sellers
-    accountParams.settings = {
-      payouts: {
-        schedule: {
-          interval: 'manual'  // Platform completely controls when sellers get paid
-        }
-      }
-    };
-    
-    // Set verification requirements to minimum for all sellers
-    if (sellerType === 'individual') {
-      // Get first and last name with fallbacks
-      const firstNameValue = firstName || (sellerName ? sellerName.split(' ')[0] : null) || email.split('@')[0] || "User";
-      const lastNameValue = lastName || (sellerName && sellerName.split(' ').length > 1 ? sellerName.split(' ').slice(1).join(' ') : "User");
-      
-      // For individuals - use the standard nested format that Stripe's Node.js library expects
-      // The library will convert this to the proper format when making the API request
-      accountParams.individual = {
-        first_name: firstNameValue,
-        last_name: lastNameValue
-      };
-      
-      // Add empty verification document (optional but mimics successful request)
-      if (process.env.NODE_ENV !== 'production') { // Only in non-production environments
-        accountParams.individual.verification = {
-          document: {
-            back: "",
-            front: ""
-          }
-        };
-      }
-      
-      // Add URL to business profile (required before first transfer)
-      accountParams.business_profile = {
-        ...accountParams.business_profile,
-        url: `https://benchlot.com/sellers/${userId}`
-      };
-      
-      // Add the optional but helpful DOB fields if we have them
-      // (these are required for accounts over $3,000 anyway)
-      if (false) { // Placeholder for when DOB is available
-        accountParams.individual.dob = {
-          day: 1,  // Replace with actual values when available
-          month: 1,
-          year: 1980
-        };
-      }
-      
-    } else {
-      // For businesses
-      accountParams.company = {
-        verification: {
-          document: {
-            back: "",
-            front: ""
-          }
-        }
-      };
-    }
-    
-    // Explicitly set US as country to reduce international compliance requirements
-    accountParams.country = 'US';
-    
-    // Explicitly mark as destination only (receiving transfers only)
-    accountParams.metadata.purpose = 'destination_only';
-    
-    // Add business_profile.url for all accounts to satisfy Stripe requirements
-    accountParams.business_profile = {
-      url: `https://benchlot.com/sellers/${userId}`
-    };
-    
-    // IMPORTANT NOTE: We're using a "full" service agreement (default) with only the "transfers" capability.
-    // Even with a full agreement, these accounts are still configured to only receive transfers, not process payments directly,
-    // by only requesting the "transfers" capability and not the "card_payments" capability.
-    // This is the correct configuration for a US-based marketplace platform where the platform handles all payments
-    // and sellers only receive their share of the funds.
-    
-    const account = await stripe.accounts.create(accountParams);
-    console.log(`Stripe account created: ${account.id}`);
-    
-    // Step 2: Explicitly update the Person (representative) with required information
-    try {
-      // Extract the person ID from the account
-      const personId = account.individual?.id;
+    });
 
-      // Get first and last name with fallbacks
-      const firstNameValue = firstName || (sellerName ? sellerName.split(' ')[0] : null) || email.split('@')[0] || "User";
-      const lastNameValue = lastName || (sellerName && sellerName.split(' ').length > 1 ? sellerName.split(' ').slice(1).join(' ') : "User");
-      
-      if (personId) {
-        // Update the person with explicit name information
-        try {
-          const updatedPerson = await stripe.accounts.updatePerson(
-            account.id,
-            personId,
-            {
-              first_name: firstNameValue,
-              last_name: lastNameValue,
-              relationship: {
-                representative: true
-              }
-            }
-          );
-          
-        } catch (updateError) {
-          console.error('Error updating person, falling back to create:', updateError.message);
-          // Fall through to person creation as a backup
-          const newPerson = await stripe.accounts.createPerson(
-            account.id,
-            {
-              first_name: firstNameValue,
-              last_name: lastNameValue,
-              relationship: {
-                representative: true
-              }
-            }
-          );
-          
-        }
-      } else {
-        // Person ID not found in account response, creating new person
-        
-        try {
-          const newPerson = await stripe.accounts.createPerson(
-            account.id,
-            {
-              first_name: firstNameValue,
-              last_name: lastNameValue,
-              relationship: {
-                representative: true
-              }
-            }
-          );
-          
-        } catch (createError) {
-          console.error('Error creating person:', createError);
-        }
-      }
-    } catch (personError) {
-      console.error('Error in overall person creation/update process:', personError);
-      console.error('Error stack:', personError.stack);
-      // Continue with the flow - we don't want to fail the whole account creation
-      // if updating the person fails
-    }
-    
-    // Store the account ID and seller info in Firestore
+    console.log(`Stripe Express account created: ${account.id}`);
+
+    // Persist the account + basic seller profile to Firestore.
+    // chargesEnabled / payoutsEnabled / detailsSubmitted will be filled in
+    // by the Stripe `account.updated` webhook once the seller finishes
+    // hosted onboarding.
     try {
-      
-      // Create seller profile data
-      const sellerProfile = {
+      await db.collection('users').doc(userId).update({
         stripeAccountId: account.id,
         isSeller: true,
         sellerSince: admin.firestore.FieldValue.serverTimestamp(),
@@ -924,53 +776,40 @@ app.post('/create-connected-account', async (req, res) => {
         firstName: firstName || '',
         lastName: lastName || '',
         sellerName: sellerName || email.split('@')[0],
-        location: location || 'Boston, MA',
+        location: location || '',
         contactEmail: contactEmail || email,
         contactPhone: contactPhone || '',
         sellerBio: sellerBio || '',
         stripeStatus: 'pending',
         detailsSubmitted: false,
         payoutsEnabled: false,
-        role: 'seller', // Explicitly set role to seller to match Firestore rules
-        // Also set seller object with the new data structure
+        chargesEnabled: false,
+        role: 'seller',
         seller: {
           isSeller: true,
           stripeAccountId: account.id,
           stripeStatus: 'pending',
           sellerType: sellerType || 'individual',
-          sellerSince: new Date().toISOString()
-        }
-      };
-      
-      // Update user record
-      await db.collection('users').doc(userId).update(sellerProfile);
+          sellerSince: new Date().toISOString(),
+        },
+      });
     } catch (firestoreError) {
       console.error('Error updating user in Firestore:', firestoreError);
       throw firestoreError;
     }
-    
-    // Handle account setup for ALL sellers - bypass Stripe hosted onboarding completely
-    const appUrl = process.env.APP_URL || 'https://benchlot.com';
-    
-    // Skip Stripe hosted onboarding completely
-    // Route everyone to our bank account collection UI
-    const setupResult = {
-      url: `${appUrl}/seller/bank-details?accountId=${account.id}`
-    };
-    
-    // Mark this in the user's profile so we know they need to provide bank details directly
-    await db.collection('users').doc(userId).update({
-      needsBankDetails: true,
-      stripeStatus: 'pending_bank_details'
+
+    // Generate the hosted-onboarding URL the seller will be redirected to.
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: `${appUrl}/seller/onboarding/refresh`,
+      return_url: `${appUrl}/seller/onboarding/complete`,
+      type: 'account_onboarding',
     });
-    
-    const accountLink = setupResult;
-    
-    // Return the account link URL and new account ID
-    res.json({ 
+
+    res.json({
       url: accountLink.url,
       accountId: account.id,
-      exists: false
+      exists: false,
     });
   } catch (error) {
     console.error('Error creating connected account:', error);
@@ -1018,14 +857,16 @@ app.get('/get-account-status', async (req, res) => {
       chargesEnabled: account.charges_enabled
     };
     
-    // Update the user's account status in Firestore
+    // Update the user's account status in Firestore so the realtime
+    // useAuth snapshot listener picks up chargesEnabled immediately.
     await db.collection('users').doc(userId).update({
       stripeStatus: accountStatus.status,
       detailsSubmitted: accountStatus.detailsSubmitted,
       payoutsEnabled: accountStatus.payoutsEnabled,
-      lastStatusUpdate: admin.firestore.FieldValue.serverTimestamp()
+      chargesEnabled: accountStatus.chargesEnabled,
+      lastStatusUpdate: admin.firestore.FieldValue.serverTimestamp(),
     });
-    
+
     res.json(accountStatus);
   } catch (error) {
     console.error('Error getting account status:', error);
@@ -1514,84 +1355,6 @@ app.post('/stripe-webhook', async (req, res) => {
     res.json({ received: true });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Add a bank account to a Stripe Custom Connect account
- * This is used for individual sellers who skip the Stripe hosted onboarding
- * and provide bank details directly on our platform
- */
-app.post('/add-bank-account', async (req, res) => {
-  try {
-    const { 
-      userId, 
-      accountNumber, 
-      routingNumber, 
-      accountHolderName, 
-      accountHolderType = 'individual'
-    } = req.body;
-    
-    if (!userId || !accountNumber || !routingNumber || !accountHolderName) {
-      return res.status(400).json({ error: 'Missing required bank account details' });
-    }
-    
-    
-    // Get the user from Firestore
-    const userDoc = await db.collection('users').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    const userData = userDoc.data();
-    
-    if (!userData.stripeAccountId) {
-      return res.status(404).json({ error: 'User is not a seller' });
-    }
-    
-    // Create token for bank account
-    const bankAccountToken = await stripe.tokens.create({
-      bank_account: {
-        country: 'US',
-        currency: 'usd',
-        account_number: accountNumber,
-        routing_number: routingNumber,
-        account_holder_name: accountHolderName,
-        account_holder_type: accountHolderType // 'individual' or 'company'
-      }
-    });
-    
-    // Create external account on the Connect account
-    const bankAccount = await stripe.accounts.createExternalAccount(
-      userData.stripeAccountId,
-      {
-        external_account: bankAccountToken.id,
-        default_for_currency: true
-      }
-    );
-    
-    // Update user record
-    await db.collection('users').doc(userId).update({
-      hasBankAccount: true,
-      stripeStatus: 'active',
-      payoutsEnabled: true,
-      detailsSubmitted: true,
-      needsBankDetails: false,
-      lastStatusUpdate: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    // Return success with the last 4 digits
-    res.json({
-      success: true,
-      last4: bankAccount.last4,
-      bankName: bankAccount.bank_name,
-      status: 'active'
-    });
-    
-  } catch (error) {
-    console.error('Error adding bank account:', error);
     res.status(500).json({ error: error.message });
   }
 });
