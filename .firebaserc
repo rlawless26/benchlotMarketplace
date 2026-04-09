@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "benchlot-6d64e"
+    "default": "benchlot-6d64e",
+    "prod": "benchlot-6d64e",
+    "staging": "benchlot-staging"
   }
 }

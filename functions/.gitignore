@@ -1,11 +1,15 @@
 node_modules/
 .runtimeconfig.json
 
-# Environment variables
+# Environment variables — never commit
 .env
 .env.local
 .env.development
 .env.production
+# Per-project Functions env files: .env.<projectId> is auto-loaded by
+# Firebase Functions v2 on deploy. Wildcard ignores any project-specific
+# file (e.g. .env.benchlot-staging, .env.benchlot-6d64e).
+.env.benchlot-*
 sendgrid.env
 
 # Service account files

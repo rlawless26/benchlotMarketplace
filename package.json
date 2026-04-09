@@ -11,7 +11,6 @@
     "@firebase/functions": "^0.12.3",
     "@firebase/storage": "^0.13.7",
     "@firebase/util": "^1.11.0",
-    "@sendgrid/mail": "^8.1.5",
     "@sentry/react": "^10.47.0",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^1.54.2",
@@ -41,7 +40,13 @@
     "build:staging": "REACT_APP_ENVIRONMENT=staging react-scripts build",
     "build:development": "REACT_APP_ENVIRONMENT=development react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy:staging": "firebase deploy --only functions,firestore,storage --project staging",
+    "deploy:prod": "firebase deploy --only functions,firestore,storage --project prod",
+    "deploy:rules:staging": "firebase deploy --only firestore:rules,storage --project staging",
+    "deploy:rules:prod": "firebase deploy --only firestore:rules,storage --project prod",
+    "deploy:functions:staging": "firebase deploy --only functions --project staging",
+    "deploy:functions:prod": "firebase deploy --only functions --project prod"
   },
   "eslintConfig": {
     "extends": [
