@@ -53,11 +53,15 @@ if (fs.existsSync(envPath)) {
 const args = process.argv.slice(2);
 const COMMIT = args.includes('--commit');
 const I_MEAN_IT = args.includes('--i-mean-it');
+const USE_LIVE = args.includes('--live');
 const limitIdx = args.indexOf('--limit');
 const LIMIT = limitIdx >= 0 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : Infinity;
 
 // ─── Stripe init ──────────────────────────────────────────────────────────
-const stripeKey = process.env.STRIPE_SECRET_TEST || process.env.STRIPE_SECRET || process.env.STRIPE_SECRET_KEY;
+// By default, prefer the test key (safer). Pass --live to force the live key.
+const liveKey = process.env.STRIPE_SECRET || process.env.STRIPE_SECRET_KEY;
+const testKey = process.env.STRIPE_SECRET_TEST;
+const stripeKey = USE_LIVE ? liveKey : (testKey || liveKey);
 if (!stripeKey) {
   console.error('No Stripe key found. Set STRIPE_SECRET (or STRIPE_SECRET_TEST) in functions/.env.');
   process.exit(1);
