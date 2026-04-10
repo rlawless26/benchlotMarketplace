@@ -74,7 +74,7 @@ export function AuthProvider({ children }) {
             },
           };
           try {
-            await setDoc(userRef, newProfile);
+            await setDoc(userRef, newProfile, { merge: true });
           } catch (err) {
             console.error("Error creating user profile:", err);
           }
@@ -169,11 +169,12 @@ export function AuthProvider({ children }) {
         displayName: userData.displayName || email.split('@')[0],
         photoURL: userData.photoURL || null,
         createdAt: new Date().toISOString(),
+        role: 'user',
         ...userData
       };
       
       const userRef = doc(db, 'users', userCredential.user.uid);
-      await setDoc(userRef, userProfile);
+      await setDoc(userRef, userProfile, { merge: true });
 
       // Welcome email is sent by the users/{uid} onCreate Cloud Function trigger
       // (Template 3: Welcome Full Account). No direct email call here.
