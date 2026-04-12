@@ -151,7 +151,7 @@ const Header = ({ publicMode = false }) => {
             <div className="flex items-center gap-4">
               <Link
                 to="/scan"
-                className="text-secondary hover:text-bone font-body font-medium transition-colors"
+                className="text-bone/70 hover:text-bone font-body font-medium transition-colors"
                 style={{ fontSize: '13px', letterSpacing: '0.3px' }}
               >
                 Scan a Tool
@@ -227,7 +227,7 @@ const Header = ({ publicMode = false }) => {
                 <CartIcon />
 
                 {/* Wishlist icon */}
-                <Link to="/wishlist" className="hidden md:flex text-secondary hover:text-bone relative" aria-label="Wishlist">
+                <Link to="/wishlist" className="hidden md:flex text-bone/70 hover:text-bone relative" aria-label="Wishlist">
                   <Heart className="h-5 w-5" />
                   {wishlistCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -237,7 +237,7 @@ const Header = ({ publicMode = false }) => {
                 </Link>
 
                 {/* Messages Icon with notifications */}
-                <Link to="/messages" className="hidden md:flex text-secondary hover:text-bone relative" aria-label="Messages">
+                <Link to="/messages" className="hidden md:flex text-bone/70 hover:text-bone relative" aria-label="Messages">
                   <MessageSquare className="h-5 w-5" />
                   {(notificationCount > 0 || messageCount > 0) && (
                     <span className="absolute -top-1 -right-1 bg-honey text-dark-teal text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -249,7 +249,7 @@ const Header = ({ publicMode = false }) => {
                 {/* User Profile Dropdown - Hide on mobile */}
                 <div className="relative hidden md:block">
                   <button
-                    className="flex items-center gap-1 text-secondary hover:text-bone"
+                    className="flex items-center gap-1 text-bone/70 hover:text-bone"
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     aria-label="Open user menu"
                     aria-expanded={profileMenuOpen}
@@ -400,7 +400,7 @@ const Header = ({ publicMode = false }) => {
                 {/* Login link - text only */}
                 <button
                   onClick={openSignIn}
-                  className="text-secondary hover:text-bone text-sm font-body font-medium whitespace-nowrap hidden md:block"
+                  className="text-bone/70 hover:text-bone text-sm font-body font-medium whitespace-nowrap hidden md:block"
                 >
                   Log In
                 </button>
@@ -426,7 +426,7 @@ const Header = ({ publicMode = false }) => {
             <nav className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
               <Link
                 to="/marketplace"
-                className="text-secondary hover:text-bone whitespace-nowrap font-medium"
+                className="text-bone/70 hover:text-bone whitespace-nowrap font-medium"
               >
                 Browse All
               </Link>
@@ -435,7 +435,7 @@ const Header = ({ publicMode = false }) => {
                 <div key={category.name} className="relative group">
                   <Link
                     to={`/marketplace?category=${encodeURIComponent(category.name)}`}
-                    className="flex items-center gap-1 text-secondary hover:text-bone whitespace-nowrap"
+                    className="flex items-center gap-1 text-bone/70 hover:text-bone whitespace-nowrap"
                   >
                     {category.name} <ChevronDown className="h-3 w-3" />
                   </Link>
@@ -455,7 +455,7 @@ const Header = ({ publicMode = false }) => {
 
               {/* More categories dropdown */}
               <div className="relative group">
-                <button className="flex items-center gap-1 text-secondary hover:text-bone whitespace-nowrap">
+                <button className="flex items-center gap-1 text-bone/70 hover:text-bone whitespace-nowrap">
                   More <ChevronDown className="h-3 w-3" />
                 </button>
                 <div className="absolute left-0 top-full mt-1 bg-bone-light shadow-lg rounded-md p-2 min-w-[220px] hidden group-hover:block z-10">
@@ -475,13 +475,13 @@ const Header = ({ publicMode = false }) => {
             {/* Right side - Utility links */}
             <div className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
               <Link to="/scan" className="text-honey hover:text-honey-light font-medium">Scan a Tool</Link>
-              <Link to="/help" className="text-secondary hover:text-bone">Help</Link>
-              <Link to="/about" className="text-secondary hover:text-bone">About</Link>
+              <Link to="/help" className="text-bone/70 hover:text-bone">Help</Link>
+              <Link to="/about" className="text-bone/70 hover:text-bone">About</Link>
               <a
                 href="https://blog.benchlot.com/blog"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-secondary hover:text-bone"
+                className="text-bone/70 hover:text-bone"
               >
                 Updates
               </a>
