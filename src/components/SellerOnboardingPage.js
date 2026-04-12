@@ -28,6 +28,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
+import { useSeller } from '../firebase/hooks/useSeller';
 import { getConnectAccountStatus, refreshConnectAccountLink } from '../utils/stripeService';
 import { openAuthModal } from '../utils/featureFlags';
 
@@ -35,6 +36,7 @@ const SellerOnboardingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
+  const { createSellerAccount } = useSeller();
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState('Connecting you to Stripe…');
 
@@ -72,8 +74,33 @@ const SellerOnboardingPage = () => {
         }
 
         // ── Outbound to Stripe (normal entry OR refresh) ───────────────────
+        // Try refreshing an existing account link first. If the user has no
+        // Stripe account yet (e.g. because create-connected-account failed
+        // during publish), fall back to creating one from scratch.
         setStatusMessage('Connecting you to Stripe…');
-        const result = await refreshConnectAccountLink(user.uid);
+        let result;
+        try {
+          result = await refreshConnectAccountLink(user.uid);
+        } catch (refreshErr) {
+          console.warn('[onboarding] refresh failed, trying to create account:', refreshErr.message);
+          // Fallback: create the Stripe Express account now. createSellerAccount
+          // handles the Firestore user-doc setup AND calls /create-connected-account
+          // which returns a hosted-onboarding URL.
+          setStatusMessage('Setting up your payout account…');
+          const createResult = await createSellerAccount({
+            sellerName: user.displayName || user.sellerName || '',
+            sellerType: 'individual',
+            contactEmail: user.email || '',
+            isSeller: true,
+            'profile.isSeller': true,
+          });
+          if (createResult.success && createResult.url) {
+            result = { url: createResult.url };
+          } else {
+            throw new Error(createResult.error || 'Could not create your Stripe account. Please try again.');
+          }
+        }
+
         if (cancelled) return;
 
         if (!result || !result.url) {

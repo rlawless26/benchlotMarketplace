@@ -322,19 +322,21 @@ const SellerOnboardAndListPage = () => {
     <div className="bg-bone min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 md:p-8">
-          {/* Header */}
-          <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
-            {formStep === 1 ? 'Start Selling on Benchlot' :
-             formStep === 2 ? 'Tell us about your tool' :
-             formStep === 3 ? 'Add photos & publish' :
-             'Your listing is live!'}
-          </h1>
-          <p className="text-gray-600 mb-6">
-            {formStep === 1 ? 'Complete your seller profile to begin listing tools.' :
-             formStep === 2 ? 'Provide details about the tool you want to sell.' :
-             formStep === 3 ? 'Add photos to help your tool sell faster, then publish your listing.' :
-             'Buyers can find your tool on the marketplace right now.'}
-          </p>
+          {/* Header — hidden on step 4 since the green success card provides the heading */}
+          {formStep <= 3 && (
+            <>
+              <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-2">
+                {formStep === 1 ? 'Start Selling on Benchlot' :
+                 formStep === 2 ? 'Tell us about your tool' :
+                 'Add photos & publish'}
+              </h1>
+              <p className="text-gray-600 mb-6">
+                {formStep === 1 ? 'Complete your seller profile to begin listing tools.' :
+                 formStep === 2 ? 'Provide details about the tool you want to sell.' :
+                 'Add photos to help your tool sell faster, then publish your listing.'}
+              </p>
+            </>
+          )}
 
           {/* Progress Steps — 3 steps (hidden after publish) */}
           {formStep <= 3 && (
