@@ -147,7 +147,7 @@ describe('email templates — P0', () => {
       const out = t06.render(vars);
       expect(out.html).toContain('$85.00');
       expect(out.html).toContain('$74.80');
-      expect(out.html).toMatch(/12% marketplace fee/);
+      expect(out.html).toMatch(/10% marketplace fee/);
     });
 
     test('explicit 3-business-day shipping expectation', () => {

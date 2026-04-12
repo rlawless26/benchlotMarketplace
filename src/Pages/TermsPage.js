@@ -87,9 +87,9 @@ const TermsPage = () => {
             <h2>5. Fees and Payments</h2>
             <h3>5.1. Platform Fees</h3>
             <p>
-              Benchlot charges a 5% platform fee on each successful transaction. This fee covers our service,
-              payment processing, and ongoing platform improvements. There are no listing fees or monthly
-              subscription costs for basic sellers.
+              Benchlot charges a 10% marketplace fee on each successful transaction. This all-in fee covers
+              our service, payment processing, and ongoing platform improvements. There are no listing fees
+              or monthly subscription costs.
             </p>
 
             <h3>5.2. Payment Processing</h3>

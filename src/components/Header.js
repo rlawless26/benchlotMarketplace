@@ -27,6 +27,7 @@ import { useMessages } from '../firebase/hooks/useMessages';
 
 // Import components
 import CartIcon from './CartIcon';
+import Avatar from './ui/Avatar';
 import AuthModal from './AuthModal';
 
 // Import auth utils
@@ -255,21 +256,7 @@ const Header = ({ publicMode = false }) => {
                     aria-expanded={profileMenuOpen}
                     aria-haspopup="true"
                   >
-                    {user?.photoURL ? (
-                      // User has a profile image - display it
-                      <div className="w-8 h-8 rounded-full overflow-hidden border border-dark">
-                        <img
-                          src={user.photoURL}
-                          alt="Profile"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      // No profile image - show default icon
-                      <div className="w-8 h-8 rounded-full bg-spruce-light flex items-center justify-center">
-                        <User className="h-4 w-4 text-bone" />
-                      </div>
-                    )}
+                    <Avatar src={user?.photoURL} name={user?.displayName || user?.email} size="sm" />
                     <ChevronDown className="h-3 w-3 hidden md:block" />
                   </button>
 
@@ -282,19 +269,7 @@ const Header = ({ publicMode = false }) => {
                       {/* User info header */}
                       <div className="px-4 py-3 border-b">
                         <div className="flex items-center gap-3">
-                          {user?.photoURL ? (
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-dark">
-                              <img
-                                src={user.photoURL}
-                                alt="Profile"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-spruce-light flex items-center justify-center">
-                              <User className="h-5 w-5 text-bone" />
-                            </div>
-                          )}
+                          <Avatar src={user?.photoURL} name={user?.displayName || user?.email} size="md" />
                           <div>
                             <div className="font-body font-medium text-dark-teal">{user?.displayName || 'User'}</div>
                             <div className="text-xs text-secondary">{user?.email}</div>
@@ -594,17 +569,7 @@ const Header = ({ publicMode = false }) => {
                       className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {user?.photoURL ? (
-                        <div className="w-7 h-7 rounded-full overflow-hidden border border-dark flex-shrink-0">
-                          <img
-                            src={user.photoURL}
-                            alt="Profile"
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <User className="h-5 w-5" />
-                      )}
+                      <Avatar src={user?.photoURL} name={user?.displayName || user?.email} size="xs" />
                       My Account
                     </Link>
                     <Link

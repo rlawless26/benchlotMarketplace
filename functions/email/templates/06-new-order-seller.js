@@ -57,7 +57,7 @@ module.exports = {
             <p style="margin: 0 0 12px 0; font-family: ${tokens.displayFont}; font-size: 20px; font-weight: 700; color: ${tokens.spruce};">${escapeHtml(toolTitle)}</p>
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
               <tr><td style="padding: 4px 0; font-family: ${tokens.bodyFont}; font-size: 14px; color: ${tokens.bodyText};"><strong>Sale price:</strong> ${escapeHtml(salePrice)}</td></tr>
-              <tr><td style="padding: 4px 0; font-family: ${tokens.bodyFont}; font-size: 16px; color: ${tokens.bodyText};"><strong>Your payout:</strong> <span style="color: ${tokens.honey}; font-weight: 700;">${escapeHtml(yourPayout)}</span> <span style="color: ${tokens.mutedText}; font-size: 13px;">(after Benchlot's 12% marketplace fee)</span></td></tr>
+              <tr><td style="padding: 4px 0; font-family: ${tokens.bodyFont}; font-size: 16px; color: ${tokens.bodyText};"><strong>Your payout:</strong> <span style="color: ${tokens.honey}; font-weight: 700;">${escapeHtml(yourPayout)}</span> <span style="color: ${tokens.mutedText}; font-size: 13px;">(after Benchlot's 10% marketplace fee)</span></td></tr>
               ${buyerName ? `<tr><td style="padding: 4px 0; font-family: ${tokens.bodyFont}; font-size: 14px; color: ${tokens.bodyText};"><strong>Buyer:</strong> ${escapeHtml(buyerName)}</td></tr>` : ''}
               ${shippingAddress ? `<tr><td style="padding: 8px 0 4px 0; font-family: ${tokens.bodyFont}; font-size: 14px; color: ${tokens.bodyText};"><strong>Ship to:</strong><br>${formattedAddress}</td></tr>` : ''}
             </table>

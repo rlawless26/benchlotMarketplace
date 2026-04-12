@@ -58,6 +58,9 @@ const db = admin.firestore();
 // Import the new Resend-based email module (replaces emailService.js)
 const { sendEmail } = require('./email');
 
+// Centralized fee constants — single source of truth for the 10% all-in rate
+const { MARKETPLACE_FEE_RATE, SELLER_PAYOUT_RATE, MARKETPLACE_FEE_LABEL } = require('./fees');
+
 /**
  * Pull a usable first name from a user document for email greetings.
  *
@@ -178,7 +181,7 @@ async function sendOrderEmails({ orderId, orderTotal, items, shippingAddress, bu
       if (!sellerEmail) continue;
 
       const itemTotal = (item.price || 0) * (item.quantity || 1);
-      const payout = itemTotal * 0.88; // 12% marketplace fee — see Template 6 spec
+      const payout = itemTotal * SELLER_PAYOUT_RATE;
 
       await sendEmail({
         templateId: '06-new-order-seller',
@@ -463,7 +466,7 @@ app.post('/create-payment-intent', async (req, res) => {
             isMarketplace: 'true',
             itemCount: cart.items.length.toString(),
             sellerCount: Object.keys(sellerItems).length.toString(),
-            platformFeePercent: '5' // 5% platform fee
+            platformFeePercent: String(Math.round(MARKETPLACE_FEE_RATE * 100))
           }
         });
         
@@ -1116,9 +1119,9 @@ app.post('/stripe-webhook', async (req, res) => {
                   (total, item) => total + (item.price * item.quantity), 0
                 );
                 
-                // Calculate platform fee (5%)
-                const platformFee = Math.round(sellerTotal * 0.05 * 100);
-                const sellerAmount = Math.round(sellerTotal * 0.95 * 100);
+                // Calculate platform fee
+                const platformFee = Math.round(sellerTotal * MARKETPLACE_FEE_RATE * 100);
+                const sellerAmount = Math.round(sellerTotal * SELLER_PAYOUT_RATE * 100);
                 
                 // Create transfer
                 try {
@@ -1856,7 +1859,7 @@ app.get('/get-seller-orders', async (req, res) => {
         const sellerTotal = sellerItems.reduce(
           (sum, item) => sum + (item.price * (item.quantity || 1)), 0
         );
-        const platformFee = sellerTotal * 0.05;
+        const platformFee = sellerTotal * MARKETPLACE_FEE_RATE;
 
         sellerOrders.push({
           id: doc.id,

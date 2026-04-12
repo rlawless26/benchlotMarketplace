@@ -88,7 +88,7 @@ const HelpPage = () => {
             <div className="bg-bone-light p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-medium mb-3 text-dark-teal">What are your fees?</h3>
               <p className="text-secondary">
-                Listing tools on Benchlot is completely free. We charge a 5% transaction fee for sellers when a tool sells, plus a 3% payment processing fee. There are no hidden costs or subscription fees.
+                Listing tools on Benchlot is completely free. When a tool sells, we charge a 10% marketplace fee (includes payment processing). You keep 90% of the sale price. There are no hidden costs or subscription fees.
               </p>
             </div>
 

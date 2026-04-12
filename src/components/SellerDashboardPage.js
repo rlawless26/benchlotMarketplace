@@ -8,6 +8,7 @@ import { Check, Loader, Briefcase, FileText, Truck, ExternalLink, DollarSign, Pa
 import { updateSellerSettings } from '../firebase/models/userModel';
 import MyListings from './MyListings';
 import StripeStatusBanner from './StripeStatusBanner';
+import Avatar from './ui/Avatar';
 
 /**
  * Seller Dashboard Page
@@ -99,6 +100,7 @@ const SellerDashboardPage = () => {
                            user.seller?.stripeStatus === 'active' ||
                            (user.seller?.hasBankAccount === true && user.seller?.verified === true);
         
+        // eslint-disable-next-line no-console
         console.log('SellerDashboardPage - Checking if user is a seller:', {
           userIsSeller,
           sellerIsSeller: user.seller?.isSeller,
@@ -494,30 +496,14 @@ const SellerDashboardPage = () => {
           <div className="col-span-1">
             <div className="bg-bone-light rounded-lg shadow-md border border-default p-6 mb-6">
               <div className="flex items-center space-x-4 mb-6">
-                {user?.photoURL ? (
-                  // Display user's profile image if available
-                  <div className="h-16 w-16 rounded-full overflow-hidden border border-gray-200">
-                    <img 
-                      src={user.photoURL} 
-                      alt="Profile" 
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23047857'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E`;
-                      }}
-                    />
-                  </div>
-                ) : (
-                  // Fallback to initial if no profile image
-                  <div className="h-16 w-16 rounded-full bg-bone-dark flex items-center justify-center">
-                    <span className="text-xl font-bold text-spruce">
-                      {user?.profile?.sellerName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'S'}
-                    </span>
-                  </div>
-                )}
+                <Avatar
+                  src={user?.photoURL}
+                  name={user?.profile?.sellerName || user?.displayName || user?.email}
+                  size="lg"
+                />
                 <div>
                   <h2 className="text-xl font-medium">{user?.profile?.sellerName || user?.displayName || 'Seller'}</h2>
-                  <p className="text-gray-600 text-sm">{user?.profile?.location || 'Boston, MA'}</p>
+                  <p className="text-gray-600 text-sm">{user?.profile?.location || user?.location || ''}</p>
                 </div>
               </div>
               
@@ -634,40 +620,79 @@ const SellerDashboardPage = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-display font-medium text-stone-800">Seller Dashboard</h2>
                   <Link
-                    to="/tools/new"
+                    to="/seller/onboard-and-list"
                     className="bg-honey text-dark-teal px-4 py-2 rounded-md text-sm font-medium hover:bg-honey-light"
                   >
                     + New Listing
                   </Link>
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <button
-                    onClick={() => setActiveMainTab('orders')}
-                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">ORDERS</h3>
-                    <p className="text-2xl font-bold">{ordersCount || 0}</p>
-                  </button>
-                  <button
-                    onClick={() => setActiveMainTab('earnings')}
-                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL EARNINGS</h3>
-                    <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
-                  </button>
-                  <button
-                    onClick={() => setActiveMainTab('earnings')}
-                    className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
-                  >
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">AVAILABLE</h3>
-                    <p className="text-2xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
-                  </button>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING</h3>
-                    <p className="text-2xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
+
+                {/* Zero state — shown when the seller has no activity yet */}
+                {ordersCount === 0 && totalSales === 0 && sellerBalance.available === 0 && sellerBalance.pending === 0 ? (
+                  <div className="bg-bone-light rounded-lg border border-default p-8 mb-6">
+                    <h3 className="text-xl font-display font-medium text-spruce mb-3">
+                      You're all set up — now let's get your first sale
+                    </h3>
+                    <p className="text-gray-700 mb-6">
+                      Your seller account is active and your listings are visible to buyers.
+                      Here are some things you can do to get things moving:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-gray-50 rounded-lg p-5">
+                        <h4 className="font-medium text-dark-teal mb-1">List more tools</h4>
+                        <p className="text-sm text-gray-600 mb-3">Sellers with 3+ listings get significantly more visibility.</p>
+                        <Link to="/seller/onboard-and-list" className="text-sm font-medium text-spruce hover:underline">
+                          Add a listing →
+                        </Link>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-5">
+                        <h4 className="font-medium text-dark-teal mb-1">Share your listings</h4>
+                        <p className="text-sm text-gray-600 mb-3">Copy your listing link and share it with woodworking communities.</p>
+                        <button
+                          onClick={() => setActiveMainTab('listings')}
+                          className="text-sm font-medium text-spruce hover:underline"
+                        >
+                          View your listings →
+                        </button>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-5">
+                        <h4 className="font-medium text-dark-teal mb-1">Scan your tools</h4>
+                        <p className="text-sm text-gray-600 mb-3">Not sure what something is worth? Our scanner identifies and values tools from a photo.</p>
+                        <Link to="/scan" className="text-sm font-medium text-spruce hover:underline">
+                          Scan a tool →
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <button
+                      onClick={() => setActiveMainTab('orders')}
+                      className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">ORDERS</h3>
+                      <p className="text-2xl font-bold">{ordersCount || 0}</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveMainTab('earnings')}
+                      className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL EARNINGS</h3>
+                      <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveMainTab('earnings')}
+                      className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">AVAILABLE</h3>
+                      <p className="text-2xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
+                    </button>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING</h3>
+                      <p className="text-2xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="border-t border-gray-200 pt-6 mb-6">
                   <h3 className="text-lg font-medium mb-4">Recent Offers</h3>
@@ -930,7 +955,7 @@ const SellerDashboardPage = () => {
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
                       <h3 className="text-sm font-medium text-gray-700 mb-1">Total Earned</h3>
                       <p className="text-3xl font-bold text-gray-900">${totalSales.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500 mt-1">After 5% platform fee</p>
+                      <p className="text-xs text-gray-500 mt-1">After 10% marketplace fee</p>
                     </div>
                   </div>
 
@@ -961,9 +986,9 @@ const SellerDashboardPage = () => {
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-blue-800">How earnings work</h4>
                         <p className="text-xs text-blue-700 mt-1">
-                          Benchlot charges a 5% platform fee on each sale. When a buyer purchases your item,
-                          the payment is processed and your earnings (minus the fee) are transferred to your
-                          connected bank account. Transfers typically arrive within 2-3 business days.
+                          Benchlot charges a 10% marketplace fee on each sale (includes payment processing).
+                          When a buyer purchases your item, your earnings (90% of the sale price) are
+                          transferred to your connected bank account. Transfers typically arrive within 2-3 business days.
                         </p>
                       </div>
                     </div>
