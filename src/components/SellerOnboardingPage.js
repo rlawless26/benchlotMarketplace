@@ -5,26 +5,19 @@
  * keyed off the route:
  *
  *   /seller/onboarding          → generate a fresh Stripe accountLinks URL
- *                                 and window.location.href to it. The user
- *                                 completes ID verification, business info,
- *                                 and bank account collection on Stripe's
- *                                 hosted pages.
+ *                                 and redirect to it. If the seller doesn't
+ *                                 have a Stripe account yet, show a manual
+ *                                 "Set Up Payouts" button instead of auto-
+ *                                 creating (to avoid cascading state changes
+ *                                 that could trigger re-render loops).
  *
- *   /seller/onboarding/refresh  → the previous Stripe link expired. Regenerate
- *                                 and bounce the user back to Stripe.
+ *   /seller/onboarding/refresh  → expired link, same as above.
  *
- *   /seller/onboarding/complete → the user just finished Stripe onboarding.
- *                                 Fetch their fresh account status (which
- *                                 also pushes chargesEnabled / payoutsEnabled
- *                                 to Firestore), then redirect to the
- *                                 dashboard with a success flag.
- *
- * The page deliberately renders almost no UI of its own — just a centered
- * spinner with a status message. All the actual onboarding happens on
- * stripe.com.
+ *   /seller/onboarding/complete → returning from Stripe. Fetch fresh account
+ *                                 status, then redirect to dashboard.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../firebase/hooks/useAuth';
@@ -39,11 +32,18 @@ const SellerOnboardingPage = () => {
   const { createSellerAccount } = useSeller();
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState('Connecting you to Stripe…');
+  const [needsAccountCreation, setNeedsAccountCreation] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
+
+  // Capture user UID in a ref so useEffect doesn't depend on the user object
+  // (which changes on every onSnapshot delivery and would re-trigger the effect).
+  const userRef = useRef(null);
+  const hasAttempted = useRef(false);
 
   const isCompleteReturn = location.pathname.includes('/complete');
 
+  // ── One-shot effect: runs once when auth resolves ─────────────────────
   useEffect(() => {
-    // Wait for auth to resolve before doing anything
     if (authLoading) return;
 
     if (!user) {
@@ -51,21 +51,23 @@ const SellerOnboardingPage = () => {
       return;
     }
 
+    // Capture the UID and email for use in the async function
+    userRef.current = { uid: user.uid, email: user.email, displayName: user.displayName, sellerName: user.sellerName };
+
+    // Only run once per mount
+    if (hasAttempted.current) return;
+    hasAttempted.current = true;
+
     let cancelled = false;
 
     const run = async () => {
       try {
         if (isCompleteReturn) {
-          // ── Return path from Stripe ──────────────────────────────────────
-          // Pull the latest account status. The /get-account-status endpoint
-          // also writes chargesEnabled / payoutsEnabled / detailsSubmitted to
-          // the user doc, which the realtime useAuth snapshot listener picks
-          // up immediately, so the dashboard banner reacts on its own.
+          // ── Return path from Stripe ────────────────────────────────────
           setStatusMessage('Finalizing your account…');
           try {
-            await getConnectAccountStatus(user.uid);
+            await getConnectAccountStatus(userRef.current.uid);
           } catch (statusErr) {
-            // Non-fatal — the webhook will eventually update the user doc.
             console.warn('[onboarding/complete] could not fetch account status:', statusErr.message);
           }
           if (cancelled) return;
@@ -73,45 +75,29 @@ const SellerOnboardingPage = () => {
           return;
         }
 
-        // ── Outbound to Stripe (normal entry OR refresh) ───────────────────
-        // Try refreshing an existing account link first. If the user has no
-        // Stripe account yet (e.g. because create-connected-account failed
-        // during publish), fall back to creating one from scratch.
+        // ── Outbound to Stripe ───────────────────────────────────────────
         setStatusMessage('Connecting you to Stripe…');
-        let result;
-        try {
-          result = await refreshConnectAccountLink(user.uid);
-        } catch (refreshErr) {
-          console.warn('[onboarding] refresh failed, trying to create account:', refreshErr.message);
-          // Fallback: create the Stripe Express account now. createSellerAccount
-          // handles the Firestore user-doc setup AND calls /create-connected-account
-          // which returns a hosted-onboarding URL.
-          setStatusMessage('Setting up your payout account…');
-          const createResult = await createSellerAccount({
-            sellerName: user.displayName || user.sellerName || '',
-            sellerType: 'individual',
-            contactEmail: user.email || '',
-            isSeller: true,
-            'profile.isSeller': true,
-          });
-          if (createResult.success && createResult.url) {
-            result = { url: createResult.url };
-          } else {
-            throw new Error(createResult.error || 'Could not create your Stripe account. Please try again.');
-          }
-        }
-
+        const result = await refreshConnectAccountLink(userRef.current.uid);
         if (cancelled) return;
 
-        if (!result || !result.url) {
-          throw new Error('Could not generate a Stripe onboarding link. Please try again.');
+        if (result && result.url) {
+          window.location.href = result.url;
+        } else {
+          throw new Error('Could not generate a Stripe onboarding link.');
         }
-
-        // Full-page redirect to Stripe's hosted onboarding
-        window.location.href = result.url;
       } catch (err) {
         console.error('[onboarding] error:', err);
-        if (!cancelled) {
+        if (cancelled) return;
+
+        // If the error is "not a seller" or similar, the user needs an
+        // account created from scratch. Show a manual button instead of
+        // auto-retrying (which triggers updateDoc → onSnapshot → loop).
+        if (err.message?.includes('not a seller') || err.message?.includes('404')) {
+          setNeedsAccountCreation(true);
+          setError(null);
+        } else if (err.message?.includes('Too many requests')) {
+          setError('Too many requests. Please wait a few minutes and try again.');
+        } else {
           setError(err.message || 'Something went wrong. Please try again.');
         }
       }
@@ -119,11 +105,42 @@ const SellerOnboardingPage = () => {
 
     run();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, isCompleteReturn]);
+  }, [authLoading, isCompleteReturn, navigate]);
+
+  // ── Manual account creation (user clicks button, not auto-triggered) ──
+  const handleCreateAccount = useCallback(async () => {
+    if (!userRef.current) return;
+
+    setCreatingAccount(true);
+    setError(null);
+
+    try {
+      const result = await createSellerAccount({
+        sellerName: userRef.current.displayName || userRef.current.sellerName || '',
+        sellerType: 'individual',
+        contactEmail: userRef.current.email || '',
+        isSeller: true,
+        'profile.isSeller': true,
+      });
+
+      if (result.success && result.url) {
+        window.location.href = result.url;
+      } else {
+        setError(result.error || 'Could not create your Stripe account. Please try again.');
+        setCreatingAccount(false);
+      }
+    } catch (err) {
+      console.error('[onboarding] create account error:', err);
+      if (err.message?.includes('Too many requests')) {
+        setError('Too many requests. Please wait a few minutes and try again.');
+      } else {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
+      setCreatingAccount(false);
+    }
+  }, [createSellerAccount]);
 
   return (
     <div className="bg-bone min-h-screen">
@@ -138,10 +155,50 @@ const SellerOnboardingPage = () => {
               <p className="text-gray-700 mb-6">{error}</p>
               <button
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  hasAttempted.current = false;
+                  setError(null);
+                  setNeedsAccountCreation(false);
+                  window.location.reload();
+                }}
                 className="px-6 py-2 bg-honey text-dark-teal rounded-md font-medium hover:bg-honey-light"
               >
                 Try Again
+              </button>
+              <p className="text-sm text-gray-500 mt-4">
+                Or{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/seller/dashboard')}
+                  className="underline text-spruce hover:text-spruce-dark"
+                >
+                  return to your dashboard
+                </button>
+                .
+              </p>
+            </>
+          ) : needsAccountCreation ? (
+            <>
+              <h1 className="text-xl font-display font-medium text-spruce mb-2">
+                Set up your payout account
+              </h1>
+              <p className="text-gray-700 mb-6">
+                You'll be redirected to Stripe to verify your identity and connect a bank account. Takes about 3 minutes.
+              </p>
+              <button
+                type="button"
+                onClick={handleCreateAccount}
+                disabled={creatingAccount}
+                className="px-8 py-3 bg-honey text-dark-teal rounded-md font-medium hover:bg-honey-light disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creatingAccount ? (
+                  <span className="flex items-center justify-center">
+                    <Loader className="h-4 w-4 animate-spin mr-2" />
+                    Setting up…
+                  </span>
+                ) : (
+                  'Set Up Payouts'
+                )}
               </button>
               <p className="text-sm text-gray-500 mt-4">
                 Or{' '}

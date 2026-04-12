@@ -236,6 +236,13 @@ try {
 
 // Express app for API endpoints
 const app = express();
+
+// Trust X-Forwarded-For headers from Cloud Run's load balancer so
+// express-rate-limit can identify individual client IPs. Without this,
+// ALL users share a single rate-limit bucket (because Express sees the
+// load balancer's IP, not the client's).
+app.set('trust proxy', true);
+
 app.use(cors);
 app.use(express.json());
 
