@@ -6,6 +6,8 @@ import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
 import { Check, Loader, Briefcase, FileText, Truck, ExternalLink, DollarSign, Package } from 'lucide-react';
 import { updateSellerSettings } from '../firebase/models/userModel';
+import { getToolsByUserId } from '../firebase/models/toolModel';
+import { getUserSellerOffers } from '../firebase/models/offerModel';
 import MyListings from './MyListings';
 import StripeStatusBanner from './StripeStatusBanner';
 import Avatar from './ui/Avatar';
@@ -276,10 +278,24 @@ const SellerDashboardPage = () => {
           // Non-fatal - dashboard still loads with zero values
         }
 
-        // Reset listings - MyListings component handles its own data
-        setListings([]);
-        setOffers([]);
-        
+        // Load listings and offers for the dashboard overview
+        try {
+          const [userListings, sellerOffers] = await Promise.allSettled([
+            getToolsByUserId(user.uid),
+            getUserSellerOffers(user.uid, { limit: 5 }),
+          ]);
+
+          if (userListings.status === 'fulfilled') {
+            setListings(userListings.value || []);
+          }
+
+          if (sellerOffers.status === 'fulfilled') {
+            setOffers(sellerOffers.value || []);
+          }
+        } catch (dataError) {
+          console.error('Error fetching listings/offers:', dataError);
+        }
+
         setLoading(false);
       } catch (err) {
         console.error('Error loading seller data:', err);
@@ -694,138 +710,97 @@ const SellerDashboardPage = () => {
                   </div>
                 )}
                 
-                <div className="border-t border-gray-200 pt-6 mb-6">
-                  <h3 className="text-lg font-medium mb-4">Recent Offers</h3>
-                  {offers.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No offers yet.</p>
-                      <p className="text-sm text-gray-400 mt-2">When you receive offers, they will appear here.</p>
-                    </div>
-                  ) : (
+                {/* Recent Offers — only rendered when there are offers */}
+                {offers.length > 0 && (
+                  <div className="border-t border-gray-200 pt-6 mb-6">
+                    <h3 className="text-lg font-medium mb-4">Recent Offers</h3>
                     <div className="space-y-4">
-                      {offers.map(offer => (
-                        <div key={offer.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                          <div className="flex items-start gap-4">
-                            <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                              {/* Placeholder for tool image */}
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
+                      {offers.slice(0, 5).map(offer => (
+                        <Link
+                          key={offer.id}
+                          to={`/messages?offer=${offer.id}`}
+                          className="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 truncate">{offer.toolTitle}</h4>
+                              <p className="text-sm text-gray-500 mt-0.5">
+                                Offer from {offer.buyerName || 'a buyer'}
+                              </p>
                             </div>
-                            
-                            <div className="flex-grow">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium text-gray-900">{offer.toolTitle}</h4>
-                                  
-                                  <div className="flex items-center mt-1">
-                                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                      {offer.buyerPhoto ? (
-                                        <img src={offer.buyerPhoto} alt="" className="h-8 w-8 rounded-full" />
-                                      ) : (
-                                        <span className="text-xs font-medium text-gray-500">
-                                          {offer.buyerName?.charAt(0)?.toUpperCase() || '?'}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Offer from <span className="font-medium">{offer.buyerName}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                    offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                    offer.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                                    offer.status === 'countered' ? 'bg-blue-100 text-blue-800' : 
-                                    offer.status === 'declined' ? 'bg-red-100 text-red-800' : 
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
-                                  </div>
-                                  
-                                  <div className="mt-1 flex space-x-2">
-                                    <div className="text-sm text-gray-500 line-through">${offer.originalPrice.toFixed(2)}</div>
-                                    <div className="text-sm font-medium text-spruce">${offer.currentPrice.toFixed(2)}</div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="mt-2 flex justify-end">
-                                <button className="text-sm text-spruce hover:text-spruce-light">
-                                  View Details
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {offers.length > 3 && (
-                        <div className="text-center mt-4">
-                          <button className="text-spruce hover:text-spruce-light font-medium">
-                            View All Offers
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="border-t border-gray-200 pt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium">Your Listings</h3>
-                    <button 
-                      onClick={() => setActiveMainTab('listings')}
-                      className="text-spruce hover:text-spruce-light font-medium text-sm"
-                    >
-                      View All
-                    </button>
-                  </div>
-                  
-                  {listings.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No listings yet.</p>
-                      <Link to="/tools/new" className="text-spruce font-medium underline mt-2 inline-block">
-                        Create your first listing
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {listings.slice(0, 2).map(listing => (
-                        <div key={listing.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                          <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                            {listing.images?.[0] ? (
-                              <img src={listing.images[0]} alt={listing.name} className="object-cover" />
-                            ) : (
-                              <div className="flex items-center justify-center h-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-4">
-                            <h4 className="font-medium">{listing.name}</h4>
-                            <p className="text-spruce font-medium mt-1">${listing.price.toFixed(2)}</p>
-                            <div className="flex justify-between mt-3">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                listing.status === 'active' ? 'bg-green-100 text-green-800' : 
+                            <div className="text-right flex-shrink-0">
+                              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                offer.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                offer.status === 'countered' ? 'bg-blue-100 text-blue-800' :
+                                offer.status === 'declined' ? 'bg-red-100 text-red-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>
-                                {listing.status}
+                                {(offer.status || 'pending').charAt(0).toUpperCase() + (offer.status || 'pending').slice(1)}
                               </span>
-                              <Link to={`/tools/edit/${listing.id}`} className="text-spruce text-sm font-medium">
-                                Edit
-                              </Link>
+                              <p className="text-sm font-medium text-honey mt-1">
+                                ${(offer.currentPrice || 0).toFixed(2)}
+                              </p>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Your Listings preview — only rendered when there are listings */}
+                {listings.length > 0 && (
+                  <div className={`${offers.length > 0 || ordersCount > 0 ? 'border-t border-gray-200' : ''} pt-6`}>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-medium">Your Listings</h3>
+                      <button
+                        onClick={() => setActiveMainTab('listings')}
+                        className="text-spruce hover:text-spruce-light font-medium text-sm"
+                      >
+                        View All
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {listings.filter(l => l.status !== 'chest').slice(0, 4).map(listing => {
+                        const imageUrl = listing.images?.[0]?.url || listing.images?.[0] || '';
+                        const price = listing.current_price || listing.price || 0;
+                        return (
+                          <Link
+                            key={listing.id}
+                            to={`/tools/${listing.id}`}
+                            className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                          >
+                            <div className="h-32 bg-gray-100">
+                              {imageUrl ? (
+                                <img src={imageUrl} alt={listing.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <Package className="h-8 w-8 text-gray-300" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-3">
+                              <h4 className="font-medium text-sm truncate">{listing.name}</h4>
+                              <div className="flex justify-between items-center mt-2">
+                                <span className="text-honey font-medium text-sm">
+                                  ${typeof price === 'number' ? price.toFixed(2) : '0.00'}
+                                </span>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  listing.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {listing.status === 'active' ? 'Live' : listing.status}
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
