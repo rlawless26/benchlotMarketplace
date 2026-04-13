@@ -4,7 +4,7 @@ import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, getSellerBalance, getSellerTransfers, getSellerOrders } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
-import { DollarSign, Package } from 'lucide-react';
+import { LayoutDashboard, List, ShoppingBag, DollarSign, Package, ChevronRight } from 'lucide-react';
 import { getToolsByUserId } from '../firebase/models/toolModel';
 import { getUserSellerOffers } from '../firebase/models/offerModel';
 import MyListings from './MyListings';
@@ -287,56 +287,31 @@ const SellerDashboardPage = () => {
                   </div>
                 )}
                 
-                {/* Stripe Dashboard access button removed since we're using controller.stripe_dashboard.type = 'none' */}
               </div>
-              
-              <div className="border-t border-gray-200 pt-4 mb-2">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">SELLER MENU</h3>
-                <nav className="space-y-1">
-                  <button 
-                    onClick={() => setActiveMainTab('dashboard')}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'dashboard' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    Dashboard
-                  </button>
-                  <button 
-                    onClick={() => setActiveMainTab('listings')}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'listings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    My Listings
-                  </button>
-                  <button
-                    onClick={() => setActiveMainTab('orders')}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'orders' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    Orders
-                  </button>
-                  <button
-                    onClick={() => setActiveMainTab('earnings')}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeMainTab === 'earnings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <DollarSign className="h-5 w-5 mr-2" />
-                    Earnings
-                  </button>
-                </nav>
-              </div>
+
+              <nav className="p-2">
+                <ul className="space-y-1">
+                  {[
+                    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+                    { id: 'listings', icon: List, label: 'My Listings' },
+                    { id: 'orders', icon: ShoppingBag, label: 'Orders' },
+                    { id: 'earnings', icon: DollarSign, label: 'Earnings' },
+                  ].map(({ id, icon: Icon, label }) => (
+                    <li key={id}>
+                      <button
+                        onClick={() => setActiveMainTab(id)}
+                        className={`w-full text-left px-3 py-2 rounded-md flex items-center ${
+                          activeMainTab === id ? 'bg-bone-dark text-spruce' : 'hover:bg-stone-50 text-stone-700'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 mr-3" />
+                        {label}
+                        <ChevronRight className={`h-4 w-4 ml-auto ${activeMainTab === id ? 'opacity-100' : 'opacity-0'}`} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             </div>
           </div>
           

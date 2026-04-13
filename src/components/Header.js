@@ -279,11 +279,6 @@ const Header = ({ publicMode = false }) => {
 
                       {/* Main Account Options */}
                       <div className="py-1">
-                        <Link to="/settings?tab=profile" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
-                          <User className="h-4 w-4" />
-                          My Account
-                        </Link>
-
                         <Link to="/wishlist" className="flex items-center gap-3 w-full text-left px-4 py-2 text-dark-teal hover:bg-spruce-light hover:text-bone text-sm font-body">
                           <Heart className="h-4 w-4" />
                           Saved Tools
@@ -564,14 +559,6 @@ const Header = ({ publicMode = false }) => {
                     <div className="px-3 py-1 text-xs font-body font-medium text-secondary">
                       ACCOUNT
                     </div>
-                    <Link
-                      to="/settings?tab=profile"
-                      className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Avatar src={user?.photoURL} name={user?.displayName || user?.email} size="xs" />
-                      My Account
-                    </Link>
                     <Link
                       to="/wishlist"
                       className="flex items-center gap-3 py-3 px-3 text-dark-teal hover:text-spruce rounded-md font-body"
