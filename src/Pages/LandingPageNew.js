@@ -75,22 +75,22 @@ const LandingPageNew = () => {
     {
       name: "Hand Planes",
       count: null,
-      imageUrl: "/images/handtools.jpg"
+      imageUrl: "/images/category-planes.jpg"
     },
     {
       name: "Chisels",
       count: null,
-      imageUrl: "/images/handtools.jpg"
+      imageUrl: "/images/category-chisels.jpg"
     },
     {
       name: "Hand Saws",
       count: null,
-      imageUrl: "/images/handtools.jpg"
+      imageUrl: "/images/category-saws.jpg"
     },
     {
       name: "Sharpening",
       count: null,
-      imageUrl: "/images/handtools.jpg"
+      imageUrl: "/images/category-sharpening.jpg"
     }
   ];
 
