@@ -4,7 +4,7 @@ import { useAuth } from '../firebase/hooks/useAuth';
 import { getConnectAccountStatus, getSellerBalance, getSellerTransfers, getSellerOrders } from '../utils/stripeService';
 import NewSellerWelcome from './NewSellerWelcome';
 import { openAuthModal } from '../utils/featureFlags';
-import { LayoutDashboard, List, ShoppingBag, DollarSign, Package, ChevronRight } from 'lucide-react';
+import { DollarSign, Package } from 'lucide-react';
 import { getToolsByUserId } from '../firebase/models/toolModel';
 import { getUserSellerOffers } from '../firebase/models/offerModel';
 import MyListings from './MyListings';
@@ -287,31 +287,56 @@ const SellerDashboardPage = () => {
                   </div>
                 )}
                 
+                {/* Stripe Dashboard access button removed since we're using controller.stripe_dashboard.type = 'none' */}
               </div>
-
-              <nav className="p-2">
-                <ul className="space-y-1">
-                  {[
-                    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                    { id: 'listings', icon: List, label: 'My Listings' },
-                    { id: 'orders', icon: ShoppingBag, label: 'Orders' },
-                    { id: 'earnings', icon: DollarSign, label: 'Earnings' },
-                  ].map(({ id, icon: Icon, label }) => (
-                    <li key={id}>
-                      <button
-                        onClick={() => setActiveMainTab(id)}
-                        className={`w-full text-left px-3 py-2 rounded-md flex items-center ${
-                          activeMainTab === id ? 'bg-bone-dark text-spruce' : 'hover:bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <Icon className="h-4 w-4 mr-3" />
-                        {label}
-                        <ChevronRight className={`h-4 w-4 ml-auto ${activeMainTab === id ? 'opacity-100' : 'opacity-0'}`} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+              
+              <div className="border-t border-gray-200 pt-4 mb-2">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">SELLER MENU</h3>
+                <nav className="space-y-1">
+                  <button 
+                    onClick={() => setActiveMainTab('dashboard')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'dashboard' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Dashboard
+                  </button>
+                  <button 
+                    onClick={() => setActiveMainTab('listings')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'listings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    My Listings
+                  </button>
+                  <button
+                    onClick={() => setActiveMainTab('orders')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'orders' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    Orders
+                  </button>
+                  <button
+                    onClick={() => setActiveMainTab('earnings')}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeMainTab === 'earnings' ? 'bg-green-50 text-spruce' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <DollarSign className="h-5 w-5 mr-2" />
+                    Earnings
+                  </button>
+                </nav>
+              </div>
             </div>
           </div>
           
@@ -357,15 +382,15 @@ const SellerDashboardPage = () => {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div className="bg-gray-50 rounded-lg p-5">
-                        <h4 className="font-medium text-dark-teal mb-1">List more tools</h4>
-                        <p className="text-sm text-gray-600 mb-3">Sellers with 3+ listings get significantly more visibility.</p>
+                        <h4 className="font-display font-medium text-spruce mb-1">List more tools</h4>
+                        <p className="text-sm text-stone-600 mb-3">Sellers with 3+ listings get significantly more visibility.</p>
                         <Link to="/seller/onboard-and-list" className="text-sm font-medium text-spruce hover:underline">
                           Add a listing →
                         </Link>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-5">
-                        <h4 className="font-medium text-dark-teal mb-1">Share your listings</h4>
-                        <p className="text-sm text-gray-600 mb-3">Copy your listing link and share it with woodworking communities.</p>
+                        <h4 className="font-display font-medium text-spruce mb-1">Share your listings</h4>
+                        <p className="text-sm text-stone-600 mb-3">Copy your listing link and share it with woodworking communities.</p>
                         <button
                           onClick={() => setActiveMainTab('listings')}
                           className="text-sm font-medium text-spruce hover:underline"
@@ -374,8 +399,8 @@ const SellerDashboardPage = () => {
                         </button>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-5">
-                        <h4 className="font-medium text-dark-teal mb-1">Scan your tools</h4>
-                        <p className="text-sm text-gray-600 mb-3">Not sure what something is worth? Our scanner identifies and values tools from a photo.</p>
+                        <h4 className="font-display font-medium text-spruce mb-1">Scan your tools</h4>
+                        <p className="text-sm text-stone-600 mb-3">Not sure what something is worth? Our scanner identifies and values tools from a photo.</p>
                         <Link to="/scan" className="text-sm font-medium text-spruce hover:underline">
                           Scan a tool →
                         </Link>
@@ -388,26 +413,26 @@ const SellerDashboardPage = () => {
                       onClick={() => setActiveMainTab('orders')}
                       className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
                     >
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">ORDERS</h3>
-                      <p className="text-2xl font-bold">{ordersCount || 0}</p>
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Orders</h3>
+                      <p className="text-2xl font-display font-medium text-stone-800">{ordersCount || 0}</p>
                     </button>
                     <button
                       onClick={() => setActiveMainTab('earnings')}
                       className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
                     >
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">TOTAL EARNINGS</h3>
-                      <p className="text-2xl font-bold">${totalSales.toFixed(2)}</p>
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Total earnings</h3>
+                      <p className="text-2xl font-display font-medium text-honey">${totalSales.toFixed(2)}</p>
                     </button>
                     <button
                       onClick={() => setActiveMainTab('earnings')}
                       className="bg-gray-50 p-4 rounded-lg text-left hover:bg-gray-100 transition-colors"
                     >
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">AVAILABLE</h3>
-                      <p className="text-2xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Available</h3>
+                      <p className="text-2xl font-display font-medium text-honey">${sellerBalance.available.toFixed(2)}</p>
                     </button>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">PENDING</h3>
-                      <p className="text-2xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Pending</h3>
+                      <p className="text-2xl font-display font-medium text-honey">${sellerBalance.pending.toFixed(2)}</p>
                     </div>
                   </div>
                 )}
@@ -415,7 +440,7 @@ const SellerDashboardPage = () => {
                 {/* Recent Offers — only rendered when there are offers */}
                 {offers.length > 0 && (
                   <div className="border-t border-gray-200 pt-6 mb-6">
-                    <h3 className="text-lg font-medium mb-4">Recent Offers</h3>
+                    <h3 className="text-lg font-display font-medium text-stone-800 mb-4">Recent Offers</h3>
                     <div className="space-y-4">
                       {offers.slice(0, 5).map(offer => (
                         <Link
@@ -455,7 +480,7 @@ const SellerDashboardPage = () => {
                 {listings.length > 0 && (
                   <div className={`${offers.length > 0 || ordersCount > 0 ? 'border-t border-gray-200' : ''} pt-6`}>
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-medium">Your Listings</h3>
+                      <h3 className="text-lg font-display font-medium text-stone-800">Your Listings</h3>
                       <button
                         onClick={() => setActiveMainTab('listings')}
                         className="text-spruce hover:text-spruce-light font-medium text-sm"
@@ -555,12 +580,23 @@ const SellerDashboardPage = () => {
                   {/* Orders list */}
                   <div className="space-y-4">
                     {sellerOrders.length === 0 ? (
-                      <div className="text-center py-8 bg-gray-50 rounded-lg">
-                        <Package className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-4 text-gray-500 font-medium">No orders yet</p>
-                        <p className="text-sm text-gray-400 mt-2">
-                          When customers place orders for your listings, they will appear here.
+                      <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default text-center">
+                        <div className="mx-auto w-16 h-16 mb-6 text-stone-300 flex items-center justify-center">
+                          <Package className="h-16 w-16" strokeWidth={1.5} />
+                        </div>
+                        <h2 className="text-xl font-semibold mb-4 text-spruce">No Orders Yet</h2>
+                        <p className="text-stone-600 mb-6 max-w-md mx-auto">
+                          When customers place orders for your listings, they'll show up here. Keep your listings fresh to attract buyers.
                         </p>
+                        <Link
+                          to="/seller/onboard-and-list"
+                          className="bg-honey hover:bg-honey-light text-dark-teal font-medium py-2 px-4 rounded-md inline-flex items-center transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          Add a Listing
+                        </Link>
                       </div>
                     ) : (
                       sellerOrders.map(order => (
@@ -619,20 +655,20 @@ const SellerDashboardPage = () => {
                 <div>
                   {/* Balance cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-5">
-                      <h3 className="text-sm font-medium text-green-800 mb-1">Available Balance</h3>
-                      <p className="text-3xl font-bold text-spruce">${sellerBalance.available.toFixed(2)}</p>
-                      <p className="text-xs text-green-600 mt-1">Ready for payout</p>
+                    <div className="bg-bone-light border border-default rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Available balance</h3>
+                      <p className="text-3xl font-display font-medium text-honey">${sellerBalance.available.toFixed(2)}</p>
+                      <p className="text-xs text-stone-500 mt-1">Ready for payout</p>
                     </div>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
-                      <h3 className="text-sm font-medium text-amber-800 mb-1">Pending Balance</h3>
-                      <p className="text-3xl font-bold text-amber-600">${sellerBalance.pending.toFixed(2)}</p>
-                      <p className="text-xs text-amber-600 mt-1">Processing from recent sales</p>
+                    <div className="bg-bone-light border border-default rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Pending balance</h3>
+                      <p className="text-3xl font-display font-medium text-honey">${sellerBalance.pending.toFixed(2)}</p>
+                      <p className="text-xs text-stone-500 mt-1">Processing from recent sales</p>
                     </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                      <h3 className="text-sm font-medium text-gray-700 mb-1">Total Earned</h3>
-                      <p className="text-3xl font-bold text-gray-900">${totalSales.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500 mt-1">After 10% marketplace fee</p>
+                    <div className="bg-bone-light border border-default rounded-lg p-5">
+                      <h3 className="text-sm font-medium text-stone-500 mb-1">Total earned</h3>
+                      <p className="text-3xl font-display font-medium text-honey">${totalSales.toFixed(2)}</p>
+                      <p className="text-xs text-stone-500 mt-1">After 10% marketplace fee</p>
                     </div>
                   </div>
 
@@ -657,27 +693,21 @@ const SellerDashboardPage = () => {
                   )}
 
                   {/* Fee explanation */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-                    <div className="flex">
-                      <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                        <h4 className="text-sm font-medium text-blue-800">How earnings work</h4>
-                        <p className="text-xs text-blue-700 mt-1">
-                          Benchlot charges a 10% marketplace fee on each sale (includes payment processing).
-                          When a buyer purchases your item, your earnings (90% of the sale price) are
-                          transferred to your connected bank account. Transfers typically arrive within 2-3 business days.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-xs text-stone-500 mb-8 max-w-2xl">
+                    Benchlot charges a 10% marketplace fee on each sale (includes payment processing).
+                    Your earnings (90% of the sale price) transfer to your connected bank account and
+                    typically arrive within 2–3 business days.
+                  </p>
 
                   {/* Transfer history */}
-                  <h3 className="text-lg font-medium text-stone-800 mb-4">Transfer History</h3>
+                  <h3 className="text-lg font-display font-medium text-stone-800 mb-4">Transfer History</h3>
                   {transfers.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-4 text-gray-500 font-medium">No transfers yet</p>
-                      <p className="text-sm text-gray-400 mt-2">
+                    <div className="bg-bone-light rounded-lg shadow-md p-8 border border-default text-center">
+                      <div className="mx-auto w-16 h-16 mb-6 text-stone-300 flex items-center justify-center">
+                        <Package className="h-16 w-16" strokeWidth={1.5} />
+                      </div>
+                      <h2 className="text-xl font-semibold mb-4 text-spruce">No Transfers Yet</h2>
+                      <p className="text-stone-600 mb-2 max-w-md mx-auto">
                         When you make sales, your earnings transfers will appear here.
                       </p>
                     </div>
@@ -710,7 +740,7 @@ const SellerDashboardPage = () => {
                                   {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right text-spruce">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right text-honey">
                                 ${transfer.amount.toFixed(2)}
                               </td>
                             </tr>
