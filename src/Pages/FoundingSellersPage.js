@@ -105,39 +105,59 @@ const FoundingSellersPage = () => {
 
   return (
     <div className="min-h-screen bg-bone font-body text-dark-teal">
-      {/* Minimal top bar — wordmark only, no nav */}
-      <header className="px-6 pt-8 pb-2 max-w-[960px] mx-auto">
-        <a href="https://benchlot.com" className="inline-block" aria-label="Benchlot home">
-          <span
-            className="text-2xl font-display font-black text-spruce"
-            style={{ letterSpacing: '-1.5px' }}
-          >
-            Benchlot
-          </span>
-        </a>
-      </header>
+      {/* Hero with photo background */}
+      <section
+        className="relative bg-cover"
+        style={{
+          backgroundImage: "url('/images/founding-hero-tools.jpg')",
+          backgroundPosition: '30% bottom',
+        }}
+      >
+        {/* Spruce-tinted overlay for legibility (stronger on left where text sits) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(14,32,32,0.82) 0%, rgba(14,32,32,0.70) 45%, rgba(14,32,32,0.45) 100%)',
+          }}
+        />
 
-      {/* Hero */}
-      <section className="px-6 pt-10 md:pt-20 pb-16 md:pb-24">
-        <div className="max-w-[960px] mx-auto">
-          <h1 className="text-4xl md:text-6xl font-display font-black text-spruce leading-[1.05] tracking-tight mb-6 max-w-3xl">
-            Your tools deserve a better next home.
-          </h1>
-          <p className="text-lg md:text-xl text-spruce/80 leading-relaxed max-w-2xl mb-10">
-            Benchlot is the curated marketplace for quality hand tools — built by a
-            woodworker, for woodworkers. No eBay noise. No Craigslist flakes. Just
-            people who know what a Bedrock is worth.
-          </p>
-          <a
-            href="#signup"
-            onClick={scrollToForm}
-            className="inline-flex items-center px-8 py-4 bg-honey text-dark-teal font-semibold rounded-lg text-base md:text-lg hover:bg-honey-light transition-colors"
-          >
-            Become a Founding Seller
-          </a>
-          <p className="mt-4 text-sm text-spruce/60">
-            Limited to the first 50 founding sellers
-          </p>
+        {/* Wordmark overlay */}
+        <div className="relative z-10 px-6 pt-8">
+          <div className="max-w-[960px] mx-auto">
+            <a href="https://benchlot.com" className="inline-block" aria-label="Benchlot home">
+              <span
+                className="font-display font-black text-bone"
+                style={{ fontSize: '26px', letterSpacing: '-1.5px' }}
+              >
+                Benchlot
+              </span>
+            </a>
+          </div>
+        </div>
+
+        {/* Hero content */}
+        <div className="relative z-10 px-6 pt-16 md:pt-24 pb-20 md:pb-32">
+          <div className="max-w-[960px] mx-auto">
+            <h1 className="text-4xl md:text-6xl font-display font-black text-bone leading-[1.05] tracking-tight mb-6 max-w-3xl">
+              Your tools deserve a better next home.
+            </h1>
+            <p className="text-lg md:text-xl text-bone/85 leading-relaxed max-w-2xl mb-10">
+              Benchlot is the curated marketplace for quality hand tools — built by a
+              woodworker, for woodworkers. No eBay noise. No Craigslist flakes. Just
+              people who know what a Bedrock is worth.
+            </p>
+            <a
+              href="#signup"
+              onClick={scrollToForm}
+              className="inline-flex items-center px-8 py-4 bg-honey text-dark-teal font-semibold rounded-lg text-base md:text-lg hover:bg-honey-light transition-colors"
+            >
+              Become a Founding Seller
+            </a>
+            <p className="mt-4 text-sm text-bone/70">
+              Limited to the first 50 founding sellers
+            </p>
+          </div>
         </div>
       </section>
 
@@ -304,9 +324,9 @@ const FoundingSellersPage = () => {
       </section>
 
       {/* Who's behind this */}
-      <section className="px-6 py-16 md:py-24 bg-spruce text-bone">
+      <section className="px-6 py-16 md:py-24 bg-spruce">
         <div className="max-w-[720px] mx-auto">
-          <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-bone mb-6">
             Built from the bench, not a boardroom.
           </h2>
           <p className="text-lg leading-relaxed text-bone/85">
