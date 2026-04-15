@@ -15,6 +15,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import LandingPage from './Pages/LandingPage';
 import LandingPageNew from './Pages/LandingPageNew';
 import WaitlistLandingPage from './Pages/WaitlistLandingPage';
+import FoundingSellersPage from './Pages/FoundingSellersPage';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
 import AuthPage from './Pages/AuthPage';
@@ -88,6 +89,8 @@ function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
   const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA;
+  // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels
+  const isChromelessPage = location.pathname === '/founding-sellers';
 
   // Public mode: marketplace not yet launched AND user not signed in
   const isPublicMode = !MARKETPLACE_BETA && !user;
@@ -96,9 +99,9 @@ function AppLayout() {
     <div className="App min-h-screen flex flex-col bg-stone-50">
       <ScrollToTop />
       <SellerStatusFix />
-      {!isWaitlistPage && <Header publicMode={isPublicMode} />}
+      {!isWaitlistPage && !isChromelessPage && <Header publicMode={isPublicMode} />}
 
-      <main className={!isWaitlistPage ? 'flex-grow' : undefined}>
+      <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
         <Routes>
           {/* Home: marketplace landing when launched, waitlist otherwise */}
           <Route path="/" element={MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />} />
@@ -113,6 +116,9 @@ function AppLayout() {
 
           {/* ToolScan — always public */}
           <Route path="/scan" element={<ToolScanPage />} />
+
+          {/* Founding Sellers campaign landing — always public, no site chrome */}
+          <Route path="/founding-sellers" element={<FoundingSellersPage />} />
 
           {/* Tool Routes — gated */}
           <Route path="/tools/:id" element={<MarketplaceRoute element={<ToolDetailPage />} />} />
@@ -162,7 +168,7 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {!isWaitlistPage && <Footer publicMode={isPublicMode} />}
+      {!isWaitlistPage && !isChromelessPage && <Footer publicMode={isPublicMode} />}
       <EnvironmentDisplay />
       <Analytics />
       <SpeedInsights />

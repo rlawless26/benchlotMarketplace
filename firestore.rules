@@ -202,6 +202,18 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Founding seller signups (anonymous access for /founding-sellers campaign page)
+    match /founding_sellers/{docId} {
+      allow create: if request.resource.data.keys().hasAll(['email', 'first_name', 'tools_to_list', 'signed_up_at'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() > 0
+                    && request.resource.data.first_name is string
+                    && request.resource.data.first_name.size() > 0
+                    && request.resource.data.tools_to_list is string
+                    && request.resource.data.tools_to_list.size() > 0;
+      allow read, update, delete: if isAdmin();
+    }
+
     // ToolScan leads (email capture from scan results modal)
     match /toolscan_leads/{docId} {
       // Anyone can create a toolscan lead (no auth required)
