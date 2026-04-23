@@ -25,6 +25,12 @@ export const ENABLE_TOOL_FIRST_FLOW = getFeatureFlag('ENABLE_TOOL_FIRST_FLOW', t
 // When true, the full marketplace is visible to everyone. This is the launch switch.
 export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', true);
 
+// Aggregator mode — when true, the public surface is the tool-discovery aggregator.
+// All marketplace routes redirect unauthenticated visitors; signed-in users still
+// reach marketplace code for dev/testing. localStorage override:
+// localStorage.setItem('AGGREGATOR_MODE', 'false') restores the pre-pivot view.
+export const AGGREGATOR_MODE = getFeatureFlag('AGGREGATOR_MODE', true);
+
 // Default path for seller onboarding
 export const SELLER_ENTRY_PATH = '/sell';
 
@@ -33,6 +39,7 @@ export const featureFlags = {
   ENABLE_TOOL_FIRST_FLOW,
   SELLER_ENTRY_PATH,
   MARKETPLACE_BETA,
+  AGGREGATOR_MODE,
 };
 
 // Auth modal event - create a custom event to trigger the auth modal

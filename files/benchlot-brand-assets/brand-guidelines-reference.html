@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchlot — Brand Guidelines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Outfit', sans-serif; background: #f2f0eb; color: #0c1c1e; }
+
+.cover {
+  background: #0c1c1e;
+  padding: 6rem 2rem;
+  text-align: center;
+}
+.cover-word {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  font-size: 120px;
+  letter-spacing: -3px;
+  color: #f2f0eb;
+  line-height: 1;
+}
+.cover-tag {
+  font-family: 'Petrona', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 20px;
+  color: #d4aa60;
+  margin-top: 16px;
+  letter-spacing: 1px;
+}
+.cover-line {
+  width: 40px;
+  height: 2px;
+  background: #d4aa60;
+  margin: 24px auto 0;
+}
+.cover-sub {
+  font-size: 12px;
+  color: #4a6a64;
+  margin-top: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.container { max-width: 880px; margin: 0 auto; padding: 0 2rem; }
+
+.section {
+  padding: 4rem 0 0;
+}
+.section-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #d4aa60;
+}
+.section-title {
+  font-family: 'Petrona', serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #1a3030;
+  margin-top: 6px;
+  letter-spacing: -0.3px;
+}
+.section-desc {
+  font-size: 14px;
+  color: #6a7a74;
+  margin-top: 8px;
+  line-height: 1.6;
+  max-width: 560px;
+}
+.divider {
+  height: 1px;
+  background: #dcdad4;
+  margin-top: 4rem;
+}
+
+/* Brand story */
+.story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.story-card {
+  background: #ffffff;
+  border: 1px solid #e4e2dc;
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+.story-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d4aa60;
+  margin-bottom: 8px;
+}
+.story-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2a3a34;
+}
+
+/* Color palette */
+.palette {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 14px;
+  margin-top: 24px;
+}
+.pal-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.pal-swatch {
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 14px;
+}
+.pal-swatch-name {
+  font-size: 11px;
+  font-weight: 600;
+}
+.pal-info {
+  background: #ffffff;
+  border: 1px solid #e4e2dc;
+  border-top: none;
+  padding: 12px 14px;
+  border-radius: 0 0 12px 12px;
+}
+.pal-hex {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0c1c1e;
+}
+.pal-rgb {
+  font-size: 10px;
+  color: #8a8a80;
+  margin-top: 2px;
+}
+.pal-use {
+  font-size: 10px;
+  color: #6a7a74;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* Typography */
+.type-specimen {
+  margin-top: 24px;
+}
+.type-card {
+  background: #ffffff;
+  border: 1px solid #e4e2dc;
+  border-radius: 12px;
+  padding: 28px 28px;
+  margin-bottom: 14px;
+}
+.type-card-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d4aa60;
+  margin-bottom: 16px;
+}
+.type-display {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  font-size: 48px;
+  color: #1a3030;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+.type-display-sm {
+  font-family: 'Petrona', serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #1a3030;
+  letter-spacing: -0.3px;
+  margin-top: 16px;
+}
+.type-body-display {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #4a5a54;
+  margin-top: 16px;
+  max-width: 520px;
+}
+.type-weights {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.type-weight {
+  font-size: 22px;
+  color: #1a3030;
+}
+.type-weight-label {
+  font-size: 9px;
+  color: #8a8a80;
+  margin-top: 2px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Wordmark sizes */
+.wm-sizes { margin-top: 24px; }
+.wm-row {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  gap: 1.5rem;
+}
+.wm-row + .wm-row { border-top: 1px solid #e4e2dc; }
+.wm-label {
+  width: 70px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8a8a80;
+  flex-shrink: 0;
+}
+.wm-word {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  color: #1a3030;
+  letter-spacing: -0.5px;
+}
+
+/* Lockups */
+.lockups {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+.lk {
+  border-radius: 12px;
+  padding: 2.25rem 1.25rem;
+  text-align: center;
+}
+.lk-word {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -0.5px;
+}
+.lk-label {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* Buttons */
+.btn-section { margin-top: 24px; }
+.btn-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.btn-label {
+  width: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8a8a80;
+  flex-shrink: 0;
+}
+.btn {
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.3px;
+}
+.btn-sm {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.3px;
+}
+.btn-outline {
+  padding: 10px 23px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+/* Mock: Nav */
+.mock-nav {
+  display: flex;
+  align-items: center;
+  padding: 14px 22px;
+  border-radius: 12px;
+  margin-top: 24px;
+  background: #0c1c1e;
+}
+.mn-logo {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #f2f0eb;
+  letter-spacing: -0.5px;
+}
+.mn-links {
+  display: flex;
+  gap: 22px;
+  margin-left: 32px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6a8a84;
+}
+.mn-cta {
+  margin-left: auto;
+  padding: 7px 18px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  background: #d4aa60;
+  color: #0c1c1e;
+}
+
+/* Mock: Hero */
+.mock-hero {
+  border-radius: 14px;
+  padding: 4rem 3rem;
+  margin-top: 14px;
+  background: #1a3030;
+  text-align: center;
+}
+.mh-word {
+  font-family: 'Petrona', serif;
+  font-weight: 900;
+  font-size: 64px;
+  color: #f2f0eb;
+  letter-spacing: -1.5px;
+  line-height: 1;
+}
+.mh-sub {
+  font-size: 16px;
+  color: #6aaa98;
+  margin-top: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.mh-btn {
+  display: inline-block;
+  padding: 13px 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  margin-top: 24px;
+  font-family: 'Outfit', sans-serif;
+  background: #d4aa60;
+  color: #0c1c1e;
+}
+.mh-btn-secondary {
+  display: inline-block;
+  padding: 12px 29px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #6aaa98;
+  background: transparent;
+  cursor: pointer;
+  margin-top: 24px;
+  margin-left: 10px;
+  font-family: 'Outfit', sans-serif;
+  color: #6aaa98;
+}
+
+/* Mock: ToolScan */
+.mock-ts {
+  border-radius: 14px;
+  padding: 3rem;
+  margin-top: 14px;
+  background: #0c1c1e;
+  text-align: center;
+}
+.mt-title {
+  font-family: 'Petrona', serif;
+  font-weight: 800;
+  font-size: 26px;
+  color: #f2f0eb;
+}
+.mt-sub {
+  font-size: 13px;
+  color: #4a7a70;
+  margin-top: 6px;
+  line-height: 1.6;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mt-btn {
+  display: inline-block;
+  padding: 11px 26px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  margin-top: 18px;
+  font-family: 'Outfit', sans-serif;
+  background: #d4aa60;
+  color: #0c1c1e;
+}
+
+/* Mock: Cards */
+.mock-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.mc {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #faf8f4;
+  border: 1px solid #e4e2dc;
+}
+.mc-img {
+  height: 140px;
+  background: #eae8e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #8a8a80;
+}
+.mc-body { padding: 10px 12px 14px; }
+.mc-title {
+  font-family: 'Petrona', serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0c1c1e;
+}
+.mc-detail {
+  font-size: 10px;
+  color: #8a8a80;
+  margin-top: 2px;
+}
+.mc-price {
+  font-weight: 700;
+  font-size: 16px;
+  color: #d4aa60;
+  margin-top: 6px;
+}
+.mc-btn {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  font-family: 'Outfit', sans-serif;
+  background: #1a3030;
+  color: #f2f0eb;
+}
+
+/* Mock: Badges */
+.mock-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.mb {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Do / Don't */
+.dos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 24px;
+}
+.do-card {
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e4e2dc;
+  background: #ffffff;
+}
+.do-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.do-item {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #4a5a54;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 4rem 0;
+  font-size: 10px;
+  color: #8a8a80;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-word">Benchlot</div>
+  <div class="cover-tag">The second cut.</div>
+  <div class="cover-line"></div>
+  <div class="cover-sub">Brand Guidelines — March 2026</div>
+</div>
+
+<div class="container">
+
+  <!-- 01 BRAND STORY -->
+  <div class="section">
+    <div class="section-num">01</div>
+    <div class="section-title">Brand story</div>
+    <div class="section-desc">Benchlot is a marketplace and tool intelligence platform for premium used hand tools. "Kerf" is the cut a saw makes in wood. "Re" means again — a second cut, a second life for every tool.</div>
+  </div>
+  <div class="story">
+    <div class="story-card">
+      <div class="story-label">What we are</div>
+      <div class="story-text">A peer-to-peer marketplace where woodworkers buy, sell, and trade hand tools — planes, chisels, saws, mallets, measuring tools. Positioned as "Reverb for woodworkers."</div>
+    </div>
+    <div class="story-card">
+      <div class="story-label">ToolScan</div>
+      <div class="story-text">AI-powered tool identification and valuation. Point your camera at any hand tool — we'll tell you what it is, what it's worth, and help you list it in seconds. Built for estate sellers and collectors alike.</div>
+    </div>
+    <div class="story-card">
+      <div class="story-label">Personality</div>
+      <div class="story-text">Sturdy, confident, knowledgeable. Like a well-worn Carhartt jacket — not precious, not corporate, not trying too hard. Speaks like a peer to woodworkers and a patient guide to estate sellers.</div>
+    </div>
+    <div class="story-card">
+      <div class="story-label">Audience</div>
+      <div class="story-text">Hand tool woodworkers, collectors, restorers (men 30-65 who follow Paul Sellers and Rob Cosman). Estate sellers inheriting tool collections. Newcomers looking for quality used tools at fair prices.</div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 02 COLOR PALETTE -->
+  <div class="section">
+    <div class="section-num">02</div>
+    <div class="section-title">Color palette</div>
+    <div class="section-desc">Earth tones that signal heritage, trust, and craft. Desaturated to convey the passage of time. Honey accent for CTAs and pricing — warm, visible, and referencing the brass ferrules and copper on vintage tools.</div>
+  </div>
+  <div class="palette">
+    <div class="pal-card">
+      <div class="pal-swatch" style="background:#1a3030"><span class="pal-swatch-name" style="color:#6aaa98">Spruce</span></div>
+      <div class="pal-info"><div class="pal-hex">#1a3030</div><div class="pal-rgb">RGB 26, 48, 48</div><div class="pal-use">Primary brand color. Wordmark, headings, primary buttons, key UI elements.</div></div>
+    </div>
+    <div class="pal-card">
+      <div class="pal-swatch" style="background:#f2f0eb"><span class="pal-swatch-name" style="color:#8a8a80">Bone</span></div>
+      <div class="pal-info"><div class="pal-hex">#f2f0eb</div><div class="pal-rgb">RGB 242, 240, 235</div><div class="pal-use">Background. Warmer than white, feels like aged paper. Makes tool photos look better.</div></div>
+    </div>
+    <div class="pal-card">
+      <div class="pal-swatch" style="background:#d4aa60"><span class="pal-swatch-name" style="color:#5a3a10">Honey</span></div>
+      <div class="pal-info"><div class="pal-hex">#d4aa60</div><div class="pal-rgb">RGB 212, 170, 96</div><div class="pal-use">Accent. CTA buttons, pricing, links, highlights, and active states.</div></div>
+    </div>
+    <div class="pal-card">
+      <div class="pal-swatch" style="background:#0c1c1e"><span class="pal-swatch-name" style="color:#4a7a70">Dark Teal</span></div>
+      <div class="pal-info"><div class="pal-hex">#0c1c1e</div><div class="pal-rgb">RGB 12, 28, 30</div><div class="pal-use">Dark tone. Navigation, dark sections, button text on Honey, dark mode backgrounds.</div></div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 03 TYPOGRAPHY -->
+  <div class="section">
+    <div class="section-num">03</div>
+    <div class="section-title">Typography</div>
+    <div class="section-desc">Petrona for the wordmark and headings — angular, sharp serifs with a hand-carved quality. Outfit for body, navigation, and UI — clean geometric sans-serif that lets Petrona shine.</div>
+  </div>
+  <div class="type-specimen">
+    <div class="type-card">
+      <div class="type-card-label">Display — Petrona</div>
+      <div class="type-display">Benchlot</div>
+      <div class="type-display-sm">Every tool has a next owner.</div>
+      <div class="type-weights">
+        <div><div class="type-weight" style="font-family:'Petrona',serif;font-weight:900">Aa</div><div class="type-weight-label">900 Black</div></div>
+        <div><div class="type-weight" style="font-family:'Petrona',serif;font-weight:800">Aa</div><div class="type-weight-label">800 Bold</div></div>
+        <div><div class="type-weight" style="font-family:'Petrona',serif;font-weight:700">Aa</div><div class="type-weight-label">700 Semi</div></div>
+        <div><div class="type-weight" style="font-family:'Petrona',serif;font-weight:500;font-style:italic">Aa</div><div class="type-weight-label">500 Italic</div></div>
+      </div>
+    </div>
+    <div class="type-card">
+      <div class="type-card-label">Body — Outfit</div>
+      <div class="type-body-display">Benchlot is the marketplace for premium used hand tools. Buy, sell, and discover planes, chisels, saws, and more — from vintage Stanley to modern Lie-Nielsen. Whether you're building your first workbench or passing along a lifetime collection, this is where tools find their next chapter.</div>
+      <div class="type-weights">
+        <div><div class="type-weight" style="font-family:'Outfit',sans-serif;font-weight:700">Aa</div><div class="type-weight-label">700 Bold</div></div>
+        <div><div class="type-weight" style="font-family:'Outfit',sans-serif;font-weight:600">Aa</div><div class="type-weight-label">600 Semi</div></div>
+        <div><div class="type-weight" style="font-family:'Outfit',sans-serif;font-weight:500">Aa</div><div class="type-weight-label">500 Medium</div></div>
+        <div><div class="type-weight" style="font-family:'Outfit',sans-serif;font-weight:400">Aa</div><div class="type-weight-label">400 Regular</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 04 WORDMARK -->
+  <div class="section">
+    <div class="section-num">04</div>
+    <div class="section-title">Wordmark</div>
+    <div class="section-desc">The wordmark is the brand. Set in Petrona 900 with capital R. No icon, no symbol — just the word. Like Reverb, Etsy, and eBay.</div>
+  </div>
+  <div class="wm-sizes">
+    <div class="wm-row"><div class="wm-label">Hero / 72px</div><div class="wm-word" style="font-size:72px">Benchlot</div></div>
+    <div class="wm-row"><div class="wm-label">Title / 48px</div><div class="wm-word" style="font-size:48px">Benchlot</div></div>
+    <div class="wm-row"><div class="wm-label">Large / 36px</div><div class="wm-word" style="font-size:36px">Benchlot</div></div>
+    <div class="wm-row"><div class="wm-label">Nav / 22px</div><div class="wm-word" style="font-size:22px">Benchlot</div></div>
+    <div class="wm-row"><div class="wm-label">Small / 16px</div><div class="wm-word" style="font-size:16px">Benchlot</div></div>
+  </div>
+  <div class="lockups">
+    <div class="lk" style="background:#1a3030"><div class="lk-word" style="color:#f2f0eb">Benchlot</div><div class="lk-label" style="color:#5a8a7a">Bone on Spruce</div></div>
+    <div class="lk" style="background:#f2f0eb;border:1px solid #e4e2dc"><div class="lk-word" style="color:#1a3030">Benchlot</div><div class="lk-label" style="color:#8a8a80">Spruce on Bone</div></div>
+    <div class="lk" style="background:#0c1c1e"><div class="lk-word" style="color:#f2f0eb">Benchlot</div><div class="lk-label" style="color:#4a6a64">Bone on Dark Teal</div></div>
+    <div class="lk" style="background:#1a3030"><div class="lk-word" style="color:#d4aa60">Benchlot</div><div class="lk-label" style="color:#5a8a7a">Honey on Spruce</div></div>
+    <div class="lk" style="background:#0c1c1e"><div class="lk-word" style="color:#d4aa60">Benchlot</div><div class="lk-label" style="color:#4a6a64">Honey on Dark Teal</div></div>
+    <div class="lk" style="background:#f2f0eb;border:1px solid #e4e2dc"><div class="lk-word" style="color:#0c1c1e">Benchlot</div><div class="lk-label" style="color:#8a8a80">Dark Teal on Bone</div></div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 05 BUTTONS -->
+  <div class="section">
+    <div class="section-num">05</div>
+    <div class="section-title">Buttons</div>
+    <div class="section-desc">Primary actions use Honey with Dark Teal text. Secondary actions use Spruce with Bone text. Outline variant for lower-priority actions.</div>
+  </div>
+  <div class="btn-section">
+    <div class="btn-row">
+      <div class="btn-label">Primary</div>
+      <button class="btn" style="background:#d4aa60;color:#0c1c1e">Scan a Tool</button>
+      <button class="btn-sm" style="background:#d4aa60;color:#0c1c1e">List a Tool</button>
+    </div>
+    <div class="btn-row">
+      <div class="btn-label">Secondary</div>
+      <button class="btn" style="background:#1a3030;color:#f2f0eb">Browse Tools</button>
+      <button class="btn-sm" style="background:#1a3030;color:#f2f0eb">Add to Watch</button>
+    </div>
+    <div class="btn-row">
+      <div class="btn-label">Outline</div>
+      <button class="btn-outline" style="border:2px solid #1a3030;color:#1a3030">Learn More</button>
+      <button class="btn-outline" style="border:2px solid #d4aa60;color:#d4aa60">View Details</button>
+    </div>
+    <div class="btn-row">
+      <div class="btn-label">On dark</div>
+      <span style="background:#0c1c1e;padding:10px 14px;border-radius:8px;display:inline-flex;gap:10px">
+        <button class="btn-sm" style="background:#d4aa60;color:#0c1c1e">Scan a Tool</button>
+        <button class="btn-sm" style="background:transparent;color:#6aaa98;border:2px solid #6aaa98">Learn More</button>
+      </span>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 06 APPLICATIONS -->
+  <div class="section">
+    <div class="section-num">06</div>
+    <div class="section-title">Applications</div>
+    <div class="section-desc">How the brand system comes together across the product — navigation, hero sections, feature callouts, and listing cards.</div>
+  </div>
+
+  <div class="mock-nav">
+    <div class="mn-logo">Benchlot</div>
+    <div class="mn-links"><span>Browse</span><span>Sell</span><span>ToolScan</span><span>Price Guide</span></div>
+    <button class="mn-cta">List a Tool</button>
+  </div>
+
+  <div class="mock-hero">
+    <div class="mh-word">Benchlot</div>
+    <div class="mh-sub">The marketplace for premium used hand tools.<br>Buy, sell, and discover — from vintage Stanley to modern Lie-Nielsen.</div>
+    <button class="mh-btn">Browse Tools</button>
+    <button class="mh-btn-secondary">Sell Your Tools</button>
+  </div>
+
+  <div class="mock-ts">
+    <div class="mt-title">What's it worth? Ask Benchlot.</div>
+    <div class="mt-sub">Point your camera at any hand tool. We'll identify it, tell you what it's worth, and help you list it in seconds.</div>
+    <button class="mt-btn">Scan a Tool</button>
+  </div>
+
+  <div class="mock-cards">
+    <div class="mc"><div class="mc-img">[Tool Photo]</div><div class="mc-body"><div class="mc-title">Stanley No. 4 Type 11</div><div class="mc-detail">Circa 1910 · Excellent</div><div class="mc-price">$185</div><button class="mc-btn">Add to Watch</button></div></div>
+    <div class="mc"><div class="mc-img">[Tool Photo]</div><div class="mc-body"><div class="mc-title">Lie-Nielsen No. 62</div><div class="mc-detail">Low Angle Jack · Like New</div><div class="mc-price">$345</div><button class="mc-btn">Add to Watch</button></div></div>
+    <div class="mc"><div class="mc-img">[Tool Photo]</div><div class="mc-body"><div class="mc-title">Disston D-8 Handsaw</div><div class="mc-detail">26" Crosscut · Restored</div><div class="mc-price">$95</div><button class="mc-btn">Add to Watch</button></div></div>
+  </div>
+
+  <div class="mock-badges">
+    <div class="mb" style="background:#d4aa60;color:#0c1c1e">Price Drop</div>
+    <div class="mb" style="background:#d4aa60;color:#0c1c1e">New Listing</div>
+    <div class="mb" style="background:#d6ece4;color:#1a3030">Barn Find</div>
+    <div class="mb" style="background:#d6ece4;color:#1a3030">ToolScan Verified</div>
+    <div class="mb" style="background:#d6ece4;color:#1a3030">Rare</div>
+    <div class="mb" style="background:#e8e6e0;color:#4a5a54">Verified Seller</div>
+    <div class="mb" style="background:#e8e6e0;color:#4a5a54">Excellent</div>
+    <div class="mb" style="background:#e8e6e0;color:#4a5a54">Restored</div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 07 USAGE -->
+  <div class="section">
+    <div class="section-num">07</div>
+    <div class="section-title">Usage guidelines</div>
+  </div>
+  <div class="dos">
+    <div class="do-card">
+      <div class="do-header" style="color:#1a3030">Do</div>
+      <div class="do-item">
+        Use Petrona 900 for the wordmark — always capital R, lowercase ekerf<br>
+        Use Outfit for all body text, nav, buttons, and UI elements<br>
+        Use Bone backgrounds — never pure white<br>
+        Use Honey for CTAs with Dark Teal text<br>
+        Use Spruce for secondary buttons with Bone text<br>
+        Keep generous whitespace — let the tools breathe<br>
+        Let product photos be the visual star — muted UI, vivid tools
+      </div>
+    </div>
+    <div class="do-card">
+      <div class="do-header" style="color:#c45a3c">Don't</div>
+      <div class="do-item">
+        Don't use pure white (#fff) or pure black (#000) backgrounds<br>
+        Don't add an icon or symbol to the wordmark<br>
+        Don't use Honey text on Honey backgrounds<br>
+        Don't set the wordmark in anything other than Petrona 900<br>
+        Don't use bright, saturated colors — keep everything muted<br>
+        Don't use decorative or script fonts anywhere<br>
+        Don't add drop shadows, gradients, or bevels to the wordmark
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Benchlot Brand Guidelines v1.0 — March 2026<br>
+    benchlot.com
+  </div>
+
+</div>
+
+</body>
+</html>

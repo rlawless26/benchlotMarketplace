@@ -1,0 +1,21 @@
+{
+  "Stanley No. 45 Combination Plane": {
+    "tool_name": "Stanley No. 45 Combination Plane",
+    "brand": "Stanley",
+    "category": "Specialty Planes",
+    "subcategory": "Combination",
+    "new_price_low": null,
+    "new_price_high": null,
+    "notes": "The 'plane that does everything'. Collector and user.",
+    "ebay_sold": {
+      "count": 120,
+      "min": 5.44,
+      "max": 975.0,
+      "mean": 110.03,
+      "median": 77.0,
+      "p25": 35.0,
+      "p75": 140.0
+    },
+    "value_retention": null
+  }
+}

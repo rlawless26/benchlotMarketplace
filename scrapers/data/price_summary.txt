@@ -1,0 +1,19 @@
+BENCHLOT PRICE GUIDE SUMMARY
+Generated: 2026-02-09 20:04
+Total listings scraped: 120
+Tools covered: 1
+================================================================================
+
+
+============================================================
+  SPECIALTY PLANES
+============================================================
+
+  Stanley No. 45 Combination Plane
+    Brand: Stanley
+    eBay sold range: $5 - $975
+    Median: $77 | Mean: $110
+    25th-75th percentile: $35 - $140
+    Sample size: 120 sold listings
+    Notes: The 'plane that does everything'. Collector and user.
+

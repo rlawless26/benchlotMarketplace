@@ -1,0 +1,933 @@
+{
+  "README": "This file seeds the normalizer eval. Each entry shows title_raw and a\nbest-guess `truth` object (brand+type pre-filled from M1 heuristics,\nmodel/size/era null). Review each entry: correct truth.canonical_brand,\ntruth.canonical_type to match the canonical vocabulary; fill in model,\nsize, era where you know them (leave null when uncertain).\n\nWhen done: rename this file to `ground_truth.json` and commit it.\n\nScoring gates: brand @ 95%, model @ 90% on this set. canonical_type is\ntracked and must be right on every entry (hard gate — drives alert\nmatch quality in M3).",
+  "generated_at": "2026-04-22T17:38:06.615Z",
+  "count": 50,
+  "listings": [
+    {
+      "doc_id": "jimbode__rare-j-r-tolman-hanover-ma-crisp-fine-ship-s-hawk-plane-107787",
+      "source": "jimbode",
+      "source_id": "rare-j-r-tolman-hanover-ma-crisp-fine-ship-s-hawk-plane-107787",
+      "title_raw": "Rare J.R. TOLMAN HANOVER, MA Crisp & Fine Ship’s Hawk Plane - 107787",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Bench Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__fine-very-rare-stanley-no-90a-bullnose-shoulder-plane-usa-118466",
+      "source": "jimbode",
+      "source_id": "fine-very-rare-stanley-no-90a-bullnose-shoulder-plane-usa-118466",
+      "title_raw": "Fine & Very Rare STANLEY No. 90A Bullnose Shoulder Plane USA - 118466",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__near-mint-lie-nielsen-no-97-1-2-chisel-edge-plane-119601",
+      "source": "jimbode",
+      "source_id": "near-mint-lie-nielsen-no-97-1-2-chisel-edge-plane-119601",
+      "title_raw": "Near Mint LIE NIELSEN No. 97 1/2 Chisel Edge Plane - 119601",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Bench Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__sweet-gunmetal-chariot-plane-a-abell-excelsior-107279",
+      "source": "jimbode",
+      "source_id": "sweet-gunmetal-chariot-plane-a-abell-excelsior-107279",
+      "title_raw": "Sweet Gunmetal Chariot Plane “A. ABELL” - EXCELSIOR 107279",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Bench Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__spectacular-16th-century-ornate-pliers-excelsior-104494",
+      "source": "jimbode",
+      "source_id": "spectacular-16th-century-ornate-pliers-excelsior-104494",
+      "title_raw": "Spectacular 16th Century Ornate Pliers - EXCELSIOR 104494 - AS OF NOV 13",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Other",
+      "_tags": [
+        "miscellaneous",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__extra-fine-rare-baby-atwater-patent-1883-quick-adjust-tiger-wrench-excelsior-113682",
+      "source": "jimbode",
+      "source_id": "extra-fine-rare-baby-atwater-patent-1883-quick-adjust-tiger-wrench-excelsior-113682",
+      "title_raw": "Extra Fine Rare BABY ATWATER PATENT 1883 Quick Adjust Tiger Wrench - EXCELSIOR 113682",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Other",
+      "_tags": [
+        "miscellaneous",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__stunning-carved-boxwood-long-horn-cattle-vintage-sumitsubo-japanese-ink-line-excelsior-118728",
+      "source": "jimbode",
+      "source_id": "stunning-carved-boxwood-long-horn-cattle-vintage-sumitsubo-japanese-ink-line-excelsior-118728",
+      "title_raw": "Stunning Carved Boxwood Water Buffalo Vintage Sumitsubo Japanese Ink Line - EXCELSIOR 118728 - AS OF JAN 14",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Other",
+      "_tags": [
+        "measuring",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__millers-falls-boring-machine-120099-as-of-mar-16",
+      "source": "jimbode",
+      "source_id": "millers-falls-boring-machine-120099-as-of-mar-16",
+      "title_raw": "MILLERS FALLS Boring Machine - 120099 - AS OF MAR 16",
+      "truth": {
+        "canonical_brand": "Millers Falls",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Millers Falls",
+      "_heuristic_type": "Other",
+      "_tags": [
+        "timber frame"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-batchelder-inclinometer-level-chamberlin-patent-excelsior-100954",
+      "source": "jimbode",
+      "source_id": "rare-batchelder-inclinometer-level-chamberlin-patent-excelsior-100954",
+      "title_raw": "Rare BATCHELDER Inclinometer Level CHAMBERLIN Patent - EXCELSIOR 100954",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Rule",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Measuring",
+      "_tags": [
+        "measuring",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__bridge-city-tool-works-pg-24-panel-gauge-near-mint-120243",
+      "source": "jimbode",
+      "source_id": "bridge-city-tool-works-pg-24-panel-gauge-near-mint-120243",
+      "title_raw": "BRIDGE CITY TOOL WORKS PG-24 Panel Gauge Near Mint - 120243",
+      "truth": {
+        "canonical_brand": "Bridge City",
+        "canonical_type": "Rule",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Bridge City",
+      "_heuristic_type": "Measuring",
+      "_tags": [
+        "measuring"
+      ]
+    },
+    {
+      "doc_id": "jimbode__used-bridge-city-tool-works-no-as-14-adjustable-try-square-119635",
+      "source": "jimbode",
+      "source_id": "used-bridge-city-tool-works-no-as-14-adjustable-try-square-119635",
+      "title_raw": "Used BRIDGE CITY TOOL WORKS No. As-14 Adjustable Try Square - 119635",
+      "truth": {
+        "canonical_brand": "Bridge City",
+        "canonical_type": "Rule",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Bridge City",
+      "_heuristic_type": "Measuring",
+      "_tags": [
+        "measuring"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-near-mint-t-f-deck-gravity-level-inclinometer-115027",
+      "source": "jimbode",
+      "source_id": "rare-near-mint-t-f-deck-gravity-level-inclinometer-115027",
+      "title_raw": "Rare & Near Mint T.F. DECK Gravity Level Inclinometer - 115027",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Rule",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Measuring",
+      "_tags": [
+        "measuring",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__mint-wenzloff-stair-saw-kerfing-saw-120006",
+      "source": "jimbode",
+      "source_id": "mint-wenzloff-stair-saw-kerfing-saw-120006",
+      "title_raw": "Mint WENZLOFF Stair Saw Kerfing Saw - 120006",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hand Saw",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Saws",
+      "_tags": [
+        "saws"
+      ]
+    },
+    {
+      "doc_id": "jimbode__amazing-46-inch-disston-d-100-hand-saw-sign-with-cast-iron-handle-excelsior-66682",
+      "source": "jimbode",
+      "source_id": "amazing-46-inch-disston-d-100-hand-saw-sign-with-cast-iron-handle-excelsior-66682",
+      "title_raw": "AMAZING 46 inch DISSTON D-100 Hand Saw Sign with Cast Iron Handle - EXCELSIOR 66682 -",
+      "truth": {
+        "canonical_brand": "Disston",
+        "canonical_type": "Hand Saw",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Disston",
+      "_heuristic_type": "Saws",
+      "_tags": [
+        "saws",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__miniature-saw-with-buffalo-horn-handle-boxwood-saw-vise-5-5-8-inches-long-110321",
+      "source": "jimbode",
+      "source_id": "miniature-saw-with-buffalo-horn-handle-boxwood-saw-vise-5-5-8-inches-long-110321",
+      "title_raw": "Miniature Saw with Buffalo Horn Handle & Boxwood Saw Vise 5 5/8 Inches Long - 110321",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hand Saw",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Saws",
+      "_tags": [
+        "miniatures",
+        "saws",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__very-rare-worrall-co-brass-back-dovetail-saw-119794",
+      "source": "jimbode",
+      "source_id": "very-rare-worrall-co-brass-back-dovetail-saw-119794",
+      "title_raw": "Very Rare WORRALL & CO. Brass Back Dovetail Saw - 119794",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hand Saw",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Saws",
+      "_tags": [
+        "saws"
+      ]
+    },
+    {
+      "doc_id": "jimbode__near-mint-with-engine-turning-norris-no-a5-smooth-plane-119778-as-of-feb-14",
+      "source": "jimbode",
+      "source_id": "near-mint-with-engine-turning-norris-no-a5-smooth-plane-119778-as-of-feb-14",
+      "title_raw": "Near Mint with Engine Turning NORRIS No. A5 Smooth Plane - 119778 - AS OF FEB 14",
+      "truth": {
+        "canonical_brand": "Norris",
+        "canonical_type": "Infill Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Norris",
+      "_heuristic_type": "Infill Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-and-minty-2-inch-norris-a-7-adjustable-shoulder-plane-only-known-example-excelsior-91141",
+      "source": "jimbode",
+      "source_id": "rare-and-minty-2-inch-norris-a-7-adjustable-shoulder-plane-only-known-example-excelsior-91141",
+      "title_raw": "Rare and Minty! 2 Inch NORRIS A-7 Adjustable Shoulder Plane Only Known Example! + EXCELSIOR 91141",
+      "truth": {
+        "canonical_brand": "Norris",
+        "canonical_type": "Infill Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Norris",
+      "_heuristic_type": "Infill Planes",
+      "_tags": [
+        "infill",
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__spectacular-norris-no-20e-gunmetal-ebony-infill-shoulder-plane-excelsior-117819",
+      "source": "jimbode",
+      "source_id": "spectacular-norris-no-20e-gunmetal-ebony-infill-shoulder-plane-excelsior-117819",
+      "title_raw": "Spectacular NORRIS No. 20E Gunmetal & Ebony Infill Shoulder Plane - EXCELSIOR 117819",
+      "truth": {
+        "canonical_brand": "Norris",
+        "canonical_type": "Infill Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Norris",
+      "_heuristic_type": "Infill Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__3-1-2-inch-spiers-chariot-plane-made-for-moseley-excelsior-82347u-as-of-oct-21",
+      "source": "jimbode",
+      "source_id": "3-1-2-inch-spiers-chariot-plane-made-for-moseley-excelsior-82347u-as-of-oct-21",
+      "title_raw": "3 1/2 Inch SPIERS Chariot Plane Made for MOSELEY * EXCELSIOR 82347U - AS OF OCT 21",
+      "truth": {
+        "canonical_brand": "Spiers",
+        "canonical_type": "Infill Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Spiers",
+      "_heuristic_type": "Infill Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__mint-lie-nielsen-1-inch-bevel-edge-long-handle-socket-chisel-120281",
+      "source": "jimbode",
+      "source_id": "mint-lie-nielsen-1-inch-bevel-edge-long-handle-socket-chisel-120281",
+      "title_raw": "Mint LIE NIELSEN 1 Inch Bevel Edge Long Handle Socket Chisel - 120281",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Chisel",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Chisels",
+      "_tags": [
+        "fine chisels & carving tools"
+      ]
+    },
+    {
+      "doc_id": "jimbode__extra-fine-7-8-x-11-3-4-inch-buck-bros-socket-firmer-chisel-119813",
+      "source": "jimbode",
+      "source_id": "extra-fine-7-8-x-11-3-4-inch-buck-bros-socket-firmer-chisel-119813",
+      "title_raw": "Extra Fine 7/8 x 11 3/4 Inch BUCK BROS. Socket Firmer Chisel - 119813",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Chisel",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Chisels",
+      "_tags": [
+        "timber frame"
+      ]
+    },
+    {
+      "doc_id": "jimbode__1-x-16-1-2-inch-heavy-framing-chisel-mortise-chisel-120113",
+      "source": "jimbode",
+      "source_id": "1-x-16-1-2-inch-heavy-framing-chisel-mortise-chisel-120113",
+      "title_raw": "1 x 16 1/2 Inch Heavy Framing Chisel Mortise Chisel - 120113",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Chisel",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Chisels",
+      "_tags": [
+        "timber frame"
+      ]
+    },
+    {
+      "doc_id": "jimbode__bridge-city-tool-works-fc-1-flushing-chisel-mint-in-box-120418",
+      "source": "jimbode",
+      "source_id": "bridge-city-tool-works-fc-1-flushing-chisel-mint-in-box-120418",
+      "title_raw": "BRIDGE CITY TOOL WORKS FC-1 Flushing Chisel Mint in Box - 120418",
+      "truth": {
+        "canonical_brand": "Bridge City",
+        "canonical_type": "Chisel",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Bridge City",
+      "_heuristic_type": "Chisels",
+      "_tags": [
+        "fine chisels & carving tools"
+      ]
+    },
+    {
+      "doc_id": "jimbode__millers-falls-no-77a-hand-drill-112454",
+      "source": "jimbode",
+      "source_id": "millers-falls-no-77a-hand-drill-112454",
+      "title_raw": "MILLERS FALLS No. 77A Hand Drill - 112454",
+      "truth": {
+        "canonical_brand": "Millers Falls",
+        "canonical_type": "Brace",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Millers Falls",
+      "_heuristic_type": "Braces & Drills",
+      "_tags": [
+        "fine braces & drills",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__5-inch-sheffield-steel-products-bit-brace-120432",
+      "source": "jimbode",
+      "source_id": "5-inch-sheffield-steel-products-bit-brace-120432",
+      "title_raw": "5 Inch SHEFFIELD STEEL PRODUCTS Bit Brace - 120432",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Brace",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Braces & Drills",
+      "_tags": [
+        "fine braces & drills"
+      ]
+    },
+    {
+      "doc_id": "jimbode__perfect-set-of-russell-jennings-auger-bits-120252",
+      "source": "jimbode",
+      "source_id": "perfect-set-of-russell-jennings-auger-bits-120252",
+      "title_raw": "Perfect Set of RUSSELL JENNINGS Auger Bits - 120252",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Brace",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Braces & Drills",
+      "_tags": [
+        "fine braces & drills"
+      ]
+    },
+    {
+      "doc_id": "jimbode__contrasting-ebony-beech-plated-bit-brace-119565",
+      "source": "jimbode",
+      "source_id": "contrasting-ebony-beech-plated-bit-brace-119565",
+      "title_raw": "Contrasting Ebony & Beech Plated Bit Brace - 119565",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Brace",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Braces & Drills",
+      "_tags": [
+        "fine braces & drills"
+      ]
+    },
+    {
+      "doc_id": "jimbode__gorgeous-z-j-m-master-one-arm-plow-plane-in-solid-ebony-by-james-leamy-excelsior-114430",
+      "source": "jimbode",
+      "source_id": "gorgeous-z-j-m-master-one-arm-plow-plane-in-solid-ebony-by-james-leamy-excelsior-114430",
+      "title_raw": "Gorgeous Z. J. M’MASTER One Arm Plow Plane in Solid Ebony by JAMES LEAMY - EXCELSIOR 114430 - AS OF DEC 18",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Plow Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Plow Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-kimberly-patent-3-arm-plow-plane-104689",
+      "source": "jimbode",
+      "source_id": "rare-kimberly-patent-3-arm-plow-plane-104689",
+      "title_raw": "Rare KIMBERLY PATENT 3 Arm Plow Plane — 104688",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Plow Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Plow Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__fine-graduated-set-of-8-plow-plane-irons-by-dwight-french-120135",
+      "source": "jimbode",
+      "source_id": "fine-graduated-set-of-8-plow-plane-irons-by-dwight-french-120135",
+      "title_raw": "Graduated Set of 8 Plow Plane Irons by DWIGHT & FRENCH - 120135",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Plow Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Plow Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__gorgeous-e-w-carpenter-patent-plow-plane-in-boxwood-rosewood-by-jim-leamy-excelsior-111111",
+      "source": "jimbode",
+      "source_id": "gorgeous-e-w-carpenter-patent-plow-plane-in-boxwood-rosewood-by-jim-leamy-excelsior-111111",
+      "title_raw": "Gorgeous E.W. CARPENTER PATENT Plow Plane in Boxwood & Rosewood by JIM LEAMY - EXCELSIOR 111111 - AS OF MAR 28",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Plow Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Plow Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-fish-head-hammer-excelsior-95432-as-of-jan-4",
+      "source": "jimbode",
+      "source_id": "rare-fish-head-hammer-excelsior-95432-as-of-jan-4",
+      "title_raw": "Rare Fish Head Hammer * EXCELSIOR 95432 - AS OF JAN 4",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hammer",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Hammers",
+      "_tags": [
+        "hammers",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__bridge-city-tool-works-db-1-dead-blow-mallet-mint-in-box-120420",
+      "source": "jimbode",
+      "source_id": "bridge-city-tool-works-db-1-dead-blow-mallet-mint-in-box-120420",
+      "title_raw": "BRIDGE CITY TOOL WORKS DB-1 Dead Blow Mallet Mint in Box - 120420",
+      "truth": {
+        "canonical_brand": "Bridge City",
+        "canonical_type": "Hammer",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Bridge City",
+      "_heuristic_type": "Hammers",
+      "_tags": [
+        "hammers"
+      ]
+    },
+    {
+      "doc_id": "jimbode__2-premium-solid-lignum-vitae-lawn-bowls-for-mallet-heads-73377",
+      "source": "jimbode",
+      "source_id": "2-premium-solid-lignum-vitae-lawn-bowls-for-mallet-heads-73377",
+      "title_raw": "2 Premium Solid Lignum Vitae Lawn Bowls for Mallet Heads - 73377",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hammer",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Hammers",
+      "_tags": []
+    },
+    {
+      "doc_id": "jimbode__rare-fine-mitteldorfer-straus-patent-jan-10-1928-goat-head-hammer118311",
+      "source": "jimbode",
+      "source_id": "rare-fine-mitteldorfer-straus-patent-jan-10-1928-goat-head-hammer118311",
+      "title_raw": "Rare & Fine MITTELDORFER STRAUS PATENT JAN. 10, 1928 Goat Head Hammer - 118311",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Hammer",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Hammers",
+      "_tags": [
+        "hammers",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__fine-stanley-no-9-1-4-block-plane-119954",
+      "source": "jimbode",
+      "source_id": "fine-stanley-no-9-1-4-block-plane-119954",
+      "title_raw": "Fine STANLEY No. 9 1/4 Block Plane - 119954",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Block Planes",
+      "_tags": [
+        "hammers"
+      ]
+    },
+    {
+      "doc_id": "jimbode__fine-lie-nielsen-no-60-1-2-low-angle-block-plane-with-adjustable-mouth-119614",
+      "source": "jimbode",
+      "source_id": "fine-lie-nielsen-no-60-1-2-low-angle-block-plane-with-adjustable-mouth-119614",
+      "title_raw": "Fine LIE NIELSEN No. 60 1/2 Low Angle Block Plane with Adjustable Mouth - 119614",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Block Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__mint-limited-edition-lie-nielsen-2001-white-bronze-matched-pair-block-planes-in-original-box-106939",
+      "source": "jimbode",
+      "source_id": "mint-limited-edition-lie-nielsen-2001-white-bronze-matched-pair-block-planes-in-original-box-106939",
+      "title_raw": "Mint Limited Edition LIE NIELSEN 2001 White Bronze Matched Pair Block Planes in Original Box - 106939 -",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Block Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-patented-block-plane-meriden-malleable-iron-co-110681",
+      "source": "jimbode",
+      "source_id": "rare-patented-block-plane-meriden-malleable-iron-co-110681",
+      "title_raw": "Rare Patented Block Plane MERIDEN MALLEABLE IRON CO. - 110681",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Block Planes",
+      "_tags": [
+        "planes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-fine-stanley-no-10c-carriage-maker-s-rabbet-plane-119331",
+      "source": "jimbode",
+      "source_id": "rare-fine-stanley-no-10c-carriage-maker-s-rabbet-plane-119331",
+      "title_raw": "Rare & Fine STANLEY No. 10C Carriage Maker’s Rabbet Plane - 119331",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Rabbet Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__extra-fine-stanley-no-10-1-2-carriage-maker-s-rabbet-plane-119773",
+      "source": "jimbode",
+      "source_id": "extra-fine-stanley-no-10-1-2-carriage-maker-s-rabbet-plane-119773",
+      "title_raw": "Extra Fine STANLEY No. 10 1/2 Carriage Maker’s Rabbet Plane -  - 119773",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Rabbet Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__rare-spiers-dual-iron-dovetailed-rosewood-infill-rabbet-plane-119409",
+      "source": "jimbode",
+      "source_id": "rare-spiers-dual-iron-dovetailed-rosewood-infill-rabbet-plane-119409",
+      "title_raw": "Rare SPIERS Dual Iron Dovetailed Rosewood Infill Rabbet Plane - 119409",
+      "truth": {
+        "canonical_brand": "Spiers",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Spiers",
+      "_heuristic_type": "Rabbet Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__record-no-2506-double-side-rabbet-plane-near-mint-in-box-bottom-119462",
+      "source": "jimbode",
+      "source_id": "record-no-2506-double-side-rabbet-plane-near-mint-in-box-bottom-119462",
+      "title_raw": "RECORD No. 2506 Double Side Rabbet Plane Near Mint in Box Bottom - 119462",
+      "truth": {
+        "canonical_brand": "Record",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Record",
+      "_heuristic_type": "Rabbet Planes",
+      "_tags": [
+        "planes"
+      ]
+    },
+    {
+      "doc_id": "jimbode__stunning-early-hand-carved-native-american-crooked-knife-excelsior-115594",
+      "source": "jimbode",
+      "source_id": "stunning-early-hand-carved-native-american-crooked-knife-excelsior-115594",
+      "title_raw": "Stunning Early Hand Carved Native American Crooked Knife - EXCELSIOR 115594",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Knife",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Knives",
+      "_tags": [
+        "knives",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__hand-carved-native-american-crooked-knife-excelsior-116186",
+      "source": "jimbode",
+      "source_id": "hand-carved-native-american-crooked-knife-excelsior-116186",
+      "title_raw": "“Hand” Carved Native American Crooked Knife - EXCELSIOR 116186",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Knife",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Knives",
+      "_tags": [
+        "knives"
+      ]
+    },
+    {
+      "doc_id": "jimbode__dead-mint-stanley-no-1022-combination-jack-knife-screwdriver-excelsior-106925",
+      "source": "jimbode",
+      "source_id": "dead-mint-stanley-no-1022-combination-jack-knife-screwdriver-excelsior-106925",
+      "title_raw": "Dead Mint STANLEY No. 1022 Combination Jack Knife Screwdriver - EXCELSIOR 106925",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Knife",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Knives",
+      "_tags": [
+        "miscellaneous",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__12-inch-draw-knife-cut-keen-fine-114463",
+      "source": "jimbode",
+      "source_id": "12-inch-draw-knife-cut-keen-fine-114463",
+      "title_raw": "12 Inch Draw Knife CUT KEEN Fine - 114463",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Knife",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Knives",
+      "_tags": [
+        "knives",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__gorgeous-18th-century-single-bevel-side-axe-excelsior-109190",
+      "source": "jimbode",
+      "source_id": "gorgeous-18th-century-single-bevel-side-axe-excelsior-109190",
+      "title_raw": "Gorgeous 18th Century Single Bevel Side Axe - EXCELSIOR 109190",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Axe",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Axes & Adzes",
+      "_tags": [
+        "axes and adzes",
+        "what's new!"
+      ]
+    },
+    {
+      "doc_id": "jimbode__early-strapped-handled-fireman-s-belt-axe-117442",
+      "source": "jimbode",
+      "source_id": "early-strapped-handled-fireman-s-belt-axe-117442",
+      "title_raw": "Early Strapped Handled Fireman’s Belt Axe - 117442",
+      "truth": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Axe",
+        "canonical_model": null,
+        "canonical_size": null,
+        "era_estimate": null
+      },
+      "_heuristic_brand": "Unknown",
+      "_heuristic_type": "Axes & Adzes",
+      "_tags": [
+        "axes and adzes",
+        "what's new!"
+      ]
+    }
+  ]
+}

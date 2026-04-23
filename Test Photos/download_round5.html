@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Round 5 Test Photos Downloader (50 images)</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+h1 { color: #333; }
+.progress { background: #ddd; border-radius: 8px; overflow: hidden; height: 30px; margin: 20px 0; }
+.progress-bar { background: #4CAF50; height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+.status { margin: 10px 0; font-size: 14px; color: #666; }
+button { background: #4CAF50; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; margin: 5px; }
+button:hover { background: #45a049; }
+button:disabled { background: #ccc; cursor: not-allowed; }
+.log { background: #1e1e1e; color: #0f0; font-family: monospace; font-size: 12px; padding: 15px; border-radius: 6px; max-height: 400px; overflow-y: auto; margin-top: 20px; }
+.error { color: #f44; }
+.success { color: #4f4; }
+</style>
+</head>
+<body>
+<h1>Round 5 Blind Test Photos</h1>
+<p>50 fresh eBay images for AI tool identification testing. Click to download all.</p>
+<button id="startBtn" onclick="startDownload()">Download All 50 Photos</button>
+<button id="retryBtn" onclick="retryFailed()" disabled>Retry Failed</button>
+<div class="progress"><div class="progress-bar" id="progressBar">0%</div></div>
+<div class="status" id="status">Ready to download</div>
+<div class="log" id="log"></div>
+<script>
+const images = [
+  {name: "r5_stanley_no4_type17.jpg", url: "https://i.ebayimg.com/images/g/OJYAAeSwDfVpqC86/s-l1600.jpg"},
+  {name: "r5_stanley_no5_type20.jpg", url: "https://i.ebayimg.com/images/g/5WEAAeSwCTFpsfw6/s-l1600.jpg"},
+  {name: "r5_stanley_no7_type11.jpg", url: "https://i.ebayimg.com/images/g/xPgAAeSwPa9psfyr/s-l1600.jpg"},
+  {name: "r5_record_no4_england.jpg", url: "https://i.ebayimg.com/images/g/JyEAAeSw8Etprcgc/s-l1600.jpg"},
+  {name: "r5_sargent_414_jack.jpg", url: "https://i.ebayimg.com/images/g/yhQAAeSw~5lpe8vl/s-l1600.jpg"},
+  {name: "r5_stanley_no3_project.jpg", url: "https://i.ebayimg.com/images/g/6goAAeSwK9ZptW-f/s-l1600.jpg"},
+  {name: "r5_stanley_9half_block.jpg", url: "https://i.ebayimg.com/images/g/xPkAAOSwfFdlmCAa/s-l1600.jpg"},
+  {name: "r5_record_311_shoulder.jpg", url: "https://i.ebayimg.com/images/g/0PsAAeSwQCRpoZH0/s-l1600.jpg"},
+  {name: "r5_stanley_no71_router.jpg", url: "https://i.ebayimg.com/images/g/-NgAAeSwx6FpvCTm/s-l1600.jpg"},
+  {name: "r5_stanley_no78_rabbet.jpg", url: "https://i.ebayimg.com/images/g/U7YAAeSw9K5o-W4x/s-l1600.jpg"},
+  {name: "r5_stanley_no45_combo.jpg", url: "https://i.ebayimg.com/images/g/KHYAAeSwbL1pun5E/s-l1600.jpg"},
+  {name: "r5_stanley_no48_tongue_groove.jpg", url: "https://i.ebayimg.com/images/g/YgsAAeSwcKNpsGQB/s-l1600.jpg"},
+  {name: "r5_stanley_sb3_scrub.jpg", url: "https://i.ebayimg.com/images/g/WPwAAeSwiqxpm12F/s-l1600.jpg"},
+  {name: "r5_veritas_la_jack.jpg", url: "https://i.ebayimg.com/images/g/G44AAeSwVVVpdL~N/s-l1600.jpg"},
+  {name: "r5_disston_d8_handsaw.jpg", url: "https://i.ebayimg.com/images/g/24YAAeSwRipoirtT/s-l1600.jpg"},
+  {name: "r5_dovetail_saw_brass.jpg", url: "https://i.ebayimg.com/images/g/d40AAeSwbK5paLgT/s-l1600.jpg"},
+  {name: "r5_disston_tenon_saw.jpg", url: "https://i.ebayimg.com/images/g/OUAAAeSwob9pRIS0/s-l1600.jpg"},
+  {name: "r5_japanese_ryoba.jpg", url: "https://i.ebayimg.com/images/g/Ck8AAeSwAi5o8Jul/s-l1600.jpg"},
+  {name: "r5_coping_saw_millers_falls.jpg", url: "https://i.ebayimg.com/images/g/tjYAAeSwOv5pc~TE/s-l1600.jpg"},
+  {name: "r5_stanley_bench_chisel.jpg", url: "https://i.ebayimg.com/images/g/8dIAAeSw5GFpuV29/s-l1600.jpg"},
+  {name: "r5_sorby_mortise_chisel.jpg", url: "https://i.ebayimg.com/images/g/hZIAAeSwNKxprbA9/s-l1600.jpg"},
+  {name: "r5_hale_paring_chisel.jpg", url: "https://i.ebayimg.com/images/g/1zUAAeSwDy5ppO9F/s-l1600.jpg"},
+  {name: "r5_pfeil_carving_gouge.jpg", url: "https://i.ebayimg.com/images/g/fq8AAeSwd59pstgR/s-l1600.jpg"},
+  {name: "r5_japanese_nomi_chisel.jpg", url: "https://i.ebayimg.com/images/g/pdYAAOSwdI9Y8Ti1/s-l1600.jpg"},
+  {name: "r5_narex_chisel_set.jpg", url: "https://i.ebayimg.com/images/g/caUAAeSwFd1pllxv/s-l1600.jpg"},
+  {name: "r5_craftsman_marking_gauge.jpg", url: "https://i.ebayimg.com/images/g/~MUAAeSw4h1pued6/s-l1600.jpg"},
+  {name: "r5_starrett_combo_square.jpg", url: "https://i.ebayimg.com/images/g/3YoAAeSwOn9pt3br/s-l1600.jpg"},
+  {name: "r5_stanley_t_bevel.jpg", url: "https://i.ebayimg.com/images/g/~TgAAeSwVRppuC9C/s-l1600.jpg"},
+  {name: "r5_wing_dividers.jpg", url: "https://i.ebayimg.com/images/g/feoAAeSwrSJpWL5C/s-l1600.jpg"},
+  {name: "r5_arkansas_oilstone.jpg", url: "https://i.ebayimg.com/images/g/p5QAAeSwPfRpudTF/s-l1600.jpg"},
+  {name: "r5_king_waterstone.jpg", url: "https://i.ebayimg.com/images/g/FEEAAOSwa~BYdNir/s-l1600.jpg"},
+  {name: "r5_dmt_diamond_plate.jpg", url: "https://i.ebayimg.com/images/g/Z~oAAeSwcEdpi3KO/s-l1600.jpg"},
+  {name: "r5_eclipse_honing_guide.jpg", url: "https://i.ebayimg.com/images/g/Le0AAeSwbyVpcBT7/s-l1600.jpg"},
+  {name: "r5_leather_strop.jpg", url: "https://i.ebayimg.com/images/g/MDMAAOSwaQtctJxO/s-l1600.jpg"},
+  {name: "r5_card_scraper_single.jpg", url: "https://i.ebayimg.com/images/g/g24AAeSwFhRpOfnR/s-l1600.jpg"},
+  {name: "r5_card_scraper_set.jpg", url: "https://i.ebayimg.com/images/g/wzEAAeSwx95olXxb/s-l1600.jpg"},
+  {name: "r5_stanley_no80_cabinet_scraper.jpg", url: "https://i.ebayimg.com/images/g/tTYAAeSwmS5pqKGM/s-l1600.jpg"},
+  {name: "r5_stanley_no151_spokeshave.jpg", url: "https://i.ebayimg.com/images/g/kokAAeSwl~ZpmbDf/s-l1600.jpg"},
+  {name: "r5_james_swan_drawknife.jpg", url: "https://i.ebayimg.com/images/g/ercAAeSw7tJpsy1d/s-l1600.jpg"},
+  {name: "r5_kunz_round_spokeshave.jpg", url: "https://i.ebayimg.com/images/g/f-EAAeSwPOlpNt0O/s-l1600.jpg"},
+  {name: "r5_stanley_ratchet_brace.jpg", url: "https://i.ebayimg.com/images/g/0NMAAeSwSFlpsidt/s-l1600.jpg"},
+  {name: "r5_stanley_eggbeater_drill.jpg", url: "https://i.ebayimg.com/images/g/gzYAAeSwkxdpbYXu/s-l1600.jpg"},
+  {name: "r5_wooden_molding_plane.jpg", url: "https://i.ebayimg.com/images/g/DIcAAeSw2Ktprul3/s-l1600.jpg"},
+  {name: "r5_holdfast.jpg", url: "https://i.ebayimg.com/images/g/aCsAAeSwz~Vo7Avz/s-l1600.jpg"},
+  {name: "r5_record_woodworking_vise.jpg", url: "https://i.ebayimg.com/images/g/zysAAeSwO6xps7q~/s-l1600.jpg"},
+  {name: "r5_rusty_plane_project.jpg", url: "https://i.ebayimg.com/images/g/PGEAAeSwH1ppb5iD/s-l1600.jpg"},
+  {name: "r5_stanley_no5_sole_view.jpg", url: "https://i.ebayimg.com/images/g/9nMAAeSwHsVpUZBr/s-l1600.jpg"},
+  {name: "r5_stanley_no6_cluttered.jpg", url: "https://i.ebayimg.com/images/g/e4kAAeSwq8Npsvz0/s-l1600.jpg"},
+  {name: "r5_hand_adze.jpg", url: "https://i.ebayimg.com/images/g/bUIAAeSwzLtpCkhp/s-l1600.jpg"},
+  {name: "r5_stanley_no3_worn.jpg", url: "https://i.ebayimg.com/images/g/RlUAAeSw2NRpmZNf/s-l1600.jpg"}
+];
+
+let completed = 0;
+let failed = [];
+
+function log(msg, cls) {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls||''}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateProgress() {
+  const pct = Math.round((completed / images.length) * 100);
+  const bar = document.getElementById('progressBar');
+  bar.style.width = pct + '%';
+  bar.textContent = pct + '%';
+  document.getElementById('status').textContent = `Downloaded ${completed}/${images.length} (${failed.length} failed)`;
+}
+
+async function downloadOne(img) {
+  try {
+    const resp = await fetch(img.url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = img.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    completed++;
+    log(`✓ ${img.name}`, 'success');
+  } catch(e) {
+    failed.push(img);
+    log(`✗ ${img.name}: ${e.message}`, 'error');
+  }
+  updateProgress();
+}
+
+async function startDownload() {
+  document.getElementById('startBtn').disabled = true;
+  completed = 0;
+  failed = [];
+  log('Starting download of 50 Round 5 test photos...');
+  // Download in batches of 3 with delay
+  for (let i = 0; i < images.length; i += 3) {
+    const batch = images.slice(i, i + 3);
+    await Promise.all(batch.map(downloadOne));
+    if (i + 3 < images.length) await new Promise(r => setTimeout(r, 500));
+  }
+  log(`\nComplete! ${completed}/${images.length} downloaded.`, completed === images.length ? 'success' : 'error');
+  document.getElementById('retryBtn').disabled = failed.length === 0;
+  document.getElementById('startBtn').disabled = false;
+}
+
+async function retryFailed() {
+  const toRetry = [...failed];
+  failed = [];
+  document.getElementById('retryBtn').disabled = true;
+  log(`\nRetrying ${toRetry.length} failed downloads...`);
+  for (const img of toRetry) {
+    await downloadOne(img);
+    await new Promise(r => setTimeout(r, 300));
+  }
+  document.getElementById('retryBtn').disabled = failed.length === 0;
+}
+</script>
+</body>
+</html>

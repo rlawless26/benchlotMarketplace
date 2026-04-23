@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Benchlot — The woodworker's marketplace">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Benchlot — A search engine for quality hand tools">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Petrona:wght@900&amp;display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400&amp;display=swap');
@@ -23,5 +23,5 @@
     font-size="32"
     fill="#d4aa60"
     letter-spacing="0.05em"
-  >The woodworker's marketplace.</text>
+  >A search engine for quality hand tools.</text>
 </svg>

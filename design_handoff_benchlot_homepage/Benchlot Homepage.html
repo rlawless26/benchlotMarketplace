@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Benchlot — The search engine for premium used hand tools</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bone); color: var(--fg-primary); font-family: var(--font-body); }
+  * { box-sizing: border-box; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+  input, select { font-family: inherit; }
+  @keyframes bl-pulse {
+    0%, 100% { opacity: 0.25; transform: scale(1); }
+    50% { opacity: 0; transform: scale(1.6); }
+  }
+  /* Mode toggle */
+  .mode-toggle {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+    display: inline-flex;
+    background: var(--dark-teal);
+    border-radius: 999px;
+    padding: 4px;
+    box-shadow: 0 8px 24px rgba(12,28,30,0.25), 0 2px 6px rgba(12,28,30,0.18);
+  }
+  .mode-toggle button {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 0;
+    background: transparent;
+    color: rgba(242,240,235,0.6);
+    font: 500 12px var(--font-body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .mode-toggle button.active {
+    background: var(--honey);
+    color: var(--dark-teal);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="Icons.jsx"></script>
+  <script type="text/babel" src="ExtraIcons.jsx"></script>
+  <script type="text/babel" src="Data.jsx"></script>
+  <script type="text/babel" src="ResultCard.jsx"></script>
+  <script type="text/babel" src="FilterRail.jsx"></script>
+  <script type="text/babel" src="Homepage.jsx"></script>
+  <script type="text/babel" src="ResultsState.jsx"></script>
+
+  <script type="text/babel">
+  function App() {
+    const [query, setQuery] = React.useState('');
+    const [sort, setSort] = React.useState('Newest first');
+    const [filters, setFilters] = React.useState({maker:{'Stanley':true}, cond:{'Good':true}});
+    const [alertSaved, setAlertSaved] = React.useState(false);
+
+    // Persist state
+    React.useEffect(() => {
+      try {
+        const raw = localStorage.getItem('benchlot-agg-state');
+        if (raw) {
+          const s = JSON.parse(raw);
+          if (s.query != null) setQuery(s.query);
+          if (s.filters) setFilters(s.filters);
+          if (s.sort) setSort(s.sort);
+        }
+      } catch(e) {}
+    }, []);
+    React.useEffect(() => {
+      localStorage.setItem('benchlot-agg-state', JSON.stringify({query, filters, sort}));
+    }, [query, filters, sort]);
+
+    const toggleFilter = (group, key) => {
+      setFilters(prev => {
+        const next = {...prev, [group]: {...(prev[group]||{})}};
+        if (next[group][key]) delete next[group][key]; else next[group][key] = true;
+        return next;
+      });
+      setAlertSaved(false);
+    };
+
+    const activeFilters = [];
+    Object.entries(filters).forEach(([group, keys]) => {
+      Object.keys(keys || {}).forEach(k => {
+        if (keys[k]) activeFilters.push({group, key:k, label:k});
+      });
+    });
+
+    const hasQuery = !!query.trim();
+    const inResultsMode = hasQuery || activeFilters.length > 0;
+
+    // Filter listings (demo only — keep it simple)
+    let results = window.LISTINGS;
+    if (hasQuery) {
+      const q = query.toLowerCase();
+      results = results.filter(l =>
+        l.title.toLowerCase().includes(q) ||
+        l.maker.toLowerCase().includes(q) ||
+        l.category.toLowerCase().includes(q)
+      );
+    }
+    // If filters produce no matches, fall back to full list so the mock always shows cards
+    if (results.length === 0) results = window.LISTINGS;
+
+    const onSetQuery = (q) => { setQuery(q); setAlertSaved(false); window.scrollTo({top:0, behavior:'instant'}); };
+    const onClearAll = () => { setQuery(''); setFilters({}); setAlertSaved(false); };
+
+    return (
+      <div style={{minHeight:'100vh', display:'flex', flexDirection:'column'}}>
+        <window.TopNav
+          compact={inResultsMode}
+          query={query} onQueryChange={onSetQuery}
+          onClearQuery={onClearAll}
+          onOpenFilters={()=>{}}
+          filterCount={activeFilters.length}
+          sort={sort} onSortChange={setSort}
+        />
+
+        {!inResultsMode && (
+          <>
+            <window.EmptyState onQueryChange={onSetQuery}/>
+            <window.LatestListings listings={window.LISTINGS} onSaveAlert={()=>{}}/>
+          </>
+        )}
+
+        {inResultsMode && (
+          <>
+            <window.BreadcrumbBar
+              query={query}
+              activeFilters={activeFilters}
+              onRemoveFilter={toggleFilter}
+              resultCount={results.length === window.LISTINGS.length ? 47 : results.length}
+              onSaveAlert={()=>setAlertSaved(true)}
+              alertSaved={alertSaved}
+            />
+            <main style={{maxWidth:1280, margin:'0 auto', padding:'28px 40px 80px', width:'100%', flex:1}}>
+              <div style={{display:'grid', gridTemplateColumns:'240px 1fr', gap:40, alignItems:'flex-start'}}>
+                <window.FilterRail active={filters} onToggle={toggleFilter}/>
+                <div>
+                  <window.ResultsStats listings={results}/>
+                  <window.ResultsGrid listings={results} onSaveAlert={()=>{}}/>
+                  <div style={{marginTop:48, textAlign:'center'}}>
+                    <button style={{
+                      padding:'12px 28px', background:'var(--bone-light)',
+                      border:'1px solid var(--border-dark)', borderRadius:6,
+                      font:'600 13px var(--font-body)', color:'var(--spruce)',
+                      letterSpacing:'0.02em', cursor:'pointer',
+                    }}>Load more results</button>
+                    <div style={{marginTop:14, font:'400 12px var(--font-body)', color:'var(--fg-muted)', letterSpacing:'0.02em'}}>
+                      Showing {results.length} of 47 results
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </>
+        )}
+
+        <window.AggregatorFooter/>
+
+        {/* Mode toggle — lets reviewer jump between states */}
+        <div className="mode-toggle">
+          <button className={!inResultsMode ? 'active' : ''} onClick={onClearAll}>
+            Empty state
+          </button>
+          <button className={inResultsMode ? 'active' : ''} onClick={()=>{
+            setQuery('Stanley No. 4');
+            setFilters({maker:{'Stanley':true}, cond:{'Good':true}});
+            window.scrollTo({top:0});
+          }}>
+            Results state
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

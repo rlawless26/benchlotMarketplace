@@ -3,6 +3,7 @@
 **ID:** `03-welcome-full-account`
 **Provider:** Resend
 **Priority:** P4 — nice to have. Existing signup flow works without it.
+**Status:** Marketplace-flavored copy below is pre-pivot. M0 left the runtime JS template untouched (low send volume in aggregator mode). Full rewrite to aggregator positioning is scoped into M4 (public launch readiness).
 
 ## Trigger
 
@@ -17,11 +18,11 @@ User creates a full account via `/auth` (email + password signup).
 | Variable | Type | Example |
 |---|---|---|
 | `{{displayName}}` | string | `Rob` (falls back gracefully if empty) |
-| `{{marketplaceUrl}}` | url | `https://benchlot.com/marketplace` |
+| `{{homeUrl}}` | url | `https://benchlot.com/` (M4 replaces `marketplaceUrl`) |
 | `{{scanUrl}}` | url | `https://benchlot.com/scan` |
-| `{{listToolUrl}}` | url | `https://benchlot.com/seller/onboard-and-list` |
+| `{{listToolUrl}}` | url | Marketplace-only. Unused in aggregator mode. |
 
-## Body copy
+## Body copy (pre-pivot, superseded by M4 rewrite)
 
 ```
 {{displayName}},
@@ -48,3 +49,4 @@ We're early and growing. If you have feedback, ideas, or just want to talk shop,
 
 - If `{{displayName}}` is empty, drop the first line entirely (don't print "undefined,").
 - Founder-voice sign-off.
+- **M4 rewrite TODO:** drop the "List a Tool" CTA, replace with "Save your first search" CTA pointing to the aggregator home. Ship aligned with the public launch copy pass.

@@ -1,0 +1,139 @@
+/* ============================================
+   BENCHLOT BRAND TOKENS
+   Last updated: March 2026
+   ============================================ */
+
+:root {
+  /* ---- Colors ---- */
+  
+  /* Primary */
+  --color-spruce: #1a3030;
+  --color-spruce-light: #2a4a48;
+  --color-spruce-dark: #0e2020;
+  
+  /* Background */
+  --color-bone: #f2f0eb;
+  --color-bone-dark: #e8e6e0;   /* Subtle borders, card hover states */
+  --color-bone-light: #f8f6f2;  /* Elevated card backgrounds */
+  
+  /* Accent */
+  --color-honey: #d4aa60;
+  --color-honey-light: #e0c080;  /* Hover state */
+  --color-honey-dark: #b08a40;   /* Active/pressed state */
+  
+  /* Dark tone */
+  --color-dark-teal: #0c1c1e;
+  --color-dark-teal-light: #1a2e30;  /* Lighter dark sections */
+  
+  /* Semantic */
+  --color-success: #2a6a4a;
+  --color-error: #a83a2a;
+  --color-warning: #b08a40;
+  --color-info: #2a5a6a;
+  
+  /* Text */
+  --color-text-primary: #0c1c1e;       /* Body text on light backgrounds */
+  --color-text-secondary: #4a5a54;      /* Descriptions, details */
+  --color-text-muted: #8a8a80;          /* Captions, timestamps, metadata */
+  --color-text-on-spruce: #f2f0eb;      /* Text on spruce backgrounds */
+  --color-text-on-dark: #f2f0eb;        /* Text on dark teal backgrounds */
+  --color-text-on-dark-muted: #6a8a84;  /* Muted text on dark backgrounds */
+  --color-text-on-honey: #0c1c1e;       /* Button text on honey */
+  --color-text-link: #d4aa60;           /* Links on dark backgrounds */
+  --color-text-price: #d4aa60;          /* Pricing accent */
+  
+  /* Borders */
+  --color-border: #e4e2dc;             /* Default border */
+  --color-border-light: #eceae4;       /* Subtle dividers */
+  --color-border-dark: #d4d2cc;        /* Emphasized borders */
+  
+  /* Badge backgrounds */
+  --color-badge-accent: #d4aa60;       /* Price Drop, New Listing */
+  --color-badge-accent-text: #0c1c1e;
+  --color-badge-highlight: #d6ece4;    /* Barn Find, Rare, ToolScan Verified */
+  --color-badge-highlight-text: #1a3030;
+  --color-badge-neutral: #e8e6e0;      /* Verified Seller, Excellent, Restored */
+  --color-badge-neutral-text: #4a5a54;
+  
+  /* ---- Typography ---- */
+  
+  /* Font families */
+  --font-display: 'Petrona', Georgia, 'Times New Roman', serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Font sizes */
+  --text-hero: 72px;
+  --text-h1: 48px;
+  --text-h2: 32px;
+  --text-h3: 24px;
+  --text-h4: 20px;
+  --text-body: 15px;
+  --text-body-sm: 13px;
+  --text-caption: 11px;
+  --text-label: 10px;
+  --text-nav: 13px;
+  --text-btn: 13px;
+  --text-btn-sm: 11px;
+  --text-price: 16px;
+  --text-wordmark-nav: 20px;
+  
+  /* Font weights */
+  --weight-display-black: 900;  /* Wordmark only */
+  --weight-display-bold: 800;   /* Section headings */
+  --weight-display-semi: 700;   /* Card titles */
+  --weight-display-italic: 500; /* Tagline italic */
+  --weight-body-bold: 700;
+  --weight-body-semi: 600;
+  --weight-body-medium: 500;
+  --weight-body-regular: 400;
+  --weight-body-light: 300;
+  
+  /* Line heights */
+  --leading-tight: 1.1;    /* Display type */
+  --leading-snug: 1.3;     /* Headings */
+  --leading-normal: 1.5;   /* UI text */
+  --leading-relaxed: 1.7;  /* Body copy */
+  
+  /* Letter spacing */
+  --tracking-tight: -1.5px;  /* Hero wordmark */
+  --tracking-snug: -0.5px;   /* Headings */
+  --tracking-normal: 0;      /* Body */
+  --tracking-wide: 0.5px;    /* Buttons, nav */
+  --tracking-wider: 2px;     /* Labels, section headers */
+  
+  /* ---- Spacing ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+  
+  /* ---- Border Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-pill: 9999px;
+  
+  /* ---- Shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(12, 28, 30, 0.05);
+  --shadow-md: 0 2px 8px rgba(12, 28, 30, 0.08);
+  --shadow-lg: 0 4px 16px rgba(12, 28, 30, 0.10);
+  
+  /* ---- Transitions ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ---- Google Fonts Import ---- */
+/* Add to <head>:
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,500;0,700;0,800;0,900;1,500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+*/

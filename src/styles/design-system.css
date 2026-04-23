@@ -417,4 +417,15 @@
   .transition-slow {
     transition: all 400ms ease;
   }
+
+  /* Live-index pulse — aggregator homepage chip. Expanding-fading ring
+     around the static dot. 2s infinite loop. */
+  @keyframes bl-pulse {
+    0%   { opacity: 0.25; transform: scale(1); }
+    50%  { opacity: 0;    transform: scale(1.6); }
+    100% { opacity: 0.25; transform: scale(1); }
+  }
+  .bl-pulse {
+    animation: bl-pulse 2s infinite linear;
+  }
 }

@@ -38,6 +38,16 @@ module.exports = {
         error: '#a83a2a',
         warning: '#b08a40',
         info: '#2a5a6a',
+        // Source-kind palette (aggregator — used for card kind-dots,
+        // source-distribution strip, and kind legends). Keep in sync with
+        // KIND_COLORS in src/firebase/adapters/sources.js.
+        kind: {
+          dealer: '#d4aa60',
+          forum: '#2a6a4a',
+          reddit: '#a83a2a',
+          marketplace: '#2a5a6a',
+          auction: '#6a4a2a',
+        },
       },
       fontFamily: {
         display: ["'Petrona'", 'Georgia', "'Times New Roman'", 'serif'],
@@ -66,6 +76,7 @@ module.exports = {
       },
       backgroundColor: {
         page: '#f2f0eb',
+        'success-bg': '#d6ece4',
       },
       textColor: {
         primary: '#0c1c1e',

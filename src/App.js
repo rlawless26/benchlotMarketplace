@@ -15,6 +15,8 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import LandingPage from './Pages/LandingPage';
 import LandingPageNew from './Pages/LandingPageNew';
 import WaitlistLandingPage from './Pages/WaitlistLandingPage';
+import AggregatorHomePage from './Pages/aggregator/AggregatorHomePage';
+import AlertsPage from './Pages/aggregator/AlertsPage';
 import FoundingSellersPage from './Pages/FoundingSellersPage';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
@@ -52,7 +54,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Feature flags
-import { MARKETPLACE_BETA } from './utils/featureFlags';
+import { MARKETPLACE_BETA, AGGREGATOR_MODE } from './utils/featureFlags';
 
 // Styles
 import './styles/design-system.css';
@@ -75,9 +77,21 @@ function SellerStatusFix() {
   return null;
 }
 
-// Route guard — redirects public-mode users away from marketplace routes
+// Route guard — redirects public-mode users away from marketplace routes.
+// In aggregator mode, only signed-in users can reach the marketplace surface
+// (preserves dev/testing access). In pre-pivot public mode, the old gate still
+// applies. Signed-in users always pass through regardless of flag state.
+//
+// The `loading` check matters: Firebase's onAuthStateChanged is async, so
+// `user` is null for the first render tick after a hard refresh even for
+// signed-in users. Without this guard, MarketplaceRoute redirects before
+// auth rehydrates, then the user never sees the page they asked for.
 function MarketplaceRoute({ element }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (AGGREGATOR_MODE && !user) {
+    return <Navigate to="/?gated=1" replace />;
+  }
   if (!MARKETPLACE_BETA && !user) {
     return <Navigate to="/?gated=1" replace />;
   }
@@ -88,12 +102,17 @@ function MarketplaceRoute({ element }) {
 function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
-  const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA;
-  // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels
-  const isChromelessPage = location.pathname === '/founding-sellers';
+  const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA && !AGGREGATOR_MODE;
+  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE;
+  const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
+  // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
+  // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
+  const isChromelessPage =
+    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts;
 
-  // Public mode: marketplace not yet launched AND user not signed in
-  const isPublicMode = !MARKETPLACE_BETA && !user;
+  // Public mode: aggregator is on OR marketplace not yet launched, AND user not signed in.
+  // Header/Footer adapt their CTAs when publicMode is true.
+  const isPublicMode = (AGGREGATOR_MODE || !MARKETPLACE_BETA) && !user;
 
   return (
     <div className="App min-h-screen flex flex-col bg-stone-50">
@@ -103,8 +122,16 @@ function AppLayout() {
 
       <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
         <Routes>
-          {/* Home: marketplace landing when launched, waitlist otherwise */}
-          <Route path="/" element={MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />} />
+          {/* Home: design-spec aggregator homepage in aggregator mode,
+              legacy marketplace landing otherwise. */}
+          <Route
+            path="/"
+            element={
+              AGGREGATOR_MODE
+                ? <AggregatorHomePage />
+                : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />)
+            }
+          />
 
           {/* App Home (previous landing page, preserved) */}
           <Route path="/app" element={<MarketplaceRoute element={<LandingPageNew />} />} />
@@ -117,8 +144,16 @@ function AppLayout() {
           {/* ToolScan — always public */}
           <Route path="/scan" element={<ToolScanPage />} />
 
-          {/* Founding Sellers campaign landing — always public, no site chrome */}
-          <Route path="/founding-sellers" element={<FoundingSellersPage />} />
+          {/* Aggregator: saved-search management (/alerts). Gated to signed-in
+              users at the page level — anonymous visitors see a sign-in CTA. */}
+          <Route path="/alerts" element={<AlertsPage />} />
+
+          {/* Founding Sellers campaign landing — live seller funnel.
+              Gated off when the aggregator is on; page file preserved for future marketplace relaunch. */}
+          <Route
+            path="/founding-sellers"
+            element={AGGREGATOR_MODE ? <Navigate to="/?gated=1" replace /> : <FoundingSellersPage />}
+          />
 
           {/* Tool Routes — gated */}
           <Route path="/tools/:id" element={<MarketplaceRoute element={<ToolDetailPage />} />} />

@@ -1,0 +1,191 @@
+/**
+ * Benchlot — Colors & Type
+ * Source of truth for design tokens.
+ * Pairs with Tailwind config in the production codebase; uses plain CSS vars here
+ * so designs can be built without Tailwind.
+ */
+
+/* Outfit (UI) via Google Fonts — Petrona is loaded locally from /fonts below */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* Petrona — variable font (covers weights 100–900, upright + italic) */
+@font-face {
+  font-family: 'Petrona';
+  src: url('fonts/Petrona-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/Petrona-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Petrona';
+  src: url('fonts/Petrona-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/Petrona-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Brand Palette ---------- */
+  --spruce:         #1a3030;  /* primary, deep workshop green */
+  --spruce-light:   #2a4a48;
+  --spruce-dark:    #0e2020;
+  --bone:           #f2f0eb;  /* page background, warm off-white */
+  --bone-dark:      #e8e6e0;
+  --bone-light:     #f8f6f2;
+  --honey:          #d4aa60;  /* accent, CTAs, prices */
+  --honey-light:    #e0c080;
+  --honey-dark:     #b08a40;
+  --dark-teal:      #0c1c1e;  /* primary text, darker than spruce */
+  --dark-teal-light:#1a2e30;
+
+  /* ---------- Text ---------- */
+  --fg-primary:     #0c1c1e;  /* body text */
+  --fg-secondary:   #4a5a54;  /* supporting copy */
+  --fg-muted:       #8a8a80;  /* captions, placeholders */
+  --fg-on-spruce:   #f2f0eb;
+  --fg-on-dark:     #f2f0eb;
+  --fg-on-dark-muted: #6a8a84;
+  --fg-on-honey:    #0c1c1e;
+  --fg-price:       #d4aa60;
+
+  /* ---------- Borders ---------- */
+  --border:         #e4e2dc;
+  --border-light:   #eceae4;
+  --border-dark:    #d4d2cc;
+
+  /* ---------- Semantic ---------- */
+  --success:        #2a6a4a;
+  --success-bg:     #d6ece4;
+  --error:          #a83a2a;
+  --error-bg:       #fef2f0;
+  --error-border:   #f0c4be;
+  --warning:        #b08a40;
+  --warning-bg:     #fdf6ec;
+  --info:           #2a5a6a;
+  --info-bg:        #edf5f7;
+
+  /* ---------- Badges ---------- */
+  --badge-accent:         #d4aa60;
+  --badge-accent-text:    #0c1c1e;
+  --badge-highlight:      #d6ece4;
+  --badge-highlight-text: #1a3030;
+  --badge-neutral:        #e8e6e0;
+  --badge-neutral-text:   #4a5a54;
+
+  /* ---------- Fonts ---------- */
+  --font-display: 'Petrona', Georgia, 'Times New Roman', serif;
+  --font-body:    'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'IBM Plex Mono', Menlo, Monaco, Consolas, monospace;
+
+  /* ---------- Type Scale ---------- */
+  --fs-hero:     72px;
+  --fs-h1:       48px;
+  --fs-h2:       32px;
+  --fs-h3:       24px;
+  --fs-h4:       20px;
+  --fs-body:     15px;
+  --fs-body-sm:  13px;
+  --fs-caption:  11px;
+  --fs-label:    10px;
+  --fs-nav:      13px;
+  --fs-btn:      13px;
+  --fs-btn-sm:   11px;
+  --fs-price:    16px;
+  --fs-wordmark: 20px;
+
+  /* ---------- Line height & tracking ---------- */
+  --lh-tight: 1.1;
+  --lh-snug:  1.3;
+  --lh-body:  1.7;
+  --tracking-body:    0.015em;
+  --tracking-wordmark: -1.5px;
+  --tracking-h1:      -0.5px;
+  --tracking-label:   2px;     /* eyebrow / section-label uppercase */
+  --tracking-btn:     0.3px;
+
+  /* ---------- Radii (restrained) ---------- */
+  --radius-btn-sm:  6px;
+  --radius-btn:     8px;
+  --radius-card:   10px;
+  --radius-section:12px;
+  --radius-badge:  16px;  /* pill-ish, used only for badges, NOT buttons */
+
+  /* ---------- Shadow system ---------- */
+  --shadow-sm:         0 1px 2px  rgba(12, 28, 30, 0.05);
+  --shadow-md:         0 2px 8px  rgba(12, 28, 30, 0.08);
+  --shadow-lg:         0 4px 16px rgba(12, 28, 30, 0.10);
+  --shadow-card:       0 2px 8px  rgba(12, 28, 30, 0.08);
+  --shadow-card-hover: 0 4px 16px rgba(12, 28, 30, 0.10);
+
+  /* ---------- Spacing scale (4px base) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-fast:   150ms;
+  --dur-medium: 250ms;
+  --dur-slow:   400ms;
+
+  /* ---------- Layout ---------- */
+  --container-narrow: 55rem;   /* 880px — forms, articles */
+  --container-wide:   80rem;   /* 1280px — landing, marketplace */
+}
+
+/* ---------- Base element styling ---------- */
+body {
+  font-family: var(--font-body);
+  font-size:   var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-body);
+  color:       var(--fg-primary);
+  background-color: var(--bone);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--fg-primary);
+  margin: 0 0 0.5em;
+}
+
+h1 { font-weight: 800; font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--tracking-h1); }
+h2 { font-weight: 700; font-size: var(--fs-h2); line-height: var(--lh-snug); }
+h3 { font-weight: 700; font-size: var(--fs-h3); line-height: var(--lh-snug); }
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--fg-primary);
+  margin: 0 0 0.5em;
+}
+h4 { font-size: var(--fs-h4); }
+
+/* ---------- Semantic type classes ---------- */
+.ds-hero      { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-hero);  line-height: var(--lh-tight); letter-spacing: -1px; color: var(--fg-primary); }
+.ds-display   { font-family: var(--font-display); font-weight: 500; font-style: italic; color: var(--honey); } /* tagline */
+.ds-h1        { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--tracking-h1); }
+.ds-h2        { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h2); line-height: var(--lh-snug); }
+.ds-h3        { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h3); line-height: var(--lh-snug); }
+.ds-h4        { font-family: var(--font-body);    font-weight: 600; font-size: var(--fs-h4); }
+.ds-body      { font-family: var(--font-body); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--fg-primary); }
+.ds-body-sm   { font-family: var(--font-body); font-size: var(--fs-body-sm); line-height: 1.55; color: var(--fg-secondary); }
+.ds-caption   { font-family: var(--font-body); font-size: var(--fs-caption); color: var(--fg-muted); }
+.ds-label     { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--fg-muted); }
+.ds-nav       { font-family: var(--font-body); font-weight: 500; font-size: var(--fs-nav); letter-spacing: var(--tracking-btn); }
+.ds-btn       { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-btn); letter-spacing: var(--tracking-btn); }
+.ds-price     { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-price); color: var(--honey); }
+.ds-wordmark  { font-family: var(--font-display); font-weight: 900; font-size: var(--fs-wordmark); letter-spacing: var(--tracking-wordmark); }
+.ds-tagline   { font-family: var(--font-display); font-weight: 500; font-style: italic; color: var(--honey); }

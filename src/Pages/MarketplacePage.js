@@ -1,5 +1,13 @@
 // src/Pages/MarketplacePage.js
-import React, { useState, useEffect } from 'react';
+//
+// Aggregator search surface. Queries the `externalListings` collection via
+// src/firebase/adapters/externalListingAdapter.js and renders external-mode
+// <ToolListingCard>s that link out to the source dealer/forum.
+//
+// Intentionally no subcategory/condition/verified/location filters — those
+// were marketplace concepts. Price + search + canonical type + source are
+// what survive the pivot.
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ChevronDown,
@@ -7,451 +15,311 @@ import {
   Filter,
   ArrowDownAZ as SortAsc,
   Search,
-  MapPin,
-  Loader
+  Loader,
 } from 'lucide-react';
 
 import ToolListingCard from '../components/ToolListingCard';
-import { getActiveTools, toolSubcategories, toolConditions } from '../firebase/models/toolModel';
+import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
+import { sourceDisplayName } from '../firebase/adapters/sources';
+
+// Kept in sync with functions/normalize/vocabulary.js — duplicated to avoid
+// importing Cloud Functions code into the React bundle. If this list grows,
+// factor to a shared JSON config.
+const CANONICAL_TYPE_OPTIONS = [
+  'All types',
+  'Bench Plane',
+  'Block Plane',
+  'Shoulder Plane',
+  'Router Plane',
+  'Plow Plane',
+  'Rabbet Plane',
+  'Moulding Plane',
+  'Infill Plane',
+  'Scrub Plane',
+  'Combination Plane',
+  'Spokeshave',
+  'Chisel',
+  'Gouge',
+  'Drawknife',
+  'Cabinet Scraper',
+  'Card Scraper',
+  'Knife',
+  'Hand Saw',
+  'Back Saw',
+  'Japanese Saw',
+  'Coping Saw',
+  'Frame Saw',
+  'Brace',
+  'Eggbeater Drill',
+  'Drill Bit',
+  'Auger Bit',
+  'Hammer',
+  'Mallet',
+  'Axe',
+  'Adze',
+  'Hatchet',
+  'Square',
+  'Bevel Gauge',
+  'Marking Gauge',
+  'Mortise Gauge',
+  'Rule',
+  'Caliper',
+  'Level',
+  'Vise',
+  'Clamp',
+  'Holdfast',
+  'Boring Machine',
+  'Shaper',
+];
+
+// Known sources (extend as dealers are added). Display names live in sources.js.
+const SOURCE_OPTIONS = [
+  { slug: '', label: 'All sources' },
+  { slug: 'jimbode', label: sourceDisplayName('jimbode') },
+  { slug: 'hyperkitten', label: sourceDisplayName('hyperkitten') },
+  { slug: 'leach', label: sourceDisplayName('leach') },
+  { slug: 'ebay', label: sourceDisplayName('ebay') },
+];
+
+const PRICE_MAX = 5000;
+const FETCH_LIMIT = 120;
 
 const MarketplacePage = () => {
-  // Use search params for URL filtering
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State for mobile filter panel
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
-  const [selectedCondition, setSelectedCondition] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [selectedType, setSelectedType] = useState('All types');
+  const [selectedSource, setSelectedSource] = useState('');
+  const [priceRange, setPriceRange] = useState([0, PRICE_MAX]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('featured');
+  const [sortBy, setSortBy] = useState('newest');
 
-  // Add loading and error states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Add state for actual tool listings
-  const [toolListings, setToolListings] = useState([]);
+  const [rawListings, setRawListings] = useState([]);
 
   useEffect(() => {
-    document.title = 'Marketplace | Benchlot';
+    document.title = 'Search | Benchlot';
   }, []);
 
-  // Filter categories with subcategories - sourced from toolModel
-  const categoryData = {
-    'All Categories': [],
-    ...toolSubcategories
-  };
-
-  // Categories array for simple iteration
-  const categories = Object.keys(categoryData);
-
-  // Condition options (using the predefined conditions from toolModel.js)
-  const conditions = toolConditions;
-
-  // Load filters from URL parameters when component mounts
+  // Load filters from URL on mount and whenever URL changes.
   useEffect(() => {
-    // Get category from URL
-    const categoryParam = searchParams.get('category');
-    if (categoryParam && categories.includes(categoryParam)) {
-      setSelectedCategory(categoryParam);
+    const typeParam = searchParams.get('type');
+    if (typeParam && CANONICAL_TYPE_OPTIONS.includes(typeParam)) {
+      setSelectedType(typeParam);
     }
 
-    // Get subcategory from URL
-    const subcategoryParam = searchParams.get('subcategory');
-    if (subcategoryParam) {
-      setSelectedSubcategory(subcategoryParam);
+    const sourceParam = searchParams.get('source');
+    if (sourceParam && SOURCE_OPTIONS.some((o) => o.slug === sourceParam)) {
+      setSelectedSource(sourceParam);
     }
 
-    // Get condition filters from URL (comma-separated list)
-    const conditionParam = searchParams.get('condition');
-    if (conditionParam) {
-      const conditionArray = conditionParam.split(',');
-      // Only use valid conditions that are in our predefined list
-      const validConditions = conditionArray.filter(c => conditions.includes(c));
-      setSelectedCondition(validConditions);
-    }
-
-    // Get price range from URL
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     if (minPrice !== null || maxPrice !== null) {
       setPriceRange([
-        minPrice !== null ? parseInt(minPrice) : 0,
-        maxPrice !== null ? parseInt(maxPrice) : 2000
+        minPrice !== null ? parseInt(minPrice, 10) : 0,
+        maxPrice !== null ? parseInt(maxPrice, 10) : PRICE_MAX,
       ]);
     }
 
-    // Get search query from URL
     const queryParam = searchParams.get('query');
-    if (queryParam) {
-      setSearchQuery(queryParam);
-    }
+    if (queryParam) setSearchQuery(queryParam);
 
-    // Get sort parameter from URL
     const sortParam = searchParams.get('sort');
-    if (sortParam && ['featured', 'newest', 'price_low', 'price_high'].includes(sortParam)) {
+    if (sortParam && ['newest', 'price_low', 'price_high'].includes(sortParam)) {
       setSortBy(sortParam);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Update URL when filters change
+  // Push filter state to URL.
   const updateUrlParams = () => {
     const newParams = new URLSearchParams();
-
-    // Only add params that aren't default values
-    if (selectedCategory !== 'All Categories') {
-      newParams.set('category', selectedCategory);
-    }
-
-    if (selectedSubcategory) {
-      newParams.set('subcategory', selectedSubcategory);
-    }
-
-    if (selectedCondition.length > 0) {
-      newParams.set('condition', selectedCondition.join(','));
-    }
-
-    if (priceRange[0] > 0) {
-      newParams.set('minPrice', priceRange[0].toString());
-    }
-
-    if (priceRange[1] < 2000) {
-      newParams.set('maxPrice', priceRange[1].toString());
-    }
-
-    if (searchQuery) {
-      newParams.set('query', searchQuery);
-    }
-
-    if (sortBy !== 'featured') {
-      newParams.set('sort', sortBy);
-    }
-
-    // Update the URL without refreshing the page
+    if (selectedType !== 'All types') newParams.set('type', selectedType);
+    if (selectedSource) newParams.set('source', selectedSource);
+    if (priceRange[0] > 0) newParams.set('minPrice', String(priceRange[0]));
+    if (priceRange[1] < PRICE_MAX) newParams.set('maxPrice', String(priceRange[1]));
+    if (searchQuery) newParams.set('query', searchQuery);
+    if (sortBy !== 'newest') newParams.set('sort', sortBy);
     setSearchParams(newParams);
   };
 
-  // Fetch tools from Firebase when filters change
+  // Fetch listings whenever the filters that change the server query change.
+  // Price + search are applied client-side on the fetched slice.
   useEffect(() => {
-    const loadTools = async () => {
+    const load = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        console.log("Loading marketplace tools...");
-
-        // Prepare filter object for the API call
-        const options = {
-          limitCount: 20
-        };
-
-        if (selectedCategory !== 'All Categories') {
-          options.category = selectedCategory;
-        }
-
-        // Get tools from Firebase
-        const result = await getActiveTools(options);
-
-        // Apply client-side filtering for subcategory, condition, price, and search
-        let filteredTools = result.tools || [];
-
-        // Filter by subcategory if selected
-        if (selectedSubcategory) {
-          filteredTools = filteredTools.filter(tool =>
-            tool.subcategory === selectedSubcategory
-          );
-        }
-
-        // Filter by condition if selected
-        if (selectedCondition.length > 0) {
-          filteredTools = filteredTools.filter(tool =>
-            selectedCondition.includes(tool.condition)
-          );
-        }
-
-        // Filter by price range
-        filteredTools = filteredTools.filter(tool => {
-          const price = tool.price || tool.current_price || 0;
-          return price >= priceRange[0] && price <= priceRange[1];
+        const result = await getAggregatedListings({
+          canonicalType: selectedType !== 'All types' ? selectedType : undefined,
+          source: selectedSource || undefined,
+          sort: sortBy,
+          limit: FETCH_LIMIT,
         });
-
-        // Filter by search query
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          filteredTools = filteredTools.filter(tool =>
-            (tool.name && tool.name.toLowerCase().includes(query)) ||
-            (tool.description && tool.description.toLowerCase().includes(query)) ||
-            (tool.brand && tool.brand.toLowerCase().includes(query))
-          );
-        }
-
-        // Sort tools based on sort option
-        switch (sortBy) {
-          case 'price_low':
-            filteredTools.sort((a, b) => (a.price || 0) - (b.price || 0));
-            break;
-          case 'price_high':
-            filteredTools.sort((a, b) => (b.price || 0) - (a.price || 0));
-            break;
-          case 'newest':
-            filteredTools.sort((a, b) => {
-              if (a.created_at && b.created_at) {
-                return b.created_at.seconds - a.created_at.seconds;
-              }
-              return 0;
-            });
-            break;
-          default:
-            // 'featured' - featured items first, then by creation date
-            filteredTools.sort((a, b) => {
-              if (a.featured && !b.featured) return -1;
-              if (!a.featured && b.featured) return 1;
-              if (a.created_at && b.created_at) {
-                return b.created_at.seconds - a.created_at.seconds;
-              }
-              return 0;
-            });
-        }
-
-        setToolListings(filteredTools);
+        setRawListings(result.tools || []);
       } catch (err) {
-        console.error('Error loading tools:', err);
-        setError('Failed to load tools. Please try again.');
+        console.error('Failed to load aggregated listings:', err);
+        setError('Could not load listings. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
-    loadTools();
-
-    // Update URL whenever filters change
+    load();
     updateUrlParams();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, selectedSubcategory, selectedCondition, priceRange, searchQuery, sortBy]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType, selectedSource, sortBy]);
 
-  // Toggle condition filter
-  const toggleCondition = (condition) => {
-    if (selectedCondition.includes(condition)) {
-      setSelectedCondition(selectedCondition.filter(item => item !== condition));
-    } else {
-      setSelectedCondition([...selectedCondition, condition]);
-    }
-  };
+  // Reflect price + search changes back into the URL without refetching.
+  useEffect(() => {
+    updateUrlParams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceRange, searchQuery]);
 
-  // Handle category change
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    // Reset subcategory when category changes
-    setSelectedSubcategory(null);
-  };
+  // Client-side text + price filter over the current fetched slice.
+  const visibleListings = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return rawListings.filter((t) => {
+      const price = t.price ?? 0;
+      if (price < priceRange[0] || price > priceRange[1]) return false;
+      if (!q) return true;
+      const haystack = [
+        t.name,
+        t.brand,
+        t.category,
+        t.canonical_model,
+        t.canonical_size,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [rawListings, searchQuery, priceRange]);
 
-  // Handle subcategory change
-  const handleSubcategoryChange = (subcategory) => {
-    setSelectedSubcategory(subcategory);
-  };
-
-  // Handle sort change
-  const handleSortChange = (sortValue) => {
-    setSortBy(sortValue);
-  };
-
-  // Reset filters
   const resetFilters = () => {
-    setSelectedCategory('All Categories');
-    setSelectedSubcategory(null);
-    setSelectedCondition([]);
-    setPriceRange([0, 2000]);
+    setSelectedType('All types');
+    setSelectedSource('');
+    setPriceRange([0, PRICE_MAX]);
     setSearchQuery('');
-    setSortBy('featured');
-
-    // Clear URL parameters
+    setSortBy('newest');
     setSearchParams({});
   };
 
+  const filterPanel = (idPrefix = '') => (
+    <>
+      {/* Type */}
+      <div className="mb-6">
+        <h3 className="font-medium text-dark-teal mb-3">Type</h3>
+        <div className="space-y-1 max-h-72 overflow-y-auto pr-2">
+          {CANONICAL_TYPE_OPTIONS.map((type) => (
+            <div key={type} className="flex items-center">
+              <input
+                type="radio"
+                id={`${idPrefix}type-${type}`}
+                name={`${idPrefix}type`}
+                checked={selectedType === type}
+                onChange={() => setSelectedType(type)}
+                className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
+              />
+              <label htmlFor={`${idPrefix}type-${type}`} className="text-sm text-secondary">
+                {type}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Source */}
+      <div className="mb-6">
+        <h3 className="font-medium text-dark-teal mb-3">Source</h3>
+        <div className="space-y-2">
+          {SOURCE_OPTIONS.map((opt) => (
+            <div key={opt.slug || 'all'} className="flex items-center">
+              <input
+                type="radio"
+                id={`${idPrefix}source-${opt.slug || 'all'}`}
+                name={`${idPrefix}source`}
+                checked={selectedSource === opt.slug}
+                onChange={() => setSelectedSource(opt.slug)}
+                className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
+              />
+              <label htmlFor={`${idPrefix}source-${opt.slug || 'all'}`} className="text-sm text-secondary">
+                {opt.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Price */}
+      <div className="mb-6">
+        <h3 className="font-medium text-dark-teal mb-3">Price</h3>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm text-secondary">$</span>
+          <input
+            type="number"
+            min="0"
+            value={priceRange[0]}
+            onChange={(e) => setPriceRange([parseInt(e.target.value, 10) || 0, priceRange[1]])}
+            className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
+          />
+          <span className="text-sm text-secondary">to</span>
+          <span className="text-sm text-secondary">$</span>
+          <input
+            type="number"
+            min="0"
+            value={priceRange[1]}
+            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value, 10) || PRICE_MAX])}
+            className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
+          />
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={PRICE_MAX}
+          value={priceRange[1]}
+          onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value, 10)])}
+          className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+        />
+      </div>
+
+      <button
+        className="w-full py-2 border border-stone-300 rounded-md text-secondary hover:bg-bone text-sm"
+        onClick={resetFilters}
+      >
+        Reset Filters
+      </button>
+    </>
+  );
+
   return (
     <div className="bg-bone min-h-screen">
-      {/* Page content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-medium text-dark-teal mb-2">Browse Tools</h1>
-          <p className="text-secondary">Find quality tools from verified sellers in the Boston area</p>
+          <h1 className="text-3xl font-display font-medium text-dark-teal mb-2">
+            Search quality hand tools
+          </h1>
+          <p className="text-secondary">
+            One search across the dealers, forums, and auctions woodworkers already trust. Every click goes back to the source.
+          </p>
         </div>
 
-        {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters - Desktop */}
+          {/* Desktop filters */}
           <div className="hidden lg:block">
             <div className="bg-bone-light p-6 rounded-lg shadow-md">
               <h2 className="text-lg font-medium mb-4 text-dark-teal">Filters</h2>
-
-              {/* Categories */}
-              <div className="mb-6">
-                <h3 className="font-medium text-dark-teal mb-3">Category</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <div key={category} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`category-${category}`}
-                        name="category"
-                        checked={selectedCategory === category}
-                        onChange={() => handleCategoryChange(category)}
-                        className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                      />
-                      <label htmlFor={`category-${category}`} className="text-sm text-secondary">
-                        {category}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Subcategories - Only show when a category is selected */}
-              {selectedCategory !== 'All Categories' && categoryData[selectedCategory].length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-medium text-dark-teal mb-3">Subcategory</h3>
-                  <div className="space-y-2">
-                    {categoryData[selectedCategory].map((subcategory) => (
-                      <div key={subcategory} className="flex items-center">
-                        <input
-                          type="radio"
-                          id={`subcategory-${subcategory}`}
-                          name="subcategory"
-                          checked={selectedSubcategory === subcategory}
-                          onChange={() => handleSubcategoryChange(subcategory)}
-                          className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                        />
-                        <label htmlFor={`subcategory-${subcategory}`} className="text-sm text-secondary">
-                          {subcategory}
-                        </label>
-                      </div>
-                    ))}
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="subcategory-all"
-                        name="subcategory"
-                        checked={selectedSubcategory === null}
-                        onChange={() => handleSubcategoryChange(null)}
-                        className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                      />
-                      <label htmlFor="subcategory-all" className="text-sm text-secondary">
-                        All {selectedCategory}
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Conditions */}
-              <div className="mb-6">
-                <h3 className="font-medium text-dark-teal mb-3">Condition</h3>
-                <div className="space-y-2">
-                  {conditions.map((condition) => (
-                    <div key={condition} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`condition-${condition}`}
-                        checked={selectedCondition.includes(condition)}
-                        onChange={() => toggleCondition(condition)}
-                        className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                      />
-                      <label htmlFor={`condition-${condition}`} className="text-sm text-secondary">
-                        {condition}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div className="mb-6">
-                <h3 className="font-medium text-dark-teal mb-3">Price Range</h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm text-secondary">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={priceRange[0]}
-                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                    className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
-                  />
-                  <span className="text-sm text-secondary">to</span>
-                  <span className="text-sm text-secondary">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])}
-                    className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
-                  />
-                </div>
-                <div className="mt-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max="2000"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                    className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="mb-6">
-                <h3 className="font-medium text-dark-teal mb-3">Location</h3>
-                <div className="relative">
-                  <div className="flex items-center border border-stone-300 rounded-md px-3 py-2">
-                    <MapPin className="h-4 w-4 text-stone-400 mr-2" />
-                    <input
-                      type="text"
-                      placeholder="Boston, MA"
-                      className="w-full text-sm focus:outline-none"
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <label className="flex items-center text-sm text-secondary">
-                      <input
-                        type="checkbox"
-                        className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                      />
-                      Within 10 miles
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verified Only */}
-              <div className="mb-6">
-                <label className="flex items-center text-secondary">
-                  <input
-                    type="checkbox"
-                    className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                  />
-                  Verified tools only
-                </label>
-              </div>
-
-              {/* Reset Filters */}
-              <button
-                className="w-full py-2 border border-stone-300 rounded-md text-secondary hover:bg-bone text-sm"
-                onClick={resetFilters}
-              >
-                Reset Filters
-              </button>
+              {filterPanel()}
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Main */}
           <div className="lg:col-span-3">
-            {/* Search and sort bar */}
+            {/* Search + sort */}
             <div className="bg-bone-light p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-              {/* Search */}
               <div className="relative w-full md:w-1/2">
                 <input
                   type="text"
@@ -463,7 +331,6 @@ const MarketplacePage = () => {
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-stone-400" />
               </div>
 
-              {/* Mobile filters button */}
               <button
                 className="lg:hidden flex items-center gap-2 px-4 py-2 border border-stone-300 rounded-md text-secondary"
                 onClick={() => setMobileFiltersOpen(true)}
@@ -472,175 +339,109 @@ const MarketplacePage = () => {
                 Filters
               </button>
 
-              {/* Sort dropdown */}
               <div className="relative group w-full md:w-auto">
                 <button className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2 border border-stone-300 rounded-md text-secondary">
                   <div className="flex items-center gap-2">
                     <SortAsc className="h-4 w-4" />
-                    <span>Sort by: {sortBy === 'newest' ? 'Newest' :
-                             sortBy === 'price_low' ? 'Price: Low to High' :
-                             sortBy === 'price_high' ? 'Price: High to Low' :
-                             'Featured'}</span>
+                    <span>
+                      Sort: {sortBy === 'newest' ? 'Newest' : sortBy === 'price_low' ? 'Price: Low to High' : 'Price: High to Low'}
+                    </span>
                   </div>
                   <ChevronDown className="h-4 w-4" />
                 </button>
                 <div className="absolute right-0 top-full mt-1 bg-bone-light shadow-lg rounded-md p-1 min-w-[200px] hidden group-hover:block z-10">
-                  <button
-                    className="w-full text-left px-3 py-2 text-secondary hover:bg-bone-dark hover:text-spruce rounded-md text-sm"
-                    onClick={() => handleSortChange('featured')}
-                  >
-                    Featured
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-secondary hover:bg-bone-dark hover:text-spruce rounded-md text-sm"
-                    onClick={() => handleSortChange('price_low')}
-                  >
-                    Price: Low to High
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-secondary hover:bg-bone-dark hover:text-spruce rounded-md text-sm"
-                    onClick={() => handleSortChange('price_high')}
-                  >
-                    Price: High to Low
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-secondary hover:bg-bone-dark hover:text-spruce rounded-md text-sm"
-                    onClick={() => handleSortChange('newest')}
-                  >
-                    Newest First
-                  </button>
+                  {[
+                    ['newest', 'Newest'],
+                    ['price_low', 'Price: Low to High'],
+                    ['price_high', 'Price: High to Low'],
+                  ].map(([val, label]) => (
+                    <button
+                      key={val}
+                      className="w-full text-left px-3 py-2 text-secondary hover:bg-bone-dark hover:text-spruce rounded-md text-sm"
+                      onClick={() => setSortBy(val)}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Display active filters */}
+            {/* Active filter chips */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              {/* Category filter badge */}
-              {selectedCategory !== 'All Categories' && (
+              {selectedType !== 'All types' && (
                 <span className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
-                  {selectedCategory}
-                  <button
-                    className="ml-1 text-spruce"
-                    onClick={() => handleCategoryChange('All Categories')}
-                  >
+                  {selectedType}
+                  <button className="ml-1 text-spruce" onClick={() => setSelectedType('All types')}>
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               )}
-
-              {/* Subcategory filter badge */}
-              {selectedSubcategory && (
+              {selectedSource && (
                 <span className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
-                  {selectedSubcategory}
-                  <button
-                    className="ml-1 text-spruce"
-                    onClick={() => setSelectedSubcategory(null)}
-                  >
+                  {sourceDisplayName(selectedSource)}
+                  <button className="ml-1 text-spruce" onClick={() => setSelectedSource('')}>
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               )}
-
-              {/* Condition filter badges */}
-              {selectedCondition.map((condition) => (
-                <span key={condition} className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
-                  {condition}
-                  <button
-                    className="ml-1 text-spruce"
-                    onClick={() => toggleCondition(condition)}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-
-              {/* Price filter badge */}
-              {(priceRange[0] > 0 || priceRange[1] < 2000) && (
+              {(priceRange[0] > 0 || priceRange[1] < PRICE_MAX) && (
                 <span className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
                   ${priceRange[0]} - ${priceRange[1]}
-                  <button
-                    className="ml-1 text-spruce"
-                    onClick={() => setPriceRange([0, 2000])}
-                  >
+                  <button className="ml-1 text-spruce" onClick={() => setPriceRange([0, PRICE_MAX])}>
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               )}
-
-              {/* Search query badge */}
               {searchQuery && (
                 <span className="inline-flex items-center bg-bone-dark text-spruce text-xs px-2 py-1 rounded-full">
                   Search: {searchQuery}
-                  <button
-                    className="ml-1 text-spruce"
-                    onClick={() => setSearchQuery('')}
-                  >
+                  <button className="ml-1 text-spruce" onClick={() => setSearchQuery('')}>
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               )}
-
-              {/* Clear all filters button */}
-              {(selectedCategory !== 'All Categories' ||
-                selectedSubcategory ||
-                selectedCondition.length > 0 ||
-                priceRange[0] > 0 ||
-                priceRange[1] < 2000 ||
-                searchQuery) && (
-                <button
-                  className="text-xs text-spruce hover:text-spruce-light ml-2"
-                  onClick={resetFilters}
-                >
+              {(selectedType !== 'All types' || selectedSource || priceRange[0] > 0 || priceRange[1] < PRICE_MAX || searchQuery) && (
+                <button className="text-xs text-spruce hover:text-spruce-light ml-2" onClick={resetFilters}>
                   Clear all
                 </button>
               )}
             </div>
 
-            {/* Results count */}
+            {/* Count */}
             <div className="mb-4">
               <p className="text-secondary">
-                {loading ? 'Loading tools...' : `Showing ${toolListings.length} results`}
+                {loading ? 'Loading listings...' : `Showing ${visibleListings.length} of ${rawListings.length} loaded`}
               </p>
             </div>
 
-            {/* Loading state */}
             {loading && (
               <div className="flex justify-center items-center py-12">
                 <Loader className="h-8 w-8 text-spruce animate-spin" />
-                <span className="ml-2 text-secondary">Loading tools...</span>
+                <span className="ml-2 text-secondary">Loading listings...</span>
               </div>
             )}
 
-            {/* Error state */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-error px-4 py-3 rounded-md mb-6">
                 {error}
               </div>
             )}
 
-            {/* Grid of listings */}
             {!loading && !error && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {toolListings.map((tool) => (
-                  <ToolListingCard
-                    key={tool.id}
-                    tool={tool}
-                    featured={tool.featured}
-                  />
+                {visibleListings.map((tool) => (
+                  <ToolListingCard key={tool.id} tool={tool} />
                 ))}
               </div>
             )}
 
-            {/* Empty state */}
-            {!loading && !error && toolListings.length === 0 && (
+            {!loading && !error && visibleListings.length === 0 && (
               <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-dark-teal mb-2">No tools found</h3>
-                <p className="text-secondary mb-6">Try adjusting your filters or search criteria</p>
-                <button
-                  className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
-                  onClick={resetFilters}
-                >
-                  Reset Filters
+                <h3 className="text-lg font-medium text-dark-teal mb-2">No listings match</h3>
+                <p className="text-secondary mb-6">Try broadening the filters or clearing the search.</p>
+                <button className="px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light" onClick={resetFilters}>
+                  Reset filters
                 </button>
               </div>
             )}
@@ -655,173 +456,20 @@ const MarketplacePage = () => {
           <div className="absolute inset-y-0 right-0 max-w-full flex">
             <div className="relative w-screen max-w-md">
               <div className="h-full flex flex-col bg-bone-light shadow-xl overflow-y-scroll">
-                {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <h2 className="text-lg font-medium text-dark-teal">Filters</h2>
-                  <button
-                    className="text-secondary hover:text-dark-teal"
-                    onClick={() => setMobileFiltersOpen(false)}
-                  >
+                  <button className="text-secondary hover:text-dark-teal" onClick={() => setMobileFiltersOpen(false)}>
                     <X className="h-6 w-6" />
                   </button>
                 </div>
-
-                {/* Filter content - same as desktop but in mobile panel */}
-                <div className="p-4">
-                  {/* Categories */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-dark-teal mb-3">Category</h3>
-                    <div className="space-y-2">
-                      {categories.map((category) => (
-                        <div key={category} className="flex items-center">
-                          <input
-                            type="radio"
-                            id={`mobile-category-${category}`}
-                            name="mobile-category"
-                            checked={selectedCategory === category}
-                            onChange={() => handleCategoryChange(category)}
-                            className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                          />
-                          <label htmlFor={`mobile-category-${category}`} className="text-sm text-secondary">
-                            {category}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Subcategories - Only show when a category is selected */}
-                  {selectedCategory !== 'All Categories' && categoryData[selectedCategory].length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="font-medium text-dark-teal mb-3">Subcategory</h3>
-                      <div className="space-y-2">
-                        {categoryData[selectedCategory].map((subcategory) => (
-                          <div key={subcategory} className="flex items-center">
-                            <input
-                              type="radio"
-                              id={`mobile-subcategory-${subcategory}`}
-                              name="mobile-subcategory"
-                              checked={selectedSubcategory === subcategory}
-                              onChange={() => handleSubcategoryChange(subcategory)}
-                              className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                            />
-                            <label htmlFor={`mobile-subcategory-${subcategory}`} className="text-sm text-secondary">
-                              {subcategory}
-                            </label>
-                          </div>
-                        ))}
-                        <div className="flex items-center">
-                          <input
-                            type="radio"
-                            id="mobile-subcategory-all"
-                            name="mobile-subcategory"
-                            checked={selectedSubcategory === null}
-                            onChange={() => handleSubcategoryChange(null)}
-                            className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                          />
-                          <label htmlFor="mobile-subcategory-all" className="text-sm text-secondary">
-                            All {selectedCategory}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Conditions */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-dark-teal mb-3">Condition</h3>
-                    <div className="space-y-2">
-                      {conditions.map((condition) => (
-                        <div key={condition} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`mobile-condition-${condition}`}
-                            checked={selectedCondition.includes(condition)}
-                            onChange={() => toggleCondition(condition)}
-                            className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                          />
-                          <label htmlFor={`mobile-condition-${condition}`} className="text-sm text-secondary">
-                            {condition}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Price Range */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-dark-teal mb-3">Price Range</h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm text-secondary">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                        className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
-                      />
-                      <span className="text-sm text-secondary">to</span>
-                      <span className="text-sm text-secondary">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])}
-                        className="w-full px-3 py-1 border border-stone-300 rounded-md text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-dark-teal mb-3">Location</h3>
-                    <div className="relative">
-                      <div className="flex items-center border border-stone-300 rounded-md px-3 py-2">
-                        <MapPin className="h-4 w-4 text-stone-400 mr-2" />
-                        <input
-                          type="text"
-                          placeholder="Boston, MA"
-                          className="w-full text-sm focus:outline-none"
-                        />
-                      </div>
-                      <div className="mt-2">
-                        <label className="flex items-center text-sm text-secondary">
-                          <input
-                            type="checkbox"
-                            className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                          />
-                          Within 10 miles
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Verified Only */}
-                  <div className="mb-6">
-                    <label className="flex items-center text-secondary">
-                      <input
-                        type="checkbox"
-                        className="mr-2 h-4 w-4 text-spruce focus:ring-spruce"
-                      />
-                      Verified tools only
-                    </label>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
+                <div className="p-4">{filterPanel('mobile-')}</div>
                 <div className="border-t px-4 py-4 mt-auto">
                   <div className="flex gap-4">
-                    <button
-                      className="flex-1 px-4 py-2 border border-stone-300 rounded-md text-secondary hover:bg-bone"
-                      onClick={resetFilters}
-                    >
+                    <button className="flex-1 px-4 py-2 border border-stone-300 rounded-md text-secondary hover:bg-bone" onClick={resetFilters}>
                       Reset
                     </button>
-                    <button
-                      className="flex-1 px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light"
-                      onClick={() => setMobileFiltersOpen(false)}
-                    >
-                      Apply Filters
+                    <button className="flex-1 px-4 py-2 bg-honey text-dark-teal rounded-md hover:bg-honey-light" onClick={() => setMobileFiltersOpen(false)}>
+                      Apply
                     </button>
                   </div>
                 </div>

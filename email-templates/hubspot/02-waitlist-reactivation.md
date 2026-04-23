@@ -2,11 +2,12 @@
 
 **ID:** `02-waitlist-reactivation`
 **Provider:** HubSpot (marketing email — NOT Resend)
-**Priority:** Send once 3–5 real listings are live on the marketplace.
+**Status:** Pre-pivot. DO NOT SEND. The 2026-04 aggregator pivot replaces this with a waitlist reset email (M4 deliverable) that frames the launch as an aggregator, not a marketplace. Leaving the copy below for reference only.
+**Priority (historical):** Send once 3–5 real listings are live on the marketplace.
 
 ## Trigger
 
-Manual broadcast from HubSpot to the 134 existing waitlist contacts.
+Manual broadcast from HubSpot to the 134 existing waitlist contacts. **Automation paused as part of M0.** Rob to confirm HubSpot-side that this campaign is disabled.
 
 ## HubSpot build notes
 

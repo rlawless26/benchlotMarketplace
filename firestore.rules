@@ -244,6 +244,39 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isServiceAccount() || isAdmin();
     }
+
+    // Aggregator: external listings (normalized, searchable).
+    // Written exclusively by the ingestion scheduled function (service account).
+    // Readable by anyone — this is the public search surface.
+    match /externalListings/{listingId} {
+      allow read;
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
+    // Aggregator: raw source payloads (replay data for re-normalization).
+    // Deliberately NOT publicly readable — these are ~5-10 KB Shopify/API
+    // dumps that no browser needs. Restrict reads to service account + admin
+    // so a future re-normalization job can iterate, but the public UI can't.
+    match /externalListingsRaw/{listingId} {
+      allow read: if isServiceAccount() || isAdmin();
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
+    // Aggregator: saved searches (alerts).
+    // Owned by the user. Each doc describes a {query, filters, sort} that
+    // the matcher function polls against new externalListings arrivals and
+    // emails the owner when a hit appears. Written from the client;
+    // enforced userId === request.auth.uid on every operation.
+    match /saved_searches/{alertId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'query', 'filters', 'sort', 'hash', 'createdAt']);
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
     
     // Feedback or reviews (if implemented)
     match /reviews/{reviewId} {

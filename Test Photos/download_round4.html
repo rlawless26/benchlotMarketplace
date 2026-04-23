@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Benchlot Round 4 (Blind Test) - Download 50 Test Photos</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+h1 { color: #333; }
+.status { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; }
+.ok { color: green; }
+.err { color: red; }
+button { padding: 12px 24px; font-size: 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+button:hover { background: #1d4ed8; }
+button:disabled { background: #999; cursor: not-allowed; }
+.progress { margin: 10px 0; }
+.bar { height: 20px; background: #e5e7eb; border-radius: 10px; overflow: hidden; }
+.fill { height: 100%; background: #2563eb; transition: width 0.3s; }
+.categories { margin: 15px 0; font-size: 14px; color: #555; }
+</style>
+</head>
+<body>
+<h1>Benchlot Round 4: 50 Blind Test Photos</h1>
+<p>These 50 photos are a BLIND test set — completely fresh eBay listings not used in rounds 1-3.</p>
+<p><strong>Tip:</strong> Your browser may ask to allow multiple downloads — click "Allow".</p>
+<div class="categories">
+<strong>Categories:</strong> Bench Planes (8) | Block &amp; Specialty Planes (6) | Saws (6) | Chisels (6) | Marking &amp; Measuring (5) | Sharpening (4) | Other Hand Tools (8) | Workholding (3) | Edge Cases (4)
+</div>
+
+<button id="downloadAll" onclick="startDownload()">Download All 50 Images</button>
+<button id="downloadRemaining" onclick="downloadRemaining()" style="display:none">Retry Failed Downloads</button>
+
+<div class="progress">
+  <div id="progressText">Ready</div>
+  <div class="bar"><div id="progressFill" class="fill" style="width:0%"></div></div>
+</div>
+
+<div id="status" class="status"></div>
+
+<script>
+const IMAGES = [
+  {url: "https://i.ebayimg.com/images/g/n9wAAeSwPgVpqwgT/s-l1600.jpg", name: "r4_stanley_no4_type15.jpg"},
+  {url: "https://i.ebayimg.com/images/g/KnQAAeSwyG9psgRj/s-l1600.jpg", name: "r4_stanley_no4_type19.jpg"},
+  {url: "https://i.ebayimg.com/images/g/OG4AAeSwi5dpjlcF/s-l1600.jpg", name: "r4_stanley_no5_good.jpg"},
+  {url: "https://i.ebayimg.com/images/g/TxUAAeSwLxhpj8Rx/s-l1600.jpg", name: "r4_stanley_no5_fair.jpg"},
+  {url: "https://i.ebayimg.com/images/g/VHYAAeSw7YVppIjW/s-l1600.jpg", name: "r4_stanley_no7_jointer.jpg"},
+  {url: "https://i.ebayimg.com/images/g/74MAAeSw~W5pWTsH/s-l1600.jpg", name: "r4_record_no4_blue.jpg"},
+  {url: "https://i.ebayimg.com/images/g/tJwAAeSwF~Fpsiee/s-l1600.jpg", name: "r4_lie_nielsen_no4.jpg"},
+  {url: "https://i.ebayimg.com/images/g/dfoAAeSw16NpsLT3/s-l1600.jpg", name: "r4_union_bench_plane.jpg"},
+  {url: "https://i.ebayimg.com/images/g/KTUAAeSwbodpsshB/s-l1600.jpg", name: "r4_stanley_60half_block.jpg"},
+  {url: "https://i.ebayimg.com/images/g/KVIAAeSw6MhputrX/s-l1600.jpg", name: "r4_veritas_block_plane.jpg"},
+  {url: "https://i.ebayimg.com/images/g/n4wAAeSwtZdpqdes/s-l1600.jpg", name: "r4_shoulder_plane_ln.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ai4AAeSwU5NpuyKD/s-l1600.jpg", name: "r4_stanley_71_router.jpg"},
+  {url: "https://i.ebayimg.com/images/g/LQ4AAeSwMENpsIQH/s-l1600.jpg", name: "r4_stanley_78_rabbet.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ulkAAeSw1KlpmRlx/s-l1600.jpg", name: "r4_wooden_plow_plane.jpg"},
+  {url: "https://i.ebayimg.com/images/g/Z10AAeSw2NRpmNo9/s-l1600.jpg", name: "r4_disston_d8_handsaw.jpg"},
+  {url: "https://i.ebayimg.com/images/g/JnoAAeSwlpFpQIAP/s-l1600.jpg", name: "r4_simonds_handsaw.jpg"},
+  {url: "https://i.ebayimg.com/images/g/quoAAeSwMdJpl7tg/s-l1600.jpg", name: "r4_dovetail_saw_brass.jpg"},
+  {url: "https://i.ebayimg.com/images/g/xbIAAeSwXlVpg~II/s-l1600.jpg", name: "r4_tenon_saw_backsaw.jpg"},
+  {url: "https://i.ebayimg.com/images/g/HMUAAOSwn1FgD4Wc/s-l1600.jpg", name: "r4_japanese_dozuki.jpg"},
+  {url: "https://i.ebayimg.com/images/g/NuIAAeSwx0VprZLo/s-l1600.jpg", name: "r4_coping_saw.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ONMAAeSw7jRpPzTT/s-l1600.jpg", name: "r4_bench_chisel_single.jpg"},
+  {url: "https://i.ebayimg.com/images/g/lY0AAeSw27lpsLvY/s-l1600.jpg", name: "r4_mortise_chisel.jpg"},
+  {url: "https://i.ebayimg.com/images/g/XBAAAeSwOcNpmQPl/s-l1600.jpg", name: "r4_chisel_set.jpg"},
+  {url: "https://i.ebayimg.com/images/g/~3cAAeSwjtVpR1GK/s-l1600.jpg", name: "r4_japanese_chisel.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ExQAAeSwlYJps~OP/s-l1600.jpg", name: "r4_carving_gouge.jpg"},
+  {url: "https://i.ebayimg.com/images/g/nl4AAeSwmZNpc9CJ/s-l1600.jpg", name: "r4_paring_chisel.jpg"},
+  {url: "https://i.ebayimg.com/images/g/WTMAAeSwwoppnGq8/s-l1600.jpg", name: "r4_marking_gauge.jpg"},
+  {url: "https://i.ebayimg.com/images/g/zHYAAeSwd7Rpuwpz/s-l1600.jpg", name: "r4_combination_square.jpg"},
+  {url: "https://i.ebayimg.com/images/g/dyIAAeSw7ylpm9cj/s-l1600.jpg", name: "r4_sliding_t_bevel.jpg"},
+  {url: "https://i.ebayimg.com/images/g/WV8AAeSwMdhpkjYv/s-l1600.jpg", name: "r4_marking_knife.jpg"},
+  {url: "https://i.ebayimg.com/images/g/n-kAAeSwwdZpfTo3/s-l1600.jpg", name: "r4_dividers_brass.jpg"},
+  {url: "https://i.ebayimg.com/images/g/BK8AAeSw9fppsHy3/s-l1600.jpg", name: "r4_arkansas_stone.jpg"},
+  {url: "https://i.ebayimg.com/images/g/FZ8AAeSwu8RprcKM/s-l1600.jpg", name: "r4_dmt_diamond_plate.jpg"},
+  {url: "https://i.ebayimg.com/images/g/pk8AAeSww5NprF~V/s-l1600.jpg", name: "r4_eclipse_honing_guide.jpg"},
+  {url: "https://i.ebayimg.com/images/g/yE4AAeSwudVpedZ2/s-l1600.jpg", name: "r4_leather_strop.jpg"},
+  {url: "https://i.ebayimg.com/images/g/iWYAAeSwIY9puCJ1/s-l1600.jpg", name: "r4_spokeshave_151.jpg"},
+  {url: "https://i.ebayimg.com/images/g/VlwAAeSwCQFpuXI4/s-l1600.jpg", name: "r4_drawknife.jpg"},
+  {url: "https://i.ebayimg.com/images/g/yr8AAeSw5A9prauF/s-l1600.jpg", name: "r4_card_scraper_single.jpg"},
+  {url: "https://i.ebayimg.com/images/g/CCMAAeSwKuFpce2Y/s-l1600.jpg", name: "r4_card_scraper_set.jpg"},
+  {url: "https://i.ebayimg.com/images/g/JNYAAOSwkx1oEQLL/s-l1600.jpg", name: "r4_brace_ratchet.jpg"},
+  {url: "https://i.ebayimg.com/images/g/zlgAAeSwLfpprJ~b/s-l1600.jpg", name: "r4_wooden_molding_plane.jpg"},
+  {url: "https://i.ebayimg.com/images/g/SBcAAeSwcZVpmjYH/s-l1600.jpg", name: "r4_stanley_48_tongue_groove.jpg"},
+  {url: "https://i.ebayimg.com/images/g/hC0AAeSw5-ZpSMo9/s-l1600.jpg", name: "r4_stanley_80_scraper.jpg"},
+  {url: "https://i.ebayimg.com/images/g/leMAAeSwu55poHor/s-l1600.jpg", name: "r4_record_vise.jpg"},
+  {url: "https://i.ebayimg.com/images/g/CUYAAeSwTFhpev~J/s-l1600.jpg", name: "r4_holdfast.jpg"},
+  {url: "https://i.ebayimg.com/images/g/yD8AAeSwS2JowBHd/s-l1600.jpg", name: "r4_pipe_clamp.jpg"},
+  {url: "https://i.ebayimg.com/images/g/-e8AAeSwRaxpZr6~/s-l1600.jpg", name: "r4_rusty_plane_project.jpg"},
+  {url: "https://i.ebayimg.com/images/g/5toAAeSwvQ5pZaMa/s-l1600.jpg", name: "r4_tool_unusual_angle.jpg"},
+  {url: "https://i.ebayimg.com/images/g/VSUAAeSw-VJov3-R/s-l1600.jpg", name: "r4_tool_cluttered_bench.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ynYAAeSwNEBoIn3L/s-l1600.jpg", name: "r4_eggbeater_drill.jpg"}
+];
+
+let failed = [];
+const statusEl = document.getElementById('status');
+const progressText = document.getElementById('progressText');
+const progressFill = document.getElementById('progressFill');
+
+function log(msg, cls) {
+  statusEl.innerHTML += `<div class="${cls || ''}">${msg}</div>`;
+  statusEl.scrollTop = statusEl.scrollHeight;
+}
+
+async function downloadOne(img) {
+  try {
+    const resp = await fetch(img.url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = u; a.download = img.name;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    return {ok: true, size: blob.size};
+  } catch(e) {
+    return {ok: false, error: e.message};
+  }
+}
+
+async function startDownload() {
+  document.getElementById('downloadAll').disabled = true;
+  failed = [];
+  let done = 0;
+
+  for (const img of IMAGES) {
+    const result = await downloadOne(img);
+    done++;
+    const pct = Math.round(done / IMAGES.length * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${done}/${IMAGES.length} (${pct}%)`;
+
+    if (result.ok) {
+      log(`\u2713 ${img.name} (${(result.size/1024).toFixed(0)} KB)`, 'ok');
+    } else {
+      log(`\u2717 ${img.name}: ${result.error}`, 'err');
+      failed.push(img);
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  if (failed.length > 0) {
+    log(`\n${failed.length} failed. Click "Retry" to try again.`);
+    document.getElementById('downloadRemaining').style.display = 'inline-block';
+  } else {
+    log('\n\u2713 All 50 images downloaded!', 'ok');
+  }
+}
+
+async function downloadRemaining() {
+  const toRetry = [...failed];
+  failed = [];
+  for (const img of toRetry) {
+    const result = await downloadOne(img);
+    if (result.ok) {
+      log(`\u2713 RETRY: ${img.name} (${(result.size/1024).toFixed(0)} KB)`, 'ok');
+    } else {
+      log(`\u2717 RETRY: ${img.name}: ${result.error}`, 'err');
+      failed.push(img);
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+  if (failed.length === 0) {
+    document.getElementById('downloadRemaining').style.display = 'none';
+    log('\n\u2713 All retries succeeded!', 'ok');
+  }
+}
+</script>
+</body>
+</html>

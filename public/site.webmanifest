@@ -1,7 +1,7 @@
 {
   "name": "Benchlot",
   "short_name": "Benchlot",
-  "description": "A marketplace for used hand tools",
+  "description": "A search engine for quality hand tools",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

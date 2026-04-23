@@ -1,0 +1,3362 @@
+[
+  {
+    "filename": "stanley_no4_type11_sweetheart.jpg",
+    "url": "https://i.ebayimg.com/images/g/BwkAAeSwFJtpsY6J/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1910-1918 (Type 11, Sweetheart)",
+      "condition": "Good, user grade",
+      "notable": "Sweetheart-era logo on iron, rosewood handles"
+    },
+    "source": "eBay sold listing - 'Stanley No 4 sweetheart Smoothing Bench Plane'",
+    "why_good_test": "Classic sweetheart-era No. 4, the most common plane on your marketplace. Standard workbench photo angle."
+  },
+  {
+    "filename": "stanley_no4_type12_corrugated.jpg",
+    "url": "https://i.ebayimg.com/images/g/iQ4AAeSwHxpps0EL/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4C",
+      "era": "1919-1924 (Type 12)",
+      "condition": "Good",
+      "notable": "Corrugated sole, pre-war construction"
+    },
+    "source": "eBay sold listing - 'Antique STANLEY Bailey No. 4 Smoothing Bench Plane Corrugated Bottom'",
+    "why_good_test": "Corrugated bottom variant adds identification complexity - AI must distinguish 4 vs 4C."
+  },
+  {
+    "filename": "stanley_no4_type11_1910.jpg",
+    "url": "https://i.ebayimg.com/images/g/JpoAAeSwLE9poyPO/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1910-1918 (Type 11)",
+      "condition": "Very Good",
+      "notable": "Clean example, smooth bottom, dark japanning intact"
+    },
+    "source": "eBay sold listing - 'Stanley Bailey No. 4 Type 11 1910-18 Smooth Bottom Smoothing Hand Plane'",
+    "why_good_test": "Well-preserved Type 11 with clear features. Good baseline for AI accuracy."
+  },
+  {
+    "filename": "stanley_no4_england.jpg",
+    "url": "https://i.ebayimg.com/images/g/2KUAAeSw7mppsuXu/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1960s-1970s (Made in England)",
+      "condition": "Used, working",
+      "notable": "English-made Stanley, blue paint remnants possible"
+    },
+    "source": "eBay sold listing - 'Stanley Bailey No. 4 Wood Plane Made in England'",
+    "why_good_test": "English-made Stanley looks different from US-made. Tests whether AI handles regional variants."
+  },
+  {
+    "filename": "stanley_no4half_type12.jpg",
+    "url": "https://i.ebayimg.com/images/g/c2AAAeSwAZNpsg0A/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4-1/2",
+      "era": "1919-1924 (Type 12, first Sweetheart era)",
+      "condition": "Good, clean",
+      "notable": "Wider body than No. 4, first SW era markings"
+    },
+    "source": "eBay sold listing - 'Stanley Bailey No. 4 1/2 Type 12 (1919-24) First SW era'",
+    "why_good_test": "4-1/2 is easily confused with No. 4 \u2014 tests whether AI can detect the wider body."
+  },
+  {
+    "filename": "stanley_no5_jack_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/zkAAAeSwleRpjixb/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "1930s-1950s",
+      "condition": "Used, vintage patina",
+      "notable": "Standard No. 5, 14-inch sole, typical seller photo"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No5 Jack Plane Woodworking'",
+    "why_good_test": "Bread-and-butter No. 5 jack plane. Must distinguish from No. 4 by length."
+  },
+  {
+    "filename": "stanley_no5_corrugated.jpg",
+    "url": "https://i.ebayimg.com/images/g/NdwAAeSwWatppcCz/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5C",
+      "era": "1930s-1940s",
+      "condition": "Good, brown patina",
+      "notable": "Corrugated sole variant, well-worn working tool"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No. 5 Jack Plane Corrugated Brown'",
+    "why_good_test": "Another corrugated variant. Tests AI on worn, patinated tools with less obvious markings."
+  },
+  {
+    "filename": "stanley_no3_smoothing.jpg",
+    "url": "https://i.ebayimg.com/images/g/zpwAAeSwat9pnOpv/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 5C",
+      "era": "1930s-1950s (Sweetheart)",
+      "condition": "Good, collectible",
+      "notable": "SW marking, good original condition"
+    },
+    "source": "eBay sold listing - 'Vintage STANLEY No 5C SW Jack Plane Nice Collectible'",
+    "why_good_test": "Seller photo with 'collectible' angle \u2014 different presentation style from user/working tool shots."
+  },
+  {
+    "filename": "stanley_60half_block_vintage.jpg",
+    "url": "https://i.ebayimg.com/images/g/ZoQAAeSweeRppCLF/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2",
+      "era": "1940s-1960s",
+      "condition": "Good, old tool patina",
+      "notable": "Adjustable mouth, low angle bed"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley 60-1/2 Low Angle Adjustable Mouth Block Plane'",
+    "why_good_test": "Most common premium block plane. Completely different form factor from bench planes."
+  },
+  {
+    "filename": "stanley_60half_block_vgc.jpg",
+    "url": "https://i.ebayimg.com/images/g/uhsAAeSw0y9pqlr7/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2",
+      "era": "1950s-1970s",
+      "condition": "Very Good",
+      "notable": "Clean, well-preserved example"
+    },
+    "source": "eBay sold listing - 'VINTAGE STANLEY NO 60 1/2 LOW ANGLE BLOCK PLANE- VERY GOOD CONDITION'",
+    "why_good_test": "Same model as above but better condition \u2014 tests if AI is consistent across condition grades."
+  },
+  {
+    "filename": "stanley_60half_modern.jpg",
+    "url": "https://i.ebayimg.com/images/g/xaYAAeSwo~lps07E/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2 (12-139)",
+      "era": "Modern production (post-2000)",
+      "condition": "Like New",
+      "notable": "Modern Stanley reissue, yellow/black packaging era"
+    },
+    "source": "eBay sold listing - 'Stanley No 60 1/2 Low Angle Block Plane 12-139'",
+    "why_good_test": "Modern reissue of a classic. Tests whether AI can distinguish vintage vs modern production."
+  },
+  {
+    "filename": "lie_nielsen_no4_bronze.jpg",
+    "url": "https://i.ebayimg.com/images/g/FqMAAeSw2E9piPD2/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 4",
+      "era": "Modern (2000s-2020s)",
+      "condition": "Excellent",
+      "notable": "Bronze body, cherry handles, premium modern plane"
+    },
+    "source": "eBay sold listing - 'Lie-Nielsen No. 4 Bronze Smooth Plane'",
+    "why_good_test": "Premium modern plane with distinctive bronze color. Tests maker distinction (LN vs Stanley)."
+  },
+  {
+    "filename": "lie_nielsen_no4_early.jpg",
+    "url": "https://i.ebayimg.com/images/g/FccAAeSw1WRpfSOp/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 4",
+      "era": "Early production (1990s-2000s)",
+      "condition": "Very Good, used",
+      "notable": "Early production run, patinated bronze"
+    },
+    "source": "eBay sold listing - 'Lie-Nielsen no 4 Bronze smoothing plane, early production'",
+    "why_good_test": "Same model as above but used/patinated. Tests if AI handles wear on premium tools."
+  },
+  {
+    "filename": "stanley_78_rabbet.jpg",
+    "url": "https://i.ebayimg.com/images/g/6bwAAeSwvD5pg4Sj/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Router Plane",
+      "maker": "Stanley",
+      "model": "No. 71",
+      "era": "1920s-1940s",
+      "condition": "Good, with cutters",
+      "notable": "Open-throat design, comes with extra cutters"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley 71 Router Plane Cutter Collar Clamp'",
+    "why_good_test": "Completely different form factor \u2014 open base, no sole. Tests AI on non-standard plane shapes."
+  },
+  {
+    "filename": "stanley_71_router.jpg",
+    "url": "https://i.ebayimg.com/images/g/DmAAAeSwURJpsu20/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Router Plane",
+      "maker": "Stanley",
+      "model": "No. 71",
+      "era": "1930s-1950s",
+      "condition": "Very Good, with box",
+      "notable": "Complete with original wooden box and extra blades"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley No 71 Router Plane, Extra Blades, Wooden Boxed'",
+    "why_good_test": "Tool shown with accessories/box \u2014 tests if AI can focus on the tool amid clutter."
+  },
+  {
+    "filename": "stanley_71_router_type6.jpg",
+    "url": "https://i.ebayimg.com/images/g/5jwAAeSwpZhpqZ7I/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Router Plane",
+      "maker": "Stanley",
+      "model": "No. 71",
+      "era": "1902-1905 (Type 6)",
+      "condition": "Very Good for age",
+      "notable": "Early production Type 6, nickel plating remnants"
+    },
+    "source": "eBay sold listing - 'STANLEY # 71 - ROUTER PLANE TYPE 6 - 1902-1905'",
+    "why_good_test": "Very early production with different finish. Tests AI on early vs late production differences."
+  },
+  {
+    "filename": "disston_d8_crosscut.jpg",
+    "url": "https://i.ebayimg.com/images/g/RGYAAeSwr35pkjUC/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Disston",
+      "model": "D-8",
+      "era": "1930s-1950s",
+      "condition": "Good, working",
+      "notable": "26-inch blade, classic Disston medallion on handle"
+    },
+    "source": "eBay sold listing - 'Henry Disston & Sons D-8 Hand Saw 26\" Blade'",
+    "why_good_test": "Classic American handsaw. Completely different tool category \u2014 tests breadth of AI's knowledge."
+  },
+  {
+    "filename": "disston_d8_1940s.jpg",
+    "url": "https://i.ebayimg.com/images/g/RbEAAeSwUZtpgo7E/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Disston",
+      "model": "D-8",
+      "era": "1940-1947",
+      "condition": "Good",
+      "notable": "USA medallion visible, wartime production"
+    },
+    "source": "eBay sold listing - 'Vintage DISSTON D-8 HAND SAW 26\" Blade with USA Medallion 1940-1947'",
+    "why_good_test": "WWII-era saw with dateable medallion. Tests AI on dating clues in non-plane tools."
+  },
+  {
+    "filename": "disston_d8_crosscut_rip.jpg",
+    "url": "https://i.ebayimg.com/images/g/NvkAAeSwxF5pnjCS/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Disston",
+      "model": "D-8",
+      "era": "1930s-1940s",
+      "condition": "Very Good",
+      "notable": "9 TPI crosscut, thumbhole handle"
+    },
+    "source": "eBay sold listing - 'VTG Henry Disston D-8 26\" 9 TPI Crosscut Hand Saw Great Condition'",
+    "why_good_test": "Third Disston \u2014 tests if AI is consistently accurate on same maker, different condition shots."
+  },
+  {
+    "filename": "stanley_151_spokeshave.jpg",
+    "url": "https://i.ebayimg.com/images/g/n5wAAeSwLAVppEWp/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5-1/2",
+      "era": "1940s-1960s",
+      "condition": "Good, user grade",
+      "notable": "Wider-body jack plane, smooth bottom"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No.5 1/2 Jack Plane Smooth Bottom Good User'",
+    "why_good_test": "5-1/2 is an uncommon size. Tests if AI can distinguish the subtle width difference."
+  },
+  {
+    "filename": "stanley_sweetheart_no4_modern.jpg",
+    "url": "https://i.ebayimg.com/images/g/jeIAAOSw42hoLdBF/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4 (12-136 Sweetheart reissue)",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Like New",
+      "notable": "Modern Sweetheart reissue, thicker iron, cherry handles"
+    },
+    "source": "eBay sold listing - 'Stanley Sweetheart No.4 Smoothing Bench Plane 12-136'",
+    "why_good_test": "Modern premium reissue of a vintage design. Can AI tell modern from vintage No. 4?"
+  },
+  {
+    "filename": "stanley_5quarter_jack.jpg",
+    "url": "https://i.ebayimg.com/images/g/sisAAeSw7cpppykZ/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Junior Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5-1/4",
+      "era": "1910-1920s (Sweetheart)",
+      "condition": "Good, vintage patina",
+      "notable": "Uncommon size between No. 4 and No. 5, early Sweetheart"
+    },
+    "source": "eBay sold listing - 'Vintage Early STANLEY Sweetheart No. 5 1/4 Junior Jack Plane SW'",
+    "why_good_test": "Very uncommon plane size \u2014 real stress test for AI. Most people haven't heard of a 5-1/4."
+  },
+  {
+    "filename": "stanley_60half_in_box.jpg",
+    "url": "https://i.ebayimg.com/images/g/0O0AAeSw8fVpotiL/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2",
+      "era": "1950s-1960s",
+      "condition": "Excellent, with original box",
+      "notable": "In original cardboard box, barely used"
+    },
+    "source": "eBay sold listing - 'Vintage STANLEY No. 60 1/2 Low Angle Block Plane In orig. Box'",
+    "why_good_test": "Tool photographed in box \u2014 tests if AI can identify tool when partially obscured by packaging."
+  },
+  {
+    "filename": "lie_nielsen_no4_new.jpg",
+    "url": "https://i.ebayimg.com/images/g/QlgAAeSwYsdpf~n1/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 4",
+      "era": "Modern (2010s-2020s)",
+      "condition": "New",
+      "notable": "Brand new, bright bronze, unworn cherry handles"
+    },
+    "source": "eBay sold listing - 'Lie-Nielsen No. 4 Bronze Smooth Plane NEW'",
+    "why_good_test": "Brand new condition vs used \u2014 tests if AI is robust across condition spectrum."
+  },
+  {
+    "filename": "stanley_60half_60p.jpg",
+    "url": "https://i.ebayimg.com/images/g/K20AAeSwBmxpo6b6/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2P",
+      "era": "1960s-1980s",
+      "condition": "Good",
+      "notable": "P suffix indicates plastic knob/lever, later production"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley No. 60-1/2P Low Angle Adjustable Mouth Block Plane'",
+    "why_good_test": "P-suffix variant with plastic parts. Tests if AI detects sub-model differences."
+  },
+  {
+    "filename": "veritas_laj_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/SjUAAeSwxO5pscqC/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Jack Plane",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Very Good",
+      "notable": "Ductile iron body, PM-V11 blade, green accents"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Most popular Veritas plane \u2014 distinctive green/gray look vs Stanley or LN."
+  },
+  {
+    "filename": "veritas_laj_plane_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/nLoAAeSwPo5pl-Bx/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Jack Plane",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Excellent",
+      "notable": "Complete with box, minimal use"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different angle/condition from above \u2014 tests consistency on same model."
+  },
+  {
+    "filename": "veritas_laj_plane_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/EywAAeSw8V9ovuxS/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Jack Plane",
+      "era": "Modern (2000s-2010s)",
+      "condition": "Good, used",
+      "notable": "Working user grade, some patina"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Used Veritas \u2014 tests if AI handles wear on modern premium tools."
+  },
+  {
+    "filename": "veritas_smoothing_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/QCsAAeSwvgdpn3s-/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Smoothing Plane",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Very Good",
+      "notable": "PMV-11 blade, shorter body than LAJ"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Smaller Veritas plane \u2014 tests if AI distinguishes smoother vs jack."
+  },
+  {
+    "filename": "veritas_block_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/4soAAeSwqNtppIG0/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Block Plane",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Excellent",
+      "notable": "PM-V11 blade, Made in Canada"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Veritas block vs Stanley 60-1/2 \u2014 different design language entirely."
+  },
+  {
+    "filename": "veritas_block_plane_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/ZEEAAeSwvTlpJ0Yv/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Block Plane",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Very Good",
+      "notable": "With ball tail handle accessory"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Same model with aftermarket tail \u2014 tests if accessories confuse the AI."
+  },
+  {
+    "filename": "lie_nielsen_no62_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/JXoAAeSwH8pprrnr/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 62",
+      "era": "Modern (2010s-2020s)",
+      "condition": "Excellent",
+      "notable": "Bronze body, cherry handles, low-angle bed"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "LN 62 is their most popular plane \u2014 bronze body, very different from Veritas LAJ."
+  },
+  {
+    "filename": "lie_nielsen_no62_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/57UAAeSw4-NppySy/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 62",
+      "era": "Modern (2000s-2020s)",
+      "condition": "Very Good",
+      "notable": "Some use marks, patinated bronze"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Used LN 62 \u2014 different lighting/condition from above."
+  },
+  {
+    "filename": "lie_nielsen_no62_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/qfcAAeSwDzZpqMv4/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low Angle Jack Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 62",
+      "era": "Modern (2000s-2010s)",
+      "condition": "Very Good",
+      "notable": "Well-used but maintained"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Third LN 62 \u2014 tests consistency across presentation styles."
+  },
+  {
+    "filename": "record_no4_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/RZsAAeSwdUVpqbMX/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Record",
+      "model": "No. 04",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Blue painted body, English-made"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Record vs Stanley No. 4 \u2014 similar size, different maker. Blue paint is key clue."
+  },
+  {
+    "filename": "record_no4_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/-ewAAeSwpOxphNqt/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Record",
+      "model": "No. 04",
+      "era": "1960s-1970s",
+      "condition": "Used, working",
+      "notable": "Vintage Record, 9-inch smooth plane"
+    },
+    "source": "eBay sold listing - 'Vintage RECORD No. 4 9\" Smooth Bench Plane ENGLAND'",
+    "why_good_test": "Well-used Record \u2014 tests if AI can still ID when paint is worn."
+  },
+  {
+    "filename": "record_no4_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/QA4AAeSwTPdphyDG/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Record",
+      "model": "No. 04",
+      "era": "1960s-1980s",
+      "condition": "Good, with storage box",
+      "notable": "With original storage box"
+    },
+    "source": "eBay sold listing - 'Vintage Record No.4 Smoothing Plane with Storage Box'",
+    "why_good_test": "Record in box \u2014 tests if packaging distracts the AI."
+  },
+  {
+    "filename": "record_no5_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/AzoAAeSwXstpor1u/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Record",
+      "model": "No. 05",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Blue body, 14-inch sole"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Record No. 5 \u2014 same as Stanley No. 5 in size. Tests maker distinction."
+  },
+  {
+    "filename": "record_no5_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/ZvYAAeSwV8ppoG6D/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Record",
+      "model": "No. 05",
+      "era": "1960s-1980s",
+      "condition": "Used, working",
+      "notable": "Worn blue paint, user grade"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Worn Record No. 5 \u2014 tests ID when paint clues are faded."
+  },
+  {
+    "filename": "narex_chisel_set_boxed.jpg",
+    "url": "https://i.ebayimg.com/images/g/iz8AAOSwQeBd8RZA/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Bench Chisel Set",
+      "maker": "Narex",
+      "model": "Richter Extra Bevel Edge (5-piece)",
+      "era": "Modern (2020s)",
+      "condition": "New in box",
+      "notable": "5-piece set: 1/4, 3/8, 1/2, 3/4, 1 inch"
+    },
+    "source": "eBay sold listing - 'Narex 5 Pc Boxed Set of Richter Extra Bevel Edge Chisel'",
+    "why_good_test": "New chisel set in presentation box \u2014 very different from planes."
+  },
+  {
+    "filename": "narex_chisel_set_7pc.jpg",
+    "url": "https://i.ebayimg.com/images/g/lW4AAeSwXQJprVmt/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Bench Chisel Set",
+      "maker": "Narex",
+      "model": "Richter Extra Bevel Edge (7-piece)",
+      "era": "Modern (2020s)",
+      "condition": "New",
+      "notable": "Brand new 7-piece set"
+    },
+    "source": "eBay sold listing - 'Narex 7 Piece Set of Richter Extra Bevel Edge Chisel - BRAND NEW SET'",
+    "why_good_test": "Larger set, different packaging \u2014 tests if AI distinguishes set sizes."
+  },
+  {
+    "filename": "narex_chisel_set_wooden.jpg",
+    "url": "https://i.ebayimg.com/images/g/ZhQAAeSwYkNpl0~f/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Bench Chisel Set",
+      "maker": "Narex",
+      "model": "Bevel Edge (4-piece, wooden handles)",
+      "era": "Modern (2020s)",
+      "condition": "New",
+      "notable": "Wooden handles, 4-piece set"
+    },
+    "source": "eBay sold listing - 'Narex Bevel Edge Chisel Set with Wooden Handles, Set of 4 pcs'",
+    "why_good_test": "Different handle style from Richter line \u2014 tests sub-model distinction."
+  },
+  {
+    "filename": "narex_chisel_set_presentation.jpg",
+    "url": "https://i.ebayimg.com/images/g/YXIAAOSw4KdgZJ2V/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Bench Chisel Set",
+      "maker": "Narex",
+      "model": "Standard Bevel Edge (6-piece)",
+      "era": "Modern (2020s)",
+      "condition": "New in wooden box",
+      "notable": "6-piece set in presentation box (853053)"
+    },
+    "source": "eBay sold listing - 'Narex 6 Piece Standard Bevel Edge Chisel Set in Wooden Presentation Box'",
+    "why_good_test": "Premium packaging \u2014 different presentation from loose tools."
+  },
+  {
+    "filename": "japanese_ryoba_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/ylgAAeSwFaZpLQDC/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Unknown Japanese",
+      "model": "Ryoba (double-edge)",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Double-edge pull saw, crosscut and rip teeth"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Completely different saw form factor from Western Disston saws."
+  },
+  {
+    "filename": "japanese_ryoba_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/3SIAAeSwe-FpAmwT/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Unknown Japanese",
+      "model": "Ryoba (double-edge)",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Wooden handle, replaceable blade"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Second ryoba \u2014 different seller, different photo style."
+  },
+  {
+    "filename": "japanese_ryoba_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/n5UAAeSwtWZpR3Vy/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Unknown Japanese",
+      "model": "Ryoba (double-edge)",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Different blade length/style"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Third ryoba variant \u2014 tests consistency."
+  },
+  {
+    "filename": "japanese_dozuki_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/tGAAAOSw2AxmX1q2/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Unknown Japanese",
+      "model": "Dozuki (backsaw)",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Fine-toothed backsaw for joinery"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Dozuki vs ryoba \u2014 tests if AI can distinguish the two Japanese saw types."
+  },
+  {
+    "filename": "japanese_dozuki_gyokucho.jpg",
+    "url": "https://i.ebayimg.com/images/g/kXwAAOSw1vxg7Cee/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Gyokucho",
+      "model": "Razorsaw Dozuki RZ-290",
+      "era": "Modern",
+      "condition": "New",
+      "notable": "180mm blade, fine crosscut teeth"
+    },
+    "source": "eBay sold listing - 'Japanese Razorsaw Dozuki Saw with Blade 180mm - Gyokucho - RZ-290'",
+    "why_good_test": "Named maker dozuki \u2014 tests specific maker identification on Japanese tools."
+  },
+  {
+    "filename": "japanese_dozuki_zsaw.jpg",
+    "url": "https://i.ebayimg.com/images/g/qMYAAOSwvBlg--Bi/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Z-Saw",
+      "model": "Dozuki Ultra-fine 240mm",
+      "era": "Modern",
+      "condition": "New",
+      "notable": "Ultra-fine cut, 240mm blade"
+    },
+    "source": "eBay sold listing - 'Z-saw Japanese Saw Ultra-fine cut pull saw Dozuki 240mm Japan'",
+    "why_good_test": "Another named maker \u2014 different packaging/presentation."
+  },
+  {
+    "filename": "marking_gauge_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/QFoAAeSwT-pot0pc/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Marking Gauge",
+      "maker": "Unknown",
+      "model": "Wooden marking gauge",
+      "era": "Vintage (pre-1960s)",
+      "condition": "Good",
+      "notable": "Traditional wooden stem and head"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Simple hand tool \u2014 completely different form factor from planes and saws."
+  },
+  {
+    "filename": "marking_gauge_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/SaIAAeSw6R9phVlK/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Marking Gauge",
+      "maker": "Unknown",
+      "model": "Wooden marking gauge",
+      "era": "Vintage",
+      "condition": "Good, user grade",
+      "notable": "Brass fittings, rosewood or beech"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different style marking gauge \u2014 tests breadth."
+  },
+  {
+    "filename": "marking_gauge_stanley95.jpg",
+    "url": "https://i.ebayimg.com/images/g/pdkAAeSwiK9pUfcb/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Marking Gauge",
+      "maker": "Stanley",
+      "model": "No. 95 Mortise & Butt Gauge",
+      "era": "Vintage (1940s-1960s)",
+      "condition": "Good",
+      "notable": "Cast iron, dual-pin mortise gauge"
+    },
+    "source": "eBay sold listing - 'VINTAGE STANLEY NO. 95 MORTISE AND BUTT MARKING GAUGE'",
+    "why_good_test": "Stanley gauge \u2014 a non-plane Stanley tool. Tests maker recognition on unexpected tool type."
+  },
+  {
+    "filename": "stanley_151_spokeshave_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/jo0AAeSwjdJppifs/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Stanley",
+      "model": "No. 151",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Flat sole, adjustable mouth"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Distinctive form \u2014 low-profile body with wing handles."
+  },
+  {
+    "filename": "stanley_151_spokeshave_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/xDEAAeSwdWNpqUAu/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Stanley",
+      "model": "No. 151",
+      "era": "1950s-1970s",
+      "condition": "Very Good",
+      "notable": "Clean example, nickel plating intact"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Better condition 151 \u2014 tests consistency."
+  },
+  {
+    "filename": "stanley_151_spokeshave_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/dfUAAeSwEJxppKBx/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Stanley",
+      "model": "No. 151",
+      "era": "1930s-1960s",
+      "condition": "Good, vintage",
+      "notable": "Vintage Stanley spokeshave"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley No. 151 Spoke Shave'",
+    "why_good_test": "Third spokeshave \u2014 different photo angle."
+  },
+  {
+    "filename": "brace_and_bit_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/mLcAAOSwV5tm2L~l/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Brace (Hand Drill)",
+      "maker": "Unknown",
+      "model": "Ratchet brace",
+      "era": "Vintage (pre-1960s)",
+      "condition": "Good",
+      "notable": "Sweep handle, ratchet mechanism"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Unusual form factor \u2014 crank-style tool, nothing like a plane."
+  },
+  {
+    "filename": "brace_and_bit_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/TDkAAeSwsV9pqO6K/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Brace (Hand Drill)",
+      "maker": "Unknown",
+      "model": "Ratchet brace",
+      "era": "Vintage",
+      "condition": "Good, working",
+      "notable": "Wood and metal construction"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different brace, different photo style."
+  },
+  {
+    "filename": "brace_and_bit_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/xMIAAeSwpWRpVXsd/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Brace (Hand Drill)",
+      "maker": "Unknown",
+      "model": "Ratchet brace with bits",
+      "era": "Vintage",
+      "condition": "Good",
+      "notable": "Shown with auger bits"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Brace with accessories \u2014 tests if AI focuses on the main tool."
+  },
+  {
+    "filename": "combination_square_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/0e8AAeSwcKNpsywW/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Combination Square",
+      "maker": "Unknown",
+      "model": "12-inch combination square",
+      "era": "Vintage",
+      "condition": "Good",
+      "notable": "Steel blade, cast iron head"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Layout/measuring tool \u2014 tests non-cutting tool identification."
+  },
+  {
+    "filename": "combination_square_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/ZzEAAeSwoKxpX~ib/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Combination Square",
+      "maker": "Unknown",
+      "model": "Combination square",
+      "era": "Vintage",
+      "condition": "Good",
+      "notable": "With level vial in head"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different square, different angle."
+  },
+  {
+    "filename": "combination_square_starrett.jpg",
+    "url": "https://i.ebayimg.com/images/g/k1IAAeSwd6FprBbh/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Combination Square Set",
+      "maker": "Starrett",
+      "model": "No. 12 with protractor head",
+      "era": "Vintage (1950s-1970s)",
+      "condition": "Good",
+      "notable": "Premium Starrett with protractor and 45-degree attachments"
+    },
+    "source": "eBay sold listing - 'Vintage L S Starrett Combination Square W/ Protractor Head & 45 degree'",
+    "why_good_test": "Premium measuring tool with multiple heads \u2014 complex identification."
+  },
+  {
+    "filename": "wooden_molding_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/8IMAAOSw0p9oAQq3/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Wooden Molding Plane",
+      "maker": "Unknown",
+      "model": "Hollows and rounds",
+      "era": "19th century",
+      "condition": "Good for age",
+      "notable": "Beechwood body, wedge-held iron"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Entirely wooden construction \u2014 radically different from metal planes."
+  },
+  {
+    "filename": "wooden_molding_plane_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/HmEAAeSw7cpppzsV/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Wooden Molding Plane",
+      "maker": "Unknown",
+      "model": "Molding plane",
+      "era": "19th century",
+      "condition": "Good, antique",
+      "notable": "Profile-specific iron"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different molding profile \u2014 tests if AI recognizes the category."
+  },
+  {
+    "filename": "wooden_molding_plane_3.jpg",
+    "url": "https://i.ebayimg.com/images/g/OBcAAeSwojBpqFHg/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Wooden Molding Plane",
+      "maker": "Unknown",
+      "model": "Side bead or ogee plane",
+      "era": "19th century",
+      "condition": "Fair to Good",
+      "notable": "Worn but usable"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Third wooden plane \u2014 different condition/wear level."
+  },
+  {
+    "filename": "stanley_no78_rabbet_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/URsAAeSw4mtpY4UT/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Rabbet Plane",
+      "maker": "Stanley",
+      "model": "No. 78",
+      "era": "1930s-1960s",
+      "condition": "Good",
+      "notable": "Fence and depth stop, dual position iron"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Distinctive specialty plane \u2014 narrow body, exposed blade at edge."
+  },
+  {
+    "filename": "stanley_no78_rabbet_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/XOkAAeSw5ItpYtuc/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Rabbet Plane",
+      "maker": "Stanley",
+      "model": "No. 78",
+      "era": "1940s-1970s",
+      "condition": "Good, user grade",
+      "notable": "Working tool with fence attached"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Different photo angle of No. 78."
+  },
+  {
+    "filename": "stanley_no7_jointer_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/H-EAAeSwVUxppdIS/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jointer Plane",
+      "maker": "Stanley",
+      "model": "No. 7",
+      "era": "1930s-1960s",
+      "condition": "Good",
+      "notable": "22-inch sole, longest common bench plane"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Big plane \u2014 tests if AI recognizes the much longer body."
+  },
+  {
+    "filename": "stanley_no7_jointer_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/bnkAAeSw3ylpqiPv/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jointer Plane",
+      "maker": "Stanley",
+      "model": "No. 7",
+      "era": "1940s-1960s",
+      "condition": "Good, user grade",
+      "notable": "Heavy working tool"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Second No. 7 \u2014 different condition/presentation."
+  },
+  {
+    "filename": "stanley_no220_block_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/ADYAAeSwH4lpm3f5/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Stanley",
+      "model": "No. 220",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Simple fixed-mouth block plane"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Budget block plane \u2014 simpler than 60-1/2. Tests model distinction."
+  },
+  {
+    "filename": "stanley_no220_block_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/SYkAAeSwDCxpd2eH/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Stanley",
+      "model": "No. 220",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Common utility block plane"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Second 220 \u2014 tests consistency."
+  },
+  {
+    "filename": "stanley_no3_smoothing_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/R08AAeSwNKxppvMr/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 3",
+      "era": "1930s-1960s",
+      "condition": "Good",
+      "notable": "Smaller than No. 4, 8-inch sole"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "No. 3 vs No. 4 \u2014 smaller but looks similar. Key size distinction."
+  },
+  {
+    "filename": "stanley_no3_smoothing_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/4~0AAeSwtj1pqLH0/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 3",
+      "era": "1940s-1960s",
+      "condition": "Good, user grade",
+      "notable": "Well-used working tool"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Second No. 3 \u2014 tests consistency."
+  },
+  {
+    "filename": "card_scraper_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/V2gAAeSweYpoClte/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Card Scraper",
+      "maker": "Unknown",
+      "model": "Rectangular card scraper",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Simple steel rectangle, burnished edge"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Extremely simple tool \u2014 just a piece of steel. Maximum form-factor challenge."
+  },
+  {
+    "filename": "card_scraper_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/rfAAAeSwiXpoxcxl/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Card Scraper",
+      "maker": "Unknown",
+      "model": "Card scraper",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Flexible steel scraper"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Second scraper \u2014 different seller photo style."
+  },
+  {
+    "filename": "card_scraper_set.jpg",
+    "url": "https://i.ebayimg.com/images/g/0ksAAeSwj8ZpQyt3/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Card Scraper Set",
+      "maker": "Unknown",
+      "model": "Multi-shape scraper set",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Set with multiple profiles (gooseneck, rectangular, curved)"
+    },
+    "source": "eBay sold listing",
+    "why_good_test": "Scraper set with multiple shapes \u2014 tests multi-tool recognition."
+  },
+  {
+    "filename": "bench_chisel_single_stanley_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/p2IAAeSwqutpm5UL/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Chisel",
+      "maker": "Stanley",
+      "model": "No. 750",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Bevel-edge bench chisel, single tool, plastic handle typical of later production"
+    },
+    "why_good_test": "Tests individual chisel identification vs chisel sets; Stanley 750 is the most common vintage bench chisel"
+  },
+  {
+    "filename": "bench_chisel_single_marples.jpg",
+    "url": "https://i.ebayimg.com/images/g/-C0AAeSw77Vpm8iR/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Chisel",
+      "maker": "Marples",
+      "model": "Blue Chip",
+      "era": "1970s-1990s",
+      "condition": "Good/Fair",
+      "notable": "Blue plastic handle, bevel-edge, Sheffield steel"
+    },
+    "why_good_test": "Tests maker distinction between Stanley and Marples; Blue Chip line is very common on secondary market"
+  },
+  {
+    "filename": "bench_chisel_single_wide.jpg",
+    "url": "https://i.ebayimg.com/images/g/9T8AAeSwAd1paOxN/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Chisel",
+      "maker": "Various",
+      "model": "Wide bench chisel (1.5-2 inch)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Wide blade, useful for testing size estimation"
+    },
+    "why_good_test": "Tests whether AI can estimate chisel width and distinguish wide chisels from standard sizes"
+  },
+  {
+    "filename": "mortise_chisel_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/HgIAAeSwnrxpsNHu/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Mortise Chisel",
+      "maker": "Various",
+      "model": "English-pattern mortise chisel",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "Thick rectangular cross-section, leather-washer handle, designed for mallet use"
+    },
+    "why_good_test": "Tests distinction between mortise chisel (thick) and bench chisel (thin); very different tool despite similar appearance"
+  },
+  {
+    "filename": "mortise_chisel_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/iMgAAeSwEaNpp3sz/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Mortise Chisel",
+      "maker": "Various",
+      "model": "Sash mortise or pig sticker",
+      "era": "Early-mid 20th century",
+      "condition": "Fair/Project",
+      "notable": "Heavy-duty mortising chisel, may show significant wear"
+    },
+    "why_good_test": "Fair/Project condition adds difficulty; tests condition assessment alongside type identification"
+  },
+  {
+    "filename": "paring_chisel_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/im0AAOSwlOlnvkq-/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Paring Chisel",
+      "maker": "Various",
+      "model": "Long paring chisel",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Long thin blade (10+ inches), designed for hand pressure only, no mallet"
+    },
+    "why_good_test": "Tests distinction between paring chisel (long, thin) and bench chisel (shorter, sturdier)"
+  },
+  {
+    "filename": "carving_gouge_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/mNkAAeSwx-RprGk4/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Carving Gouge",
+      "maker": "Various",
+      "model": "Single carving gouge",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Curved cutting edge, vintage wooden handle, used for wood carving"
+    },
+    "why_good_test": "Tests gouge vs chisel distinction; gouges have curved profiles vs flat chisel edges"
+  },
+  {
+    "filename": "carving_gouge_set_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/HQwAAOSwSwJdC-nd/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Carving Gouge Set",
+      "maker": "Various",
+      "model": "Carving tool set in roll or case",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Set of 6-12 carving gouges in a roll or wooden case"
+    },
+    "why_good_test": "Tests set detection; multiple tools in one photo, should still identify as carving gouges not bench chisels"
+  },
+  {
+    "filename": "japanese_chisel_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/98oAAeSwouNpUfme/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Japanese Chisel",
+      "maker": "Japanese",
+      "model": "Oire nomi",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Laminated steel blade, wooden handle with metal hoop, hollow-ground back"
+    },
+    "why_good_test": "Tests Japanese vs Western chisel distinction; very different construction and handle style"
+  },
+  {
+    "filename": "firmer_chisel_vintage.jpg",
+    "url": "https://i.ebayimg.com/images/g/3G8AAeSwQ6Rpr4RE/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Firmer Chisel",
+      "maker": "Various",
+      "model": "Firmer chisel (flat sides)",
+      "era": "Early-mid 20th century",
+      "condition": "Good/Fair",
+      "notable": "Flat sides (not bevel-edge), older style, wooden handle"
+    },
+    "why_good_test": "Tests firmer vs bevel-edge distinction; firmer chisels have flat rectangular cross-section"
+  },
+  {
+    "filename": "chisel_set_stanley_vintage.jpg",
+    "url": "https://i.ebayimg.com/images/g/Rc8AAeSwle9pq1nG/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Chisel Set",
+      "maker": "Stanley",
+      "model": "Vintage chisel set in roll",
+      "era": "1950s-1970s",
+      "condition": "Fair",
+      "notable": "Multiple chisels in a canvas or leather roll, used condition"
+    },
+    "why_good_test": "Tests set identification with Stanley branding; used condition adds difficulty"
+  },
+  {
+    "filename": "dovetail_saw_ln_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/~PEAAeSwHTRpm9xH/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Dovetail Saw",
+      "maker": "Lie-Nielsen/Bad Axe",
+      "model": "Dovetail saw",
+      "era": "2000s-present",
+      "condition": "Excellent/Good",
+      "notable": "Brass back, turned handle, premium modern dovetail saw"
+    },
+    "why_good_test": "Tests premium modern saw identification; brass back and turned handle are distinctive"
+  },
+  {
+    "filename": "dovetail_saw_vintage_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/sj4AAeSwGY9pVZvx/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Dovetail Saw",
+      "maker": "Disston/Tyzack",
+      "model": "Vintage brass-backed dovetail saw",
+      "era": "Early-mid 20th century",
+      "condition": "Good/Fair",
+      "notable": "Brass or steel back, open pistol-grip handle, vintage construction"
+    },
+    "why_good_test": "Tests vintage vs modern saw distinction; older handle style and patina"
+  },
+  {
+    "filename": "tenon_saw_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/hoYAAeSwduhpiqSF/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Tenon Saw",
+      "maker": "Various",
+      "model": "Full-size tenon/backsaw (12-14 inch)",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "Larger than dovetail saw, steel or brass back, vintage"
+    },
+    "why_good_test": "Tests size distinction between tenon saw (larger) and dovetail saw (smaller)"
+  },
+  {
+    "filename": "tenon_saw_veritas.jpg",
+    "url": "https://i.ebayimg.com/images/g/H5oAAeSwjbBphPm0/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Tenon Saw",
+      "maker": "Veritas",
+      "model": "Veritas tenon saw",
+      "era": "2000s-present",
+      "condition": "Excellent/Good",
+      "notable": "Modern premium tenon saw, distinctive Veritas design"
+    },
+    "why_good_test": "Tests modern premium saw maker identification; Veritas has distinctive design language"
+  },
+  {
+    "filename": "coping_saw_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/V3sAAeSw3I9osJeN/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Coping Saw",
+      "maker": "Various",
+      "model": "Standard coping saw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "U-shaped frame, thin blade for curved cuts, turned handle"
+    },
+    "why_good_test": "Completely different saw type from handsaws and backsaws; tests frame saw recognition"
+  },
+  {
+    "filename": "fret_saw_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/leMAAeSwK3lo9AsE/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Fret Saw",
+      "maker": "Various",
+      "model": "Deep-throated fret saw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Deeper throat than coping saw, very fine blade, for delicate curved work"
+    },
+    "why_good_test": "Tests fret saw vs coping saw distinction; similar frame shape but different proportions"
+  },
+  {
+    "filename": "frame_saw_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/PNQAAeSwmOFpmjGv/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Frame Saw",
+      "maker": "Various",
+      "model": "Wooden frame/bow/turning saw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Wooden H-frame with tensioned blade, traditional design"
+    },
+    "why_good_test": "Unique tool type unlike any metal-framed saw; tests wooden frame saw recognition"
+  },
+  {
+    "filename": "handsaw_atkins_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/oEAAAOSwN1FgxF~e/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Atkins",
+      "model": "Atkins handsaw",
+      "era": "Early-mid 20th century",
+      "condition": "Fair",
+      "notable": "Non-Disston handsaw, Atkins was a major competitor"
+    },
+    "why_good_test": "Tests maker distinction beyond Disston; Atkins saws have different medallions and etch patterns"
+  },
+  {
+    "filename": "sharpening_stone_arkansas.jpg",
+    "url": "https://i.ebayimg.com/images/g/segAAeSwedFpg~rQ/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sharpening Stone",
+      "maker": "Various",
+      "model": "Arkansas oilstone in wooden box",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Natural Arkansas stone, wooden storage box, used with honing oil"
+    },
+    "why_good_test": "New tool category entirely; tests sharpening equipment recognition"
+  },
+  {
+    "filename": "sharpening_stone_waterstone.jpg",
+    "url": "https://i.ebayimg.com/images/g/DAUAAeSwulxpV3xf/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sharpening Stone",
+      "maker": "King/Shapton/Naniwa",
+      "model": "Japanese waterstone",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Synthetic Japanese waterstone, used with water, often color-coded by grit"
+    },
+    "why_good_test": "Tests Japanese vs Arkansas stone distinction; different appearance and use method"
+  },
+  {
+    "filename": "diamond_plate_dmt.jpg",
+    "url": "https://i.ebayimg.com/images/g/wuUAAeSwYIZpdNiC/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Diamond Sharpening Plate",
+      "maker": "DMT",
+      "model": "Diamond plate",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Diamond-coated steel plate, flat sharpening surface, color-coded by grit"
+    },
+    "why_good_test": "Tests diamond plate vs stone distinction; very different construction"
+  },
+  {
+    "filename": "honing_guide_eclipse.jpg",
+    "url": "https://i.ebayimg.com/images/g/dOcAAeSwx0VpqI-c/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Honing Guide",
+      "maker": "Eclipse",
+      "model": "Eclipse-style honing guide",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Side-clamping roller guide for sharpening chisels and plane irons"
+    },
+    "why_good_test": "Small accessory tool; tests whether AI can identify sharpening accessories"
+  },
+  {
+    "filename": "honing_guide_veritas.jpg",
+    "url": "https://i.ebayimg.com/images/g/IWQAAeSwE51phPOu/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Honing Guide",
+      "maker": "Veritas",
+      "model": "Mk.II Honing Guide",
+      "era": "2000s-present",
+      "condition": "Good",
+      "notable": "Premium honing guide with registration jig, green/black Veritas design"
+    },
+    "why_good_test": "Tests premium vs budget honing guide distinction; Veritas Mk.II is very distinctive"
+  },
+  {
+    "filename": "strop_leather_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/0aMAAeSw1WRpfqmp/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Leather Strop",
+      "maker": "Various",
+      "model": "Leather paddle strop",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Leather surface on wooden paddle, used for final honing/polishing"
+    },
+    "why_good_test": "Unusual tool category; tests whether AI recognizes strops as sharpening equipment"
+  },
+  {
+    "filename": "shoulder_plane_ln_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/6x0AAeSwMENprfK8/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Shoulder Plane",
+      "maker": "Lie-Nielsen",
+      "model": "Shoulder plane",
+      "era": "2000s-present",
+      "condition": "Excellent/Good",
+      "notable": "Bronze body, full-width blade, for trimming tenon shoulders and rabbets"
+    },
+    "why_good_test": "Tests specialty plane identification; shoulder planes have blade flush with sides"
+  },
+  {
+    "filename": "shoulder_plane_record_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/pxwAAeSwNG5pQxbp/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Shoulder/Bullnose Plane",
+      "maker": "Record",
+      "model": "No. 073 or similar",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Small bullnose/shoulder plane, cast iron, blue Record finish"
+    },
+    "why_good_test": "Tests vintage vs modern shoulder plane; Record 073 is a classic design"
+  },
+  {
+    "filename": "stanley_45_plow_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/1QEAAeSwiCBprwa5/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Combination Plane",
+      "maker": "Stanley",
+      "model": "No. 45",
+      "era": "1900s-1950s",
+      "condition": "Good",
+      "notable": "Multi-purpose plane with interchangeable cutters, fence, and depth stop"
+    },
+    "why_good_test": "Complex tool with many parts; tests recognition of a distinctive but unusual plane type"
+  },
+  {
+    "filename": "stanley_45_plow_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/6aIAAeSwHmtpCpcg/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Combination Plane",
+      "maker": "Stanley",
+      "model": "No. 45",
+      "era": "1900s-1950s",
+      "condition": "Fair/Project",
+      "notable": "Same model as above but in worse condition, may be missing parts or rusty"
+    },
+    "why_good_test": "Tests condition assessment on a complex specialty plane; Fair/Project grade"
+  },
+  {
+    "filename": "scrub_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/dp4AAeSwbodptzbw/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Scrub Plane",
+      "maker": "ECE/Stanley",
+      "model": "Scrub plane (ECE or Stanley No. 40)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Narrow body, heavily cambered iron for aggressive stock removal"
+    },
+    "why_good_test": "Uncommon plane type; tests distinction from standard bench planes"
+  },
+  {
+    "filename": "tongue_groove_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/xFoAAeSweXppVDrM/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Tongue and Groove Plane",
+      "maker": "Various",
+      "model": "Matched pair tongue and groove planes",
+      "era": "19th-early 20th century",
+      "condition": "Good/Fair",
+      "notable": "Wooden body, matched pair, one cuts tongue and one cuts groove"
+    },
+    "why_good_test": "Rare specialty plane type; tests recognition of wooden-bodied specialty planes"
+  },
+  {
+    "filename": "stanley_no220_block.jpg",
+    "url": "https://i.ebayimg.com/images/g/mkQAAeSwOcNpm10u/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Stanley",
+      "model": "No. 220",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Budget block plane, no adjustable mouth, simple design"
+    },
+    "why_good_test": "REPLACEMENT photo for bad Round 1 image; tests basic block plane identification"
+  },
+  {
+    "filename": "block_plane_9half_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/q64AAeSwHxpppyvC/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Stanley",
+      "model": "No. 9-1/2",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Standard angle block plane with adjustable mouth"
+    },
+    "why_good_test": "Tests distinction between No. 9-1/2 (standard angle) and No. 60-1/2 (low angle) block planes"
+  },
+  {
+    "filename": "drawknife_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/BoUAAeSws09pmfkZ/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Drawknife",
+      "maker": "Various",
+      "model": "Standard drawknife",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Two-handled blade, pulled toward user, for debarking and shaping"
+    },
+    "why_good_test": "New tool category; distinctive shape unlike any other hand tool"
+  },
+  {
+    "filename": "drawknife_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/wDcAAeSwWK1pr~AJ/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Drawknife",
+      "maker": "Various",
+      "model": "Drawknife",
+      "era": "Various",
+      "condition": "Project",
+      "notable": "Rusty/worn drawknife, project grade for restoration"
+    },
+    "why_good_test": "Tests condition assessment on drawknife; rusty Project grade"
+  },
+  {
+    "filename": "cabinet_scraper_stanley80_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/IekAAeSwi~JptyNr/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Cabinet Scraper",
+      "maker": "Stanley",
+      "model": "No. 80",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Cast iron body with thumbscrew blade adjustment, sole acts as scraping surface"
+    },
+    "why_good_test": "Tests distinction between cabinet scraper and spokeshave; similar shape but different function"
+  },
+  {
+    "filename": "adze_hand_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/trYAAeSwl29paEvs/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Hand Adze",
+      "maker": "Various",
+      "model": "Carpenter's hand adze",
+      "era": "Various",
+      "condition": "Good/Fair",
+      "notable": "Axe-like tool with blade perpendicular to handle, for shaping wood"
+    },
+    "why_good_test": "Uncommon tool type; tests recognition of adze vs axe vs hatchet"
+  },
+  {
+    "filename": "spokeshave_round_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/qTsAAeSwxO5preZH/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Various",
+      "model": "Round-sole spokeshave",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Convex sole for working concave surfaces, unlike flat-sole spokeshaves"
+    },
+    "why_good_test": "Tests round vs flat sole spokeshave distinction; adds to existing spokeshave coverage"
+  },
+  {
+    "filename": "vise_record_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/biUAAeSwPFJpjj0C/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Vise",
+      "maker": "Record",
+      "model": "Face vise with quick-release",
+      "era": "Mid-late 20th century",
+      "condition": "Good",
+      "notable": "Blue cast iron, quick-release mechanism, woodworking bench vise"
+    },
+    "why_good_test": "New tool category (workholding); very common marketplace item"
+  },
+  {
+    "filename": "vise_moxon_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/FlAAAOSwLihn-~4s/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Moxon Vise",
+      "maker": "Various",
+      "model": "Moxon twin-screw vise",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Twin-screw design, sits on top of bench, for dovetailing and joinery"
+    },
+    "why_good_test": "Tests Moxon vs traditional vise distinction; very different design"
+  },
+  {
+    "filename": "holdfast_gramercy_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/3KQAAeSwbcxpeqqV/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Holdfast",
+      "maker": "Gramercy/Various",
+      "model": "Holdfast",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "L-shaped iron bar that wedges into bench dog hole to hold work"
+    },
+    "why_good_test": "Simple but distinctive tool; tests recognition of workholding accessories"
+  },
+  {
+    "filename": "clamp_handscrew_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/mFAAAeSwKDdprd~m/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Handscrew Clamp",
+      "maker": "Jorgensen",
+      "model": "Wooden handscrew clamp",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Two wooden jaws with twin screws, classic woodworking clamp"
+    },
+    "why_good_test": "Tests clamp type identification; handscrews are very distinctive"
+  },
+  {
+    "filename": "clamp_bar_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/~1IAAeSw6~hpjPuK/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bar Clamp",
+      "maker": "Various",
+      "model": "Bar clamp or pipe clamp",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Long bar or pipe with sliding jaw and fixed jaw"
+    },
+    "why_good_test": "Tests bar/pipe clamp vs handscrew clamp distinction"
+  },
+  {
+    "filename": "bench_hook_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/SHoAAeSwyqlpOwJh/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Hook",
+      "maker": "Various/Shop-made",
+      "model": "Bench hook or shooting board",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Flat board with fence on each side, hooks against bench edge"
+    },
+    "why_good_test": "Simple jig that many might not recognize as a tool; tests accessory recognition"
+  },
+  {
+    "filename": "sliding_bevel_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/Th0AAeSwBhJprsAG/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sliding T-Bevel",
+      "maker": "Stanley/Starrett",
+      "model": "Sliding T-bevel",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Adjustable blade locked at any angle, for transferring and checking angles"
+    },
+    "why_good_test": "Tests measuring tool recognition; distinctive T-shape with adjustable blade"
+  },
+  {
+    "filename": "sliding_bevel_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/NLgAAeSwk0pppQZk/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sliding T-Bevel",
+      "maker": "Various",
+      "model": "Sliding T-bevel (different handle style)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Different handle material or design from sliding_bevel_1"
+    },
+    "why_good_test": "Second sliding bevel with different handle tests consistency of identification"
+  },
+  {
+    "filename": "marking_knife_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/nUgAAeSwFtFofyKx/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Marking Knife",
+      "maker": "Various",
+      "model": "Single-bevel marking knife",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Single-bevel blade for precise layout lines, wooden or metal handle"
+    },
+    "why_good_test": "Small precision tool; tests marking knife vs utility knife distinction"
+  },
+  {
+    "filename": "marking_knife_2.jpg",
+    "url": "https://i.ebayimg.com/images/g/5XQAAeSwfVxpkhu1/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Marking Knife",
+      "maker": "Various",
+      "model": "Striking/spear-point marking knife",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Spear-point or striking knife style, different blade geometry from standard"
+    },
+    "why_good_test": "Different marking knife style tests whether AI can identify both types"
+  },
+  {
+    "filename": "dividers_wing_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/tmAAAeSwxi9oZm~9/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Wing Dividers",
+      "maker": "Various",
+      "model": "Wing dividers with arc set screw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Two pointed legs with wing nut adjustment for scribing circles and arcs"
+    },
+    "why_good_test": "Precision layout tool; tests dividers vs calipers distinction"
+  },
+  {
+    "filename": "calipers_spring_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/DIcAAeSwCQBpQGAa/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Spring Calipers",
+      "maker": "Various",
+      "model": "Spring calipers (inside or outside)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Spring-loaded legs with adjusting nut, for measuring diameters"
+    },
+    "why_good_test": "Tests caliper vs divider distinction; similar shape but different purpose"
+  },
+  {
+    "filename": "marking_gauge_wheel_modern.jpg",
+    "url": "https://i.ebayimg.com/images/g/4~YAAeSwoONptcg5/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Wheel Marking Gauge",
+      "maker": "Tite-Mark/Veritas",
+      "model": "Modern wheel marking gauge",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Micro-adjustable wheel cutter, precision marking gauge"
+    },
+    "why_good_test": "Tests modern vs traditional marking gauge distinction; wheel cutter vs pin/blade"
+  },
+  {
+    "filename": "stanley_no4_rusty_project.jpg",
+    "url": "https://i.ebayimg.com/images/g/mCoAAeSwEE5pMop1/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "Various",
+      "condition": "Project",
+      "notable": "Heavily rusted/pitted, needs full restoration, Project grade"
+    },
+    "why_good_test": "Tests identification under heavy rust; same model as clean versions in Round 1"
+  },
+  {
+    "filename": "stanley_no5_fair_condition.jpg",
+    "url": "https://i.ebayimg.com/images/g/FPgAAeSwvJxovLlp/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "Various",
+      "condition": "Fair",
+      "notable": "Moderate rust, chipped tote, usable but worn"
+    },
+    "why_good_test": "Tests identification and condition assessment on a Fair condition plane"
+  },
+  {
+    "filename": "chisel_rusty_lot.jpg",
+    "url": "https://i.ebayimg.com/images/g/GAcAAeSwcXppScRB/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Chisel Lot",
+      "maker": "Various",
+      "model": "Rusty vintage chisel lot",
+      "era": "Various",
+      "condition": "Project/Fair",
+      "notable": "Multiple rusty chisels, barn find style, mixed makers"
+    },
+    "why_good_test": "Tests identification under heavy patina/rust; lot of mixed tools adds difficulty"
+  },
+  {
+    "filename": "plane_unusual_angle_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/pKAAAeSw7cpptW27/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Stanley",
+      "model": "No. 4 or similar",
+      "era": "Various",
+      "condition": "Various",
+      "notable": "Photographed from unusual angle (sole-up, extreme close-up, etc.)"
+    },
+    "why_good_test": "Tests robustness to unusual photo angles; many seller photos are poorly composed"
+  },
+  {
+    "filename": "plane_cluttered_background.jpg",
+    "url": "https://i.ebayimg.com/images/g/bJsAAeSw7jRpRBgY/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Stanley",
+      "model": "No. 4 or similar",
+      "era": "Various",
+      "condition": "Various",
+      "notable": "Messy workbench background, poor lighting, realistic seller photo"
+    },
+    "why_good_test": "Tests robustness to cluttered backgrounds and poor lighting conditions"
+  },
+  {
+    "filename": "saw_dark_photo_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/N6UAAOSw411oVwus/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Various",
+      "model": "Handsaw",
+      "era": "Various",
+      "condition": "Fair",
+      "notable": "Dim/poor lighting, realistic low-quality seller photo"
+    },
+    "why_good_test": "Tests identification under poor lighting; many real marketplace photos are dim"
+  },
+  {
+    "filename": "tool_dirty_spokeshave.jpg",
+    "url": "https://i.ebayimg.com/images/g/Oj8AAeSwH1BpfOHA/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Various",
+      "model": "Spokeshave",
+      "era": "Various",
+      "condition": "Fair/Project",
+      "notable": "Heavily dirty/patinated, needs cleaning"
+    },
+    "why_good_test": "Tests identification through heavy dirt/patina on a known tool type"
+  },
+  {
+    "filename": "japanese_chisel_rusty.jpg",
+    "url": "https://i.ebayimg.com/images/g/HJwAAeSwY5dpTzY3/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Japanese Chisel",
+      "maker": "Japanese",
+      "model": "Nomi (rusty/patinated)",
+      "era": "Various",
+      "condition": "Fair/Project",
+      "notable": "Rusty/patinated Japanese chisel, laminated steel visible"
+    },
+    "why_good_test": "Tests Japanese chisel identification under poor condition; rust obscures features"
+  },
+  {
+    "filename": "handplane_unknown_maker.jpg",
+    "url": "https://i.ebayimg.com/images/g/A0sAAeSwJ-Zpb3LW/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Unknown/Unbranded",
+      "model": "No-name bench plane",
+      "era": "Various",
+      "condition": "Fair",
+      "notable": "No visible maker markings, could be Sargent, Union, or generic"
+    },
+    "why_good_test": "Tests AI behavior when maker is unknown; should still identify tool type correctly"
+  },
+  {
+    "filename": "brace_ratchet_millers_falls.jpg",
+    "url": "https://i.ebayimg.com/images/g/GhQAAeSw6BppFM-7/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Ratchet Brace",
+      "maker": "Millers Falls",
+      "model": "Ratchet brace",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Ratcheting mechanism, chuck for auger bits, Millers Falls branding"
+    },
+    "why_good_test": "Tests Millers Falls vs Stanley brace distinction; adds maker diversity"
+  },
+  {
+    "filename": "brace_vintage_stanley.jpg",
+    "url": "https://i.ebayimg.com/images/g/hikAAeSwZ9Rpn42L/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Ratchet Brace",
+      "maker": "Stanley",
+      "model": "Vintage Stanley brace",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "Stanley-branded ratchet brace, nickel plating"
+    },
+    "why_good_test": "Tests Stanley brace identification; compare with Millers Falls version"
+  },
+  {
+    "filename": "hand_drill_eggbeater_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/gUQAAeSwa2do~Qld/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Hand Drill",
+      "maker": "Millers Falls/Stanley",
+      "model": "Eggbeater-style hand drill",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Geared hand drill with side handle and chuck, eggbeater mechanism"
+    },
+    "why_good_test": "Tests hand drill vs brace distinction; both are drilling tools but very different designs"
+  },
+  {
+    "filename": "sargent_bench_plane_1.jpg",
+    "url": "https://i.ebayimg.com/images/g/gFEAAeSwfiVppNya/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Sargent",
+      "model": "Sargent bench plane",
+      "era": "Early-mid 20th century",
+      "condition": "Good/Fair",
+      "notable": "Sargent-made (NOT Stanley), tests maker distinction on similar-looking planes"
+    },
+    "why_good_test": "Critical test: Sargent planes look very similar to Stanley but have different features"
+  },
+  {
+    "filename": "stanley_no6_fore_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/jZEAAeSw-Bpo~tDj/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Fore Plane",
+      "maker": "Stanley",
+      "model": "No. 6",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "18-inch sole, between jack (No.5) and jointer (No.7) in size"
+    },
+    "why_good_test": "Tests size estimation; No.6 fills the gap between No.5 and No.7 in the catalog"
+  },
+  {
+    "filename": "r4_stanley_no4_type15.jpg",
+    "url": "https://i.ebayimg.com/images/g/n9wAAeSwPgVpqwgT/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1931-1932 (Type 15)",
+      "condition": "Good",
+      "notable": "Pre-war production, rosewood handles, kidney-shaped lever cap hole"
+    },
+    "why_good_test": "Blind test for Type 15 identification; different era from training set Type 11/17/19 photos"
+  },
+  {
+    "filename": "r4_stanley_no4_type19.jpg",
+    "url": "https://i.ebayimg.com/images/g/KnQAAeSwyG9psgRj/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1948-1961 (Type 19)",
+      "condition": "Good",
+      "notable": "Post-war blue/gray finish, stained hardwood handles"
+    },
+    "why_good_test": "Type 19 is the most common vintage Stanley; tests whether AI can distinguish from earlier types"
+  },
+  {
+    "filename": "r4_stanley_no5_good.jpg",
+    "url": "https://i.ebayimg.com/images/g/OG4AAeSwi5dpjlcF/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "14-inch sole, standard jack plane in good usable condition"
+    },
+    "why_good_test": "Clean example; tests basic No. 5 identification in good condition"
+  },
+  {
+    "filename": "r4_stanley_no5_fair.jpg",
+    "url": "https://i.ebayimg.com/images/g/TxUAAeSwLxhpj8Rx/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "Mid 20th century",
+      "condition": "Fair",
+      "notable": "Some rust, worn handles, still identifiable as No. 5"
+    },
+    "why_good_test": "Tests same model in worse condition; Fair grade adds identification difficulty"
+  },
+  {
+    "filename": "r4_stanley_no7_jointer.jpg",
+    "url": "https://i.ebayimg.com/images/g/VHYAAeSw7YVppIjW/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Jointer Plane",
+      "maker": "Stanley",
+      "model": "No. 7",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "22-inch sole, largest common bench plane, distinctive long body"
+    },
+    "why_good_test": "Tests size estimation; No. 7 is significantly longer than No. 5"
+  },
+  {
+    "filename": "r4_record_no4_blue.jpg",
+    "url": "https://i.ebayimg.com/images/g/74MAAeSw~W5pWTsH/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Record",
+      "model": "No. 04",
+      "era": "Mid-late 20th century",
+      "condition": "Good",
+      "notable": "Blue cast iron body, Record lever cap, English manufacture"
+    },
+    "why_good_test": "Tests Record vs Stanley distinction on same-size planes"
+  },
+  {
+    "filename": "r4_lie_nielsen_no4.jpg",
+    "url": "https://i.ebayimg.com/images/g/tJwAAeSwF~Fpsiee/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Lie-Nielsen",
+      "model": "No. 4",
+      "era": "2000s-present",
+      "condition": "Excellent",
+      "notable": "Bronze body, cherry handles, premium modern production"
+    },
+    "why_good_test": "Fresh listing for blind test; tests premium maker identification"
+  },
+  {
+    "filename": "r4_union_bench_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/dfoAAeSw16NpsLT3/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Union",
+      "model": "Union bench plane",
+      "era": "Early 20th century",
+      "condition": "Fair",
+      "notable": "Obscure maker, similar appearance to Stanley but different details"
+    },
+    "why_good_test": "Tests obscure maker identification; Union planes are often misidentified as Stanley"
+  },
+  {
+    "filename": "r4_stanley_60half_block.jpg",
+    "url": "https://i.ebayimg.com/images/g/KTUAAeSwbodpsshB/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Low Angle Block Plane",
+      "maker": "Stanley",
+      "model": "No. 60-1/2",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Low-angle block plane with adjustable mouth"
+    },
+    "why_good_test": "Fresh listing; tests block plane identification separate from training data"
+  },
+  {
+    "filename": "r4_veritas_block_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/KVIAAeSw6MhputrX/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Veritas",
+      "model": "Low Angle Block Plane",
+      "era": "2000s-present",
+      "condition": "Excellent/Good",
+      "notable": "Ductile iron body, green adjuster, Norris-style adjuster"
+    },
+    "why_good_test": "Tests Veritas block plane identification; distinctive modern design"
+  },
+  {
+    "filename": "r4_shoulder_plane_ln.jpg",
+    "url": "https://i.ebayimg.com/images/g/n4wAAeSwtZdpqdes/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Shoulder Plane",
+      "maker": "Lie-Nielsen",
+      "model": "Shoulder plane",
+      "era": "2000s-present",
+      "condition": "Good",
+      "notable": "Bronze body, blade flush with sides, for trimming tenon shoulders"
+    },
+    "why_good_test": "Fresh listing; tests specialty plane identification"
+  },
+  {
+    "filename": "r4_stanley_71_router.jpg",
+    "url": "https://i.ebayimg.com/images/g/ai4AAeSwU5NpuyKD/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Router Plane",
+      "maker": "Stanley",
+      "model": "No. 71",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Open-throat router plane with depth adjustment and cutter"
+    },
+    "why_good_test": "Unique plane type; tests recognition of distinctive open-body design"
+  },
+  {
+    "filename": "r4_stanley_78_rabbet.jpg",
+    "url": "https://i.ebayimg.com/images/g/LQ4AAeSwMENpsIQH/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Rabbet Plane",
+      "maker": "Stanley",
+      "model": "No. 78",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Duplex rabbet plane with fence and depth stop"
+    },
+    "why_good_test": "Fresh listing for blind test of rabbet plane recognition"
+  },
+  {
+    "filename": "r4_wooden_plow_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/ulkAAeSw1KlpmRlx/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Plow Plane",
+      "maker": "Various",
+      "model": "Wooden screw-arm plow plane",
+      "era": "19th century",
+      "condition": "Good/Fair",
+      "notable": "All-wooden construction with threaded arms and boxwood fence"
+    },
+    "why_good_test": "Wooden plow plane is visually very different from metal combination planes"
+  },
+  {
+    "filename": "r4_disston_d8_handsaw.jpg",
+    "url": "https://i.ebayimg.com/images/g/Z10AAeSw2NRpmNo9/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Disston",
+      "model": "D-8",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "Disston D-8, applewood handle with medallion visible"
+    },
+    "why_good_test": "Tests Disston identification from a fresh listing"
+  },
+  {
+    "filename": "r4_simonds_handsaw.jpg",
+    "url": "https://i.ebayimg.com/images/g/JnoAAeSwlpFpQIAP/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Simonds",
+      "model": "Simonds handsaw",
+      "era": "Early-mid 20th century",
+      "condition": "Fair",
+      "notable": "Non-Disston American handsaw, different medallion and etch"
+    },
+    "why_good_test": "Tests non-Disston handsaw maker identification; Simonds is less common"
+  },
+  {
+    "filename": "r4_dovetail_saw_brass.jpg",
+    "url": "https://i.ebayimg.com/images/g/quoAAeSwMdJpl7tg/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Dovetail Saw",
+      "maker": "Various",
+      "model": "Brass-backed dovetail saw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Short blade (8-10 inch), brass spine, fine teeth for dovetail joinery"
+    },
+    "why_good_test": "Tests dovetail saw identification from a fresh listing"
+  },
+  {
+    "filename": "r4_tenon_saw_backsaw.jpg",
+    "url": "https://i.ebayimg.com/images/g/xbIAAeSwXlVpg~II/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Tenon Saw",
+      "maker": "Various",
+      "model": "Tenon/back saw (12-14 inch)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Larger than dovetail saw, steel or brass back"
+    },
+    "why_good_test": "Tests tenon vs dovetail saw distinction based on size"
+  },
+  {
+    "filename": "r4_japanese_dozuki.jpg",
+    "url": "https://i.ebayimg.com/images/g/HMUAAOSwn1FgD4Wc/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Japanese",
+      "model": "Dozuki",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Japanese backsaw with wrapped handle, pull-cut design"
+    },
+    "why_good_test": "Fresh dozuki listing; tests Japanese saw identification"
+  },
+  {
+    "filename": "r4_coping_saw.jpg",
+    "url": "https://i.ebayimg.com/images/g/NuIAAeSwx0VprZLo/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Coping Saw",
+      "maker": "Various",
+      "model": "Coping saw",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "U-shaped steel frame, thin blade for curved cuts"
+    },
+    "why_good_test": "Tests frame saw recognition from fresh listing"
+  },
+  {
+    "filename": "r4_bench_chisel_single.jpg",
+    "url": "https://i.ebayimg.com/images/g/ONMAAeSw7jRpPzTT/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Chisel",
+      "maker": "Various",
+      "model": "Bevel-edge bench chisel",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Single bevel-edge chisel, wooden or plastic handle"
+    },
+    "why_good_test": "Tests single chisel identification from fresh listing"
+  },
+  {
+    "filename": "r4_mortise_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/lY0AAeSw27lpsLvY/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Mortise Chisel",
+      "maker": "Various",
+      "model": "Mortise chisel (thick rectangular cross-section)",
+      "era": "Various",
+      "condition": "Good/Fair",
+      "notable": "Thick blade designed for levering out mortise waste"
+    },
+    "why_good_test": "Tests mortise vs bench chisel distinction from fresh listing"
+  },
+  {
+    "filename": "r4_chisel_set.jpg",
+    "url": "https://i.ebayimg.com/images/g/XBAAAeSwOcNpmQPl/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Chisel Set",
+      "maker": "Various",
+      "model": "Socket chisel set",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Set of 4-6 chisels, various sizes"
+    },
+    "why_good_test": "Tests set identification from fresh listing"
+  },
+  {
+    "filename": "r4_japanese_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/~3cAAeSwjtVpR1GK/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Japanese Chisel",
+      "maker": "Japanese",
+      "model": "Oire nomi (white steel)",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Laminated steel, wooden handle with metal hoop"
+    },
+    "why_good_test": "Fresh Japanese chisel listing for blind test"
+  },
+  {
+    "filename": "r4_carving_gouge.jpg",
+    "url": "https://i.ebayimg.com/images/g/ExQAAeSwlYJps~OP/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Carving Gouge",
+      "maker": "Various",
+      "model": "Single carving gouge",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Curved cutting edge for wood carving"
+    },
+    "why_good_test": "Tests gouge vs chisel distinction from fresh listing"
+  },
+  {
+    "filename": "r4_paring_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/nl4AAeSwmZNpc9CJ/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Paring Chisel",
+      "maker": "Various",
+      "model": "Long paring chisel",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Long thin blade for hand-pressure-only paring"
+    },
+    "why_good_test": "Tests paring vs bench chisel distinction"
+  },
+  {
+    "filename": "r4_marking_gauge.jpg",
+    "url": "https://i.ebayimg.com/images/g/WTMAAeSwwoppnGq8/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Marking Gauge",
+      "maker": "Various",
+      "model": "Wooden marking gauge with pin",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Wooden beam and fence, steel pin for scribing lines"
+    },
+    "why_good_test": "Fresh listing for marking gauge blind test"
+  },
+  {
+    "filename": "r4_combination_square.jpg",
+    "url": "https://i.ebayimg.com/images/g/zHYAAeSwd7Rpuwpz/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Combination Square",
+      "maker": "Starrett",
+      "model": "12-inch combination square",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Precision machinist's combination square, steel rule with cast head"
+    },
+    "why_good_test": "Tests combination square identification from fresh listing"
+  },
+  {
+    "filename": "r4_sliding_t_bevel.jpg",
+    "url": "https://i.ebayimg.com/images/g/dyIAAeSw7ylpm9cj/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sliding T-Bevel",
+      "maker": "Stanley",
+      "model": "Sliding T-bevel gauge",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Smooth blade (NO teeth), pivots from handle, locks at any angle"
+    },
+    "why_good_test": "Critical test: T-bevel has smooth blade, must NOT be confused with a saw"
+  },
+  {
+    "filename": "r4_marking_knife.jpg",
+    "url": "https://i.ebayimg.com/images/g/WV8AAeSwMdhpkjYv/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Marking Knife",
+      "maker": "Various",
+      "model": "Marking knife",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Single or double-bevel blade for precise layout lines"
+    },
+    "why_good_test": "Fresh listing for marking knife blind test"
+  },
+  {
+    "filename": "r4_dividers_brass.jpg",
+    "url": "https://i.ebayimg.com/images/g/n-kAAeSwwdZpfTo3/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Dividers",
+      "maker": "Various",
+      "model": "Brass dividers/compass",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Two pointed legs for scribing arcs and transferring measurements"
+    },
+    "why_good_test": "Tests dividers identification from fresh listing"
+  },
+  {
+    "filename": "r4_arkansas_stone.jpg",
+    "url": "https://i.ebayimg.com/images/g/BK8AAeSw9fppsHy3/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Sharpening Stone",
+      "maker": "Various",
+      "model": "Arkansas translucent oilstone",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Natural Arkansas stone in wooden box"
+    },
+    "why_good_test": "Fresh listing for sharpening stone blind test"
+  },
+  {
+    "filename": "r4_dmt_diamond_plate.jpg",
+    "url": "https://i.ebayimg.com/images/g/FZ8AAeSwu8RprcKM/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Diamond Sharpening Plate",
+      "maker": "DMT",
+      "model": "Diamond bench stone",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Diamond-coated steel plate for sharpening"
+    },
+    "why_good_test": "Fresh listing for diamond plate blind test"
+  },
+  {
+    "filename": "r4_eclipse_honing_guide.jpg",
+    "url": "https://i.ebayimg.com/images/g/pk8AAeSww5NprF~V/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Honing Guide",
+      "maker": "Eclipse",
+      "model": "No. 36 honing guide",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Side-clamping roller guide for sharpening chisels and plane irons"
+    },
+    "why_good_test": "Fresh listing for honing guide blind test"
+  },
+  {
+    "filename": "r4_leather_strop.jpg",
+    "url": "https://i.ebayimg.com/images/g/yE4AAeSwudVpedZ2/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Leather Strop",
+      "maker": "Various",
+      "model": "Paddle strop",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Leather on wooden paddle for final honing"
+    },
+    "why_good_test": "Fresh listing for leather strop blind test"
+  },
+  {
+    "filename": "r4_spokeshave_151.jpg",
+    "url": "https://i.ebayimg.com/images/g/iWYAAeSwIY9puCJ1/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Stanley",
+      "model": "No. 151 or similar",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Flat-sole spokeshave with wing handles"
+    },
+    "why_good_test": "Fresh listing for spokeshave blind test"
+  },
+  {
+    "filename": "r4_drawknife.jpg",
+    "url": "https://i.ebayimg.com/images/g/VlwAAeSwCQFpuXI4/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Drawknife",
+      "maker": "Various",
+      "model": "Drawknife",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Two-handled blade pulled toward user"
+    },
+    "why_good_test": "Fresh listing for drawknife blind test"
+  },
+  {
+    "filename": "r4_card_scraper_single.jpg",
+    "url": "https://i.ebayimg.com/images/g/yr8AAeSw5A9prauF/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Card Scraper",
+      "maker": "Various",
+      "model": "Rectangular card scraper",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Thin flat piece of steel, NO handle, rectangular shape"
+    },
+    "why_good_test": "Tests card scraper recognition \u2014 just a thin flat rectangle of steel"
+  },
+  {
+    "filename": "r4_card_scraper_set.jpg",
+    "url": "https://i.ebayimg.com/images/g/CCMAAeSwKuFpce2Y/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Card Scraper Set",
+      "maker": "Various",
+      "model": "Card scraper set with burnisher",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Multiple thin steel shapes plus burnishing rod"
+    },
+    "why_good_test": "Tests card scraper set identification; multiple shapes in one photo"
+  },
+  {
+    "filename": "r4_brace_ratchet.jpg",
+    "url": "https://i.ebayimg.com/images/g/JNYAAOSwkx1oEQLL/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Ratchet Brace",
+      "maker": "Various",
+      "model": "Ratchet brace / hand drill",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "U-shaped crank with ratchet mechanism and chuck"
+    },
+    "why_good_test": "Fresh listing for brace blind test"
+  },
+  {
+    "filename": "r4_wooden_molding_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/zlgAAeSwLfpprJ~b/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Wooden Molding Plane",
+      "maker": "Various",
+      "model": "Wooden molding/profile plane",
+      "era": "19th century",
+      "condition": "Good/Fair",
+      "notable": "All-wood body with shaped sole for cutting molding profiles"
+    },
+    "why_good_test": "Fresh listing for wooden molding plane blind test"
+  },
+  {
+    "filename": "r4_stanley_48_tongue_groove.jpg",
+    "url": "https://i.ebayimg.com/images/g/SBcAAeSwcZVpmjYH/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Tongue and Groove Plane",
+      "maker": "Stanley",
+      "model": "No. 48 or No. 49",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "Metal tongue & groove plane with scroll handle"
+    },
+    "why_good_test": "Tests tongue & groove plane identification; distinctive scroll handle"
+  },
+  {
+    "filename": "r4_stanley_80_scraper.jpg",
+    "url": "https://i.ebayimg.com/images/g/hC0AAeSw5-ZpSMo9/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Cabinet Scraper",
+      "maker": "Stanley",
+      "model": "No. 80",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Cast-iron body with handles, looks like a spokeshave but scrapes"
+    },
+    "why_good_test": "Tests No. 80 vs spokeshave distinction; they look very similar"
+  },
+  {
+    "filename": "r4_record_vise.jpg",
+    "url": "https://i.ebayimg.com/images/g/leMAAeSwu55poHor/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Vise",
+      "maker": "Record",
+      "model": "Quick-release woodworking vise",
+      "era": "Mid-late 20th century",
+      "condition": "Good",
+      "notable": "Blue cast iron, quick-release lever"
+    },
+    "why_good_test": "Fresh listing for workholding blind test"
+  },
+  {
+    "filename": "r4_holdfast.jpg",
+    "url": "https://i.ebayimg.com/images/g/CUYAAeSwTFhpev~J/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Holdfast",
+      "maker": "Various",
+      "model": "Holdfast",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "L-shaped iron bar that wedges into bench dog hole"
+    },
+    "why_good_test": "Fresh listing for holdfast blind test"
+  },
+  {
+    "filename": "r4_pipe_clamp.jpg",
+    "url": "https://i.ebayimg.com/images/g/yD8AAeSwS2JowBHd/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Pipe Clamp",
+      "maker": "Pony/Bessey",
+      "model": "Pipe clamp",
+      "era": "Various",
+      "condition": "Good",
+      "notable": "Pipe clamp with sliding jaw and fixed jaw on pipe"
+    },
+    "why_good_test": "Tests pipe clamp identification from fresh listing"
+  },
+  {
+    "filename": "r4_rusty_plane_project.jpg",
+    "url": "https://i.ebayimg.com/images/g/-e8AAeSwRaxpZr6~/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Stanley",
+      "model": "No. 4 or No. 5 (heavily rusted)",
+      "era": "Various",
+      "condition": "Project",
+      "notable": "Heavily rusted barn find, still identifiable by shape"
+    },
+    "why_good_test": "Tests identification under extreme rust; Project grade"
+  },
+  {
+    "filename": "r4_tool_unusual_angle.jpg",
+    "url": "https://i.ebayimg.com/images/g/5toAAeSwvQ5pZaMa/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Stanley",
+      "model": "Bench plane (unusual photo angle)",
+      "era": "Various",
+      "condition": "Fair",
+      "notable": "Photographed from unusual angle, poor composition"
+    },
+    "why_good_test": "Tests robustness to unusual photo angles and poor photography"
+  },
+  {
+    "filename": "r4_tool_cluttered_bench.jpg",
+    "url": "https://i.ebayimg.com/images/g/VSUAAeSw-VJov3-R/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Bench Plane",
+      "maker": "Stanley",
+      "model": "Bench plane on cluttered workbench",
+      "era": "Various",
+      "condition": "Fair",
+      "notable": "Messy background, poor lighting, realistic seller photo"
+    },
+    "why_good_test": "Tests identification with cluttered background and poor lighting"
+  },
+  {
+    "filename": "r4_eggbeater_drill.jpg",
+    "url": "https://i.ebayimg.com/images/g/ynYAAeSwNEBoIn3L/s-l1600.jpg",
+    "source": "eBay sold listing",
+    "ground_truth": {
+      "tool_type": "Hand Drill",
+      "maker": "Millers Falls",
+      "model": "Eggbeater hand drill",
+      "era": "Mid 20th century",
+      "condition": "Good",
+      "notable": "Geared hand drill with side handle, eggbeater mechanism"
+    },
+    "why_good_test": "Uncommon tool type; tests edge case recognition"
+  },
+  {
+    "filename": "r5_stanley_no4_type17.jpg",
+    "url": "https://i.ebayimg.com/images/g/OJYAAeSwDfVpqC86/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 4",
+      "era": "1942-1945 (Type 17, WWII)",
+      "condition": "Good",
+      "notable": "WWII-era Type 17, stained hardwood handles"
+    },
+    "source": "eBay sold listing - 'Stanley Bailey No. 4 Type 17 1942-45 Smooth Bottom Hand Plane'",
+    "why_good_test": "Common Stanley No. 4 in WWII configuration, standard seller photo"
+  },
+  {
+    "filename": "r5_stanley_no5_type20.jpg",
+    "url": "https://i.ebayimg.com/images/g/5WEAAeSwCTFpsfw6/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "1962-1967 (Type 20)",
+      "condition": "Good",
+      "notable": "Late production Type 20 jack plane"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No. 5 Type 20 Jack Plane'",
+    "why_good_test": "Standard jack plane, tests era identification on late-production Stanley"
+  },
+  {
+    "filename": "r5_stanley_no7_type11.jpg",
+    "url": "https://i.ebayimg.com/images/g/xPgAAeSwPa9psfyr/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jointer Plane",
+      "maker": "Stanley",
+      "model": "No. 7",
+      "era": "1910-1918 (Type 11)",
+      "condition": "Good",
+      "notable": "22-inch jointer, Sweetheart era"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No. 7 Type 11 Jointer Plane'",
+    "why_good_test": "Large jointer plane, tests size-based model identification"
+  },
+  {
+    "filename": "r5_record_no4_england.jpg",
+    "url": "https://i.ebayimg.com/images/g/JyEAAeSw8Etprcgc/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Record",
+      "model": "No. 4",
+      "era": "1950s-1960s",
+      "condition": "Good",
+      "notable": "Blue Record finish, Made in England"
+    },
+    "source": "eBay sold listing - 'Vintage Record No.4 Smoothing Plane Made in England'",
+    "why_good_test": "Record vs Stanley discrimination test \u2014 similar form factor, different maker"
+  },
+  {
+    "filename": "r5_sargent_414_jack.jpg",
+    "url": "https://i.ebayimg.com/images/g/yhQAAeSw~5lpe8vl/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Sargent",
+      "model": "No. 414",
+      "era": "1920s-1940s",
+      "condition": "Good",
+      "notable": "Sargent 14-inch jack plane, smooth sole"
+    },
+    "source": "eBay sold listing - 'Vtg. Sargent 414 Bench JACK PLANE - 14\" Smooth Sole'",
+    "why_good_test": "Non-Stanley maker test \u2014 Sargent planes look similar to Stanley but have different features"
+  },
+  {
+    "filename": "r5_stanley_no3_project.jpg",
+    "url": "https://i.ebayimg.com/images/g/6goAAeSwK9ZptW-f/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 3",
+      "era": "1900s-1940s",
+      "condition": "Fair/Project",
+      "notable": "Rusty, needs restoration, but still identifiable"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley Bailey No 3 Plane Rusty Restoration Project'",
+    "why_good_test": "Fair/project condition stress test \u2014 can AI identify through heavy patina and rust?"
+  },
+  {
+    "filename": "r5_stanley_9half_block.jpg",
+    "url": "https://i.ebayimg.com/images/g/xPkAAOSwfFdlmCAa/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Block Plane",
+      "maker": "Stanley",
+      "model": "No. 9-1/2",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Adjustable throat block plane"
+    },
+    "source": "eBay sold listing - 'Vintage Tool Stanley No. 9-1/2 Adjustable Throat Block Plane'",
+    "why_good_test": "Standard block plane, common marketplace listing"
+  },
+  {
+    "filename": "r5_record_311_shoulder.jpg",
+    "url": "https://i.ebayimg.com/images/g/0PsAAeSwQCRpoZH0/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Shoulder Plane",
+      "maker": "Record",
+      "model": "No. 311",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Tall narrow body, blade full width of sole, no tote"
+    },
+    "source": "eBay sold listing - 'Record No 311 Shoulder Chisel Plane Woodworking Tool'",
+    "why_good_test": "Known weak spot \u2014 shoulder plane must not be confused with spokeshave or rabbet plane"
+  },
+  {
+    "filename": "r5_stanley_no71_router.jpg",
+    "url": "https://i.ebayimg.com/images/g/-NgAAeSwx6FpvCTm/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Router Plane",
+      "maker": "Stanley",
+      "model": "No. 71",
+      "era": "1930s-1960s",
+      "condition": "Good",
+      "notable": "Wide flat base, two round knobs, blade projects downward"
+    },
+    "source": "eBay sold listing - 'vintage stanley no.71 router plane'",
+    "why_good_test": "Distinctive form factor \u2014 flat base with knobs, quite different from bench planes"
+  },
+  {
+    "filename": "r5_stanley_no78_rabbet.jpg",
+    "url": "https://i.ebayimg.com/images/g/U7YAAeSw9K5o-W4x/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Rabbet Plane",
+      "maker": "Stanley",
+      "model": "No. 78",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Duplex rabbet plane with fence and depth stop"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley No 78 Duplex Rabbet Plane USA'",
+    "why_good_test": "Rabbet plane with fence \u2014 tests specialty plane identification"
+  },
+  {
+    "filename": "r5_stanley_no45_combo.jpg",
+    "url": "https://i.ebayimg.com/images/g/KHYAAeSwbL1pun5E/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Combination Plane",
+      "maker": "Stanley",
+      "model": "No. 45",
+      "era": "1923-1935 (Type 15, Sweetheart)",
+      "condition": "Good",
+      "notable": "Complex multi-part plane with fence and arms"
+    },
+    "source": "eBay sold listing - 'TYPE 15 (1923-1935) STANLEY SWEETHEART ERA No. 45 COMBINATION PLANE'",
+    "why_good_test": "Known weak spot \u2014 plow/combination plane with many parts, complex form"
+  },
+  {
+    "filename": "r5_stanley_no48_tongue_groove.jpg",
+    "url": "https://i.ebayimg.com/images/g/YgsAAeSwcKNpsGQB/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Tongue & Groove Plane",
+      "maker": "Stanley",
+      "model": "No. 48",
+      "era": "1900s-1940s",
+      "condition": "Good",
+      "notable": "Swing fence tongue and groove plane"
+    },
+    "source": "eBay sold listing - 'Stanley Swing Fence Tongue & Groove Wood Plane No.48'",
+    "why_good_test": "Unusual specialty plane type \u2014 tests breadth of plane identification"
+  },
+  {
+    "filename": "r5_stanley_sb3_scrub.jpg",
+    "url": "https://i.ebayimg.com/images/g/WPwAAeSwiqxpm12F/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Scrub Plane",
+      "maker": "Stanley",
+      "model": "SB3",
+      "era": "1960s-1980s",
+      "condition": "Good",
+      "notable": "Short narrow body, heavily cambered iron, Made in England"
+    },
+    "source": "eBay sold listing - 'Stanley SB3 Scrub Plane Made In England'",
+    "why_good_test": "Scrub planes are uncommon \u2014 short body with narrow mouth and cambered blade"
+  },
+  {
+    "filename": "r5_veritas_la_jack.jpg",
+    "url": "https://i.ebayimg.com/images/g/G44AAeSwVVVpdL~N/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Low-Angle Jack Plane",
+      "maker": "Veritas",
+      "model": "Low-Angle Jack Plane",
+      "era": "2000s-present",
+      "condition": "Excellent",
+      "notable": "Green Veritas body, Norris-style adjuster, modern premium plane"
+    },
+    "source": "eBay sold listing - 'Veritas Low-Angle Jack Plane 05P34.50 w/05P3402 Blade'",
+    "why_good_test": "Modern premium plane \u2014 tests discrimination between vintage and modern makers"
+  },
+  {
+    "filename": "r5_disston_d8_handsaw.jpg",
+    "url": "https://i.ebayimg.com/images/g/24YAAeSwRipoirtT/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Handsaw",
+      "maker": "Disston",
+      "model": "D-8",
+      "era": "1920s-1950s",
+      "condition": "Good",
+      "notable": "26-inch blade, 5-1/2 PPI, wood handle with thumbhole"
+    },
+    "source": "eBay sold listing - 'Vintage Henry Disston & Sons D-8 Hand Saw 26\" Blade 5 1/2 PPI Wood Handle'",
+    "why_good_test": "Classic handsaw, tests saw vs plane discrimination and maker identification"
+  },
+  {
+    "filename": "r5_dovetail_saw_brass.jpg",
+    "url": "https://i.ebayimg.com/images/g/d40AAeSwbK5paLgT/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Dovetail Saw",
+      "maker": "Unknown",
+      "model": "8-inch Dovetail",
+      "era": "Mid-20th century",
+      "condition": "Good",
+      "notable": "Brass-backed, 8-inch blade, fine teeth"
+    },
+    "source": "eBay sold listing - '1 - Vintage Brass Backed Dovetail Tenon Saw - 8\"'",
+    "why_good_test": "Small backsaw \u2014 tests dovetail vs tenon saw discrimination based on size"
+  },
+  {
+    "filename": "r5_disston_tenon_saw.jpg",
+    "url": "https://i.ebayimg.com/images/g/OUAAAeSwob9pRIS0/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Tenon Saw",
+      "maker": "Disston",
+      "model": "Brass Back Tenon",
+      "era": "Early 20th century",
+      "condition": "Good",
+      "notable": "Larger backsaw with brass spine, wood handle"
+    },
+    "source": "eBay sold listing - 'VTG Henry Disston & Sons Brass Back Tenon Saw USA Wood Handle'",
+    "why_good_test": "Larger backsaw \u2014 tests tenon vs dovetail size discrimination"
+  },
+  {
+    "filename": "r5_japanese_ryoba.jpg",
+    "url": "https://i.ebayimg.com/images/g/Ck8AAeSwAi5o8Jul/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Pull Saw",
+      "maker": "Generic",
+      "model": "Ryoba",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Double-edge ryoba with rip and crosscut teeth"
+    },
+    "source": "eBay sold listing - 'Japanese Pull Saw - 9.5 Ryoba Hand Saw with Rip-cut and Crosscut'",
+    "why_good_test": "Japanese saw \u2014 very different form from Western saws, tests cultural variant ID"
+  },
+  {
+    "filename": "r5_coping_saw_millers_falls.jpg",
+    "url": "https://i.ebayimg.com/images/g/tjYAAeSwOv5pc~TE/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Coping Saw",
+      "maker": "Millers Falls",
+      "model": "No. 42",
+      "era": "1908-1940s",
+      "condition": "Good",
+      "notable": "Patented Nov. 10 1908, thin blade in U-shaped frame"
+    },
+    "source": "eBay sold listing - 'Vintage Millers Falls No. 42 Coping Saw Pat. Nov. 10, 1908'",
+    "why_good_test": "Coping saw \u2014 distinctive U-frame shape, tests non-handsaw saw identification"
+  },
+  {
+    "filename": "r5_stanley_bench_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/8dIAAeSw5GFpuV29/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Bench Chisel",
+      "maker": "Stanley",
+      "model": "750-style Socket Chisel",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "1-inch bevel edge socket chisel, Made in USA"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley 1\" Bevel Edge Socket Chisel 750 Style Made in USA'",
+    "why_good_test": "Single bench chisel \u2014 baseline chisel identification test"
+  },
+  {
+    "filename": "r5_sorby_mortise_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/hZIAAeSwNKxprbA9/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Mortise Chisel",
+      "maker": "I & H Sorby",
+      "model": "1/2-inch Mortice Chisel",
+      "era": "Late 19th/early 20th century",
+      "condition": "Good",
+      "notable": "Heavy duty pig sticker style, thick rectangular cross-section"
+    },
+    "source": "eBay sold listing - 'Vintage Heavy Duty I & H SORBY 1/2\" Mortice Chisel Pig Sticker'",
+    "why_good_test": "Mortise chisel \u2014 thick cross-section distinguishes from bench chisel"
+  },
+  {
+    "filename": "r5_hale_paring_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/1zUAAeSwDy5ppO9F/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Paring Chisel",
+      "maker": "Hale Bros",
+      "model": "3/8-inch Paring Chisel",
+      "era": "Early-mid 20th century",
+      "condition": "Good",
+      "notable": "13.5 inches long, thin blade for hand-guided paring"
+    },
+    "source": "eBay sold listing - 'Hale Bros Woodworking Long Paring Chisel 3/8\" Cut 13.5\" Long'",
+    "why_good_test": "Long paring chisel \u2014 tests length-based chisel type discrimination"
+  },
+  {
+    "filename": "r5_pfeil_carving_gouge.jpg",
+    "url": "https://i.ebayimg.com/images/g/fq8AAeSwd59pstgR/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Carving Gouge",
+      "maker": "Pfeil",
+      "model": "#9 Sweep, 20mm",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Swiss Made, curved cutting edge, octagonal handle"
+    },
+    "source": "eBay sold listing - 'Genuine PFEIL 9/20 Swiss Made 20mm #9 Sweep Gouge Carving Chisel'",
+    "why_good_test": "Carving gouge \u2014 curved edge distinguishes from flat chisels"
+  },
+  {
+    "filename": "r5_japanese_nomi_chisel.jpg",
+    "url": "https://i.ebayimg.com/images/g/pdYAAOSwdI9Y8Ti1/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Japanese Chisel",
+      "maker": "Japanese (unknown maker)",
+      "model": "Tataki-Nomi (striking chisel)",
+      "era": "Mid-20th century",
+      "condition": "Good",
+      "notable": "12mm blade, laminated steel, metal hoop on handle"
+    },
+    "source": "eBay sold listing - 'Japanese Flat Bench Chisel Tataki-Nomi - 12mm blade width - Laminated blade'",
+    "why_good_test": "Known weak spot \u2014 Japanese chisel with hoop handle and laminated blade"
+  },
+  {
+    "filename": "r5_narex_chisel_set.jpg",
+    "url": "https://i.ebayimg.com/images/g/caUAAeSwFd1pllxv/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Chisel Set",
+      "maker": "Narex",
+      "model": "Premium 4-Piece Set",
+      "era": "Modern",
+      "condition": "Excellent",
+      "notable": "0.25, 0.5, 0.75, 1-inch bevel edge chisels"
+    },
+    "source": "eBay sold listing - 'Narex Premium 4 Piece Chisels Set 0.25\"/0.5\"/0.75\"/1\" Woodworking'",
+    "why_good_test": "Chisel set \u2014 tests set identification vs single chisel"
+  },
+  {
+    "filename": "r5_craftsman_marking_gauge.jpg",
+    "url": "https://i.ebayimg.com/images/g/~MUAAeSw4h1pued6/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Marking Gauge",
+      "maker": "Craftsman",
+      "model": "#3940 Butt Marking Gauge",
+      "era": "1950s-1970s",
+      "condition": "Good",
+      "notable": "Wooden beam with brass fittings"
+    },
+    "source": "eBay sold listing - 'Vintage Craftsman #3940 Butt Marking Gauge Carpentry Woodworking'",
+    "why_good_test": "Marking gauge \u2014 tests non-plane, non-chisel tool identification"
+  },
+  {
+    "filename": "r5_starrett_combo_square.jpg",
+    "url": "https://i.ebayimg.com/images/g/3YoAAeSwOn9pt3br/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Combination Square",
+      "maker": "Starrett",
+      "model": "6-inch Combination Square",
+      "era": "1940s-1960s",
+      "condition": "Very Good",
+      "notable": "6-inch rule with 4R graduations and scribe"
+    },
+    "source": "eBay sold listing - 'Vintage L.S. Starrett 6\" Combination Square w/ Tempered 6\" Rule 4R Grad'",
+    "why_good_test": "Precision measuring tool \u2014 different form factor from woodworking tools"
+  },
+  {
+    "filename": "r5_stanley_t_bevel.jpg",
+    "url": "https://i.ebayimg.com/images/g/~TgAAeSwVRppuC9C/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Sliding T-Bevel",
+      "maker": "Stanley",
+      "model": "6-inch T-Bevel",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Smooth flat blade pivoting from handle, NO teeth"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley 6\" Sliding T Bevel Square Adjustable Gauge Blade'",
+    "why_good_test": "Known weak spot \u2014 smooth blade must not be confused with a saw"
+  },
+  {
+    "filename": "r5_wing_dividers.jpg",
+    "url": "https://i.ebayimg.com/images/g/feoAAeSwrSJpWL5C/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Dividers",
+      "maker": "Unknown (USA)",
+      "model": "8-inch Wing Dividers",
+      "era": "Mid-20th century",
+      "condition": "Good",
+      "notable": "Winged machinist-style dividers/caliper"
+    },
+    "source": "eBay sold listing - 'Vintage 8\" Long Winged Machinist Dividers Caliper Woodworker Tool'",
+    "why_good_test": "Dividers \u2014 pointed compass-like tool, tests non-cutting tool ID"
+  },
+  {
+    "filename": "r5_arkansas_oilstone.jpg",
+    "url": "https://i.ebayimg.com/images/g/p5QAAeSwPfRpudTF/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Sharpening Stone",
+      "maker": "Norton",
+      "model": "Arkansas Oilstone",
+      "era": "Mid-20th century",
+      "condition": "Good",
+      "notable": "Rectangular natural stone in wooden box"
+    },
+    "source": "eBay sold listing - 'Norton Abrasives Arkansas Oilstone Sharpening Stone in Wooden Box'",
+    "why_good_test": "Known weak spot \u2014 stone in wooden box, NOT a metal plate"
+  },
+  {
+    "filename": "r5_king_waterstone.jpg",
+    "url": "https://i.ebayimg.com/images/g/FEEAAOSwa~BYdNir/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Sharpening Stone",
+      "maker": "King",
+      "model": "KW-65 Combination 1000/6000",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Colored synthetic waterstone block"
+    },
+    "source": "eBay sold listing - 'King 1000/6000 Grit Whetstone Japanese Waterstone Knife Sharpening Stone'",
+    "why_good_test": "Japanese waterstone \u2014 synthetic colored block, different from natural oilstone"
+  },
+  {
+    "filename": "r5_dmt_diamond_plate.jpg",
+    "url": "https://i.ebayimg.com/images/g/Z~oAAeSwcEdpi3KO/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Diamond Sharpening Plate",
+      "maker": "DMT",
+      "model": "Dia-Sharp 8-inch",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Continuous diamond surface, perforated metal plate"
+    },
+    "source": "eBay sold listing - 'DMT 8\" Dia-Sharp Continuous Diamond Bench Stone Extra Fine'",
+    "why_good_test": "Diamond plate \u2014 perforated metal surface, distinct from natural stones"
+  },
+  {
+    "filename": "r5_eclipse_honing_guide.jpg",
+    "url": "https://i.ebayimg.com/images/g/Le0AAeSwbyVpcBT7/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Honing Guide",
+      "maker": "Eclipse",
+      "model": "No. 36",
+      "era": "1960s-1980s",
+      "condition": "Good",
+      "notable": "Roller-based guide for chisels and plane irons, Made in England"
+    },
+    "source": "eBay sold listing - 'VTG Eclipse #36 CHISEL PROJECTION 25-30deg Honing Sharpening Guide'",
+    "why_good_test": "Honing guide \u2014 small metal jig with roller, tests accessory identification"
+  },
+  {
+    "filename": "r5_leather_strop.jpg",
+    "url": "https://i.ebayimg.com/images/g/MDMAAOSwaQtctJxO/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Leather Strop",
+      "maker": "BeaverCraft",
+      "model": "Dual-Sided Strop",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Dual-sided leather on wooden paddle"
+    },
+    "source": "eBay sold listing - 'Dual-sided Leather Strop for Sharpening Knives Tools Polishing BeaverCraft'",
+    "why_good_test": "Leather strop \u2014 simple form factor, tests sharpening accessory recognition"
+  },
+  {
+    "filename": "r5_card_scraper_single.jpg",
+    "url": "https://i.ebayimg.com/images/g/g24AAeSwFhRpOfnR/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Card Scraper",
+      "maker": "Generic",
+      "model": "Curved Cabinet Scraper Card",
+      "era": "Modern",
+      "condition": "Excellent/New",
+      "notable": "Thin flat piece of steel, curved profile, no handle"
+    },
+    "source": "eBay sold listing - 'Blue Curved Cabinet Scraper Cards-Cabinet Scraper for Woodworking'",
+    "why_good_test": "Known weak spot \u2014 thin steel card with no handle, must not confuse with handled tools"
+  },
+  {
+    "filename": "r5_card_scraper_set.jpg",
+    "url": "https://i.ebayimg.com/images/g/wzEAAeSwx95olXxb/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Card Scraper Set",
+      "maker": "Generic",
+      "model": "6-Piece Multi-Shaped Set",
+      "era": "Modern",
+      "condition": "Excellent/New",
+      "notable": "Multiple thin steel shapes \u2014 rectangular, beveled, curved"
+    },
+    "source": "eBay sold listing - '6 Piece Multi-Shaped Card Scraper Woodworking Set, 3 Rectangle 1 Beveled'",
+    "why_good_test": "Known weak spot \u2014 multiple thin steel shapes, tests set recognition"
+  },
+  {
+    "filename": "r5_stanley_no80_cabinet_scraper.jpg",
+    "url": "https://i.ebayimg.com/images/g/tTYAAeSwmS5pqKGM/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Cabinet Scraper",
+      "maker": "Stanley",
+      "model": "No. 80",
+      "era": "1930s-1960s",
+      "condition": "Good",
+      "notable": "Cast iron body with wing handles, blade sticks UP from top"
+    },
+    "source": "eBay sold listing - 'Stanley No. 80 Cabinet Scraper Plane'",
+    "why_good_test": "Critical weak spot \u2014 looks like a spokeshave but blade sticks UP. Must distinguish from No. 151"
+  },
+  {
+    "filename": "r5_stanley_no151_spokeshave.jpg",
+    "url": "https://i.ebayimg.com/images/g/kokAAeSwl~ZpmbDf/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Stanley",
+      "model": "No. 151",
+      "era": "1960s-1980s",
+      "condition": "Excellent",
+      "notable": "Flat sole, adjustable, blade recessed in body, England"
+    },
+    "source": "eBay sold listing - 'Vintage Stanley No. 151 Flat Sole Adjustable Spokeshave England CLEAN'",
+    "why_good_test": "Companion to No. 80 \u2014 spokeshave with blade recessed, tests scraper vs shave discrimination"
+  },
+  {
+    "filename": "r5_james_swan_drawknife.jpg",
+    "url": "https://i.ebayimg.com/images/g/ercAAeSw7tJpsy1d/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Drawknife",
+      "maker": "James Swan",
+      "model": "No. 9",
+      "era": "Late 19th/early 20th century",
+      "condition": "Good",
+      "notable": "9-inch blade with handle at each end"
+    },
+    "source": "eBay sold listing - 'Vintage James Swan Co USA No 9 Drawknife 9\" Blade Woodworking Tool'",
+    "why_good_test": "Drawknife \u2014 distinctive two-handle form, single tool photo"
+  },
+  {
+    "filename": "r5_kunz_round_spokeshave.jpg",
+    "url": "https://i.ebayimg.com/images/g/f-EAAeSwPOlpNt0O/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Spokeshave",
+      "maker": "Kunz",
+      "model": "No. 55A Half Round",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "Concave/round bottom sole for curved work, Made in Germany"
+    },
+    "source": "eBay sold listing - 'Kunz NO. 55A Half Round Concave Spokeshave Made in Germany'",
+    "why_good_test": "Round-sole spokeshave \u2014 tests variant spokeshave identification"
+  },
+  {
+    "filename": "r5_stanley_ratchet_brace.jpg",
+    "url": "https://i.ebayimg.com/images/g/0NMAAeSwSFlpsidt/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Brace",
+      "maker": "Stanley",
+      "model": "No. 923, 14-inch",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "U-shaped ratcheting brace, Made in USA"
+    },
+    "source": "eBay sold listing - 'Brace, Vintage Stanley Woodworkers Ratcheting Brace No. 923-14 IN.'",
+    "why_good_test": "Brace \u2014 U-shaped crank, very different form from other tools"
+  },
+  {
+    "filename": "r5_stanley_eggbeater_drill.jpg",
+    "url": "https://i.ebayimg.com/images/g/gzYAAeSwkxdpbYXu/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Hand Drill",
+      "maker": "Stanley",
+      "model": "No. 112",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "Eggbeater-style hand crank drill, Made in USA"
+    },
+    "source": "eBay sold listing - 'Stanley No.112 hand crank drill vintage carpenter egg beater made in the USA'",
+    "why_good_test": "Eggbeater drill \u2014 gear-driven hand drill, distinctive silhouette"
+  },
+  {
+    "filename": "r5_wooden_molding_plane.jpg",
+    "url": "https://i.ebayimg.com/images/g/DIcAAeSw2Ktprul3/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Wooden Molding Plane",
+      "maker": "G.E.K.",
+      "model": "Joinery Molding Plane",
+      "era": "19th century",
+      "condition": "Good",
+      "notable": "Antique wooden body with maker's mark"
+    },
+    "source": "eBay sold listing - 'Antique G. E. K. Wooden Joinery Molding Plane with Maker's Mark'",
+    "why_good_test": "Wooden molding plane \u2014 pre-metal era form, tests wood-bodied plane ID"
+  },
+  {
+    "filename": "r5_holdfast.jpg",
+    "url": "https://i.ebayimg.com/images/g/aCsAAeSwz~Vo7Avz/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Holdfast",
+      "maker": "Generic",
+      "model": "1-inch Bench Holdfast",
+      "era": "Modern",
+      "condition": "Good",
+      "notable": "L-shaped iron shaft that wedges into bench dog hole"
+    },
+    "source": "eBay sold listing - 'LARGE Woodworking Holdfast for 1\" bench dog holes'",
+    "why_good_test": "Holdfast \u2014 simple L-shaped workholding device, uncommon in AI training"
+  },
+  {
+    "filename": "r5_record_woodworking_vise.jpg",
+    "url": "https://i.ebayimg.com/images/g/zysAAeSwO6xps7q~/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Woodworking Vise",
+      "maker": "Fine Tools Inc.",
+      "model": "7-1/2 inch Carpenter's Vise",
+      "era": "Mid-20th century",
+      "condition": "Good",
+      "notable": "Under-bench mount with bench dog stop"
+    },
+    "source": "eBay sold listing - 'Fine Tools Inc. Vintage 7 1/2in Carpenters Woodworking Vise With Bench Dog Stop'",
+    "why_good_test": "Woodworking vise \u2014 workholding device, tests non-cutting tool recognition"
+  },
+  {
+    "filename": "r5_rusty_plane_project.jpg",
+    "url": "https://i.ebayimg.com/images/g/PGEAAeSwH1ppb5iD/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Unknown",
+      "model": "No. 4 size",
+      "era": "Early-mid 20th century",
+      "condition": "Poor/Project",
+      "notable": "Cracked rear handle, heavy rust, restoration project"
+    },
+    "source": "eBay sold listing - 'Vintage Cast Iron Hand Wood Plane | Cracked Rear Handle | Restoration Project'",
+    "why_good_test": "Worst-case condition \u2014 cracked handle, heavy rust, can AI still identify type?"
+  },
+  {
+    "filename": "r5_stanley_no5_sole_view.jpg",
+    "url": "https://i.ebayimg.com/images/g/9nMAAeSwHsVpUZBr/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Jack Plane",
+      "maker": "Stanley",
+      "model": "No. 5",
+      "era": "1907-1909 (Type 10)",
+      "condition": "Good",
+      "notable": "Corrugated sole, shown from bottom/unusual angle"
+    },
+    "source": "eBay sold listing - 'Antique STANLEY no. 5 Bailey JACK PLANE - Type 10 - Corrugated Sole'",
+    "why_good_test": "Unusual angle \u2014 sole view of corrugated bottom, tests angle robustness"
+  },
+  {
+    "filename": "r5_stanley_no6_cluttered.jpg",
+    "url": "https://i.ebayimg.com/images/g/e4kAAeSwq8Npsvz0/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Fore Plane",
+      "maker": "Stanley",
+      "model": "No. 6",
+      "era": "1940s-1960s",
+      "condition": "Good",
+      "notable": "18-inch fore plane, likely on cluttered seller background"
+    },
+    "source": "eBay sold listing - 'Vintage USA Stanley No. 6 fore plane'",
+    "why_good_test": "Cluttered background \u2014 tests AI ability to isolate tool from messy seller photo"
+  },
+  {
+    "filename": "r5_hand_adze.jpg",
+    "url": "https://i.ebayimg.com/images/g/bUIAAeSwzLtpCkhp/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Adze",
+      "maker": "Unknown (handmade)",
+      "model": "Hand Adze",
+      "era": "Early-mid 20th century",
+      "condition": "Fair",
+      "notable": "Primitive hand-made adze with wood carved handle"
+    },
+    "source": "eBay sold listing - 'Vintage Primitive Hand Made Adze Wood Working Tool with Wood Carved Handle'",
+    "why_good_test": "Uncommon tool \u2014 adze is rarely seen in training data, tests edge case handling"
+  },
+  {
+    "filename": "r5_stanley_no3_worn.jpg",
+    "url": "https://i.ebayimg.com/images/g/RlUAAeSw2NRpmZNf/s-l1600.jpg",
+    "ground_truth": {
+      "tool_type": "Smoothing Plane",
+      "maker": "Stanley",
+      "model": "No. 3",
+      "era": "1888-1892 (Type 6)",
+      "condition": "Fair",
+      "notable": "Very old Type 6, worn markings, heavy patina"
+    },
+    "source": "eBay sold listing - 'VERY OLD STANLEY NO. 3 PLANE. TYPE 6, 1888 - 1892'",
+    "why_good_test": "Worn markings challenge \u2014 very old plane with faded stampings and heavy wear"
+  }
+]

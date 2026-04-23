@@ -413,13 +413,13 @@ const ToolScanPage = () => {
               {/* Waitlist nudge */}
               <div className="mt-16 max-w-md mx-auto text-center">
                 <p className="text-base text-secondary font-body mb-3">
-                  Nothing to scan right now? Join the waitlist and we'll let you know when the marketplace launches.
+                  Nothing to scan right now? Leave your email and we'll let you know when search and alerts go live.
                 </p>
                 <a
                   href="#scan-waitlist"
                   className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                 >
-                  Join the waitlist →
+                  Get early access →
                 </a>
               </div>
             </div>
@@ -449,8 +449,8 @@ const ToolScanPage = () => {
                 </div>
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
-                  <h3 className="font-display font-semibold text-dark-teal mb-1">Decide</h3>
-                  <p className="text-sm text-secondary font-body">Save it to your collection or list it for sale. Your call.</p>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Know</h3>
+                  <p className="text-sm text-secondary font-body">See what it is, what era it's from, and a rough sense of what it's worth.</p>
                 </div>
               </div>
             </div>
@@ -472,21 +472,21 @@ const ToolScanPage = () => {
                   </button>
                 </div>
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Oldie but a goodie?</h3>
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Hunting something specific?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    Give your tools a second life. List what you've outgrown, find what you've been searching for.
+                    A pre-war No. 7. A Lie-Nielsen shoulder plane. A Starrett square. Soon you'll be able to save a search and we'll email you when a matching listing hits.
                   </p>
                   <a
                     href="#scan-waitlist"
                     className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                   >
-                    Join the waitlist →
+                    Get early access →
                   </a>
                 </div>
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
-                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Selling your collection?</h3>
+                  <h3 className="text-lg font-display font-semibold text-spruce mb-3">Curious what it's worth?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    We'll draft a title, description, and price estimate from your photo. You review it, adjust what needs adjusting, and list.
+                    Snap a photo and we'll identify the tool, estimate its era, and give you a rough sense of where it sits in the market.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -500,9 +500,9 @@ const ToolScanPage = () => {
 
             {/* Section 5: Bottom Waitlist */}
             <div id="scan-waitlist" className="mb-12 text-center max-w-md mx-auto">
-              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Nothing to scan right now?</h2>
+              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Get early access</h2>
               <p className="text-base text-secondary font-body mb-6">
-                Join the waitlist and we'll let you know when the marketplace launches.
+                Leave your email and we'll let you know the moment search and alerts go live.
               </p>
               <form onSubmit={handleWaitlistSubmit}>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -744,7 +744,7 @@ const ToolScanPage = () => {
                 {emailError && (
                   <p className="text-sm text-error mt-2">{emailError}</p>
                 )}
-                <p className="text-xs text-secondary mt-3">We'll send you tips on listing and selling your tools. Unsubscribe anytime.</p>
+                <p className="text-xs text-secondary mt-3">We'll keep you posted as Benchlot's search and alerts come online. Unsubscribe anytime.</p>
               </form>
             </div>
           </div>
@@ -783,7 +783,7 @@ const ToolScanPage = () => {
                 Scan another tool →
               </button>
               <p className="text-sm text-secondary font-body mt-3">
-                We'll email you when Benchlot launches and you can list your tools for sale.
+                We'll email you when Benchlot's search goes live so you can save your first alert.
               </p>
             </div>
 

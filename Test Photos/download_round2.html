@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Benchlot Round 2 - Download 50 Test Photos</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+h1 { color: #333; }
+.status { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; }
+.ok { color: green; }
+.err { color: red; }
+button { padding: 12px 24px; font-size: 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+button:hover { background: #1d4ed8; }
+button:disabled { background: #999; cursor: not-allowed; }
+.progress { margin: 10px 0; }
+.bar { height: 20px; background: #e5e7eb; border-radius: 10px; overflow: hidden; }
+.fill { height: 100%; background: #2563eb; transition: width 0.3s; }
+</style>
+</head>
+<body>
+<h1>Benchlot Round 2: 50 Non-Stanley Test Photos</h1>
+<p>Click the button below to download all 50 images. They'll save to your Downloads folder with the correct filenames.</p>
+<p><strong>Tip:</strong> Your browser may ask to allow multiple downloads — click "Allow".</p>
+
+<button id="downloadAll" onclick="startDownload()">Download All 50 Images</button>
+<button id="downloadRemaining" onclick="downloadRemaining()" style="display:none">Retry Failed Downloads</button>
+
+<div class="progress">
+  <div id="progressText">Ready</div>
+  <div class="bar"><div id="progressFill" class="fill" style="width:0%"></div></div>
+</div>
+
+<div id="status" class="status"></div>
+
+<script>
+const IMAGES = [
+  {url: "https://i.ebayimg.com/images/g/SjUAAeSwxO5pscqC/s-l1600.jpg", name: "veritas_laj_plane_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/nLoAAeSwPo5pl-Bx/s-l1600.jpg", name: "veritas_laj_plane_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/EywAAeSw8V9ovuxS/s-l1600.jpg", name: "veritas_laj_plane_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/QCsAAeSwvgdpn3s-/s-l1600.jpg", name: "veritas_smoothing_plane.jpg"},
+  {url: "https://i.ebayimg.com/images/g/4soAAeSwqNtppIG0/s-l1600.jpg", name: "veritas_block_plane_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ZEEAAeSwvTlpJ0Yv/s-l1600.jpg", name: "veritas_block_plane_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/JXoAAeSwH8pprrnr/s-l1600.jpg", name: "lie_nielsen_no62_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/57UAAeSw4-NppySy/s-l1600.jpg", name: "lie_nielsen_no62_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/qfcAAeSwDzZpqMv4/s-l1600.jpg", name: "lie_nielsen_no62_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/RZsAAeSwdUVpqbMX/s-l1600.jpg", name: "record_no4_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/-ewAAeSwpOxphNqt/s-l1600.jpg", name: "record_no4_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/QA4AAeSwTPdphyDG/s-l1600.jpg", name: "record_no4_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/AzoAAeSwXstpor1u/s-l1600.jpg", name: "record_no5_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ZvYAAeSwV8ppoG6D/s-l1600.jpg", name: "record_no5_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/iz8AAOSwQeBd8RZA/s-l1600.jpg", name: "narex_chisel_set_boxed.jpg"},
+  {url: "https://i.ebayimg.com/images/g/lW4AAeSwXQJprVmt/s-l1600.jpg", name: "narex_chisel_set_7pc.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ZhQAAeSwYkNpl0~f/s-l1600.jpg", name: "narex_chisel_set_wooden.jpg"},
+  {url: "https://i.ebayimg.com/images/g/YXIAAOSw4KdgZJ2V/s-l1600.jpg", name: "narex_chisel_set_presentation.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ylgAAeSwFaZpLQDC/s-l1600.jpg", name: "japanese_ryoba_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/3SIAAeSwe-FpAmwT/s-l1600.jpg", name: "japanese_ryoba_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/n5UAAeSwtWZpR3Vy/s-l1600.jpg", name: "japanese_ryoba_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/tGAAAOSw2AxmX1q2/s-l1600.jpg", name: "japanese_dozuki_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/kXwAAOSw1vxg7Cee/s-l1600.jpg", name: "japanese_dozuki_gyokucho.jpg"},
+  {url: "https://i.ebayimg.com/images/g/qMYAAOSwvBlg--Bi/s-l1600.jpg", name: "japanese_dozuki_zsaw.jpg"},
+  {url: "https://i.ebayimg.com/images/g/QFoAAeSwT-pot0pc/s-l1600.jpg", name: "marking_gauge_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/SaIAAeSw6R9phVlK/s-l1600.jpg", name: "marking_gauge_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/pdkAAeSwiK9pUfcb/s-l1600.jpg", name: "marking_gauge_stanley95.jpg"},
+  {url: "https://i.ebayimg.com/images/g/jo0AAeSwjdJppifs/s-l1600.jpg", name: "stanley_151_spokeshave_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/xDEAAeSwdWNpqUAu/s-l1600.jpg", name: "stanley_151_spokeshave_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/dfUAAeSwEJxppKBx/s-l1600.jpg", name: "stanley_151_spokeshave_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/mLcAAOSwV5tm2L~l/s-l1600.jpg", name: "brace_and_bit_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/TDkAAeSwsV9pqO6K/s-l1600.jpg", name: "brace_and_bit_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/xMIAAeSwpWRpVXsd/s-l1600.jpg", name: "brace_and_bit_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/0e8AAeSwcKNpsywW/s-l1600.jpg", name: "combination_square_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ZzEAAeSwoKxpX~ib/s-l1600.jpg", name: "combination_square_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/k1IAAeSwd6FprBbh/s-l1600.jpg", name: "combination_square_starrett.jpg"},
+  {url: "https://i.ebayimg.com/images/g/8IMAAOSw0p9oAQq3/s-l1600.jpg", name: "wooden_molding_plane_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/HmEAAeSw7cpppzsV/s-l1600.jpg", name: "wooden_molding_plane_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/OBcAAeSwojBpqFHg/s-l1600.jpg", name: "wooden_molding_plane_3.jpg"},
+  {url: "https://i.ebayimg.com/images/g/URsAAeSw4mtpY4UT/s-l1600.jpg", name: "stanley_no78_rabbet_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/XOkAAeSw5ItpYtuc/s-l1600.jpg", name: "stanley_no78_rabbet_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/H-EAAeSwVUxppdIS/s-l1600.jpg", name: "stanley_no7_jointer_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/bnkAAeSw3ylpqiPv/s-l1600.jpg", name: "stanley_no7_jointer_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/ADYAAeSwH4lpm3f5/s-l1600.jpg", name: "stanley_no220_block_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/SYkAAeSwDCxpd2eH/s-l1600.jpg", name: "stanley_no220_block_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/R08AAeSwNKxppvMr/s-l1600.jpg", name: "stanley_no3_smoothing_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/4~0AAeSwtj1pqLH0/s-l1600.jpg", name: "stanley_no3_smoothing_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/V2gAAeSweYpoClte/s-l1600.jpg", name: "card_scraper_1.jpg"},
+  {url: "https://i.ebayimg.com/images/g/rfAAAeSwiXpoxcxl/s-l1600.jpg", name: "card_scraper_2.jpg"},
+  {url: "https://i.ebayimg.com/images/g/0ksAAeSwj8ZpQyt3/s-l1600.jpg", name: "card_scraper_set.jpg"}
+];
+
+let failed = [];
+const statusEl = document.getElementById('status');
+const progressText = document.getElementById('progressText');
+const progressFill = document.getElementById('progressFill');
+
+function log(msg, cls) {
+  statusEl.innerHTML += `<div class="${cls || ''}">${msg}</div>`;
+  statusEl.scrollTop = statusEl.scrollHeight;
+}
+
+async function downloadOne(img) {
+  try {
+    const resp = await fetch(img.url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = u; a.download = img.name;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    return {ok: true, size: blob.size};
+  } catch(e) {
+    return {ok: false, error: e.message};
+  }
+}
+
+async function startDownload() {
+  document.getElementById('downloadAll').disabled = true;
+  failed = [];
+  let done = 0;
+
+  for (const img of IMAGES) {
+    const result = await downloadOne(img);
+    done++;
+    const pct = Math.round(done / IMAGES.length * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${done}/${IMAGES.length} (${pct}%)`;
+
+    if (result.ok) {
+      log(`✓ ${img.name} (${(result.size/1024).toFixed(0)} KB)`, 'ok');
+    } else {
+      log(`✗ ${img.name}: ${result.error}`, 'err');
+      failed.push(img);
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  if (failed.length > 0) {
+    log(`\n${failed.length} failed. Click "Retry" to try again.`);
+    document.getElementById('downloadRemaining').style.display = 'inline-block';
+  } else {
+    log('\n✓ All 50 images downloaded!', 'ok');
+  }
+}
+
+async function downloadRemaining() {
+  const toRetry = [...failed];
+  failed = [];
+  let done = 0;
+
+  for (const img of toRetry) {
+    const result = await downloadOne(img);
+    done++;
+    if (result.ok) {
+      log(`✓ RETRY: ${img.name} (${(result.size/1024).toFixed(0)} KB)`, 'ok');
+    } else {
+      log(`✗ RETRY: ${img.name}: ${result.error}`, 'err');
+      failed.push(img);
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  if (failed.length === 0) {
+    document.getElementById('downloadRemaining').style.display = 'none';
+    log('\n✓ All retries succeeded!', 'ok');
+  }
+}
+</script>
+</body>
+</html>

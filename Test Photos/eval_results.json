@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-24T14:57:41.668Z",
+  "prompt_version": "v3.3",
+  "model": "claude-sonnet-4-20250514",
+  "total_evaluated": 1,
+  "results": [
+    {
+      "filename": "r6_stanley_no4_smoothing.jpg",
+      "ground_truth": {
+        "tool_type": "Smoothing Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "post-war"
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CZN6qZZdQxEkfZmSTvjx1\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    }
+  ]
+}
