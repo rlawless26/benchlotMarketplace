@@ -2678,3 +2678,148 @@ exports.onConversationMessageCreated = onDocumentCreated(
   }
 );
 
+/**
+ * Scheduled ingestion — Jim Bode Tools Value Guide.
+ *
+ * First-ever scheduled function in this repo. Runs nightly at 04:00 UTC
+ * (midnight ET). Paginates the public Shopify products.json endpoint,
+ * upserts into the `externalListings` Firestore collection, and flips
+ * unseen listings to `status: "expired"`. See functions/ingest/SCHEMA.md.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-jimbode.js`.
+ */
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const jimbode = require('./ingest/jimbode');
+
+exports.scheduledIngestJimbode = onSchedule(
+  {
+    schedule: '0 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540, // scrape + upsert is usually minutes, not seconds
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await jimbode.runIngestion();
+      console.log('[scheduledIngestJimbode] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestJimbode] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
+ * Scheduled ingestion — Hyperkitten Tool Company.
+ *
+ * Runs nightly at 03:45 UTC, before Jim Bode (04:00) and the alert matcher
+ * (04:15). Hyperkitten publishes their full inventory as a single HTML page
+ * — no pagination, no API — so the scrape is one HTTP request + cheerio
+ * parse + batched Firestore writes, typically ~10 seconds.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-hyperkitten.js`.
+ */
+const hyperkitten = require('./ingest/hyperkitten');
+
+exports.scheduledIngestHyperkitten = onSchedule(
+  {
+    schedule: '45 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await hyperkitten.runIngestion();
+      console.log('[scheduledIngestHyperkitten] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestHyperkitten] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
+ * Normalize externalListings when they're written.
+ *
+ * Fires on create + update of any externalListings doc. The apply helper
+ * short-circuits when `canonical_brand` is already populated, so:
+ *   - fresh listings from the scraper get normalized automatically
+ *   - the trigger's own write-back (which sets canonical_brand) does NOT
+ *     re-trigger normalization (would infinite-loop otherwise)
+ *   - re-upserts from the next scrape are no-ops on already-canonical rows
+ *
+ * Model cost: ~$0.0002 per listing at current Haiku 4.5 pricing with caching.
+ * At 25k listings lifetime, backfill + ongoing is under $10 total.
+ */
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { normalizeListingDoc } = require('./normalize/apply');
+
+// Match ToolScan's pattern: read ANTHROPIC_API_KEY from process.env without
+// a `secrets` declaration. Whatever mechanism sets the key for ToolScan's
+// /toolscan endpoint will cover this function too.
+/**
+ * Scheduled alert matcher — M3b.
+ *
+ * Runs 15 minutes after the Jim Bode scrape (04:15 UTC) so any listings the
+ * scrape added have already landed and been normalized by the on-write
+ * trigger. Iterates every saved_search, finds new externalListings matching
+ * it since the alert's last run, sends a digest email per user, and updates
+ * lastMatchedAt. See functions/alerts/matcher.js for the full logic.
+ */
+const { runAlertMatcher } = require('./alerts/matcher');
+
+exports.scheduledAlertMatcher = onSchedule(
+  {
+    schedule: '15 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await runAlertMatcher();
+      console.log('[scheduledAlertMatcher] done', summary);
+    } catch (err) {
+      console.error('[scheduledAlertMatcher] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+exports.normalizeExternalListing = onDocumentWritten(
+  {
+    document: 'externalListings/{listingId}',
+    timeoutSeconds: 120,
+    memory: '512MiB',
+  },
+  async (event) => {
+    const after = event.data && event.data.after;
+    if (!after || !after.exists) return null; // deletion — nothing to do
+
+    const data = after.data();
+    if (!data) return null;
+
+    // Idempotency: skip writes that already carry canonical fields. This is
+    // the guard that keeps our own trigger-write from re-firing the trigger.
+    if (data.canonical_brand) return null;
+
+    try {
+      const result = await normalizeListingDoc(after.ref, data);
+      if (result.normalized) {
+        console.log(
+          `[normalizeExternalListing] ${event.params.listingId} normalized: brand=${result.canonical.canonical_brand} type=${result.canonical.canonical_type}`
+        );
+      }
+    } catch (err) {
+      // Swallow: per-doc normalizer failures should not crash the whole
+      // trigger. Log for ops; the backfill CLI can pick these up later.
+      console.error(
+        `[normalizeExternalListing] ${event.params.listingId} failed:`,
+        err.message
+      );
+    }
+    return null;
+  }
+);
+
