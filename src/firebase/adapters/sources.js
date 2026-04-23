@@ -46,7 +46,7 @@ const SOURCES = [
     shortName: 'Sawmill Creek',
     kind: 'Forum',
     descriptor: 'Forum classifieds',
-    indexed: false,
+    indexed: true,
   },
   {
     id: 'lumberjocks',

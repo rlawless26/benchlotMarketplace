@@ -2740,6 +2740,40 @@ exports.scheduledIngestHyperkitten = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — Sawmill Creek classifieds.
+ *
+ * Runs nightly at 03:15 UTC, first in the aggregator chain (before eBay at
+ * 03:30, Hyperkitten at 03:45, Jim Bode at 04:00, alert matcher at 04:15).
+ *
+ * Two-phase scrape: list sweep (~3 pages of the classifieds forum) plus
+ * selective detail fetch for threads we haven't seen before. Known threads
+ * get a light last_seen_at touch without re-fetching the OP body. Typical
+ * nightly runtime is under a minute; first-time full scrape takes ~5-10
+ * minutes due to per-thread politeness delay.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-sawmillcreek.js`.
+ */
+const sawmillcreek = require('./ingest/sawmillcreek');
+
+exports.scheduledIngestSawmillcreek = onSchedule(
+  {
+    schedule: '15 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540, // first-time full catalog can take several minutes
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await sawmillcreek.runIngestion();
+      console.log('[scheduledIngestSawmillcreek] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestSawmillcreek] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Normalize externalListings when they're written.
  *
  * Fires on create + update of any externalListings doc. The apply helper

@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -96,8 +96,19 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|---|
 | `jimbode` | Jim Bode Tools (Value Guide) | `shopify_product` | M1 |
 | `hyperkitten` | Hyperkitten Tool Company | `hyperkitten_item` | M4 |
+| `sawmillcreek` | Sawmill Creek Classifieds | `sawmillcreek_thread` | M4 |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
+
+### Sawmill Creek notes
+- `source_id` = XenForo thread ID (e.g. `317326`). Firestore docId: `sawmillcreek__317326`.
+- `source_url` = `https://sawmillcreek.org/threads/{slug}.{thread_id}/` — real deep link; clickthrough lands directly on the thread.
+- `posted_at` IS populated (XenForo exposes `<time datetime>` on thread-start elements). Unlike Hyperkitten, we have a real listing date.
+- Two-phase scrape: new threads get a full detail fetch (OP body, images, price regex); already-ingested threads get a `last_seen_at` touch with no re-fetch. Raw payload is preserved from first fetch.
+- Multi-item posts (e.g. "FS - lot of chisels $200 takes all") are ingested as a single listing.
+- Title-based filters at ingestion skip WTB / WTT / ISO / "want to buy" / "looking for" threads as well as any thread whose title contains `SOLD`.
+- `tags` carry `smc_author:<username>` for attribution/quality use.
+- Classifieds is heterogeneous — includes power tools, lumber, magazines, software — that don't map cleanly onto `CANONICAL_TYPES` (hand-tool focused). Those listings land in `canonical_type: Other` for now; a follow-up vocabulary-expansion milestone addresses it.
 
 ### Hyperkitten notes
 - `source_id` = Hyperkitten's item number (e.g. `C8270`, `P1234`, `MP42`). The prefix mirrors the `data-tool_type` category code.
