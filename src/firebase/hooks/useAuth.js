@@ -366,14 +366,6 @@ export function AuthProvider({ children }) {
   // Passwordless email-link sign-in (Firebase email link auth)
   // ---------------------------------------------------------------------------
 
-  // Where Firebase sends the user back to after they click the email link.
-  // Firebase appends its own apiKey / mode / oobCode params; App.js detects
-  // them on mount via completeSignInFromLink().
-  const EMAIL_LINK_RETURN_URL =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/?auth=email-link`
-      : 'https://benchlot.com/?auth=email-link';
-
   const EMAIL_LINK_STORAGE_KEY = 'benchlot:emailForSignIn';
 
   /**
@@ -381,13 +373,20 @@ export function AuthProvider({ children }) {
    * localStorage so completeSignInFromLink() can recover it when the user
    * clicks back (Firebase requires the original email to complete the flow,
    * even in the same browser).
+   *
+   * The continue URL is captured at call time from window.location.href so
+   * the user returns to the exact page they were on (preserves query +
+   * filter state in the URL — matters for the auto-save-after-auth flow in
+   * SaveAlertButton).
    */
   const sendSignInLink = async (email) => {
     try {
       const normalized = (email || '').trim().toLowerCase();
       if (!normalized) return { success: false, error: 'Email is required' };
+      const returnUrl =
+        typeof window !== 'undefined' ? window.location.href : 'https://benchlot.com/';
       await sendSignInLinkToEmail(auth, normalized, {
-        url: EMAIL_LINK_RETURN_URL,
+        url: returnUrl,
         handleCodeInApp: true,
       });
       window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, normalized);

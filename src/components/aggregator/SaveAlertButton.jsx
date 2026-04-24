@@ -1,12 +1,17 @@
 /**
  * Save-Alert button — the breadcrumb's core CTA.
  *
- * Two paths, chosen by auth state:
+ * Rendering rule: only mounts when there IS something to save — a non-empty
+ * query OR at least one active filter. An "alert for all listings" is spam,
+ * not a feature; the absence of the button is itself the UX affordance.
+ *
+ * Two auth paths:
  *   - Signed-in: writes to `saved_searches` Firestore collection via
- *     savedSearchModel. This is the real alert plumbing — M3b's matcher
- *     Cloud Function polls against these records.
- *   - Anonymous: opens the auth modal. After sign-in, the click can be
- *     re-attempted (user sees the unsaved state; clicks again → saves).
+ *     savedSearchModel. M3b's matcher Cloud Function polls against these.
+ *   - Anonymous: stash the pending intent in sessionStorage, open the auth
+ *     modal. After sign-in (Google popup OR email-link round trip), the
+ *     pending-intent effect below auto-completes the save — the user does
+ *     not have to click the button a second time.
  *
  * Any query/filter/sort change resets the button to unsaved state so the
  * user can save the new search.
@@ -23,6 +28,22 @@ import {
   hashSavedSearch,
   ALERT_CAP,
 } from '../../firebase/models/savedSearchModel';
+
+const PENDING_KEY = 'benchlot:pendingSaveAlert';
+
+/**
+ * Is any filter active? Matches the shape useAggregatorState writes.
+ * Checked alongside query to decide whether SaveAlertButton renders.
+ */
+function hasAnyIntent({ query, filters }) {
+  if (query && query.trim()) return true;
+  if (!filters) return false;
+  if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
+  for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+    if (filters[group] && Object.keys(filters[group]).length > 0) return true;
+  }
+  return false;
+}
 
 const SaveAlertButton = ({ query, filters, sort }) => {
   const { user, loading: authLoading } = useAuth();
@@ -54,19 +75,14 @@ const SaveAlertButton = ({ query, filters, sort }) => {
     };
   }, [stateHash, uid, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onClick = useCallback(async () => {
-    setError(null);
-
-    if (!uid) {
-      openAuthModal('signin', window.location.pathname + window.location.search);
-      return;
-    }
-
-    if (busy || saved) return;
+  const doSave = useCallback(async () => {
+    if (!uid) return { ok: false };
     setBusy(true);
+    setError(null);
     try {
       await createSavedSearch(uid, { query, filters, sort });
       setSaved(true);
+      return { ok: true };
     } catch (err) {
       if (err.code === 'alert_cap_reached') {
         setError(`You're at the ${ALERT_CAP}-alert limit. Delete one on /alerts to save a new search.`);
@@ -74,10 +90,51 @@ const SaveAlertButton = ({ query, filters, sort }) => {
         console.error('Save alert failed:', err);
         setError('Could not save. Please try again.');
       }
+      return { ok: false, err };
     } finally {
       setBusy(false);
     }
-  }, [uid, busy, saved, query, filters, sort]);
+  }, [uid, query, filters, sort]);
+
+  // Auto-save after auth completion. When a signed-out user clicks Save,
+  // we stash their intent in sessionStorage and open the auth modal. On
+  // successful auth — Google popup (same-page) or email-link return
+  // (full page reload via continueUrl = current href) — this effect runs:
+  // if the stored intent matches the current URL state, execute the save.
+  useEffect(() => {
+    if (!uid || authLoading) return;
+    const raw = window.sessionStorage.getItem(PENDING_KEY);
+    if (!raw) return;
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { window.sessionStorage.removeItem(PENDING_KEY); return; }
+    if (!parsed || parsed.hash !== stateHash) return;
+    window.sessionStorage.removeItem(PENDING_KEY);
+    // Small delay so the user sees the auth-complete moment before the
+    // button flips to saved — avoids a jarring flash.
+    const t = setTimeout(() => { doSave(); }, 150);
+    return () => clearTimeout(t);
+  }, [uid, authLoading, stateHash, doSave]);
+
+  const onClick = useCallback(async () => {
+    setError(null);
+
+    if (!uid) {
+      // Stash the intent so post-auth we can complete it automatically.
+      window.sessionStorage.setItem(
+        PENDING_KEY,
+        JSON.stringify({ hash: stateHash, query, filters, sort })
+      );
+      openAuthModal('signin', window.location.pathname + window.location.search);
+      return;
+    }
+
+    if (busy || saved) return;
+    await doSave();
+  }, [uid, busy, saved, query, filters, sort, stateHash, doSave]);
+
+  // Guard: don't render unless the user has something worth saving. An
+  // "alert for everything" is spam, not a feature.
+  if (!hasAnyIntent({ query, filters })) return null;
 
   if (saved) {
     return (
