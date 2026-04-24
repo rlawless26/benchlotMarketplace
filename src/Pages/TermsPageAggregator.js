@@ -1,12 +1,9 @@
 // src/Pages/TermsPageAggregator.js
 //
-// Aggregator-chromed duplicate of TermsPage.js. The legacy TermsPage.js is
-// preserved unchanged; this file is what the /terms route renders now so
-// the policy page sits under SiteHeader + SiteFooter like the rest of the
-// post-pivot content pages.
-//
-// Content is copied verbatim from TermsPage.js — update in parallel if
-// either file changes and you care about parity.
+// Terms of Service for the aggregator. Benchlot indexes public listings from
+// external sources; users click through to those sources to transact. No
+// marketplace, no payments, no user-posted inventory — the pre-pivot terms
+// (seller/buyer/marketplace fee) don't apply.
 
 import React, { useEffect } from 'react';
 
@@ -60,220 +57,149 @@ export default function TermsPageAggregator() {
               letterSpacing: '0.01em',
             }}
           >
-            Last Updated: April 20, 2025
+            Last Updated: April 24, 2026
           </p>
 
           <div className="prose prose-stone max-w-none">
-            <h2>1. Agreement to Terms</h2>
+            <h2>1. What Benchlot is</h2>
             <p>
-              Welcome to Benchlot. These Terms of Service ("Terms") govern your access to and use of the Benchlot website,
-              mobile applications, and services (collectively, the "Services"). Please read these Terms carefully.
+              Benchlot is a search engine for used hand tool and woodworking tool listings. We index
+              publicly-available listings from dealers, forum classifieds, and auction houses into one place
+              so you can search across them. When you find something you want, you click through to the
+              original source and transact there.
             </p>
             <p>
-              By accessing or using our Services, you agree to be bound by these Terms and our Privacy Policy. If you do not
-              agree to these Terms, you may not access or use our Services.
+              <strong>We do not sell tools.</strong> We don&rsquo;t hold inventory, process payments, take a
+              commission, or facilitate transactions. We point you at listings — the rest is between you and
+              the seller.
             </p>
 
-            <h2>2. Definitions</h2>
-            <p>In these Terms:</p>
-            <ul>
-              <li>"Benchlot," "we," "us," and "our" refer to Benchlot, Inc.</li>
-              <li>"User," "you," and "your" refer to any individual or entity using our Services.</li>
-              <li>"Seller" refers to a User who lists tools for sale, rent, or trade on our Services.</li>
-              <li>"Buyer" refers to a User who purchases, rents, or acquires tools listed on our Services.</li>
-              <li>"Listing" refers to a tool or equipment offered for sale, rent, or trade on our Services.</li>
-              <li>"Content" refers to any information, text, graphics, photos, or other material uploaded, downloaded, or appearing on our Services.</li>
-            </ul>
-
-            <h2>3. Account Registration</h2>
+            <h2>2. Agreement to Terms</h2>
             <p>
-              To use certain features of our Services, you must register for an account. When you register, you agree to:
+              These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of the Benchlot
+              website and services (the &ldquo;Services&rdquo;). By using the Services you agree to these
+              Terms and our Privacy Policy. If you don&rsquo;t agree, don&rsquo;t use the Services.
             </p>
-            <ul>
-              <li>Provide accurate, current, and complete information</li>
-              <li>Maintain and promptly update your information</li>
-              <li>Keep your password secure and confidential</li>
-              <li>Be responsible for all activity that occurs under your account</li>
-              <li>Notify us immediately of any unauthorized use of your account</li>
-            </ul>
+            <p>In these Terms, &ldquo;Benchlot,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; and &ldquo;our&rdquo; refer to Benchlot, Inc. &ldquo;You&rdquo; and &ldquo;your&rdquo; refer to anyone using the Services.</p>
+
+            <h2>3. Accounts and alerts</h2>
             <p>
-              We reserve the right to suspend or terminate your account if any information provided is inaccurate, false, or
-              incomplete. You must be at least 18 years old to create an account and use our Services.
-            </p>
-
-            <h2>4. Marketplace Rules</h2>
-            <h3>4.1. Listings</h3>
-            <p>As a Seller, you agree to:</p>
-            <ul>
-              <li>Provide accurate and complete information about the tools you list</li>
-              <li>List only tools that you own or are authorized to sell</li>
-              <li>Clearly disclose any defects, damages, or issues with the tools</li>
-              <li>Set fair and reasonable prices</li>
-              <li>Promptly respond to inquiries from potential Buyers</li>
-              <li>Honor commitments to sell at the agreed-upon price</li>
-            </ul>
-            <p>We reserve the right to remove any Listing at our discretion.</p>
-
-            <h3>4.2. Purchases</h3>
-            <p>As a Buyer, you agree to:</p>
-            <ul>
-              <li>Pay the full agreed-upon price for tools you purchase</li>
-              <li>Complete the transaction as agreed with the Seller</li>
-              <li>Inspect tools upon receipt</li>
-              <li>Communicate any issues promptly and professionally</li>
-            </ul>
-
-            <h3>4.3. Prohibited Items</h3>
-            <p>The following items may not be listed on our Services:</p>
-            <ul>
-              <li>Stolen or counterfeit items</li>
-              <li>Items that infringe on intellectual property rights</li>
-              <li>Dangerous or defective tools that pose safety risks</li>
-              <li>Items prohibited by law</li>
-              <li>Items that violate our community standards</li>
-            </ul>
-
-            <h2>5. Fees and Payments</h2>
-            <h3>5.1. Platform Fees</h3>
-            <p>
-              Benchlot charges a 10% marketplace fee on each successful transaction. This all-in fee covers
-              our service, payment processing, and ongoing platform improvements. There are no listing fees
-              or monthly subscription costs.
-            </p>
-
-            <h3>5.2. Payment Processing</h3>
-            <p>
-              Our Services use Stripe to process payments. By using our payment processing system, you agree to
-              comply with Stripe's terms of service, which can be found on their website.
-            </p>
-
-            <h3>5.3. Payment to Sellers</h3>
-            <p>
-              Sellers will receive payment for their sold items after the Buyer confirms receipt of the item or after
-              a specified holding period, less the applicable platform fees. Payments will be made to the Seller's
-              connected Stripe account.
-            </p>
-
-            <h3>5.4. Refunds and Returns</h3>
-            <p>
-              Our refund policy allows Buyers to request a refund within 48 hours of receiving an item if it is
-              significantly different from its description. Refunds are processed at our discretion after
-              investigation of the claim.
-            </p>
-
-            <h2>6. User Content</h2>
-            <h3>6.1. Ownership</h3>
-            <p>
-              You retain ownership of any Content you submit, post, or display on or through our Services. By
-              submitting Content, you grant Benchlot a worldwide, non-exclusive, royalty-free license to use,
-              reproduce, modify, adapt, publish, translate, and distribute the Content for the purpose of providing
-              and promoting our Services.
-            </p>
-
-            <h3>6.2. Responsibility for Content</h3>
-            <p>
-              You are solely responsible for any Content you post on our Services. You represent and warrant that:
+              You can use Benchlot&rsquo;s search anonymously. If you want to save an alert (a persistent
+              search that notifies you by email when a new listing matches), you&rsquo;ll create an account
+              with an email address. You agree to:
             </p>
             <ul>
-              <li>You own the Content or have the right to use and grant us the rights specified in these Terms</li>
-              <li>The Content does not violate the privacy rights, publicity rights, copyright, contractual rights, or any other rights of any person or entity</li>
+              <li>Provide an accurate email address and keep it current</li>
+              <li>Keep your account credentials confidential</li>
+              <li>Use the account only for personal, non-commercial purposes</li>
+              <li>Not create multiple accounts or impersonate others</li>
             </ul>
-
-            <h3>6.3. Prohibited Content</h3>
-            <p>You agree not to post Content that:</p>
-            <ul>
-              <li>Is false, misleading, or deceptive</li>
-              <li>Is defamatory, obscene, pornographic, vulgar, or offensive</li>
-              <li>Promotes discrimination, bigotry, racism, hatred, harassment, or harm against any individual or group</li>
-              <li>Is violent or threatening or promotes violence or actions that are threatening to any person or entity</li>
-              <li>Promotes illegal activities</li>
-              <li>Infringes upon or violates the intellectual property rights or other rights of any person or entity</li>
-            </ul>
-
-            <h2>7. Intellectual Property</h2>
             <p>
-              The Benchlot name, logo, and all related names, logos, product and service names, designs, and slogans
-              are trademarks of Benchlot or its affiliates. You may not use such marks without our prior written permission.
-            </p>
-            <p>
-              Our Services and their entire contents, features, and functionality (including but not limited to all
-              information, software, text, displays, images, video, and audio, and the design, selection, and
-              arrangement thereof) are owned by Benchlot, its licensors, or other providers of such material and are
-              protected by copyright, trademark, patent, trade secret, and other intellectual property or proprietary
-              rights laws.
+              You can delete your account at any time by contacting us. We may suspend or terminate accounts
+              that abuse the service (scraping us in turn, spamming, fraud, etc.).
             </p>
 
-            <h2>8. Disputes Between Users</h2>
+            <h2>4. Third-party listings and linking</h2>
             <p>
-              Benchlot is not responsible for resolving disputes between Users. However, we may, at our discretion,
-              provide assistance in resolving disputes. If you have a dispute with another User, we encourage you to
-              first attempt to resolve the issue directly with the other User.
-            </p>
-            <p>
-              If you are unable to resolve the dispute directly, you may report the issue to Benchlot. We may, at our
-              discretion, review the dispute and take appropriate action, which may include mediation, refunds, or
-              account suspension.
-            </p>
-
-            <h2>9. Limitation of Liability</h2>
-            <p>
-              To the maximum extent permitted by law, Benchlot shall not be liable for any indirect, incidental,
-              special, consequential, or punitive damages, including without limitation, loss of profits, data, use,
-              goodwill, or other intangible losses, resulting from:
+              Every listing on Benchlot originates from a third-party source that we link back to. Key points:
             </p>
             <ul>
-              <li>Your access to or use of or inability to access or use our Services</li>
-              <li>Any conduct or content of any third party on our Services</li>
-              <li>Any content obtained from our Services</li>
-              <li>Unauthorized access, use, or alteration of your transmissions or content</li>
+              <li>
+                <strong>Accuracy:</strong> We try to keep listings fresh, but sources change faster than our
+                scrape cadence. Prices, availability, condition, and shipping terms may be out of date by the
+                time you click through. Always verify details on the source site before committing to a
+                transaction.
+              </li>
+              <li>
+                <strong>Transactions:</strong> We are not a party to any transaction initiated through a
+                Benchlot clickthrough. All payments, shipping, returns, warranties, and disputes are between
+                you and the source seller.
+              </li>
+              <li>
+                <strong>Attribution:</strong> Listing titles, images, and descriptions shown on Benchlot are
+                attributed to their source. We display them for search and discovery purposes under fair-use
+                and fair-dealing principles for indexing aggregators.
+              </li>
+              <li>
+                <strong>Source compliance:</strong> We respect robots.txt and standard aggregator etiquette.
+                If you are a source operator and want Benchlot to stop indexing your site, email us and
+                we&rsquo;ll remove it within a reasonable window.
+              </li>
             </ul>
+
+            <h2>5. Acceptable use</h2>
+            <p>You agree not to:</p>
+            <ul>
+              <li>Scrape, copy, or redistribute Benchlot&rsquo;s indexed data in bulk</li>
+              <li>Interfere with the operation of the Services (denial-of-service, probing, etc.)</li>
+              <li>Use Benchlot to build a competing aggregator by harvesting our search results</li>
+              <li>Use Benchlot for any illegal purpose or in violation of these Terms</li>
+            </ul>
+
+            <h2>6. Intellectual property</h2>
             <p>
-              In no event shall Benchlot's total liability to you for all claims exceed the amount you have paid to
-              Benchlot in the last six months.
+              The Benchlot name, logo, design, and the arrangement and selection of content are ours.
+              You may not reproduce them without permission. Third-party listing content shown on Benchlot
+              remains the property of the source.
             </p>
 
-            <h2>10. Indemnification</h2>
+            <h2>7. No warranty</h2>
             <p>
-              You agree to defend, indemnify, and hold harmless Benchlot, its affiliates, and their respective
-              officers, directors, employees, and agents from and against any claims, liabilities, damages, judgments,
-              awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) arising out of or
-              relating to your violation of these Terms or your use of our Services.
+              The Services are provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo; without warranty
+              of any kind. We do not warrant that listings are accurate, that the Services will be
+              uninterrupted, or that any tool you find through Benchlot will meet your expectations.
             </p>
 
-            <h2>11. Termination</h2>
+            <h2>8. Limitation of liability</h2>
             <p>
-              We may terminate or suspend your account and bar access to our Services immediately, without prior
-              notice or liability, for any reason whatsoever, including without limitation if you breach these Terms.
-            </p>
-            <p>
-              Upon termination, your right to use our Services will immediately cease. If you wish to terminate your
-              account, you may simply discontinue using our Services or contact us to request account deletion.
-            </p>
-
-            <h2>12. Changes to Terms</h2>
-            <p>
-              We may revise these Terms from time to time. The most current version will always be posted on our
-              website. If a revision, in our sole discretion, is material, we will notify you via email or through
-              our Services. By continuing to access or use our Services after revisions become effective, you agree
-              to be bound by the revised Terms.
+              To the maximum extent permitted by law, Benchlot is not liable for any indirect, incidental,
+              special, consequential, or punitive damages arising from your use of the Services, including
+              any dispute or loss related to a transaction you initiated with a source seller after a
+              Benchlot clickthrough. Our total liability for any claim is limited to the amount you have
+              paid Benchlot in the prior twelve months — for most users that is <strong>$0</strong>, because
+              Benchlot is free.
             </p>
 
-            <h2>13. Governing Law</h2>
+            <h2>9. Indemnification</h2>
             <p>
-              These Terms shall be governed by and construed in accordance with the laws of the Commonwealth of Massachusetts,
-              without regard to its conflict of law principles. Any legal action or proceeding arising out of or
-              relating to these Terms shall be brought exclusively in the federal or state courts located in Boston, Massachusetts.
+              You agree to defend, indemnify, and hold harmless Benchlot, Inc. and its officers, directors,
+              employees, and agents from any claims or expenses arising out of your use of the Services or
+              your violation of these Terms.
             </p>
 
-            <h2>14. Contact Information</h2>
+            <h2>10. Termination</h2>
             <p>
-              If you have any questions about these Terms, please contact us at:
+              We may suspend or terminate access to the Services at any time for any reason. You may stop
+              using the Services at any time.
             </p>
+
+            <h2>11. Changes to these Terms</h2>
             <p>
-              <strong>Email:</strong> legal@benchlot.com<br />
-              <strong>Address:</strong> Benchlot, Inc.<br />
-              123 Tool Street<br />
-              Boston, MA 02108
+              We may update these Terms periodically. Material changes will be posted with a new &ldquo;Last
+              Updated&rdquo; date and, for signed-in users, noted by email where reasonable. Continued use
+              after changes means you accept the updated Terms.
+            </p>
+
+            <h2>12. Governing law</h2>
+            <p>
+              These Terms are governed by the laws of the Commonwealth of Massachusetts. Any dispute
+              relating to these Terms will be brought in state or federal courts in Boston, Massachusetts.
+            </p>
+
+            <h2>13. Contact</h2>
+            <p>
+              Questions about these Terms? Email{' '}
+              <a
+                href="mailto:rob@benchlot.com"
+                style={{
+                  color: 'var(--honey)',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 3,
+                }}
+              >
+                rob@benchlot.com
+              </a>
+              .
             </p>
           </div>
         </article>
