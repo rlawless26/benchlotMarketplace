@@ -22,6 +22,7 @@ const SOURCES = [
     shortName: 'Jim Bode',
     kind: 'Dealer',
     descriptor: 'Dealer · Katonah NY',
+    homeUrl: 'https://www.jimbodetools.com',
     indexed: true,
   },
   {
@@ -30,6 +31,7 @@ const SOURCES = [
     shortName: 'P. Leach',
     kind: 'Dealer',
     descriptor: 'Monthly list · Since 1998',
+    homeUrl: 'https://supertool.com',
     indexed: false,
   },
   {
@@ -38,6 +40,7 @@ const SOURCES = [
     shortName: 'Hyperkitten',
     kind: 'Dealer',
     descriptor: 'Josh Clark · Dealer',
+    homeUrl: 'https://www.hyperkitten.com',
     indexed: true,
   },
   {
@@ -46,6 +49,7 @@ const SOURCES = [
     shortName: 'Sawmill Creek',
     kind: 'Forum',
     descriptor: 'Forum classifieds',
+    homeUrl: 'https://sawmillcreek.org/forums/sawmill-creek-classifieds.10/',
     indexed: true,
   },
   {
@@ -54,6 +58,7 @@ const SOURCES = [
     shortName: 'Woodnet',
     kind: 'Forum',
     descriptor: 'Forum classifieds',
+    homeUrl: 'https://forums.woodnet.net/forumdisplay.php?fid=4',
     indexed: true,
   },
   {

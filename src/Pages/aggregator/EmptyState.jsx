@@ -362,14 +362,31 @@ const EmptyState = ({ onSearch }) => {
         >
           {INDEXED_SOURCES.map((id, i) => {
             const s = getSource(id);
+            // Backlink to the source's home. Opens in a new tab so the
+            // user keeps their Benchlot session; rel="noopener" per standard
+            // hygiene for target=_blank links.
+            const Wrapper = s.homeUrl ? 'a' : 'div';
+            const wrapperProps = s.homeUrl
+              ? {
+                  href: s.homeUrl,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  'aria-label': `Visit ${s.name}`,
+                }
+              : {};
             return (
-              <div
+              <Wrapper
                 key={id}
-                className="text-center"
+                {...wrapperProps}
+                className="text-center block"
                 style={{
                   padding: '22px 16px',
                   borderLeft: i === 0 ? 'none' : '1px solid #e4e2dc',
+                  textDecoration: 'none',
+                  transition: 'background-color 150ms',
                 }}
+                onMouseEnter={(e) => { if (s.homeUrl) e.currentTarget.style.backgroundColor = 'rgba(12, 28, 30, 0.03)'; }}
+                onMouseLeave={(e) => { if (s.homeUrl) e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
                 <div
                   style={{
@@ -393,7 +410,7 @@ const EmptyState = ({ onSearch }) => {
                 >
                   {s.descriptor}
                 </div>
-              </div>
+              </Wrapper>
             );
           })}
         </div>
