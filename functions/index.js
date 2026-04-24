@@ -2805,6 +2805,45 @@ exports.scheduledIngestWoodnet = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — eBay Carpentry & Woodworking category (13870).
+ *
+ * Runs nightly at 03:00 UTC — first in the aggregator chain, 15 min before
+ * Sawmill Creek (03:15). Picked this slot to avoid disturbing the existing
+ * Sawmill Creek / Woodnet / Hyperkitten / Jim Bode cadence; the originally
+ * reserved 03:30 slot per docs/ebay-integration.md would have required
+ * moving Woodnet to 03:45 which already belongs to Hyperkitten.
+ *
+ * Paginates the Buy Browse API `/item_summary/search` endpoint under
+ * `category_ids=13870`, sorted by newlyListed, default cap 2000 items per
+ * run. Typical runtime: ~50 seconds (10 pages × 500ms delay + fetches).
+ *
+ * Uses app-level OAuth via the Client Credentials grant (2h TTL,
+ * in-memory cache). Reads EBAY_APP_ID / EBAY_CERT_ID from process.env —
+ * Firebase Functions picks these up from functions/.env at deploy time.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-ebay.js`.
+ */
+const ebay = require('./ingest/ebay');
+
+exports.scheduledIngestEbay = onSchedule(
+  {
+    schedule: '0 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await ebay.runIngestion();
+      console.log('[scheduledIngestEbay] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestEbay] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Normalize externalListings when they're written.
  *
  * Fires on create + update of any externalListings doc. The apply helper
