@@ -14,9 +14,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
+import { useAuthModal } from '../../context/AuthModalContext';
 
 const StickyTopBar = ({ query, onQueryChange, filterCount, onFilterClick }) => {
   const { user } = useAuth();
+  const { open: openAuthModal } = useAuthModal();
   const location = useLocation();
   const navigate = useNavigate();
   const inputRef = useRef(null);
@@ -189,9 +191,22 @@ const StickyTopBar = ({ query, onQueryChange, filterCount, onFilterClick }) => {
                 My Alerts
               </Link>
             ) : (
-              <Link to="/login" style={{ color: '#1a3030', textDecoration: 'none' }}>
+              <button
+                type="button"
+                onClick={() => openAuthModal()}
+                className="cursor-pointer"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  color: '#1a3030',
+                }}
+              >
                 Sign in
-              </Link>
+              </button>
             )}
           </nav>
         </div>

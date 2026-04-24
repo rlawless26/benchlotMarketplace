@@ -14,6 +14,7 @@ import { Search, ArrowRight } from 'lucide-react';
 import { SOURCES, SOURCES_STRIP_ORDER, getSource } from '../../firebase/adapters/sources';
 import { getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 import { useAuth } from '../../firebase/hooks/useAuth';
+import { useAuthModal } from '../../context/AuthModalContext';
 
 import LiveIndexChip from '../../components/aggregator/LiveIndexChip';
 import SiteFooter from '../../components/siteChrome/SiteFooter';
@@ -59,6 +60,7 @@ const EYEBROW = {
 
 const EmptyState = ({ onSearch }) => {
   const { user } = useAuth();
+  const { open: openAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [stats, setStats] = useState({ activeCount: null, lastScrapedAt: null });
@@ -130,9 +132,22 @@ const EmptyState = ({ onSearch }) => {
                 My Alerts
               </Link>
             ) : (
-              <Link to="/login" style={{ color: '#1a3030', textDecoration: 'none' }}>
+              <button
+                type="button"
+                onClick={() => openAuthModal()}
+                className="cursor-pointer"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  color: '#1a3030',
+                }}
+              >
                 Sign in
-              </Link>
+              </button>
             )}
           </nav>
         </div>

@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Trash2, ArrowRight, AlertCircle } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
+import { useAuthModal } from '../../context/AuthModalContext';
 import {
   subscribeSavedSearches,
   deleteSavedSearch,
@@ -69,6 +70,7 @@ function relativeDate(ts) {
 
 const AlertsPage = () => {
   const { user, loading: authLoading } = useAuth();
+  const { open: openAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,9 +157,10 @@ const AlertsPage = () => {
           >
             Alerts are saved per account. Sign in to see the searches you've saved, and get notified when new matches are indexed.
           </p>
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-1.5"
+          <button
+            type="button"
+            onClick={() => openAuthModal({ reason: 'alerts-page' })}
+            className="inline-flex items-center gap-1.5 cursor-pointer"
             style={{
               padding: '12px 24px',
               borderRadius: 6,
@@ -167,12 +170,11 @@ const AlertsPage = () => {
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 600,
               fontSize: 13,
-              textDecoration: 'none',
             }}
           >
             Sign in
             <ArrowRight size={14} />
-          </Link>
+          </button>
         </main>
       </div>
     );

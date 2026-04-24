@@ -1,7 +1,7 @@
 // src/Pages/ToolScanPage.js
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../firebase/hooks/useAuth';
+import { useAuthModal } from '../context/AuthModalContext';
 import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
@@ -20,8 +20,8 @@ const MAX_IMAGES = 5;
 
 const ToolScanPage = () => {
   const { user } = useAuth();
+  const { open: openAuthModal } = useAuthModal();
   // const { isSeller } = useSeller(); // Preserved for marketplace launch
-  const navigate = useNavigate();
 
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -328,16 +328,10 @@ const ToolScanPage = () => {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => navigate('/login?signup=true')}
+                onClick={() => { setShowAuthPrompt(false); openAuthModal({ reason: 'toolscan' }); }}
                 className="w-full py-3 px-6 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
               >
-                Sign Up
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full py-3 px-6 bg-spruce text-bone rounded-lg font-medium font-body hover:bg-spruce-light transition-colors"
-              >
-                Log In
+                Sign Up / Log In
               </button>
             </div>
             <button

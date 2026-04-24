@@ -5,6 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   GoogleAuthProvider,
   FacebookAuthProvider,
   OAuthProvider,
@@ -359,6 +362,91 @@ export function AuthProvider({ children }) {
     return !!user;
   };
 
+  // ---------------------------------------------------------------------------
+  // Passwordless email-link sign-in (Firebase email link auth)
+  // ---------------------------------------------------------------------------
+
+  // Where Firebase sends the user back to after they click the email link.
+  // Firebase appends its own apiKey / mode / oobCode params; App.js detects
+  // them on mount via completeSignInFromLink().
+  const EMAIL_LINK_RETURN_URL =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?auth=email-link`
+      : 'https://benchlot.com/?auth=email-link';
+
+  const EMAIL_LINK_STORAGE_KEY = 'benchlot:emailForSignIn';
+
+  /**
+   * Send a one-time sign-in link to `email`. Stores the email in
+   * localStorage so completeSignInFromLink() can recover it when the user
+   * clicks back (Firebase requires the original email to complete the flow,
+   * even in the same browser).
+   */
+  const sendSignInLink = async (email) => {
+    try {
+      const normalized = (email || '').trim().toLowerCase();
+      if (!normalized) return { success: false, error: 'Email is required' };
+      await sendSignInLinkToEmail(auth, normalized, {
+        url: EMAIL_LINK_RETURN_URL,
+        handleCodeInApp: true,
+      });
+      window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, normalized);
+      return { success: true };
+    } catch (err) {
+      console.error('sendSignInLink error:', err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  /**
+   * If the current URL is a sign-in link, complete the flow. Call once on
+   * app mount. Returns the sign-in result shape or `{ success: false,
+   * reason: 'not-a-link' }` when the URL isn't one.
+   */
+  const completeSignInFromLink = async () => {
+    try {
+      if (typeof window === 'undefined') return { success: false, reason: 'ssr' };
+      if (!isSignInWithEmailLink(auth, window.location.href)) {
+        return { success: false, reason: 'not-a-link' };
+      }
+      let email = window.localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
+      if (!email) {
+        // Cross-device flow: the user clicked the link on a different browser
+        // than the one that sent it. Prompt for the email to confirm.
+        email = window.prompt('Please confirm the email you used to sign in:');
+      }
+      if (!email) return { success: false, reason: 'no-email' };
+      const result = await signInWithEmailLink(auth, email, window.location.href);
+      window.localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
+
+      // First-time sign-in via email link → seed a minimal user doc so
+      // downstream features (alerts, profile) have a document to read.
+      const isNewUser = result._tokenResponse?.isNewUser;
+      if (isNewUser) {
+        const userProfile = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.email?.split('@')[0] || 'Member',
+          createdAt: new Date().toISOString(),
+          role: 'user',
+          profile: {
+            fullName: '',
+            firstName: '',
+            lastName: '',
+            bio: '',
+            location: '',
+          },
+        };
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, userProfile);
+      }
+      return { success: true, user: result.user, isNewUser };
+    } catch (err) {
+      console.error('completeSignInFromLink error:', err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
   // Context value
   const value = {
     user,
@@ -372,7 +460,9 @@ export function AuthProvider({ children }) {
     resetPassword,
     signInWithGoogle,
     signInWithFacebook,
-    signInWithApple
+    signInWithApple,
+    sendSignInLink,
+    completeSignInFromLink,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

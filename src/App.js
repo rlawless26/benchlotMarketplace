@@ -6,6 +6,8 @@ import { AuthProvider, CartProvider } from './firebase';
 import { SellerProvider } from './firebase/hooks/useSeller';
 import { useAuth } from './firebase/hooks/useAuth';
 import { NotificationProvider } from './context/NotificationContext';
+import { AuthModalProvider } from './context/AuthModalContext';
+import AuthModal from './components/auth/AuthModal';
 import { fixSellerStatus } from './utils/fixSellerStatus';
 import EnvironmentDisplay from './components/EnvironmentDisplay';
 import { Analytics } from '@vercel/analytics/react';
@@ -77,6 +79,31 @@ function SellerStatusFix() {
   return null;
 }
 
+// On mount, check if the current URL is a Firebase email-sign-in link and
+// complete the handshake. Runs once per page load. No-op when the URL has
+// no email-link params — cost is a single synchronous string check.
+function EmailLinkCompletion() {
+  const { completeSignInFromLink } = useAuth();
+  useEffect(() => {
+    completeSignInFromLink()
+      .then((result) => {
+        if (result?.success) {
+          // Clear Firebase's apiKey/mode/oobCode params so refreshing the
+          // page doesn't re-trigger the flow.
+          const url = new URL(window.location.href);
+          ['mode', 'oobCode', 'apiKey', 'continueUrl', 'lang', 'auth'].forEach(
+            (p) => url.searchParams.delete(p)
+          );
+          window.history.replaceState({}, '', url.toString());
+        }
+      })
+      .catch(() => { /* swallow — completeSignInFromLink already logs */ });
+    // Intentionally empty dep list — this must fire exactly once per mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
 // Route guard — redirects public-mode users away from marketplace routes.
 // In aggregator mode, only signed-in users can reach the marketplace surface
 // (preserves dev/testing access). In pre-pivot public mode, the old gate still
@@ -122,6 +149,7 @@ function AppLayout() {
     <div className="App min-h-screen flex flex-col bg-stone-50">
       <ScrollToTop />
       <SellerStatusFix />
+      <EmailLinkCompletion />
       {!isWaitlistPage && !isChromelessPage && <Header publicMode={isPublicMode} />}
 
       <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
@@ -212,6 +240,7 @@ function AppLayout() {
       </main>
 
       {!isWaitlistPage && !isChromelessPage && <Footer publicMode={isPublicMode} />}
+      <AuthModal />
       <EnvironmentDisplay />
       <Analytics />
       <SpeedInsights />
@@ -245,9 +274,11 @@ function App() {
         <CartProvider>
           <SellerProvider>
             <NotificationProvider>
-              <Router>
-                <AppLayout />
-              </Router>
+              <AuthModalProvider>
+                <Router>
+                  <AppLayout />
+                </Router>
+              </AuthModalProvider>
             </NotificationProvider>
           </SellerProvider>
         </CartProvider>
