@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -98,6 +98,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `hyperkitten` | Hyperkitten Tool Company | `hyperkitten_item` | M4 |
 | `sawmillcreek` | Sawmill Creek Classifieds | `sawmillcreek_thread` | M4 |
 | `woodnet` | Woodnet Tool Swap N' Sell | `woodnet_thread` | M4 |
+| `ebay` | eBay Carpentry & Woodworking (category 13870) | `ebay_item_summary` | M5 |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -121,6 +122,16 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - Inventory skews power-tool heavy (Festool, Delta, Powermatic, Woodpecker, Atlas lathes, Shaper Origin) — complementary to Sawmill Creek's hand-tool lean. Power-tool threads fall to `canonical_type: Other` until the hand-tool-only vocabulary is expanded.
 - Price extraction is simple regex (first `$XXX` in title or body). Limitation: OPs that reference comparison prices ("recent eBay sales $103-$375") can confuse the regex when the actual asking price appears later. The normalizer may correct via description context.
 - `tags` carry `wn_author:<username>` for attribution.
+
+### eBay notes
+- `source_id` = eBay's `legacyItemId` (digits only, e.g. `127821750819`). Firestore docId: `ebay__127821750819`.
+- `source_url` = `itemWebUrl` from the Browse API response — canonical `ebay.com/itm/{id}` link including eBay's own `hash` query params. Clickthrough lands on the live listing.
+- `posted_at` IS populated from `itemCreationDate` on every listing (eBay's API always exposes it).
+- Data source: Buy Browse API `/item_summary/search` endpoint, category_ids=`13870` (Collectibles > Antiques > Tools > Carpentry, Woodworking), `sort=newlyListed`, app-level OAuth (Client Credentials grant, 2h TTL, in-memory cache only). See `docs/ebay-integration.md`.
+- **PII hygiene — Marketplace Account Deletion exemption commitment**: the `seller` object (username, feedbackScore, feedbackPercentage) is stripped from the raw payload before write. No seller / buyer identifiers land in `tags` or anywhere else on the document. Approved listing fields only: id, title, price, image URLs, category, listing URL, posted_at, condition.
+- `description_raw` is always null — the Browse API item_summary endpoint doesn't expose descriptions, and per-item detail fetches would multiply API-call volume by ~2000x per run with limited quality gain. The LLM normalizer works from the title alone for this source.
+- `tags` carry `ebay_leaf:<id>` (e.g. `ebay_leaf:13874`), `ebay_leaf_name:<name>` (e.g. `ebay_leaf_name:planes`), and `ebay_condition:<cond>` (e.g. `ebay_condition:used`). No seller tags.
+- Scrape cap: 2000 items per run out of ~242k in-category. We sample the freshest by `sort=newlyListed`, rotating the window nightly. Unlike forum/dealer sources, this adapter does NOT run `markExpired` — an item missing from today's 2000-item window hasn't sold, it's just rotated off the newlyListed frontier. A TTL-based expiry sweep (expire items unseen for >30 days) is a follow-up concern, intentionally deferred.
 
 ### Hyperkitten notes
 - `source_id` = Hyperkitten's item number (e.g. `C8270`, `P1234`, `MP42`). The prefix mirrors the `data-tool_type` category code.
