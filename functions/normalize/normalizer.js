@@ -25,7 +25,7 @@ const MAX_TOKENS = 1024;
  * search. See prompt.js for preferred-forms guidance on brand. */
 const CLASSIFY_TOOL = {
   name: 'classify_listing',
-  description: 'Emit the canonical classification for a hand-tool listing.',
+  description: 'Emit the canonical classification for a woodworking-tool listing (hand tool or power tool).',
   input_schema: {
     type: 'object',
     properties: {

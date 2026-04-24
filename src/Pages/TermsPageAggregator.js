@@ -63,8 +63,9 @@ export default function TermsPageAggregator() {
           <div className="prose prose-stone max-w-none">
             <h2>1. What Benchlot is</h2>
             <p>
-              Benchlot is a search engine for used hand tool and woodworking tool listings. We index
-              publicly-available listings from dealers, forum classifieds, and auction houses into one place
+              Benchlot is a search engine for used woodworking tool listings — hand tools and
+              power tools alike. We index publicly-available listings from dealers, forum classifieds,
+              and auction houses into one place
               so you can search across them. When you find something you want, you click through to the
               original source and transact there.
             </p>

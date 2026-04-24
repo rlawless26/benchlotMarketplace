@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
-Benchlot — A marketplace for used hand tools.
+Benchlot — An aggregator / search engine for used woodworking tools (hand tools and power tools). Indexes public listings from dealers, forum classifieds, and auction houses; clicks through to the source to transact. The pre-pivot marketplace code is preserved in-tree (legacy routes gated behind `MarketplaceRoute`) but anonymous visitors always land on the aggregator.
 
 ## Build/Test Commands
 - `npm start` - Start the React development server

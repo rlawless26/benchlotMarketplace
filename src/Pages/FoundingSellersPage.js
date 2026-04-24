@@ -143,7 +143,7 @@ const FoundingSellersPage = () => {
               Your tools deserve a better next home.
             </h1>
             <p className="text-lg md:text-xl text-bone/85 leading-relaxed max-w-2xl mb-10">
-              Benchlot is the curated marketplace for quality hand tools — built by a
+              Benchlot is the curated marketplace for quality tools — built by a
               woodworker, for woodworkers. No eBay noise. No Craigslist flakes. Just
               people who know what a Bedrock is worth.
             </p>
@@ -183,7 +183,7 @@ const FoundingSellersPage = () => {
               </h3>
               <p className="text-[15px] text-spruce/75 leading-relaxed">
                 Your Lie-Nielsen won't sit next to a Harbor Freight combo kit. Benchlot
-                is hand tools only.
+                is curated for serious woodworkers.
               </p>
             </div>
             <div>
@@ -229,7 +229,7 @@ const FoundingSellersPage = () => {
               <tbody className="text-[15px]">
                 {[
                   ['Fees', '~13% + shipping hassle', 'Free, but you pay in time', '0% for founding sellers'],
-                  ['Audience', 'Everyone (mostly not woodworkers)', 'Local, mostly tire-kickers', 'Hand tool woodworkers only'],
+                  ['Audience', 'Everyone (mostly not woodworkers)', 'Local, mostly tire-kickers', 'Woodworkers only'],
                   ['Listing experience', 'Lost among 17,000 router bit listings', '"Is this still available?" → silence', 'Curated. Your tool gets seen.'],
                   ['Trust', 'Buyer/seller disputes, returns', 'Meet a stranger in a parking lot', 'Community of verified woodworkers'],
                 ].map(([label, ebay, cl, bl]) => (
@@ -264,7 +264,7 @@ const FoundingSellersPage = () => {
                 rows: [
                   ['eBay', 'Everyone (mostly not woodworkers)'],
                   ['Craigslist / FB', 'Local, mostly tire-kickers'],
-                  ['Benchlot', 'Hand tool woodworkers only'],
+                  ['Benchlot', 'Woodworkers only'],
                 ],
               },
               {
@@ -330,7 +330,7 @@ const FoundingSellersPage = () => {
             Built from the bench, not a boardroom.
           </h2>
           <p className="text-lg leading-relaxed text-bone/85">
-            Benchlot was built by a hand tool woodworker who got tired of watching
+            Benchlot was built by a woodworker who got tired of watching
             quality tools disappear into eBay's void or get scooped by flippers at
             estate sales. This isn't a tech company that discovered woodworking —
             it's a woodworker who built the marketplace the community actually needs.

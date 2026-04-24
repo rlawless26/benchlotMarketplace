@@ -361,7 +361,7 @@ const ToolScanPage = () => {
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                Photograph a hand tool and we'll do our best to identify it — maker, model, era, and condition. We're not always right, but we're pretty good.
+                Photograph a tool and we'll do our best to identify it — maker, model, era, and condition. We're not always right, but we're pretty good.
               </p>
 
               {/* Upload area */}

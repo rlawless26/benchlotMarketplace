@@ -176,7 +176,7 @@ const EmptyState = ({ onSearch }) => {
               margin: '36px 0 0',
             }}
           >
-            Find used hand tools{' '}
+            Find used tools{' '}
             <span
               style={{
                 fontWeight: 500,

@@ -66,6 +66,13 @@ export function useAggregatorState() {
   const writeParams = useCallback(
     (next) => {
       const p = serializeToParams(next);
+      // If the next state has zero query + zero filters + default sort, the
+      // serialized URLSearchParams is empty. An empty search string would put
+      // us back on EmptyState, which is wrong for intra-results actions like
+      // clearAllFilters — the user wants to keep browsing, not bounce home.
+      // Preserve the `browse=1` marker that puts AggregatorHomePage in
+      // results mode (per nav handoff: ANY search param → ResultsState).
+      if (p.toString() === '') p.set('browse', '1');
       setParams(p);
     },
     [setParams]

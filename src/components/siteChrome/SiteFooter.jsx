@@ -159,10 +159,10 @@ export default function SiteFooter() {
                 maxWidth: 440,
               }}
             >
-              Benchlot indexes used hand tool listings from dealers, forum
-              classifieds, auction houses, and marketplaces — and makes them
-              searchable from one place. Every listing links back to its
-              original source.
+              Benchlot indexes used woodworking tool listings — hand tools and
+              power tools alike — from dealers, forum classifieds, auction
+              houses, and marketplaces, and makes them searchable from one
+              place. Every listing links back to its original source.
             </p>
             <Link
               to="/faq"

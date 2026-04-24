@@ -86,7 +86,13 @@ const ResultsState = ({ state, actions }) => {
     setLoading(true);
     setError(null);
     getAggregatedListings({
-      limit: 200,
+      // Per-source cap — used to be 200, which under-counted the total when
+      // a single source had more than 200 listings (Jim Bode has ~800). The
+      // displayed "N results" then didn't match the homepage live-index
+      // count. Bumped to 2500 so the pool covers the current full catalog
+      // (~1600 listings) with plenty of headroom. Firestore read costs at
+      // this scale are trivial.
+      limit: 2500,
       sort,
       source: activeSourceIds(filters),
       canonicalType: activeCategory(filters),

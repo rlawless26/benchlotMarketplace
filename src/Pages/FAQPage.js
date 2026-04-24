@@ -20,9 +20,10 @@ const QUESTIONS = [
     q: 'What is Benchlot?',
     a: (
       <>
-        A free search engine that pulls hand tool listings from dealers, forums,
-        auction houses, and marketplaces into one place. It&rsquo;s a hobby
-        project, built because the alternative was keeping fifteen tabs open.
+        A free search engine that pulls used woodworking tool listings —
+        hand tools and power tools alike — from dealers, forums, auction
+        houses, and marketplaces into one place. It&rsquo;s a hobby project,
+        built because the alternative was keeping fifteen tabs open.
       </>
     ),
   },

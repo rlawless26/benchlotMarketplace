@@ -339,6 +339,16 @@ const FilterRail = ({
   const priceMin = filters?.price?.min ?? '';
   const priceMax = filters?.price?.max ?? '';
 
+  // Only show "Clear all" when at least one filter is actually applied.
+  const hasAnyFilter = useMemo(() => {
+    if (!filters) return false;
+    if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
+    for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+      if (filters[group] && Object.keys(filters[group]).length > 0) return true;
+    }
+    return false;
+  }, [filters]);
+
   return (
     <aside style={{ width: 240, alignSelf: 'flex-start' }}>
       {/* Header */}
@@ -362,24 +372,26 @@ const FilterRail = ({
           <SlidersHorizontal size={14} />
           Filters
         </span>
-        <button
-          type="button"
-          onClick={clearAllFilters}
-          className="cursor-pointer"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            padding: 0,
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            fontSize: 11,
-            color: '#4a5a54',
-            textDecoration: 'underline',
-            textUnderlineOffset: 2,
-          }}
-        >
-          Clear all
-        </button>
+        {hasAnyFilter && (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="cursor-pointer"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              fontSize: 11,
+              color: '#4a5a54',
+              textDecoration: 'underline',
+              textUnderlineOffset: 2,
+            }}
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
       {/* Category */}

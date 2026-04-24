@@ -112,9 +112,9 @@ export async function getAggregatedListings(opts = {}) {
   } = opts;
 
   // Price sorts need a larger pool because price_cents is populated
-  // inconsistently and sorting is client-side. 4x the limit (capped) matches
-  // the prior behavior.
-  const poolSize = sort === 'newest' ? limit : Math.min(limit * 4, 500);
+  // inconsistently and sorting is client-side. Cap scales with limit but
+  // tops out at 3000 per source — above current catalog size with headroom.
+  const poolSize = sort === 'newest' ? limit : Math.min(limit * 4, 3000);
 
   let tools;
   if (source) {
