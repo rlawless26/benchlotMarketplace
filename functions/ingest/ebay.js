@@ -54,7 +54,7 @@ const SEARCH_URL = `${API_ORIGIN}/buy/browse/v1/item_summary/search`;
 const MARKETPLACE = 'EBAY_US';
 
 const PAGE_SIZE = 200;                // Browse API hard cap per request
-const DEFAULT_MAX_ITEMS = 5000;       // Global politeness ceiling across all buckets
+const DEFAULT_MAX_ITEMS = 6500;       // Global politeness ceiling; sum of per-bucket maxItems ≈ 6065 + headroom
 const REQUEST_DELAY_MS = 500;         // Delay between paginated API calls
 const REQUEST_TIMEOUT_MS = 30000;
 
@@ -104,6 +104,24 @@ const SEARCH_BUCKETS = [
   { label: 'jessem',         params: { q: 'jessem' },                                maxItems: 150 },
   { label: 'shopsmith',      params: { q: 'shopsmith' },                             maxItems: 250 },
   { label: 'minimax',        params: { q: 'minimax woodworking' },                   maxItems: 100 },
+  // Premium hand-tool makers — these boutique brands have low daily
+  // volume and get pushed off the newlyListed-2000 window of the big
+  // vintage-carpentry bucket. Dedicated buckets guarantee alert-level
+  // recall for users tracking specific makers. Skipped during tuning
+  // because the brand name has almost zero active listings or is
+  // swamped by non-tool noise: Benchcrafted (Frye leather collisions),
+  // Gramercy Tools (guitars / clocks / drafting-tool collisions),
+  // Sterling Tool Works (tweezers / clocks), Blue Spruce Toolworks
+  // (1 active), Bad Axe Tool Works (1 saw), Wenzloff (0). Revisit
+  // when inventory patterns change.
+  { label: 'lie-nielsen',    params: { q: 'lie nielsen' },                           maxItems: 200 },
+  { label: 'veritas',        params: { q: 'veritas' },                               maxItems: 200 },
+  { label: 'norris-plane',   params: { q: 'norris plane' },                          maxItems: 80 },
+  { label: 'hock-tools',     params: { q: 'hock tools' },                            maxItems: 50 },
+  { label: 'two-cherries',   params: { q: 'two cherries chisel' },                   maxItems: 30 },
+  { label: 'clifton-plane',  params: { q: 'clifton plane' },                         maxItems: 20 },
+  { label: 'narex',          params: { q: 'narex' },                                 maxItems: 150 },
+  { label: 'woodriver',      params: { q: 'wood river', category_ids: '631' },       maxItems: 250 },
 ];
 
 // Token cache — process-local only. Never persisted.
