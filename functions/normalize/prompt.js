@@ -37,6 +37,12 @@ Rules for well-known brand forms:
 - Stanley plane variants: use "Stanley" for plain Stanley, "Stanley-Bailey" when the listing explicitly names the Bailey pattern but not Bedrock, "Stanley Bedrock" when a Bedrock model (#602/#604/#605/#606/#607/#608) is indicated.
 - User-dealer brands (vendors who rebadge) like Keen Kutter, Winchester, Chaplin, Union: use the badged brand, not the OEM.
 - "L.S. Starrett" and "Starrett" are synonymous — prefer "Starrett" unless the title specifically writes "L.S. Starrett".
+- **JessEm** — canonical spelling is "JessEm" (intercapital E). Listings may write "Jessem", "JESSEM", or "jessem" — always normalize to "JessEm".
+- **Shopsmith** — canonical spelling is "Shopsmith" (lowercase s in "smith"). Listings may write "ShopSmith", "SHOPSMITH", or "Shop Smith" — always normalize to "Shopsmith".
+- **WoodRiver vs Woodcraft** — two different brand entities, both associated with Woodcraft Supply:
+  - "WoodRiver" (one word, intercapital R) is Woodcraft's HOUSE BRAND of hand planes, chisels, turning tools, and precision measuring tools. Listings may write "Wood River" (two words), "Woodriver" (all lowercase r), or "WOODRIVER" — always normalize to "WoodRiver" (intercapital R, no space).
+  - "Woodcraft" is the retail store brand. Only use "Woodcraft" when the listing explicitly names Woodcraft-branded (not WoodRiver-branded) merchandise such as a Woodcraft-branded bench, apron, or catalog-exclusive accessory without the WoodRiver sub-brand.
+  - When a listing contains BOTH "Woodcraft" and "WoodRiver" (e.g. "Woodcraft WoodRiver #4 Plane"), the brand is "WoodRiver" — Woodcraft is the retailer selling the WoodRiver-branded item.
 
 ## Partial-match traps — do NOT infer brand from substrings
 
