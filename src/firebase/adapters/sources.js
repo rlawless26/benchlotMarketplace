@@ -54,7 +54,7 @@ const SOURCES = [
     shortName: 'Woodnet',
     kind: 'Forum',
     descriptor: 'Forum classifieds',
-    indexed: false,
+    indexed: true,
   },
   {
     id: 'lumberjocks',
