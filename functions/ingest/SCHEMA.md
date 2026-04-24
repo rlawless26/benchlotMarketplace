@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -97,6 +97,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `jimbode` | Jim Bode Tools (Value Guide) | `shopify_product` | M1 |
 | `hyperkitten` | Hyperkitten Tool Company | `hyperkitten_item` | M4 |
 | `sawmillcreek` | Sawmill Creek Classifieds | `sawmillcreek_thread` | M4 |
+| `woodnet` | Woodnet Tool Swap N' Sell | `woodnet_thread` | M4 |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -109,6 +110,17 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - Title-based filters at ingestion skip WTB / WTT / ISO / "want to buy" / "looking for" threads as well as any thread whose title contains `SOLD`.
 - `tags` carry `smc_author:<username>` for attribution/quality use.
 - Classifieds is heterogeneous — includes power tools, lumber, magazines, software — that don't map cleanly onto `CANONICAL_TYPES` (hand-tool focused). Those listings land in `canonical_type: Other` for now; a follow-up vocabulary-expansion milestone addresses it.
+
+### Woodnet notes
+- `source_id` = MyBB thread ID (e.g. `7380609`). Firestore docId: `woodnet__7380609`.
+- `source_url` = `https://forums.woodnet.net/showthread.php?tid={thread_id}` — direct link; clickthrough lands on the thread.
+- `posted_at` IS populated. Source is `span.thread_start_datetime span[title]` (absolute "MM-DD-YYYY, HH:MM AM/PM" even when the visible text is relative "50 minutes ago"). Timestamps are stored as UTC — the forum renders US Eastern but a 4-5 hour skew doesn't affect date-granularity filters.
+- Same two-phase scrape pattern as Sawmill Creek: new threads get a full detail fetch; already-ingested threads get a `last_seen_at` touch with no re-fetch.
+- MyBB quirk: the display "#N" label next to the first post is offset (often shows `#2` even for a zero-reply OP). The scraper does NOT rely on the label — it takes the FIRST `.post.classic` div on the thread page as the OP, which is always chronologically correct.
+- Title-based filters skip WTB / WTT / ISO / "want to buy" / "looking for" threads, FREE giveaways, and any thread whose title contains `SOLD`.
+- Inventory skews power-tool heavy (Festool, Delta, Powermatic, Woodpecker, Atlas lathes, Shaper Origin) — complementary to Sawmill Creek's hand-tool lean. Power-tool threads fall to `canonical_type: Other` until the hand-tool-only vocabulary is expanded.
+- Price extraction is simple regex (first `$XXX` in title or body). Limitation: OPs that reference comparison prices ("recent eBay sales $103-$375") can confuse the regex when the actual asking price appears later. The normalizer may correct via description context.
+- `tags` carry `wn_author:<username>` for attribution.
 
 ### Hyperkitten notes
 - `source_id` = Hyperkitten's item number (e.g. `C8270`, `P1234`, `MP42`). The prefix mirrors the `data-tool_type` category code.

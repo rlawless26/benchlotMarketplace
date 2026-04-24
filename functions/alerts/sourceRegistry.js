@@ -12,6 +12,7 @@ const SOURCES = [
   { id: 'leach', name: 'Patrick Leach', shortName: 'P. Leach' },
   { id: 'hyperkitten', name: 'Hyperkitten', shortName: 'Hyperkitten' },
   { id: 'sawmillcreek', name: 'Sawmill Creek', shortName: 'Sawmill Creek' },
+  { id: 'woodnet', name: 'Woodnet', shortName: 'Woodnet' },
   { id: 'lumberjocks', name: 'LumberJocks', shortName: 'LumberJocks' },
   { id: 'reddit', name: 'r/handtools', shortName: 'r/handtools' },
   { id: 'ebay', name: 'eBay', shortName: 'eBay' },
