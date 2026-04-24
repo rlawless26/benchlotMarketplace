@@ -40,6 +40,7 @@ const COUNT = {
 // functions/normalize/vocabulary.js CANONICAL_TYPES but kept client-side to
 // avoid importing Cloud Functions code into the React bundle. Match labels.
 const CATEGORY_OPTIONS = [
+  // Planes (hand)
   'Bench Plane',
   'Block Plane',
   'Shoulder Plane',
@@ -53,26 +54,31 @@ const CATEGORY_OPTIONS = [
   'Chisel Plane',
   'Hawk Plane',
   'Spokeshave',
+  // Cutting / shaping (hand)
   'Chisel',
   'Gouge',
   'Drawknife',
   'Cabinet Scraper',
   'Card Scraper',
   'Knife',
+  // Saws (hand)
   'Hand Saw',
   'Back Saw',
   'Japanese Saw',
   'Coping Saw',
   'Frame Saw',
+  // Boring (hand)
   'Brace',
   'Eggbeater Drill',
   'Drill Bit',
   'Auger Bit',
+  // Striking (hand)
   'Hammer',
   'Mallet',
   'Axe',
   'Adze',
   'Hatchet',
+  // Measuring / marking
   'Square',
   'Bevel Gauge',
   'Marking Gauge',
@@ -80,12 +86,46 @@ const CATEGORY_OPTIONS = [
   'Rule',
   'Caliper',
   'Level',
+  // Workholding
   'Vise',
   'Clamp',
   'Holdfast',
   'Pliers',
-  'Boring Machine',
+  // Stationary power (M5)
+  'Table Saw',
+  'Band Saw',
+  'Miter Saw',
+  'Jointer',
+  'Thickness Planer',
+  'Lathe',
+  'Drill Press',
+  'Router',
   'Shaper',
+  'Mortiser',
+  'Drum Sander',
+  'Scroll Saw',
+  'Dust Collector',
+  'Air Compressor',
+  // Portable power (M5)
+  'Circular Saw',
+  'Track Saw',
+  'Jigsaw',
+  'Reciprocating Saw',
+  'Sander',
+  'Impact Driver',
+  'Drill',
+  'Angle Grinder',
+  'Biscuit Joiner',
+  'Domino',
+  'Multi-Tool',
+  // CNC (M5)
+  'CNC',
+  // Heavy / legacy
+  'Boring Machine',
+  // Shop fixtures (M5)
+  'Workbench',
+  'Router Table',
+  // Catch-all
   'Other',
 ];
 
