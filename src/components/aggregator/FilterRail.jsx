@@ -11,7 +11,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChevronDown, SlidersHorizontal, Check } from 'lucide-react';
 
-import { SOURCES, getSource } from '../../firebase/adapters/sources';
+import { SOURCES } from '../../firebase/adapters/sources';
 
 const EYEBROW = {
   fontFamily: "'Outfit', sans-serif",

@@ -18,10 +18,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
-import {
-  computeFacets,
-  getAggregatorStats,
-} from '../../firebase/adapters/aggregatorFacets';
+import { computeFacets } from '../../firebase/adapters/aggregatorFacets';
 
 import StickyTopBar from '../../components/aggregator/StickyTopBar';
 import FilterRail from '../../components/aggregator/FilterRail';
@@ -81,14 +78,7 @@ const ResultsState = ({ state, actions }) => {
   const [raw, setRaw] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({ activeCount: null, lastScrapedAt: null });
   const [visibleLimit, setVisibleLimit] = useState(24);
-
-  useEffect(() => {
-    getAggregatorStats()
-      .then(setStats)
-      .catch(() => {});
-  }, []);
 
   // Server query — push the cheapest filters to Firestore, refine client-side.
   useEffect(() => {
