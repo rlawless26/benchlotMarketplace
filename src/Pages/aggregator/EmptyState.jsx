@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, ArrowRight } from 'lucide-react';
 
 import { SOURCES, SOURCES_STRIP_ORDER, getSource } from '../../firebase/adapters/sources';
@@ -16,7 +16,7 @@ import { getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 import { useAuth } from '../../firebase/hooks/useAuth';
 
 import LiveIndexChip from '../../components/aggregator/LiveIndexChip';
-import AggregatorFooter from '../../components/aggregator/AggregatorFooter';
+import SiteFooter from '../../components/siteChrome/SiteFooter';
 
 // Round a listing count DOWN to the nearest 100 and return a "X00+" string.
 // 823 → "800+", 10,555 → "10,500+". Numbers under 100 render as-is.
@@ -26,16 +26,27 @@ function roundedListingCount(n) {
   return `${floored.toLocaleString()}+`;
 }
 
-export const SUGGESTIONS = [
-  'Stanley No. 4',
-  'Lie-Nielsen 62',
-  'Veritas plow',
-  'Narex chisels',
-  'Disston D-8',
-  'Japanese kanna',
+// Browse chips — the on-ramp from EmptyState per nav handoff Q4. Each chip
+// sets a filter param (cat= or maker=) and lands the user in ResultsState
+// with the filter rail already visible, so filters aren't gatekept behind
+// typing a query. Values must match CANONICAL_TYPES / CANONICAL_BRANDS in
+// functions/normalize/vocabulary.js.
+const BROWSE_CHIPS = [
+  { label: 'Bench Planes', param: 'cat', value: 'Bench Plane' },
+  { label: 'Chisels', param: 'cat', value: 'Chisel' },
+  { label: 'Hand Saws', param: 'cat', value: 'Hand Saw' },
+  { label: 'Moulding Planes', param: 'cat', value: 'Moulding Plane' },
+  { label: 'Stanley', param: 'maker', value: 'Stanley' },
+  { label: 'Lie-Nielsen', param: 'maker', value: 'Lie-Nielsen' },
+  { label: 'Veritas', param: 'maker', value: 'Veritas' },
+  { label: 'Disston', param: 'maker', value: 'Disston' },
 ];
 
-const INDEXED_COUNT = SOURCES.filter((s) => s.indexed).length;
+const INDEXED_SOURCES = SOURCES_STRIP_ORDER.filter((id) => {
+  const s = SOURCES.find((src) => src.id === id);
+  return s && s.indexed;
+});
+const INDEXED_COUNT = INDEXED_SOURCES.length;
 
 const EYEBROW = {
   fontFamily: "'Outfit', sans-serif",
@@ -48,6 +59,7 @@ const EYEBROW = {
 
 const EmptyState = ({ onSearch }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [stats, setStats] = useState({ activeCount: null, lastScrapedAt: null });
 
@@ -57,10 +69,6 @@ const EmptyState = ({ onSearch }) => {
       .catch(() => {});
   }, []);
 
-  const searchLabel = stats.activeCount
-    ? `Search ${roundedListingCount(stats.activeCount)} used tool listings`
-    : null;
-
   const submit = (e) => {
     e.preventDefault();
     const q = query.trim();
@@ -68,10 +76,12 @@ const EmptyState = ({ onSearch }) => {
     if (typeof onSearch === 'function') onSearch(q);
   };
 
-  const chipClick = (text) => {
-    setQuery(text);
-    if (typeof onSearch === 'function') onSearch(text);
-    window.scrollTo({ top: 0 });
+  const browseChipClick = (chip) => {
+    navigate(`/?${chip.param}=${encodeURIComponent(chip.value)}`);
+  };
+
+  const browseAllClick = () => {
+    navigate('/?browse=1');
   };
 
   return (
@@ -87,17 +97,20 @@ const EmptyState = ({ onSearch }) => {
           className="flex items-center justify-between"
           style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}
         >
-          <span
+          <Link
+            to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             style={{
               fontFamily: "'Petrona', Georgia, serif",
               fontWeight: 900,
               fontSize: 24,
               letterSpacing: '-1.2px',
               color: '#1a3030',
+              textDecoration: 'none',
             }}
           >
             Benchlot
-          </span>
+          </Link>
           <nav
             className="flex items-center"
             style={{
@@ -108,11 +121,8 @@ const EmptyState = ({ onSearch }) => {
               color: '#4a5a54',
             }}
           >
-            <Link to="/about" style={{ color: '#4a5a54', textDecoration: 'none' }}>
-              About
-            </Link>
-            <Link to="/help" style={{ color: '#4a5a54', textDecoration: 'none' }}>
-              FAQ
+            <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
+              RAQ
             </Link>
             <span aria-hidden style={{ width: 1, height: 14, background: '#e4e2dc' }} />
             {user ? (
@@ -194,28 +204,11 @@ const EmptyState = ({ onSearch }) => {
             Dealers, forums, auctions, marketplaces — all in one search. We don't sell tools. We point you to them.
           </p>
 
-          {/* Search label — "Search 800+ used tool listings" */}
-          {searchLabel && (
-            <div
-              style={{
-                marginTop: 36,
-                fontFamily: "'Outfit', sans-serif",
-                fontWeight: 500,
-                fontSize: 12,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: '#8a8a80',
-              }}
-            >
-              {searchLabel}
-            </div>
-          )}
-
           {/* Search input */}
           <form
             onSubmit={submit}
             className="relative"
-            style={{ maxWidth: 760, margin: '14px auto 0' }}
+            style={{ maxWidth: 760, margin: '48px auto 0' }}
           >
             <Search
               size={20}
@@ -271,25 +264,47 @@ const EmptyState = ({ onSearch }) => {
             </button>
           </form>
 
-          {/* Suggestion chips */}
+          {/* "Browse all" — the un-gatekept filters on-ramp (nav handoff Q4).
+              Lands directly in ResultsState with the filter rail visible,
+              no query required. */}
+          <div className="text-center" style={{ marginTop: 14 }}>
+            <button
+              type="button"
+              onClick={browseAllClick}
+              className="cursor-pointer inline-flex items-center"
+              style={{
+                gap: 4,
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 500,
+                fontSize: 13,
+                color: '#d4aa60',
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+                letterSpacing: '0.01em',
+              }}
+            >
+              {stats.activeCount
+                ? `Browse all ${roundedListingCount(stats.activeCount)} listings`
+                : 'Browse all listings'}{' '}
+              <ArrowRight size={13} />
+            </button>
+          </div>
+
+          {/* Browse chips — category + maker shortcuts. Each lands in
+              ResultsState with a filter pre-applied (cat= or maker=). The
+              filter rail renders alongside, so users can refine from there. */}
           <div
             className="flex items-center justify-center flex-wrap"
             style={{ marginTop: 18, gap: 8 }}
           >
-            <span
-              style={{
-                ...EYEBROW,
-                letterSpacing: '0.12em',
-                color: '#8a8a80',
-              }}
-            >
-              POPULAR:
-            </span>
-            {SUGGESTIONS.map((s) => (
+            {BROWSE_CHIPS.map((chip) => (
               <button
-                key={s}
+                key={`${chip.param}:${chip.value}`}
                 type="button"
-                onClick={() => chipClick(s)}
+                onClick={() => browseChipClick(chip)}
                 className="cursor-pointer"
                 style={{
                   padding: '5px 12px',
@@ -302,7 +317,7 @@ const EmptyState = ({ onSearch }) => {
                   color: '#0c1c1e',
                 }}
               >
-                {s}
+                {chip.label}
               </button>
             ))}
           </div>
@@ -325,14 +340,13 @@ const EmptyState = ({ onSearch }) => {
         <div
           className="grid"
           style={{
-            gridTemplateColumns: `repeat(${SOURCES_STRIP_ORDER.length}, 1fr)`,
+            gridTemplateColumns: `repeat(${INDEXED_SOURCES.length}, 1fr)`,
             borderTop: '1px solid #e4e2dc',
             borderBottom: '1px solid #e4e2dc',
           }}
         >
-          {SOURCES_STRIP_ORDER.map((id, i) => {
+          {INDEXED_SOURCES.map((id, i) => {
             const s = getSource(id);
-            const isIndexed = !!s.indexed;
             return (
               <div
                 key={id}
@@ -340,7 +354,6 @@ const EmptyState = ({ onSearch }) => {
                 style={{
                   padding: '22px 16px',
                   borderLeft: i === 0 ? 'none' : '1px solid #e4e2dc',
-                  opacity: isIndexed ? 1 : 0.55,
                 }}
               >
                 <div
@@ -349,7 +362,7 @@ const EmptyState = ({ onSearch }) => {
                     fontWeight: 700,
                     fontSize: 14,
                     letterSpacing: '-0.3px',
-                    color: isIndexed ? '#0c1c1e' : '#4a5a54',
+                    color: '#0c1c1e',
                   }}
                 >
                   {s.name}
@@ -365,21 +378,6 @@ const EmptyState = ({ onSearch }) => {
                 >
                   {s.descriptor}
                 </div>
-                {!isIndexed && (
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontFamily: "'Outfit', sans-serif",
-                      fontWeight: 700,
-                      fontSize: 9,
-                      letterSpacing: '0.18em',
-                      color: '#b08a40',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Coming
-                  </div>
-                )}
               </div>
             );
           })}
@@ -389,7 +387,7 @@ const EmptyState = ({ onSearch }) => {
       {/* Spacer before footer — the hero + sources strip stand alone now. */}
       <div style={{ height: 72 }} />
 
-      <AggregatorFooter stats={stats} />
+      <SiteFooter />
     </div>
   );
 };

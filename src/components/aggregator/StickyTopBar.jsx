@@ -1,16 +1,41 @@
 /**
  * StickyTopBar — replaces the editorial header when in results state.
  * Pinned to top of viewport while scrolling results.
+ *
+ * Layout matches the homepage hero nav for smooth page-to-page transitions:
+ *   Wordmark · [search input] · [mobile filter chip] · RAQ | (My Alerts | Sign in)
+ *
+ * Sort control used to live here but was moved to the breadcrumb row so the
+ * top bar is just search + global nav (parallel to the homepage hero header).
  */
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Search, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
 
-const StickyTopBar = ({ query, onQueryChange, sort, onSortChange, filterCount, onFilterClick }) => {
+const StickyTopBar = ({ query, onQueryChange, filterCount, onFilterClick }) => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const inputRef = useRef(null);
+
+  // X-clear is a tactical "forget this query" action, NOT a navigation back
+  // to the hero. Drop `q`, keep every other search param. If that would
+  // leave the URL truly empty (just `/`), fall through to `/?browse=1` so
+  // the user stays in the browsing shell rather than bouncing to EmptyState.
+  // Per nav handoff Q2.
+  const handleClear = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('q');
+    const remaining = params.toString();
+    navigate(remaining ? `/?${remaining}` : '/?browse=1', { replace: true });
+    // Focus the input so users who cleared to type a new query can just go.
+    window.requestAnimationFrame(() => {
+      if (inputRef.current) inputRef.current.focus();
+    });
+  };
   // Wrapper is rendered by the parent (ResultsState owns the unified sticky
   // region so the distribution strip can pin alongside this bar).
   return (
@@ -40,47 +65,52 @@ const StickyTopBar = ({ query, onQueryChange, sort, onSortChange, filterCount, o
           Benchlot
         </Link>
 
-        {/* Search */}
+        {/* Search — visually emphasized so it reads as the primary action on
+            any page (especially the soft-empty state where the headline
+            points at it). Stronger border + white fill + honey-accented
+            magnifier icon stand out from the bone background. */}
         <div className="relative" style={{ flex: 1, maxWidth: 640 }}>
           <Search
-            size={16}
+            size={18}
             aria-hidden
             style={{
               position: 'absolute',
-              left: 14,
+              left: 16,
               top: '50%',
               transform: 'translateY(-50%)',
-              color: '#4a5a54',
+              color: '#d4aa60',
               pointerEvents: 'none',
             }}
           />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Search across every source…"
+            placeholder="Search for a tool"
             style={{
               width: '100%',
-              padding: '10px 40px 10px 40px',
-              background: '#f8f6f2',
-              border: '1px solid #e4e2dc',
+              padding: '12px 44px 12px 46px',
+              background: '#ffffff',
+              border: '1.5px solid #1a3030',
               borderRadius: 8,
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 500,
-              fontSize: 14,
+              fontSize: 15,
               color: '#0c1c1e',
               outline: 'none',
+              boxShadow: '0 1px 2px rgba(12,28,30,0.06)',
             }}
           />
           {query && (
             <button
               type="button"
-              onClick={() => onQueryChange('')}
+              onClick={handleClear}
               aria-label="Clear search"
               className="cursor-pointer"
               style={{
                 position: 'absolute',
-                right: 8,
+                right: 10,
                 top: '50%',
                 transform: 'translateY(-50%)',
                 width: 26,
@@ -99,8 +129,11 @@ const StickyTopBar = ({ query, onQueryChange, sort, onSortChange, filterCount, o
           )}
         </div>
 
-        {/* Right group: filters (mobile only), sort, signin */}
-        <div className="flex items-center" style={{ gap: 10, flexShrink: 0 }}>
+        {/* Right group: mobile filter chip + global nav (matches homepage).
+            marginLeft:'auto' pushes nav to the far right edge — search is
+            flex:1 but capped at maxWidth 640, so the leftover space goes
+            here instead of squishing against the search box. */}
+        <div className="flex items-center" style={{ gap: 20, flexShrink: 0, marginLeft: 'auto' }}>
           <button
             type="button"
             onClick={onFilterClick}
@@ -138,63 +171,29 @@ const StickyTopBar = ({ query, onQueryChange, sort, onSortChange, filterCount, o
             )}
           </button>
 
-          <div className="relative">
-            <select
-              value={sort}
-              onChange={(e) => onSortChange(e.target.value)}
-              style={{
-                appearance: 'none',
-                padding: '7px 32px 7px 12px',
-                background: '#f8f6f2',
-                border: '1px solid #e4e2dc',
-                borderRadius: 6,
-                fontFamily: "'Outfit', sans-serif",
-                fontWeight: 500,
-                fontSize: 12,
-                color: '#0c1c1e',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-            >
-              <option value="newest">Newest first</option>
-              <option value="price_low">Price: low to high</option>
-              <option value="price_high">Price: high to low</option>
-              <option value="relevance">Relevance</option>
-            </select>
-            <ChevronDown
-              size={12}
-              aria-hidden
-              style={{
-                position: 'absolute',
-                right: 10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#4a5a54',
-                pointerEvents: 'none',
-              }}
-            />
-          </div>
-
-          {!user && (
-            <>
-              <span
-                aria-hidden
-                style={{ width: 1, height: 22, background: '#e4e2dc' }}
-              />
-              <Link
-                to="/login"
-                style={{
-                  fontFamily: "'Outfit', sans-serif",
-                  fontWeight: 500,
-                  fontSize: 13,
-                  color: '#1a3030',
-                  textDecoration: 'none',
-                }}
-              >
+          <nav
+            className="flex items-center"
+            style={{
+              gap: 20,
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              fontSize: 13,
+            }}
+          >
+            <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
+              RAQ
+            </Link>
+            <span aria-hidden style={{ width: 1, height: 14, background: '#e4e2dc' }} />
+            {user ? (
+              <Link to="/alerts" style={{ color: '#1a3030', textDecoration: 'none' }}>
+                My Alerts
+              </Link>
+            ) : (
+              <Link to="/login" style={{ color: '#1a3030', textDecoration: 'none' }}>
                 Sign in
               </Link>
-            </>
-          )}
+            )}
+          </nav>
         </div>
       </div>
     </div>

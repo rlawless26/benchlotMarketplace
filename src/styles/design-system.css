@@ -7,6 +7,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens as CSS custom properties — mirrors tailwind.config.js colors
+   so inline styles can reference them without hardcoding hexes. Added so new
+   editorial pages (About/FAQ/Contact) can use var(--xxx) per design handoff. */
+:root {
+  /* Brand palette */
+  --spruce:         #1a3030;
+  --spruce-light:   #2a4a48;
+  --spruce-dark:    #0e2020;
+  --bone:           #f2f0eb;
+  --bone-dark:      #e8e6e0;
+  --bone-light:     #f8f6f2;
+  --honey:          #d4aa60;
+  --honey-light:    #e0c080;
+  --honey-dark:     #b08a40;
+  --dark-teal:      #0c1c1e;
+
+  /* Foreground text roles */
+  --fg-primary:     #0c1c1e;
+  --fg-secondary:   #4a5a54;
+  --fg-muted:       #8a8a80;
+
+  /* Borders */
+  --border:         #e4e2dc;
+  --border-light:   #eceae4;
+  --border-dark:    #d4d2cc;
+
+  /* Fonts */
+  --font-display:   'Petrona', Georgia, 'Times New Roman', serif;
+  --font-body:      'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 @layer base {
   /* Base element styling */
   html {

@@ -13,7 +13,6 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { Bell, Check, ArrowRight } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
@@ -80,22 +79,6 @@ const SaveAlertButton = ({ query, filters, sort }) => {
     }
   }, [uid, busy, saved, query, filters, sort]);
 
-  const myAlertsLink = user ? (
-    <Link
-      to="/alerts"
-      style={{
-        fontFamily: "'Outfit', sans-serif",
-        fontWeight: 500,
-        fontSize: 11,
-        color: '#1a3030',
-        textDecoration: 'underline',
-        textUnderlineOffset: 2,
-      }}
-    >
-      My Alerts →
-    </Link>
-  ) : null;
-
   if (saved) {
     return (
       <div className="flex flex-col items-end" style={{ gap: 4 }}>
@@ -117,7 +100,6 @@ const SaveAlertButton = ({ query, filters, sort }) => {
           <Check size={14} />
           Alert saved
         </button>
-        {myAlertsLink}
       </div>
     );
   }
@@ -147,7 +129,6 @@ const SaveAlertButton = ({ query, filters, sort }) => {
         {busy ? 'Saving…' : user ? 'Create alert' : 'Sign in to create alert'}
         <ArrowRight size={14} />
       </button>
-      {myAlertsLink}
       {error && (
         <span
           style={{

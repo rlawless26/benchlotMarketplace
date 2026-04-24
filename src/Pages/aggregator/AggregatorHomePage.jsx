@@ -7,18 +7,20 @@
  * active filter. Scrolling does NOT change mode (PM contract).
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import EmptyState from './EmptyState';
 import ResultsState from './ResultsState';
 import { useAggregatorState } from '../../hooks/useAggregatorState';
 
 const AggregatorHomePage = () => {
+  const location = useLocation();
   const state = useAggregatorState();
   const {
     query,
     filters,
     sort,
-    inResultsMode,
     activeFilterChips,
     setQuery,
     setSort,
@@ -27,29 +29,21 @@ const AggregatorHomePage = () => {
     clearAllFilters,
   } = state;
 
-  // Once the user has engaged with search/filters, keep them in the results
-  // shell even after they clear — ResultsState shows inline guidance instead
-  // of dumping them back to the hero. Full reset only happens on remount
-  // (e.g. navigating away and back).
-  const hasEngagedRef = useRef(inResultsMode);
-  const [hasEngaged, setHasEngaged] = useState(inResultsMode);
-  useEffect(() => {
-    if (inResultsMode && !hasEngagedRef.current) {
-      hasEngagedRef.current = true;
-      setHasEngaged(true);
-    }
-  }, [inResultsMode]);
-
-  // Scroll to top on the initial transition into results mode only.
-  useEffect(() => {
-    if (inResultsMode) window.scrollTo({ top: 0 });
-  }, [inResultsMode]);
+  // Single routing predicate per nav spec: EmptyState iff the URL is a truly
+  // clean `/` (no query string at all). ANY search param — q, cat, maker,
+  // src, browse=1, etc. — puts us in ResultsState. This is the "something in
+  // the URL differentiates intentional browse from cold landing" contract.
+  const isBrowseMode = location.search.length > 0;
 
   useEffect(() => {
-    document.title = inResultsMode
+    if (isBrowseMode) window.scrollTo({ top: 0 });
+  }, [isBrowseMode]);
+
+  useEffect(() => {
+    document.title = isBrowseMode
       ? (query ? `${query} — Benchlot` : 'Results — Benchlot')
-      : 'Benchlot — A search engine for quality hand tools';
-  }, [inResultsMode, query]);
+      : 'Benchlot';
+  }, [isBrowseMode, query]);
 
   const actions = {
     setQuery,
@@ -59,10 +53,10 @@ const AggregatorHomePage = () => {
     clearAllFilters,
   };
 
-  if (inResultsMode || hasEngaged) {
+  if (isBrowseMode) {
     return (
       <ResultsState
-        state={{ query, filters, sort, activeFilterChips, inResultsMode }}
+        state={{ query, filters, sort, activeFilterChips, inResultsMode: isBrowseMode }}
         actions={actions}
       />
     );

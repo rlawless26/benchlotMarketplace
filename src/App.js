@@ -27,11 +27,11 @@ import CheckoutPage from './Pages/CheckoutPage';
 import OrderConfirmationPage from './Pages/OrderConfirmationPage';
 import ToolListingFormPage from './Pages/ToolListingFormPage';
 import ToolScanPage from './Pages/ToolScanPage';
-import AboutPage from './Pages/AboutPage';
+import FAQPage from './Pages/FAQPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
-import TermsPage from './Pages/TermsPage';
-import PrivacyPage from './Pages/PrivacyPage';
+import TermsPageAggregator from './Pages/TermsPageAggregator';
+import PrivacyPageAggregator from './Pages/PrivacyPageAggregator';
 import WishlistPage from './Pages/WishlistPage';
 import SettingsPage from './Pages/SettingsPage';
 import OrdersPage from './Pages/OrdersPage';
@@ -107,8 +107,12 @@ function AppLayout() {
   const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
   // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
   // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
+  // Editorial content pages (About/FAQ/Contact) also ship their own chrome
+  // per the post-pivot design handoff — see src/components/siteChrome/.
+  const contentPagePaths = ['/faq', '/privacy', '/terms'];
+  const isContentPage = contentPagePaths.includes(location.pathname);
   const isChromelessPage =
-    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts;
+    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage;
 
   // Public mode: aggregator is on OR marketplace not yet launched, AND user not signed in.
   // Header/Footer adapt their CTAs when publicMode is true.
@@ -192,11 +196,15 @@ function AppLayout() {
           <Route path="/seller/create-pending-listing" element={<MarketplaceRoute element={<CreatePendingListingPage />} />} />
 
           {/* Always public: About, Help, Legal, Categories */}
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          {/* /about and /contact consolidated into /faq (RAQ). Keep /help
+              pointing at legacy HelpPage so old deep-links don't 404. */}
+          <Route path="/about" element={<Navigate to="/faq" replace />} />
+          <Route path="/contact" element={<Navigate to="/faq" replace />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPageAggregator />} />
+          <Route path="/privacy" element={<PrivacyPageAggregator />} />
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFoundPage />} />

@@ -57,11 +57,9 @@ const INDEXED_LINKS = [
 ];
 
 const BENCHLOT_LINKS = [
-  { label: 'About', to: '/about' },
+  { label: 'RAQ', to: '/faq' },
   { label: 'Alerts', to: '/alerts' },
-  { label: 'FAQ', to: '/help' },
   { label: 'Important Notes', to: '/important-notes' },
-  { label: 'Contact', to: '/about' },
 ];
 
 const AggregatorFooter = ({ stats }) => {
@@ -115,23 +113,10 @@ const AggregatorFooter = ({ stats }) => {
                 fontSize: 40,
                 letterSpacing: '-2px',
                 color: TEXT_BONE,
-                marginBottom: 10,
                 lineHeight: 1,
               }}
             >
               Benchlot
-            </div>
-            <div
-              style={{
-                fontFamily: "'Petrona', Georgia, serif",
-                fontWeight: 500,
-                fontStyle: 'italic',
-                fontSize: 18,
-                color: '#d4aa60',
-                letterSpacing: '-0.2px',
-              }}
-            >
-              The search engine for premium used hand tools.
             </div>
           </div>
           <div
@@ -322,7 +307,7 @@ const AggregatorFooter = ({ stats }) => {
             <Link to="/important-notes" style={{ color: TEXT_DIM, textDecoration: 'none' }}>
               DMCA
             </Link>
-            <Link to="/about" style={{ color: TEXT_DIM, textDecoration: 'none' }}>
+            <Link to="/faq" style={{ color: TEXT_DIM, textDecoration: 'none' }}>
               Accessibility
             </Link>
           </div>

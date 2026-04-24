@@ -7,7 +7,7 @@
  *   - StickyTopBar (sticky wordmark + search + filters + sort)
  *   - Breadcrumb strip with query echo, result count, active chips, Save-Alert
  *   - Two-column: FilterRail (240) + results column (grid + distribution strip)
- *   - AggregatorFooter
+ *   - SiteFooter (shared editorial footer, replaces the earlier AggregatorFooter)
  *
  * Server-side data comes from `getAggregatedListings()`; facet counts are
  * derived client-side from the returned rows so narrowing a filter updates
@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
 import {
@@ -27,8 +27,7 @@ import StickyTopBar from '../../components/aggregator/StickyTopBar';
 import FilterRail from '../../components/aggregator/FilterRail';
 import ResultCard from '../../components/aggregator/ResultCard';
 import SaveAlertButton from '../../components/aggregator/SaveAlertButton';
-import AggregatorFooter from '../../components/aggregator/AggregatorFooter';
-import { SUGGESTIONS } from './EmptyState';
+import SiteFooter from '../../components/siteChrome/SiteFooter';
 
 const CHIP_GROUP_PREFIX = {
   cat: 'Type',
@@ -139,7 +138,6 @@ const ResultsState = ({ state, actions }) => {
   }, [filtered]);
 
   const filterCount = activeFilterChips.length;
-  const isSoftEmpty = !(query && query.trim()) && activeFilterChips.length === 0;
 
   const filterRailRef = useRef(null);
   const handleFilterClick = () => {
@@ -166,15 +164,13 @@ const ResultsState = ({ state, actions }) => {
         <StickyTopBar
           query={query}
           onQueryChange={actions.setQuery}
-          sort={sort}
-          onSortChange={actions.setSort}
           filterCount={filterCount}
           onFilterClick={handleFilterClick}
         />
 
-        {/* Breadcrumb header — hidden in soft-empty state (nothing to title/save). */}
-        {!isSoftEmpty && (
-          <div style={{ borderTop: '1px solid #e4e2dc' }}>
+        {/* Breadcrumb header — always shown; ResultsState only renders when
+            there's a query or active filters. */}
+        <div style={{ borderTop: '1px solid #e4e2dc' }}>
             <div
               className="flex items-center justify-between flex-wrap"
               style={{
@@ -184,7 +180,7 @@ const ResultsState = ({ state, actions }) => {
                 gap: 16,
               }}
             >
-              <div className="flex items-baseline" style={{ gap: 12 }}>
+              <div className="flex items-baseline flex-wrap" style={{ gap: 12 }}>
                 <span
                   style={{
                     fontFamily: "'Petrona', Georgia, serif",
@@ -207,11 +203,61 @@ const ResultsState = ({ state, actions }) => {
                   · <span style={{ fontWeight: 600, color: '#0c1c1e' }}>{filtered.length}</span>{' '}
                   result{filtered.length === 1 ? '' : 's'}
                 </span>
+
+                {/* Sort control — contextual to results (not in top bar). */}
+                <div className="relative" style={{ marginLeft: 4 }}>
+                  <label
+                    htmlFor="results-sort"
+                    style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 500,
+                      fontSize: 13,
+                      color: '#4a5a54',
+                      marginRight: 6,
+                    }}
+                  >
+                    · Sort:
+                  </label>
+                  <select
+                    id="results-sort"
+                    value={sort}
+                    onChange={(e) => actions.setSort(e.target.value)}
+                    style={{
+                      appearance: 'none',
+                      padding: '4px 22px 4px 4px',
+                      background: 'transparent',
+                      border: 0,
+                      borderBottom: '1px dashed #8a8a80',
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: '#0c1c1e',
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="price_low">Price: low to high</option>
+                    <option value="price_high">Price: high to low</option>
+                    <option value="relevance">Relevance</option>
+                  </select>
+                  <ChevronDown
+                    size={12}
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      right: 4,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#4a5a54',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                </div>
               </div>
               <SaveAlertButton query={query} filters={filters} sort={sort} />
             </div>
           </div>
-        )}
       </div>
 
       {/* Active filter chips — separate row below the sticky header */}
@@ -315,9 +361,6 @@ const ResultsState = ({ state, actions }) => {
           padding: '28px 40px 80px',
         }}
       >
-        {isSoftEmpty ? (
-          <SoftEmptyGuidance onPick={actions.setQuery} />
-        ) : (
         <div
           className="grid"
           style={{ gridTemplateColumns: '240px 1fr', gap: 40, alignItems: 'flex-start' }}
@@ -428,86 +471,9 @@ const ResultsState = ({ state, actions }) => {
         )}
       </main>
 
-      <AggregatorFooter stats={stats} />
+      <SiteFooter />
     </div>
   );
 };
-
-// Inline guidance shown when the user clears their search/filters from within
-// ResultsState. Keeps the sticky search bar intact so the transition reads as
-// "now what?" rather than a full page navigation back to the hero.
-const SoftEmptyGuidance = ({ onPick }) => (
-  <div
-    className="text-center"
-    style={{
-      maxWidth: 640,
-      margin: '0 auto',
-      padding: '72px 20px 48px',
-    }}
-  >
-    <div
-      style={{
-        fontFamily: "'Outfit', sans-serif",
-        fontWeight: 700,
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '0.22em',
-        color: '#8a8a80',
-      }}
-    >
-      Start a new search
-    </div>
-    <h2
-      style={{
-        marginTop: 14,
-        fontFamily: "'Petrona', Georgia, serif",
-        fontWeight: 700,
-        fontSize: 32,
-        lineHeight: 1.15,
-        letterSpacing: '-0.8px',
-        color: '#0c1c1e',
-      }}
-    >
-      What tool are you looking for?
-    </h2>
-    <p
-      style={{
-        marginTop: 12,
-        fontFamily: "'Outfit', sans-serif",
-        fontWeight: 400,
-        fontSize: 15,
-        lineHeight: 1.55,
-        color: '#4a5a54',
-      }}
-    >
-      Use the search bar above, or jump in with a popular pick.
-    </p>
-    <div
-      className="flex items-center justify-center flex-wrap"
-      style={{ marginTop: 20, gap: 8 }}
-    >
-      {SUGGESTIONS.map((s) => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onPick(s)}
-          className="cursor-pointer"
-          style={{
-            padding: '6px 14px',
-            border: '1px solid #e4e2dc',
-            borderRadius: 4,
-            background: '#f8f6f2',
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            fontSize: 13,
-            color: '#0c1c1e',
-          }}
-        >
-          {s}
-        </button>
-      ))}
-    </div>
-  </div>
-);
 
 export default ResultsState;

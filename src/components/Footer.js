@@ -38,13 +38,8 @@ const Footer = ({ publicMode = false }) => {
               <div>
                 <ul className="space-y-2">
                   <li>
-                    <Link to="/about" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/help" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
-                      Help
+                    <Link to="/faq" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
+                      RAQ
                     </Link>
                   </li>
                   <li>

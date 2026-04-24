@@ -17,7 +17,8 @@ import {
   deleteSavedSearch,
   ALERT_CAP,
 } from '../../firebase/models/savedSearchModel';
-import AggregatorFooter from '../../components/aggregator/AggregatorFooter';
+import SiteHeader from '../../components/siteChrome/SiteHeader';
+import SiteFooter from '../../components/siteChrome/SiteFooter';
 
 function summarizeAlert(alert) {
   const parts = [];
@@ -128,23 +129,7 @@ const AlertsPage = () => {
   if (!user) {
     return (
       <div className="bg-bone min-h-screen">
-        <header style={{ borderBottom: '1px solid #eceae4', padding: '22px 0' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}>
-            <Link
-              to="/"
-              style={{
-                fontFamily: "'Petrona', Georgia, serif",
-                fontWeight: 900,
-                fontSize: 24,
-                letterSpacing: '-1.2px',
-                color: '#1a3030',
-                textDecoration: 'none',
-              }}
-            >
-              Benchlot
-            </Link>
-          </div>
-        </header>
+        <SiteHeader current="alerts" />
         <main style={{ maxWidth: 640, margin: '80px auto', padding: '0 40px', textAlign: 'center' }}>
           <Bell size={32} style={{ color: '#d4aa60', margin: '0 auto 16px' }} />
           <h1
@@ -195,38 +180,7 @@ const AlertsPage = () => {
 
   return (
     <div className="bg-bone min-h-screen flex flex-col">
-      <header style={{ borderBottom: '1px solid #eceae4', padding: '22px 0' }}>
-        <div
-          className="flex items-center justify-between"
-          style={{ maxWidth: 1280, margin: '0 auto', padding: '0 40px' }}
-        >
-          <Link
-            to="/"
-            style={{
-              fontFamily: "'Petrona', Georgia, serif",
-              fontWeight: 900,
-              fontSize: 24,
-              letterSpacing: '-1.2px',
-              color: '#1a3030',
-              textDecoration: 'none',
-            }}
-          >
-            Benchlot
-          </Link>
-          <Link
-            to="/"
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 500,
-              fontSize: 13,
-              color: '#4a5a54',
-              textDecoration: 'none',
-            }}
-          >
-            ← Back to search
-          </Link>
-        </div>
-      </header>
+      <SiteHeader current="alerts" />
 
       <main
         className="flex-1"
@@ -437,7 +391,7 @@ const AlertsPage = () => {
         )}
       </main>
 
-      <AggregatorFooter />
+      <SiteFooter />
     </div>
   );
 };
