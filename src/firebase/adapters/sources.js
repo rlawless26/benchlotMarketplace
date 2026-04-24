@@ -49,6 +49,14 @@ const SOURCES = [
     indexed: true,
   },
   {
+    id: 'woodnet',
+    name: 'Woodnet',
+    shortName: 'Woodnet',
+    kind: 'Forum',
+    descriptor: 'Forum classifieds',
+    indexed: false,
+  },
+  {
     id: 'lumberjocks',
     name: 'LumberJocks',
     shortName: 'LumberJocks',

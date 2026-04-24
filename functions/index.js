@@ -2774,6 +2774,37 @@ exports.scheduledIngestSawmillcreek = onSchedule(
 );
 
 /**
+ * Nightly Woodnet ingestion.
+ *
+ * Runs at 03:30 UTC — between Sawmill Creek (03:15) and Hyperkitten (03:45),
+ * so all forum/dealer ingests finish before the alert matcher (04:15). First
+ * run scrapes ~226 threads in ~8 minutes; steady state should be well under
+ * 2 minutes once most threads are already in Firestore (list-sweep-only for
+ * known threads; new-thread detail fetches are typically just a handful).
+ *
+ * Can also be invoked locally via `node functions/ingest/run-woodnet.js`.
+ */
+const woodnet = require('./ingest/woodnet');
+
+exports.scheduledIngestWoodnet = onSchedule(
+  {
+    schedule: '30 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await woodnet.runIngestion();
+      console.log('[scheduledIngestWoodnet] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestWoodnet] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Normalize externalListings when they're written.
  *
  * Fires on create + update of any externalListings doc. The apply helper
