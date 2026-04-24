@@ -2,17 +2,24 @@
  * eBay Browse API ingestion adapter.
  *
  * Targets eBay's public Buy Browse API at app-level (Client Credentials
- * grant). We sweep a single curated category (13870 = "Carpentry,
- * Woodworking" under Collectibles > Antiques > Tools), sorted by newest
- * listing, capped at a politeness ceiling (default 2000). Category 13870
- * gives ~242k active items split across well-curated leaves: Planes,
- * Chisels, Saws, Drills, Hammers, Screwdrivers, Rules/Tapes, Squares,
- * Gauges, Vises/Clamps, Levels. Roughly 99% are woodworking-relevant.
+ * grant). We sweep a set of curated SEARCH_BUCKETS and merge into a
+ * single deduplicated record stream. Two classes of bucket:
  *
- * Power tools (category 3247) are intentionally out of scope for v1. That
- * tree is dominated by automotive / Milwaukee-impact / grinder listings
- * with very low woodworking signal; targeting it needs brand-specific
- * queries (Festool, Powermatic, etc.) and is a follow-up.
+ *   1. Category sweep — `category_ids=13870` (Collectibles > Antiques >
+ *      Tools > Carpentry, Woodworking) captures ~242k vintage hand-tool
+ *      listings with ~99% woodworking-relevant signal.
+ *   2. Brand queries — high-end woodworking power-tool and precision
+ *      brands (Festool, Woodpeckers, Laguna, Powermatic, SawStop,
+ *      Mafell, Bridge City, Shaper Origin, Delta Rockwell, Oneway, Jet,
+ *      Felder, Harvey, Grizzly, Incra, JessEm, Shopsmith, MiniMax).
+ *      Some brand names are ambiguous (e.g. "woodpeckers" matches 69k
+ *      Woody Woodpecker VHS tapes without a category filter) so each
+ *      bucket is tuned via probes; see comments on individual buckets.
+ *
+ * Scope note — v1 covers premium / woodworking-specific brands, not
+ * commodity power tools (Milwaukee, DeWalt, Makita). Those dominate
+ * category 3247 Power Tools but are overwhelmingly non-woodworking
+ * (impact drivers, automotive, grinders).
  *
  * PII hygiene — Marketplace Account Deletion exemption commitment:
  *   We do NOT store seller usernames, feedback scores, or any
@@ -25,10 +32,11 @@
  * Firestore or disk (Rob's directive).
  *
  * Expiry — unlike forum/dealer sources we do NOT run markExpired here.
- * We sample the ~2000 most-recent items out of a 242k universe; any item
- * missing from today's sample has simply rotated off the newlyListed
- * window, it hasn't sold. A TTL-based cleanup (expire items unseen for
- * >30 days) is the right long-term answer but is out of scope for v1.
+ * We sample the ~N most-recent items per bucket out of much larger
+ * universes; any item missing from today's sample has rotated off the
+ * newlyListed window, it hasn't sold. A TTL-based cleanup (expire
+ * items unseen for >30 days) is the right long-term answer but is out
+ * of scope for v1.
  */
 
 const axios = require('axios');
@@ -45,16 +53,58 @@ const OAUTH_URL = `${API_ORIGIN}/identity/v1/oauth2/token`;
 const SEARCH_URL = `${API_ORIGIN}/buy/browse/v1/item_summary/search`;
 const MARKETPLACE = 'EBAY_US';
 
-// Category 13870 = Collectibles > Antiques > Tools > Carpentry, Woodworking.
-// Verified 2026-04-24 via live probe: 242k active items, leaf distribution
-// dominated by Planes (26%), Rules/Tapes (17%), Hammers/Axes (16%), Drills
-// (7%), Chisels (6%), Saws (6%), Screwdrivers (6%), Vises/Clamps (5%).
-const TARGET_CATEGORY_IDS = ['13870'];
-
 const PAGE_SIZE = 200;                // Browse API hard cap per request
-const DEFAULT_MAX_ITEMS = 2000;       // Initial politeness ceiling
+const DEFAULT_MAX_ITEMS = 5000;       // Global politeness ceiling across all buckets
 const REQUEST_DELAY_MS = 500;         // Delay between paginated API calls
 const REQUEST_TIMEOUT_MS = 30000;
+
+/**
+ * Search buckets. Each bucket drives a separate paginated Browse API
+ * sweep; records are merged into a single dedup'd stream. Per-bucket
+ * `maxItems` caps keep any single bucket from dominating; the global
+ * `maxItems` passed to scrapeAll is a hard total ceiling on top.
+ *
+ * Query tuning rules (from 2026-04-24 live probes):
+ *   - Use `q` alone when the brand name is unambiguous (Festool, SawStop,
+ *     Mafell, Laguna Tools, Bridge City Tool Works, Delta Rockwell,
+ *     Oneway Lathe, Shaper Origin, Incra, JessEm, Shopsmith).
+ *   - Add `category_ids: '631'` (Tools & Workshop Equipment) for
+ *     brand names that match non-tool noise without a filter
+ *     (Woodpeckers → 69k Woody Woodpecker VHS tapes;
+ *     Powermatic → Tissot watches; Felder → author's books; Harvey →
+ *     books by author Harvey Green; Grizzly → bears).
+ *   - Use `category_ids: '3247'` (Power Tools) for Jet (avoids Jet
+ *     Airlines books, jet fuel, etc.).
+ *   - For MiniMax add a descriptive suffix ("minimax woodworking") since
+ *     "MiniMax" matches textbooks and weather thermometers.
+ */
+const SEARCH_BUCKETS = [
+  // Vintage hand tools — category sweep (no q)
+  {
+    label: 'vintage-carpentry',
+    params: { category_ids: '13870' },
+    maxItems: 2000,
+  },
+  // High-end power-tool and precision brands
+  { label: 'festool',        params: { q: 'festool' },                               maxItems: 250 },
+  { label: 'woodpeckers',    params: { q: 'woodpeckers', category_ids: '631' },      maxItems: 200 },
+  { label: 'laguna-tools',   params: { q: 'laguna tools' },                          maxItems: 150 },
+  { label: 'sawstop',        params: { q: 'sawstop' },                               maxItems: 150 },
+  { label: 'powermatic',     params: { q: 'powermatic', category_ids: '631' },       maxItems: 250 },
+  { label: 'mafell',         params: { q: 'mafell' },                                maxItems: 80 },
+  { label: 'bridge-city',    params: { q: 'bridge city tool works' },                maxItems: 150 },
+  { label: 'shaper-origin',  params: { q: 'shaper origin' },                         maxItems: 20 },
+  { label: 'delta-rockwell', params: { q: 'delta rockwell' },                        maxItems: 300 },
+  { label: 'oneway-lathe',   params: { q: 'oneway lathe' },                          maxItems: 150 },
+  { label: 'jet-power',      params: { q: 'jet', category_ids: '3247' },             maxItems: 250 },
+  { label: 'felder',         params: { q: 'felder', category_ids: '631' },           maxItems: 95 },
+  { label: 'harvey-tools',   params: { q: 'harvey', category_ids: '631' },           maxItems: 40 },
+  { label: 'grizzly-tools',  params: { q: 'grizzly', category_ids: '631' },          maxItems: 250 },
+  { label: 'incra',          params: { q: 'incra' },                                 maxItems: 200 },
+  { label: 'jessem',         params: { q: 'jessem' },                                maxItems: 150 },
+  { label: 'shopsmith',      params: { q: 'shopsmith' },                             maxItems: 250 },
+  { label: 'minimax',        params: { q: 'minimax woodworking' },                   maxItems: 100 },
+];
 
 // Token cache — process-local only. Never persisted.
 let tokenCache = null; // { token: string, expiresAt: number }
@@ -105,9 +155,15 @@ async function getAppToken({ forceRefresh = false } = {}) {
 // Fetching
 // ---------------------------------------------------------------------------
 
-async function fetchSearchPage({ categoryIds, offset, limit, token }) {
+/**
+ * Issue one Browse API search request. `bucketParams` is a free-form
+ * map merged verbatim into the query string — it can include `q`,
+ * `category_ids`, `filter`, or any other Browse API search param.
+ * We always add `sort=newlyListed` + pagination.
+ */
+async function fetchSearchPage({ bucketParams, offset, limit, token }) {
   const params = new URLSearchParams({
-    category_ids: categoryIds.join(','),
+    ...bucketParams,
     sort: 'newlyListed',
     offset: String(offset),
     limit: String(limit),
@@ -235,42 +291,40 @@ function toRecord(item) {
 // ---------------------------------------------------------------------------
 
 /**
- * Paginate the Browse API for TARGET_CATEGORY_IDS and return up to
- * `maxItems` normalized records. Dedupes by source_id as a safety net
- * (paginated sweeps shouldn't produce duplicates, but items can shift
- * between pages if updated mid-scrape).
+ * Run a single search bucket — paginate Browse API for this bucket's
+ * params, return records that passed `toRecord` plus pagination stats.
+ * Caller is responsible for global dedup and global caps.
  *
- * @param {object} [opts]
- * @param {number} [opts.maxItems] — cap on records returned
- * @returns {Promise<{records: object[], totalAvailable: number, pages: number}>}
+ * @param {object} bucket — one entry from SEARCH_BUCKETS
+ * @param {Set<string>} globalSeen — source_ids already ingested in this run
+ * @param {number} globalRemaining — items we can still add before hitting global cap
+ * @param {string} token
+ * @returns {Promise<{newRecords: object[], pages: number, totalAvailable: number, dupSkipped: number}>}
  */
-async function scrapeAll(opts = {}) {
-  const { maxItems = DEFAULT_MAX_ITEMS } = opts;
-
-  const token = await getAppToken();
-  const records = [];
-  const seenIds = new Set();
-
+async function runBucket(bucket, globalSeen, globalRemaining, token) {
+  const newRecords = [];
+  const perBucketCap = Math.max(0, Math.min(bucket.maxItems ?? DEFAULT_MAX_ITEMS, globalRemaining));
   let offset = 0;
   let pages = 0;
   let totalAvailable = null;
+  let dupSkipped = 0;
 
-  while (records.length < maxItems) {
+  while (newRecords.length < perBucketCap) {
     if (pages > 0) await sleep(REQUEST_DELAY_MS);
     pages += 1;
 
-    const remaining = maxItems - records.length;
+    const remaining = perBucketCap - newRecords.length;
     const limit = Math.min(PAGE_SIZE, remaining);
     let page;
     try {
       page = await fetchSearchPage({
-        categoryIds: TARGET_CATEGORY_IDS,
+        bucketParams: bucket.params,
         offset,
         limit,
         token,
       });
     } catch (err) {
-      console.error(`[ebay] search page fetch failed at offset=${offset}: ${err.message}`);
+      console.error(`[ebay] bucket=${bucket.label} page fetch failed at offset=${offset}: ${err.message}`);
       break;
     }
 
@@ -281,17 +335,60 @@ async function scrapeAll(opts = {}) {
     for (const item of items) {
       const rec = toRecord(item);
       if (!rec) continue;
-      if (seenIds.has(rec.listing.source_id)) continue;
-      seenIds.add(rec.listing.source_id);
-      records.push(rec);
-      if (records.length >= maxItems) break;
+      if (globalSeen.has(rec.listing.source_id)) { dupSkipped += 1; continue; }
+      globalSeen.add(rec.listing.source_id);
+      newRecords.push(rec);
+      if (newRecords.length >= perBucketCap) break;
     }
 
     offset += items.length;
     if (items.length < limit) break; // Source exhausted before cap
   }
 
-  return { records, totalAvailable: totalAvailable || 0, pages };
+  return { newRecords, pages, totalAvailable: totalAvailable || 0, dupSkipped };
+}
+
+/**
+ * Iterate SEARCH_BUCKETS, merging normalized records into a single
+ * deduplicated stream up to `maxItems` global cap.
+ *
+ * @param {object} [opts]
+ * @param {number} [opts.maxItems] — global cap on total records returned
+ * @param {string[]} [opts.buckets] — if provided, only run buckets whose label is in this list
+ * @returns {Promise<{records: object[], bucketStats: object[], pages: number}>}
+ */
+async function scrapeAll(opts = {}) {
+  const { maxItems = DEFAULT_MAX_ITEMS, buckets } = opts;
+  const bucketsToRun = buckets
+    ? SEARCH_BUCKETS.filter((b) => buckets.includes(b.label))
+    : SEARCH_BUCKETS;
+
+  const token = await getAppToken();
+  const records = [];
+  const seenIds = new Set();
+  const bucketStats = [];
+  let totalPages = 0;
+
+  for (const bucket of bucketsToRun) {
+    if (records.length >= maxItems) {
+      bucketStats.push({ label: bucket.label, skipped: true, reason: 'global cap reached' });
+      continue;
+    }
+    const remaining = maxItems - records.length;
+    const { newRecords, pages, totalAvailable, dupSkipped } =
+      await runBucket(bucket, seenIds, remaining, token);
+    records.push(...newRecords);
+    totalPages += pages;
+    bucketStats.push({
+      label: bucket.label,
+      new: newRecords.length,
+      pages,
+      total_available: totalAvailable,
+      dup_skipped: dupSkipped,
+    });
+  }
+
+  return { records, bucketStats, pages: totalPages };
 }
 
 /**
@@ -302,13 +399,13 @@ async function runIngestion(opts = {}) {
   const runStartedAt = admin.firestore.Timestamp.now();
   const t0 = Date.now();
 
-  const { records, totalAvailable, pages } = await scrapeAll(opts);
+  const { records, bucketStats, pages } = await scrapeAll(opts);
   const upsertSummary = await upsertListings(records, runStartedAt);
 
   return {
     source: SOURCE,
     scraped: records.length,
-    total_available: totalAvailable,
+    bucket_stats: bucketStats,
     pages,
     inserted: upsertSummary.inserted,
     updated: upsertSummary.updated,
@@ -320,10 +417,11 @@ async function runIngestion(opts = {}) {
 module.exports = {
   SOURCE,
   RAW_FORMAT,
-  TARGET_CATEGORY_IDS,
+  SEARCH_BUCKETS,
   DEFAULT_MAX_ITEMS,
   runIngestion,
   scrapeAll,
+  runBucket,
   getAppToken,
   fetchSearchPage,
   toRecord,
