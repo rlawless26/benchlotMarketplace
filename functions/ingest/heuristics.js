@@ -11,29 +11,64 @@
  * heuristic stops bucketing "jointer" (power) into "Bench Planes" and so on.
  */
 
+// ORDER MATTERS: multi-word brands and brands that are proper supersets of
+// other brand strings appear FIRST so the substring-based matcher hits the
+// specific form before the shorter one. Example: "Record Power" must come
+// before "Record" or any "Record Power BS350" title would match "Record"
+// (vintage hand-tool brand) and attribute a modern bandsaw to the wrong era.
 const BRANDS = [
+  // Multi-word / disambiguated brands — must come before their single-word
+  // prefixes (Record Power before Record, etc.)
+  'Record Power',
+  'General International',
+  'Shop Fox',
+  'Bench Dog',
+  'King Canada',
+  'Steel City',
+  'Walker-Turner',
+  'Yates-American',
+  'North Brothers',
+  'Bridge City',
+  'Blue Spruce',
+  'Buck Brothers',
+  'Millers Falls',
+  'Keen Kutter',
+  'Ohio Tool',
+  'Henry Taylor',
+  'Ashley Iles',
+  'Wood-Mizer',
+  'Brown & Sharpe',
+  'Porter-Cable',
+  'Metabo HPT',
+  'American Woodworking',
+
   // Hand-tool vintage / antique
   'Stanley', 'Lie-Nielsen', 'Veritas', 'Record', 'Norris', 'Spiers',
-  'Preston', 'Disston', 'Sargent', 'Millers Falls', 'Keen Kutter',
-  'Winchester', 'Chaplin', 'Bailey', 'Bedrock', 'Union', 'Ohio Tool',
-  'Greenfield', 'Buck Brothers', 'Marples', 'Ward', 'Mathieson',
-  'Sorby', 'Gramercy', 'Clifton', 'Hock', 'Blue Spruce', 'Barton',
-  'Moulson', 'Rabone', 'Starrett', 'Brown & Sharpe', 'Lufkin',
-  'Yankee', 'Bridge City', 'Irwin', 'North Brothers', 'Goodell-Pratt',
-  'Pexto', 'Henry Taylor', 'Ashley Iles', 'Narex',
+  'Preston', 'Disston', 'Sargent', 'Winchester', 'Chaplin', 'Bailey',
+  'Bedrock', 'Union', 'Greenfield', 'Marples', 'Ward', 'Mathieson',
+  'Sorby', 'Gramercy', 'Clifton', 'Hock', 'Barton', 'Moulson', 'Rabone',
+  'Starrett', 'Lufkin', 'Yankee', 'Irwin', 'Goodell-Pratt',
+  'Pexto', 'Narex',
+
   // Modern precision / woodworking (M5)
   'Festool', 'Woodpeckers', 'SawStop', 'Laguna', 'Powermatic', 'Delta',
-  'Jet', 'Rikon', 'Grizzly', 'Shop Fox', 'Oneida', 'Mafell', 'Felder',
+  'Jet', 'Rikon', 'Grizzly', 'Oneida', 'Mafell', 'Felder',
   'Martin', 'Minimax', 'SCM', 'Hammer', 'Oneway', 'Robust', 'Nova',
-  'Jointech', 'Incra', 'Kreg', 'Rockler', 'Bench Dog', 'Shaper',
-  'Axiom', 'Shapeoko', 'Inventables', 'Wood-Mizer',
+  'Jointech', 'Incra', 'Kreg', 'Rockler', 'Shaper',
+  'Axiom', 'Shapeoko', 'Inventables',
+
   // Power-tool pro / prosumer (M5)
   'DeWalt', 'Milwaukee', 'Makita', 'Bosch', 'Metabo', 'Ridgid',
-  'Porter-Cable', 'Hitachi', 'Skil', 'Skilsaw', 'Craftsman', 'Ryobi',
+  'Hitachi', 'Skilsaw', 'Skil', 'Craftsman', 'Ryobi',
   'Kobalt', 'Hart', 'Wen',
+
   // Vintage stationary (M5)
-  'Rockwell', 'Walker-Turner', 'Yates-American', 'Oliver', 'Tannewitz',
-  'Crescent',
+  'Rockwell', 'Oliver', 'Tannewitz', 'Crescent', 'Parks', 'Northfield',
+  'Atlas',
+
+  // Specialty / accessories (M5)
+  'SuperMax', 'Eclipse', 'Fein', 'Triton', 'Baileigh',
+  'Wilton', 'Whitney', 'Pegas', 'Excalibur', 'Woodcraft', 'Highland',
 ];
 
 function extractBrand(title) {
@@ -57,14 +92,19 @@ function containsAny(haystack, needles) {
  * the listing is almost certainly a power tool.
  */
 const POWER_TOOL_BRANDS = [
+  // Core power-tool brands from the M5 first pass
   'festool', 'sawstop', 'laguna', 'powermatic', 'grizzly', 'jet',
   'rikon', 'shop fox', 'dewalt', 'makita', 'milwaukee', 'bosch',
-  'metabo', 'ridgid', 'porter-cable', 'hitachi', 'skil', 'skilsaw',
-  'ryobi', 'craftsman', 'kobalt', 'hart', 'wen', 'rockwell',
+  'metabo', 'metabo hpt', 'ridgid', 'porter-cable', 'hitachi', 'skil',
+  'skilsaw', 'ryobi', 'craftsman', 'kobalt', 'hart', 'wen', 'rockwell',
   'walker-turner', 'yates-american', 'oliver', 'tannewitz', 'mafell',
   'felder', 'minimax', 'hammer', 'oneway', 'nova', 'woodpeckers',
   'incra', 'kreg', 'rockler', 'shaper', 'shapeoko', 'axiom',
   'inventables', 'wood-mizer', 'oneida',
+  // Additional brands (second wave — SuperMax, Eclipse, Atlas, Fein, etc.)
+  'supermax', 'eclipse', 'fein', 'triton', 'baileigh', 'steel city',
+  'wilton', 'whitney', 'record power', 'king canada', 'pegas',
+  'excalibur', 'parks', 'northfield', 'atlas', 'general international',
 ];
 
 function looksPowerBranded(lower) {

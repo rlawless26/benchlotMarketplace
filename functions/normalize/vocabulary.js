@@ -122,6 +122,27 @@ const CANONICAL_BRANDS = [
   'Tannewitz',
   'Crescent',
   'American Woodworking',
+  'Parks',                 // Parks planers (vintage American)
+  'Northfield',            // industrial stationary
+  'Atlas',                 // Atlas lathes / drill presses
+  'General',               // General Mfg Co (Canadian stationary)
+  'General International', // modern General (Canadian)
+
+  // Specialty / accessories (M5)
+  'SuperMax',              // drum sanders
+  'Eclipse',               // Eclipse vises (UK)
+  'Fein',                  // high-end multi-tools + vacs
+  'Triton',                // Australian routers + track saws
+  'Baileigh',              // industrial woodworking/metalworking
+  'Steel City',            // modern stationary
+  'Wilton',                // vises
+  'Whitney',               // mortisers + heavy machinery
+  'Record Power',          // modern Record (distinct from vintage Record)
+  'King Canada',           // Canadian home-center stationary
+  'Pegas',                 // scroll saw blades / saws
+  'Excalibur',             // scroll saws + fence systems
+  'Woodcraft',             // retail-brand tools (some house-brand stationary)
+  'Highland',              // retail-brand / specialty
 
   'Unknown',
 ];
