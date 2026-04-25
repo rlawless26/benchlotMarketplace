@@ -82,8 +82,9 @@ const SOURCES = [
     name: 'eBay',
     shortName: 'eBay',
     kind: 'Marketplace',
-    descriptor: 'Curated searches',
-    indexed: false,
+    descriptor: 'Marketplace · Curated woodworking',
+    homeUrl: 'https://www.ebay.com/b/Carpentry-Woodworking/13870',
+    indexed: true,
   },
 ];
 

@@ -478,10 +478,12 @@ const FilterRail = ({
         )}
       </CollapsibleGroup>
 
-      {/* Source — multi-select dropdown */}
+      {/* Source — multi-select dropdown. Only show sources that are actually
+         indexed; aspirational entries in SOURCES (indexed:false) would
+         confuse users since they have zero matches. */}
       <CollapsibleGroup label="Source" defaultOpen>
         <MultiSelectDropdown
-          options={SOURCES.map((s) => ({ key: s.id, label: s.name }))}
+          options={SOURCES.filter((s) => s.indexed).map((s) => ({ key: s.id, label: s.name }))}
           selected={filters?.src}
           onToggle={(key) => toggleFilter('src', key)}
           facets={facets?.source}
