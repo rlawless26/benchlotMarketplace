@@ -87,6 +87,7 @@ const CANONICAL_BRANDS = [
   'Nova',
   'Jointech',
   'Incra',
+  'JessEm',
   'Kreg',
   'Rockler',
   'Bench Dog',
@@ -141,7 +142,9 @@ const CANONICAL_BRANDS = [
   'King Canada',           // Canadian home-center stationary
   'Pegas',                 // scroll saw blades / saws
   'Excalibur',             // scroll saws + fence systems
-  'Woodcraft',             // retail-brand tools (some house-brand stationary)
+  'Woodcraft',             // Woodcraft retail store's own Woodcraft-branded items (distinct from WoodRiver house brand — see below)
+  'WoodRiver',             // Woodcraft's house brand of hand planes and chisels (one word, camelCase — NOT "Wood River" / "Woodriver" / "Woodcraft")
+  'Shopsmith',             // multi-purpose combination machines (Mark V, etc.); canonical capitalization is "Shopsmith" (NOT "ShopSmith")
   'Highland',              // retail-brand / specialty
 
   'Unknown',
