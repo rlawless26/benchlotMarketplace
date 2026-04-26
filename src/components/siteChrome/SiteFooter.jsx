@@ -84,10 +84,12 @@ export default function SiteFooter() {
 
   return (
     <footer
+      className="px-4 md:px-10"
       style={{
         background: 'var(--dark-teal)',
         color: 'var(--bone)',
-        padding: '72px 40px 32px',
+        paddingTop: 56,
+        paddingBottom: 32,
       }}
     >
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
@@ -132,15 +134,13 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        {/* Two columns — prose blurb + digest signup. The single-link "RAQ"
-            nav column was removed per the consolidation spec; the Learn more
-            link below covers the same intent more directly. */}
+        {/* Two columns — prose blurb + digest signup. Stacks to a single
+            column on mobile; side-by-side at md+ where the prose has room
+            to breathe and the form doesn't overflow. */}
         <div
+          className="grid grid-cols-1 md:grid-cols-[1.6fr_1.4fr] gap-10 md:gap-14"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1.6fr 1.4fr',
-            gap: 56,
-            padding: '56px 0 48px',
+            padding: '40px 0 32px',
             borderBottom: '1px solid rgba(242,240,235,0.1)',
           }}
         >
@@ -221,6 +221,7 @@ export default function SiteFooter() {
                 borderRadius: 8,
                 overflow: 'hidden',
                 border: '1px solid rgba(242,240,235,0.2)',
+                maxWidth: '100%',
               }}
             >
               <input
@@ -232,6 +233,7 @@ export default function SiteFooter() {
                 disabled={submitting}
                 style={{
                   flex: 1,
+                  minWidth: 0,
                   padding: '11px 14px',
                   background: 'rgba(242,240,235,0.06)',
                   border: 0,
