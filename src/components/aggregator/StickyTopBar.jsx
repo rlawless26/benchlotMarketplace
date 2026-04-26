@@ -43,7 +43,7 @@ const StickyTopBar = ({ query, onQueryChange, filterCount = 0, onFilterClick }) 
   return (
     <div>
       <div
-        className="flex items-center gap-3 md:gap-5 px-4 md:px-10"
+        className="flex items-center flex-wrap gap-y-2 gap-x-3 md:gap-x-5 px-4 md:px-10"
         style={{
           maxWidth: 1280,
           margin: '0 auto',
@@ -67,11 +67,18 @@ const StickyTopBar = ({ query, onQueryChange, filterCount = 0, onFilterClick }) 
           Benchlot
         </Link>
 
-        {/* Search — visually emphasized so it reads as the primary action on
-            any page (especially the soft-empty state where the headline
-            points at it). Stronger border + white fill + honey-accented
-            magnifier icon stand out from the bone background. */}
-        <div className="relative" style={{ flex: 1, maxWidth: 640 }}>
+        {/* Search. On mobile, wraps to its own full-width row below the
+            wordmark + nav (Reverb's mobile pattern — the search bar gets
+            maximum room for placeholder text instead of being squeezed into
+            an inline slot between logo and nav). On md+ it sits inline,
+            flex-1 to grow with the available space, capped at 640px. The
+            order-* classes drive the wrap behavior: wordmark (1) → nav (2)
+            on row 1, search (3) wraps to row 2 on mobile; on md+ all three
+            sit inline in their natural visual order (wordmark → search → nav). */}
+        <div
+          className="relative w-full order-3 md:order-2 md:w-auto md:flex-1"
+          style={{ maxWidth: 640 }}
+        >
           <Search
             size={18}
             aria-hidden
@@ -131,10 +138,10 @@ const StickyTopBar = ({ query, onQueryChange, filterCount = 0, onFilterClick }) 
           )}
         </div>
 
-        {/* Right group: mobile filter button + global nav. Filters is
-            md:hidden — the FilterRail is inline at md+ but collapsed
-            behind a tap-to-open toggle on mobile. */}
-        <div className="flex items-center gap-3 md:gap-5" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+        {/* Right group: mobile filter button + global nav. order-2 on mobile
+            (sits next to the wordmark on row 1, search wraps below); order-3
+            on md+ (last in line, after the inline search). */}
+        <div className="flex items-center gap-3 md:gap-5 order-2 md:order-3" style={{ flexShrink: 0, marginLeft: 'auto' }}>
           <button
             type="button"
             onClick={onFilterClick}
