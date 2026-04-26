@@ -11,12 +11,12 @@
 
 import React, { useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
 import { useAuthModal } from '../../context/AuthModalContext';
 
-const StickyTopBar = ({ query, onQueryChange }) => {
+const StickyTopBar = ({ query, onQueryChange, filterCount = 0, onFilterClick }) => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
   const location = useLocation();
@@ -131,46 +131,84 @@ const StickyTopBar = ({ query, onQueryChange }) => {
           )}
         </div>
 
-        {/* Right group: global nav. Filter rail is hidden on mobile (it's a
-            desktop-only surface for now), so the mobile filter chip was
-            removed — search bar handles refinement on small screens. */}
-        <nav
-          className="flex items-center gap-3 md:gap-5"
-          style={{
-            flexShrink: 0,
-            marginLeft: 'auto',
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            fontSize: 13,
-          }}
-        >
-          <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
-            RAQ
-          </Link>
-          <span aria-hidden className="hidden sm:block" style={{ width: 1, height: 14, background: '#e4e2dc' }} />
-          {user ? (
-            <Link to="/alerts" style={{ color: '#1a3030', textDecoration: 'none' }}>
-              My Alerts
+        {/* Right group: mobile filter button + global nav. Filters is
+            md:hidden — the FilterRail is inline at md+ but collapsed
+            behind a tap-to-open toggle on mobile. */}
+        <div className="flex items-center gap-3 md:gap-5" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+          <button
+            type="button"
+            onClick={onFilterClick}
+            className="md:hidden inline-flex items-center cursor-pointer"
+            style={{
+              gap: 6,
+              padding: '7px 12px',
+              background: '#f8f6f2',
+              border: '1px solid #e4e2dc',
+              borderRadius: 6,
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              fontSize: 12,
+              color: '#0c1c1e',
+            }}
+          >
+            <SlidersHorizontal size={14} />
+            Filters
+            {filterCount > 0 && (
+              <span
+                className="inline-flex items-center justify-center"
+                style={{
+                  minWidth: 18,
+                  height: 18,
+                  borderRadius: 999,
+                  background: '#d4aa60',
+                  color: '#0c1c1e',
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 10,
+                  padding: '0 6px',
+                }}
+              >
+                {filterCount}
+              </span>
+            )}
+          </button>
+
+          <nav
+            className="flex items-center gap-3 md:gap-5"
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              fontSize: 13,
+            }}
+          >
+            <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
+              RAQ
             </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => openAuthModal()}
-              className="cursor-pointer"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                fontFamily: "'Outfit', sans-serif",
-                fontWeight: 500,
-                fontSize: 13,
-                color: '#1a3030',
-              }}
-            >
-              Sign in
-            </button>
-          )}
-        </nav>
+            <span aria-hidden className="hidden sm:block" style={{ width: 1, height: 14, background: '#e4e2dc' }} />
+            {user ? (
+              <Link to="/alerts" style={{ color: '#1a3030', textDecoration: 'none' }}>
+                My Alerts
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openAuthModal()}
+                className="cursor-pointer"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  color: '#1a3030',
+                }}
+              >
+                Sign in
+              </button>
+            )}
+          </nav>
+        </div>
       </div>
     </div>
   );

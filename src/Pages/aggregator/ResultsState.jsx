@@ -186,11 +186,21 @@ const ResultsState = ({ state, actions }) => {
   const filterCount = activeFilterChips.length;
 
   const filterRailRef = useRef(null);
-  const handleFilterClick = () => {
-    if (filterRailRef.current) {
-      filterRailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  // Mobile filter sheet — toggled by the Filters button in StickyTopBar.
+  // On md+ the FilterRail is always visible inline; this state is mobile-only.
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const handleFilterClick = () => setMobileFiltersOpen((v) => !v);
+
+  // Lock body scroll while the mobile filter sheet is open so the rail
+  // scrolls instead of the page underneath.
+  useEffect(() => {
+    if (!mobileFiltersOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileFiltersOpen]);
 
   const headerTitle = query || 'All listings';
 
@@ -419,10 +429,12 @@ const ResultsState = ({ state, actions }) => {
           className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 md:gap-10"
           style={{ alignItems: 'flex-start' }}
         >
-          {/* Filter rail — hidden on mobile (filtering is a desktop task; the
-             top-bar "Filters" button scrolls here when shown). Full sidebar at
-             md+. Without this, the 240px sidebar squeezes the result column
-             below the 280px minmax minimum and cards overflow horizontally. */}
+          {/* Filter rail.
+             - md+: inline 240px sidebar, always visible.
+             - mobile: hidden by default; toggled into a full-height bottom
+               sheet by the Filters button in StickyTopBar. The sheet covers
+               the page content (z-50 + body scroll-lock) so the rail itself
+               scrolls without the page moving underneath. */}
           <div ref={filterRailRef} className="hidden md:block">
             <FilterRail
               filters={filters}
@@ -433,6 +445,65 @@ const ResultsState = ({ state, actions }) => {
               priceRangeHelper={priceRangeHelper}
             />
           </div>
+
+          {mobileFiltersOpen && (
+            <div
+              className="md:hidden fixed inset-0 flex flex-col"
+              style={{ zIndex: 60, background: 'var(--bone)' }}
+            >
+              {/* Sticky sheet header — title + Done button. */}
+              <div
+                className="flex items-center justify-between px-4"
+                style={{
+                  paddingTop: 14,
+                  paddingBottom: 14,
+                  borderBottom: '1px solid #e4e2dc',
+                  background: 'var(--bone)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "'Petrona', Georgia, serif",
+                    fontWeight: 700,
+                    fontSize: 18,
+                    color: '#0c1c1e',
+                  }}
+                >
+                  Filters{filterCount > 0 ? ` · ${filterCount} active` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  aria-label="Close filters"
+                  className="cursor-pointer inline-flex items-center"
+                  style={{
+                    gap: 4,
+                    padding: '6px 12px',
+                    background: '#0c1c1e',
+                    color: '#f2f0eb',
+                    border: 'none',
+                    borderRadius: 6,
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 600,
+                    fontSize: 13,
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+              {/* Scrollable rail body. */}
+              <div className="overflow-y-auto px-4" style={{ flex: 1, paddingTop: 12, paddingBottom: 24 }}>
+                <FilterRail
+                  filters={filters}
+                  toggleFilter={actions.toggleFilter}
+                  setPriceRange={actions.setPriceRange}
+                  clearAllFilters={actions.clearAllFilters}
+                  facets={facets}
+                  priceRangeHelper={priceRangeHelper}
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             {loading && (
