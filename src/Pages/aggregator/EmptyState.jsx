@@ -240,7 +240,7 @@ const EmptyState = ({ onSearch }) => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for a tool — Stanley No. 4, Disston D-8…"
+              placeholder="Search for a tool"
               className="w-full pl-14 pr-14 sm:pr-44 py-5"
               style={{
                 background: '#f8f6f2',
