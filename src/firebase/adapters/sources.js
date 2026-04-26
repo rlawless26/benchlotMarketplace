@@ -91,7 +91,7 @@ const SOURCES = [
     name: 'The Best Things',
     shortName: 'Best Things',
     kind: 'Dealer',
-    descriptor: 'Bob Kaune · Premium vintage',
+    descriptor: 'Dealer · Premium vintage',
     homeUrl: 'https://www.thebestthings.com/vintools.htm',
     indexed: true,
   },
