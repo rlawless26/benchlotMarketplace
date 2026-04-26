@@ -407,17 +407,23 @@ const ResultsState = ({ state, actions }) => {
 
       {/* Main: filter rail + results (or soft-empty guidance) */}
       <main
+        className="px-4 md:px-10"
         style={{
           maxWidth: 1280,
           margin: '0 auto',
-          padding: '28px 40px 80px',
+          paddingTop: 28,
+          paddingBottom: 80,
         }}
       >
         <div
-          className="grid"
-          style={{ gridTemplateColumns: '240px 1fr', gap: 40, alignItems: 'flex-start' }}
+          className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 md:gap-10"
+          style={{ alignItems: 'flex-start' }}
         >
-          <div ref={filterRailRef}>
+          {/* Filter rail — hidden on mobile (filtering is a desktop task; the
+             top-bar "Filters" button scrolls here when shown). Full sidebar at
+             md+. Without this, the 240px sidebar squeezes the result column
+             below the 280px minmax minimum and cards overflow horizontally. */}
+          <div ref={filterRailRef} className="hidden md:block">
             <FilterRail
               filters={filters}
               toggleFilter={actions.toggleFilter}

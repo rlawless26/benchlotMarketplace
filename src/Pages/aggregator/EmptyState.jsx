@@ -339,22 +339,24 @@ const EmptyState = ({ onSearch }) => {
       </section>
 
       {/* Sources strip */}
-      <section style={{ maxWidth: 1100, margin: '88px auto 0', padding: '0 40px' }}>
+      <section className="px-4 md:px-10" style={{ maxWidth: 1100, margin: '88px auto 0' }}>
         <div
           className="flex items-center justify-center"
           style={{ gap: 12, marginBottom: 20 }}
         >
-          <span aria-hidden style={{ flex: '0 0 140px', height: 1, background: '#e4e2dc' }} />
+          <span aria-hidden className="hidden sm:block" style={{ flex: '0 0 140px', height: 1, background: '#e4e2dc' }} />
           <span style={EYEBROW}>
             INDEXED FROM {INDEXED_COUNT} SOURCE{INDEXED_COUNT === 1 ? '' : 'S'}, MORE COMING
           </span>
-          <span aria-hidden style={{ flex: '0 0 140px', height: 1, background: '#e4e2dc' }} />
+          <span aria-hidden className="hidden sm:block" style={{ flex: '0 0 140px', height: 1, background: '#e4e2dc' }} />
         </div>
 
+        {/* Wrap to multiple rows on small screens. 5 sources is too many for
+           one mobile row; 2 columns at <sm, 3 at sm, 5 at md+ keeps each
+           tile wide enough for the source name not to wrap to 3+ lines. */}
         <div
-          className="grid"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
           style={{
-            gridTemplateColumns: `repeat(${INDEXED_SOURCES.length}, 1fr)`,
             borderTop: '1px solid #e4e2dc',
             borderBottom: '1px solid #e4e2dc',
           }}
