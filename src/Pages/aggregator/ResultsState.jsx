@@ -249,9 +249,13 @@ const ResultsState = ({ state, actions }) => {
                   · <span style={{ fontWeight: 600, color: '#0c1c1e' }}>{filtered.length}</span>{' '}
                   result{filtered.length === 1 ? '' : 's'}
                 </span>
+              </div>
 
-                {/* Sort control — contextual to results (not in top bar). */}
-                <div className="relative" style={{ marginLeft: 4 }}>
+              {/* Right cluster — sort control + save-alert action. Sort is
+                  conventionally right-aligned in aggregator toolbars (eBay,
+                  Etsy, Reverb) so put it here, opposite the title/count. */}
+              <div className="flex items-center flex-wrap" style={{ gap: 12 }}>
+                <div className="relative flex items-center">
                   <label
                     htmlFor="results-sort"
                     style={{
@@ -259,49 +263,51 @@ const ResultsState = ({ state, actions }) => {
                       fontWeight: 500,
                       fontSize: 13,
                       color: '#4a5a54',
-                      marginRight: 6,
+                      marginRight: 8,
                     }}
                   >
-                    · Sort:
+                    Sort:
                   </label>
-                  <select
-                    id="results-sort"
-                    value={sort}
-                    onChange={(e) => actions.setSort(e.target.value)}
-                    style={{
-                      appearance: 'none',
-                      padding: '4px 22px 4px 4px',
-                      background: 'transparent',
-                      border: 0,
-                      borderBottom: '1px dashed #8a8a80',
-                      fontFamily: "'Outfit', sans-serif",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      color: '#0c1c1e',
-                      cursor: 'pointer',
-                      outline: 'none',
-                    }}
-                  >
-                    <option value="best">Best match</option>
-                    <option value="newest">Newest</option>
-                    <option value="price_low">Price: low to high</option>
-                    <option value="price_high">Price: high to low</option>
-                  </select>
-                  <ChevronDown
-                    size={12}
-                    aria-hidden
-                    style={{
-                      position: 'absolute',
-                      right: 4,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#4a5a54',
-                      pointerEvents: 'none',
-                    }}
-                  />
+                  <div className="relative">
+                    <select
+                      id="results-sort"
+                      value={sort}
+                      onChange={(e) => actions.setSort(e.target.value)}
+                      style={{
+                        appearance: 'none',
+                        padding: '6px 28px 6px 12px',
+                        background: '#fff',
+                        border: '1px solid #d4d2cc',
+                        borderRadius: 6,
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        color: '#0c1c1e',
+                        cursor: 'pointer',
+                        outline: 'none',
+                      }}
+                    >
+                      <option value="best">Best match</option>
+                      <option value="newest">Newest</option>
+                      <option value="price_low">Price: low to high</option>
+                      <option value="price_high">Price: high to low</option>
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      aria-hidden
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#4a5a54',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  </div>
                 </div>
+                <SaveAlertButton query={query} filters={filters} sort={sort} />
               </div>
-              <SaveAlertButton query={query} filters={filters} sort={sort} />
             </div>
           </div>
       </div>
