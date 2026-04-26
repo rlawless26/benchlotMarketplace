@@ -464,7 +464,6 @@ const ResultsState = ({ state, actions }) => {
             )}
           </div>
         </div>
-        )}
       </main>
 
       <SiteFooter />
