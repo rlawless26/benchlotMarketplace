@@ -11,11 +11,12 @@ import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'age'];
-const VALID_SORTS = ['newest', 'price_low', 'price_high', 'relevance'];
+const VALID_SORTS = ['mixed', 'newest', 'price_low', 'price_high', 'relevance'];
+const DEFAULT_SORT = 'mixed';
 
 function parseFromParams(params) {
   const query = params.get('q') || '';
-  const sort = VALID_SORTS.includes(params.get('sort')) ? params.get('sort') : 'newest';
+  const sort = VALID_SORTS.includes(params.get('sort')) ? params.get('sort') : DEFAULT_SORT;
   const filters = {};
 
   for (const group of MULTI_GROUPS) {
@@ -50,7 +51,7 @@ function serializeToParams(state) {
   const price = state.filters?.price;
   if (price?.min != null) params.set('min', String(price.min));
   if (price?.max != null) params.set('max', String(price.max));
-  if (state.sort && state.sort !== 'newest') params.set('sort', state.sort);
+  if (state.sort && state.sort !== DEFAULT_SORT) params.set('sort', state.sort);
   return params;
 }
 
@@ -84,7 +85,7 @@ export function useAggregatorState() {
   );
 
   const setSort = useCallback(
-    (sort) => writeParams({ ...state, sort: VALID_SORTS.includes(sort) ? sort : 'newest' }),
+    (sort) => writeParams({ ...state, sort: VALID_SORTS.includes(sort) ? sort : DEFAULT_SORT }),
     [state, writeParams]
   );
 
@@ -119,7 +120,7 @@ export function useAggregatorState() {
   }, [state, writeParams]);
 
   const clearAll = useCallback(() => {
-    writeParams({ query: '', filters: {}, sort: 'newest' });
+    writeParams({ query: '', filters: {}, sort: DEFAULT_SORT });
   }, [writeParams]);
 
   const activeFilterChips = useMemo(() => {

@@ -269,6 +269,35 @@
       ]
     },
     {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "source", "order": "ASCENDING" },
+        { "fieldPath": "first_seen_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "source", "order": "ASCENDING" },
+        { "fieldPath": "canonical_type", "order": "ASCENDING" },
+        { "fieldPath": "first_seen_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "source", "order": "ASCENDING" },
+        { "fieldPath": "canonical_brand", "order": "ASCENDING" },
+        { "fieldPath": "first_seen_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "saved_searches",
       "queryScope": "COLLECTION",
       "fields": [

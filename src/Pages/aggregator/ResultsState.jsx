@@ -234,10 +234,10 @@ const ResultsState = ({ state, actions }) => {
                       outline: 'none',
                     }}
                   >
-                    <option value="newest">Newest first</option>
+                    <option value="mixed">Mixed sources</option>
+                    <option value="newest">Newest</option>
                     <option value="price_low">Price: low to high</option>
                     <option value="price_high">Price: high to low</option>
-                    <option value="relevance">Relevance</option>
                   </select>
                   <ChevronDown
                     size={12}
