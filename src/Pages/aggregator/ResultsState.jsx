@@ -18,7 +18,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
-import { computeFacets } from '../../firebase/adapters/aggregatorFacets';
+import { computeFacets, getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 
 import StickyTopBar from '../../components/aggregator/StickyTopBar';
 import FilterRail from '../../components/aggregator/FilterRail';
@@ -127,6 +127,18 @@ const ResultsState = ({ state, actions }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visibleLimit, setVisibleLimit] = useState(24);
+  // Total active count across all sources — fetched via Firestore's count()
+  // aggregate (one cheap roundtrip, no doc reads) and displayed in the
+  // breadcrumb header when no filters/query are active. Lets us decouple
+  // "what we render" from "how big the catalog actually is" so the
+  // per-source fetch cap below can stay aggressive without making the
+  // displayed total look small.
+  const [totalActive, setTotalActive] = useState(null);
+  useEffect(() => {
+    getAggregatorStats()
+      .then((s) => setTotalActive(s.activeCount))
+      .catch(() => {});
+  }, []);
 
   // Server query — push the cheapest filters to Firestore, refine client-side.
   useEffect(() => {
@@ -134,15 +146,16 @@ const ResultsState = ({ state, actions }) => {
     setLoading(true);
     setError(null);
     getAggregatedListings({
-      // Per-source cap. History: started at 200, bumped to 2500 once Jim
-      // Bode's catalog passed it. Bumped to 8000 once eBay launched at
-      // 5,829 active docs — the previous 2500 cap was undercounting the
-      // total ("4,145 of 7,474" mismatch with the homepage live-index
-      // count). 8000 covers eBay's current pool plus growth headroom; if
-      // eBay grows beyond ~7000 we should ship TTL-based expiry (see
-      // functions/ingest/ebay.js header) rather than keep raising this
-      // cap, since per-page Firestore reads scale with this number.
-      limit: 8000,
+      // Per-source cap. History: 200 (initial) → 2500 (Jim Bode passed 200)
+      // → 8000 (eBay launched at 5,829) → 2500 (post-launch perf pass —
+      // fetching 9,500+ docs on every page load was making the all-listings
+      // page slow on mobile). 2500 keeps client-side memory + network
+      // payload manageable; the displayed "X results" total now comes from
+      // a separate count() aggregate (totalActive) so the cap doesn't make
+      // the count appear artificially low when no filter is active. If a
+      // single source ever passes 2500 active items beyond eBay (Jim Bode
+      // is currently 832), bump or split per-source limits.
+      limit: 2500,
       sort,
       source: activeSourceIds(filters),
       canonicalType: activeCategory(filters),
@@ -256,7 +269,19 @@ const ResultsState = ({ state, actions }) => {
                     color: '#4a5a54',
                   }}
                 >
-                  · <span style={{ fontWeight: 600, color: '#0c1c1e' }}>{filtered.length}</span>{' '}
+                  · <span style={{ fontWeight: 600, color: '#0c1c1e' }}>
+                    {/* Show the global active total when nothing is narrowing
+                       the view; show the filtered subset count otherwise. The
+                       total comes from a count() aggregate so it stays
+                       accurate even though the per-source fetch cap is well
+                       below the full catalog. While the count() is in flight
+                       (totalActive=null) fall back to filtered.length so the
+                       UI never blanks. */}
+                    {(!query && activeFilterChips.length === 0 && totalActive != null
+                      ? totalActive
+                      : filtered.length
+                    ).toLocaleString()}
+                  </span>{' '}
                   result{filtered.length === 1 ? '' : 's'}
                 </span>
               </div>

@@ -7,7 +7,7 @@
  * Right: weekly-digest signup form (no fake subscriber counts).
  *
  * Pulls live-index count from Firestore stats for the top-row freshness line;
- * falls back to "Updated hourly" if the query fails.
+ * falls back to "Updated nightly" if the query fails.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -20,9 +20,9 @@ import { getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 
 function formatIndexLine(stats) {
   if (!stats || typeof stats.activeCount !== 'number' || !stats.activeCount) {
-    return 'Updated hourly';
+    return 'Updated nightly';
   }
-  return `Updated hourly · ${stats.activeCount.toLocaleString()} listings live`;
+  return `Updated nightly · ${stats.activeCount.toLocaleString()} listings live`;
 }
 
 // Scroll to top on any footer link click. React Router's <Link> won't
