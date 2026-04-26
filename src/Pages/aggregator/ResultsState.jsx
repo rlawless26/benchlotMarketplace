@@ -86,13 +86,15 @@ const ResultsState = ({ state, actions }) => {
     setLoading(true);
     setError(null);
     getAggregatedListings({
-      // Per-source cap — used to be 200, which under-counted the total when
-      // a single source had more than 200 listings (Jim Bode has ~800). The
-      // displayed "N results" then didn't match the homepage live-index
-      // count. Bumped to 2500 so the pool covers the current full catalog
-      // (~1600 listings) with plenty of headroom. Firestore read costs at
-      // this scale are trivial.
-      limit: 2500,
+      // Per-source cap. History: started at 200, bumped to 2500 once Jim
+      // Bode's catalog passed it. Bumped to 8000 once eBay launched at
+      // 5,829 active docs — the previous 2500 cap was undercounting the
+      // total ("4,145 of 7,474" mismatch with the homepage live-index
+      // count). 8000 covers eBay's current pool plus growth headroom; if
+      // eBay grows beyond ~7000 we should ship TTL-based expiry (see
+      // functions/ingest/ebay.js header) rather than keep raising this
+      // cap, since per-page Firestore reads scale with this number.
+      limit: 8000,
       sort,
       source: activeSourceIds(filters),
       canonicalType: activeCategory(filters),
