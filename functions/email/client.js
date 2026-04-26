@@ -32,7 +32,27 @@ function getClient() {
   return _client;
 }
 
-function isDryRun() {
+/**
+ * Templates that bypass the global EMAIL_DRY_RUN flag. Sourced from the
+ * comma-separated EMAIL_LIVE_TEMPLATES env var, e.g.
+ *   EMAIL_LIVE_TEMPLATES=11-alert-match
+ *
+ * Use case: the marketplace surface is feature-flagged off post-pivot
+ * (so transactional emails like 04-listing-published, 05-order-* are
+ * paused via EMAIL_DRY_RUN), but we want alert-match digests to ship
+ * normally so the aggregator's core retention loop works. Read the env
+ * on every call (cheap) so deploys don't need a process restart for
+ * the list to update.
+ */
+function liveTemplates() {
+  const v = process.env.EMAIL_LIVE_TEMPLATES;
+  if (!v) return new Set();
+  return new Set(v.split(',').map((s) => s.trim()).filter(Boolean));
+}
+
+function isDryRun(templateId) {
+  // Per-template allow-list overrides the global flag.
+  if (templateId && liveTemplates().has(templateId)) return false;
   const v = process.env.EMAIL_DRY_RUN;
   return v === 'true' || v === '1';
 }
@@ -93,8 +113,8 @@ async function deliver({ templateId, to, subject, html, text, vars, replyTo }) {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 
-  // Dry-run short-circuit
-  if (isDryRun()) {
+  // Dry-run short-circuit (per-template, falls back to global flag)
+  if (isDryRun(templateId)) {
     console.log(`[email] DRY RUN — ${templateId} → ${recipient} :: "${subject}"`);
     await logRef.set({
       ...baseLog,
