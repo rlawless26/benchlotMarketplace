@@ -35,10 +35,44 @@ const CHIP_GROUP_PREFIX = {
   price: 'Price',
 };
 
+/**
+ * A title that's selling a part, replacement piece, or accessory rather
+ * than the named tool itself. eBay especially is full of "iron for Stanley
+ * 4 1/2", "tote & knob for Lie Nielsen #4", "replacement blade for
+ * WoodRiver block plane" — substring-search matches them on the brand
+ * keyword and they crowd out actual tools at the top of results.
+ *
+ * Returns true for the accessory pattern. We use this to soft-demote
+ * (NOT exclude) within search results — accessories still appear, just
+ * after real tools in the same query.
+ */
+function isLikelyAccessory(name) {
+  if (!name) return false;
+  const t = ` ${String(name).toLowerCase()} `;
+  return (
+    / iron(s)? for /.test(t) ||
+    / blade(s)? for /.test(t) ||
+    / tote (and|&) knob /.test(t) ||
+    / tote for /.test(t) ||
+    / knob for /.test(t) ||
+    / handle for /.test(t) ||
+    / fence for /.test(t) ||
+    / parts? for /.test(t) ||
+    / assembly for /.test(t) ||
+    / cap (iron|for) /.test(t) ||
+    / chipbreaker /.test(t) ||
+    / lever cap /.test(t) ||
+    / cutting iron /.test(t) ||
+    / plane iron(s)? /.test(t) ||
+    / replacement (blade|iron|chipbreaker|knob|tote|fence|piece|part) /.test(t) ||
+    / spare part /.test(t)
+  );
+}
+
 function filterLocally(raw, state) {
   const { query, filters } = state;
   const q = (query || '').trim().toLowerCase();
-  return (raw || []).filter((l) => {
+  const matches = (raw || []).filter((l) => {
     if (q) {
       const hay = [l.name, l.brand, l.category, l.canonical_model]
         .filter(Boolean)
@@ -59,6 +93,20 @@ function filterLocally(raw, state) {
     // `age` filter not plumbed yet — posted_at vs now comparisons are TODO.
     return true;
   });
+
+  // When there's a search query, push accessory-language titles to the
+  // bottom so actual tools surface first. Stable within each group —
+  // preserves the adapter's sort order (mixed/newest/price). When there's
+  // no query, return matches verbatim — just-browsing should preserve
+  // whatever sort the user picked.
+  if (!q) return matches;
+  const tools = [];
+  const accessories = [];
+  for (const m of matches) {
+    if (isLikelyAccessory(m.name)) accessories.push(m);
+    else tools.push(m);
+  }
+  return tools.concat(accessories);
 }
 
 function activeSourceIds(filters) {
