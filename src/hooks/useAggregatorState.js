@@ -11,8 +11,8 @@ import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'age'];
-const VALID_SORTS = ['mixed', 'newest', 'price_low', 'price_high', 'relevance'];
-const DEFAULT_SORT = 'mixed';
+const VALID_SORTS = ['best', 'newest', 'price_low', 'price_high', 'relevance'];
+const DEFAULT_SORT = 'best';
 
 function parseFromParams(params) {
   const query = params.get('q') || '';

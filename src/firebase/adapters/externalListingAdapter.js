@@ -132,10 +132,11 @@ function interleaveBySource(arrays) {
  * When no `source` is provided, we fetch a fair share from EACH indexed
  * source in parallel and merge. The merge strategy depends on `sort`:
  *
- *   - `mixed` (default) — round-robin interleave across sources. Page 1
+ *   - `best` (default) — round-robin interleave across sources. Page 1
  *     takes the freshest from each source, surfacing all five sources
  *     equally regardless of catalog size. Prevents eBay's volume from
- *     drowning out the other four.
+ *     drowning out the other four. User-facing label: "Best match"
+ *     (matches the convention familiar from eBay/Reverb).
  *   - `newest` — flat `first_seen_at desc` across the merged pool.
  *     Surfaces whichever source has the absolute-newest listings, which
  *     in practice tends to be eBay (highest listing velocity).
@@ -146,7 +147,7 @@ function interleaveBySource(arrays) {
  * @param {string} [opts.source]           — restrict to a single source slug
  * @param {string} [opts.canonicalType]    — filter by canonical_type (preferred)
  * @param {string} [opts.canonicalBrand]   — filter by canonical_brand
- * @param {'mixed'|'newest'|'price_low'|'price_high'} [opts.sort='mixed']
+ * @param {'best'|'newest'|'price_low'|'price_high'} [opts.sort='best']
  * @returns {Promise<{tools: Array}>}
  */
 export async function getAggregatedListings(opts = {}) {
@@ -155,13 +156,13 @@ export async function getAggregatedListings(opts = {}) {
     source,
     canonicalType,
     canonicalBrand,
-    sort = 'mixed',
+    sort = 'best',
   } = opts;
 
   // Price sorts need a larger pool because price_cents is populated
   // inconsistently and sorting is client-side. Cap scales with limit but
   // tops out at 3000 per source — above current catalog size with headroom.
-  const poolSize = sort === 'mixed' || sort === 'newest' ? limit : Math.min(limit * 4, 3000);
+  const poolSize = sort === 'best' || sort === 'newest' ? limit : Math.min(limit * 4, 3000);
 
   let tools;
   if (source) {
@@ -176,8 +177,9 @@ export async function getAggregatedListings(opts = {}) {
       indexedSources.map((s) => fetchOneSource(s, { limit: poolSize, canonicalType, canonicalBrand }))
     );
 
-    if (sort === 'mixed') {
-      // Round-robin interleave so page 1 shows all sources equally.
+    if (sort === 'best') {
+      // Round-robin interleave so page 1 shows all sources equally —
+      // user-facing label is "Best match".
       tools = interleaveBySource(resultsPerSource);
     } else {
       // Flat newest-first across the merged pool.
