@@ -16,6 +16,7 @@ const SOURCES = [
   { id: 'lumberjocks', name: 'LumberJocks', shortName: 'LumberJocks' },
   { id: 'reddit', name: 'r/handtools', shortName: 'r/handtools' },
   { id: 'ebay', name: 'eBay', shortName: 'eBay' },
+  { id: 'thebestthings', name: 'The Best Things', shortName: 'Best Things' },
 ];
 
 const BY_ID = Object.fromEntries(SOURCES.map((s) => [s.id, s]));

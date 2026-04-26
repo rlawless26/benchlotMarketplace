@@ -86,6 +86,15 @@ const SOURCES = [
     homeUrl: 'https://www.ebay.com/b/Carpentry-Woodworking/13870',
     indexed: true,
   },
+  {
+    id: 'thebestthings',
+    name: 'The Best Things',
+    shortName: 'Best Things',
+    kind: 'Dealer',
+    descriptor: 'Dealer · Premium vintage',
+    homeUrl: 'https://www.thebestthings.com/vintools.htm',
+    indexed: true,
+  },
 ];
 
 /** Keyed lookup by source id, for O(1) access in cards/adapters. */

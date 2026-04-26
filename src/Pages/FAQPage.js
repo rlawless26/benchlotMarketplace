@@ -48,7 +48,7 @@ const QUESTIONS = [
   },
   {
     q: 'What sources do you index?',
-    a: <>Jim Bode Tools, Hyperkitten, Sawmill Creek, Woodnet, eBay. More on the way.</>,
+    a: <>Jim Bode Tools, Hyperkitten, The Best Things, Sawmill Creek, Woodnet, eBay. More on the way.</>,
   },
   {
     q: "What's an alert?",
