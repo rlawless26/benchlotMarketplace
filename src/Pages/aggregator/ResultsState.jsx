@@ -199,10 +199,10 @@ const ResultsState = ({ state, actions }) => {
   const filterCount = activeFilterChips.length;
 
   const filterRailRef = useRef(null);
-  // Mobile filter sheet — toggled by the Filters button in StickyTopBar.
-  // On md+ the FilterRail is always visible inline; this state is mobile-only.
+  // Mobile filter sheet — toggled by the Filters button in the breadcrumb
+  // row. On md+ the FilterRail is always visible inline; this state is
+  // mobile-only.
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const handleFilterClick = () => setMobileFiltersOpen((v) => !v);
 
   // Lock body scroll while the mobile filter sheet is open so the rail
   // scrolls instead of the page underneath.
