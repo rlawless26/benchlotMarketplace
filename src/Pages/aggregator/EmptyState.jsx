@@ -195,7 +195,6 @@ const EmptyState = ({ onSearch }) => {
             <span
               style={{
                 fontWeight: 500,
-                fontStyle: 'italic',
                 color: '#1a3030',
               }}
             >
