@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
 import { computeFacets, getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
@@ -233,23 +233,28 @@ const ResultsState = ({ state, actions }) => {
         <StickyTopBar
           query={query}
           onQueryChange={actions.setQuery}
-          filterCount={filterCount}
-          onFilterClick={handleFilterClick}
         />
 
         {/* Breadcrumb header — always shown; ResultsState only renders when
             there's a query or active filters. */}
         <div style={{ borderTop: '1px solid #e4e2dc' }}>
             <div
-              className="flex items-center justify-between flex-wrap"
+              className="flex items-center flex-wrap px-4 md:px-10"
               style={{
                 maxWidth: 1280,
                 margin: '0 auto',
-                padding: '14px 40px',
-                gap: 16,
+                paddingTop: 14,
+                paddingBottom: 14,
+                rowGap: 12,
+                columnGap: 16,
               }}
             >
-              <div className="flex items-baseline flex-wrap" style={{ gap: 12 }}>
+              {/* Title cluster takes its own row on mobile (w-full) so the
+                 Filters + Sort cluster can wrap below as a single 'refine'
+                 toolbar — Filters left, Sort right, mirroring the desktop
+                 left-rail/right-sort split. On md+ it sits inline with the
+                 right cluster as before. */}
+              <div className="flex items-baseline flex-wrap w-full md:w-auto" style={{ gap: 12 }}>
                 <span
                   style={{
                     fontFamily: "'Petrona', Georgia, serif",
@@ -286,12 +291,55 @@ const ResultsState = ({ state, actions }) => {
                 </span>
               </div>
 
+              {/* Mobile-only Filters button. Lives in the same row as Sort
+                  on mobile (per pattern: Filters and Sort are both 'refine
+                  current results' controls, naturally paired). mr-auto pins
+                  it to the left of the row. Hidden at md+ where the
+                  FilterRail is permanently visible inline. */}
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                aria-label="Open filters"
+                className="md:hidden inline-flex items-center cursor-pointer mr-auto"
+                style={{
+                  gap: 6,
+                  padding: '6px 12px',
+                  background: '#fff',
+                  border: '1px solid #d4d2cc',
+                  borderRadius: 6,
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  color: '#0c1c1e',
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Filters
+                {filterCount > 0 && (
+                  <span
+                    className="inline-flex items-center justify-center"
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 999,
+                      background: '#d4aa60',
+                      color: '#0c1c1e',
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 700,
+                      fontSize: 10,
+                      padding: '0 6px',
+                    }}
+                  >
+                    {filterCount}
+                  </span>
+                )}
+              </button>
+
               {/* Right cluster — sort control + save-alert action. Sort is
                   conventionally right-aligned in aggregator toolbars (eBay,
-                  Etsy, Reverb) so put it here, opposite the title/count.
-                  ml-auto keeps it right-aligned even when it wraps to its
-                  own row on mobile (justify-between alone leaves it stuck
-                  to the left of the wrapped row). */}
+                  Etsy, Reverb). ml-auto pins it to the right edge regardless
+                  of which row it lands on (mobile: paired with Filters on
+                  row 2; desktop: inline with title/count on row 1). */}
               <div className="flex items-center flex-wrap ml-auto" style={{ gap: 12 }}>
                 <div className="relative flex items-center">
                   <label
