@@ -2805,6 +2805,36 @@ exports.scheduledIngestWoodnet = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — The Best Things (Bob Kaune).
+ *
+ * Runs nightly at 03:50 UTC, between Hyperkitten (03:45) and Jim Bode
+ * (04:00). 8 static HTML category pages, ~382 items total, ~10-second
+ * scrape. Same Hyperkitten-style markExpired model — sold items
+ * disappear from the HTML and the sweep handles availability.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-thebestthings.js`.
+ */
+const thebestthings = require('./ingest/thebestthings');
+
+exports.scheduledIngestThebestthings = onSchedule(
+  {
+    schedule: '50 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await thebestthings.runIngestion();
+      console.log('[scheduledIngestThebestthings] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestThebestthings] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — eBay Carpentry & Woodworking category (13870).
  *
  * Runs nightly at 03:00 UTC — first in the aggregator chain, 15 min before

@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -99,6 +99,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `sawmillcreek` | Sawmill Creek Classifieds | `sawmillcreek_thread` | M4 |
 | `woodnet` | Woodnet Tool Swap N' Sell | `woodnet_thread` | M4 |
 | `ebay` | eBay Carpentry & Woodworking (category 13870) | `ebay_item_summary` | M5 |
+| `thebestthings` | The Best Things (Bob Kaune) | `thebestthings_item` | post-launch |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -122,6 +123,17 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - Inventory skews power-tool heavy (Festool, Delta, Powermatic, Woodpecker, Atlas lathes, Shaper Origin) — complementary to Sawmill Creek's hand-tool lean. Power-tool threads fall to `canonical_type: Other` until the hand-tool-only vocabulary is expanded.
 - Price extraction is simple regex (first `$XXX` in title or body). Limitation: OPs that reference comparison prices ("recent eBay sales $103-$375") can confuse the regex when the actual asking price appears later. The normalizer may correct via description context.
 - `tags` carry `wn_author:<username>` for attribution.
+
+### The Best Things notes
+- `source_id` = TBT's product code (e.g. `BM26029`, `WP25022`). Prefix encodes the category: BM (British Metal/Infill), CH (Chisels), ME (Measuring), MI (Misc), MP (Molding Plane), SA (Saw), ST (Stanley), WP (Wooden Plane). Firestore docId: `thebestthings__BM26029`.
+- `source_url` = `https://www.thebestthings.com/{category}.htm#{product_id}`. The site has no per-item URLs (single big HTML page per category), but the `#product_id` fragment shows up in the user's URL bar after clickthrough so they can Cmd-F for it. Same UX as Hyperkitten.
+- `posted_at` IS NULL — TBT doesn't expose per-item timestamps. `first_seen_at` is the recency signal (same convention as Hyperkitten).
+- Data source: 8 static HTML category pages at `thebestthings.com/{infill|chisels|measurin|misctool|molding|saws|stanley|woodplan}.htm`. Each page is parsed once per run; items are extracted from `<form action="/cgi/cart/additem.pl">` blocks via cheerio. Hidden inputs (`product_id`, `price`, `name`) supply the structured fields; surrounding text supplies `description_raw`. `condition_raw` is left null (the condition grade is embedded in the prose — "Fine-", "Good+", etc. — and the normalizer reads it from `description_raw`).
+- `tags` carry `tbt_category:<slug>` (e.g. `tbt_category:infill`) and `tbt_id_prefix:<two-letter>` (e.g. `tbt_id_prefix:bm`). The id-prefix is a deterministic finer-grained category signal the normalizer can pick up.
+- Newtools (their new-tool retail) and knives (cutlery) categories are intentionally excluded — Benchlot indexes used woodworking tools, not new retail or pocket knives.
+- Sold items disappear from the HTML when Bob removes them. The standard `markExpired()` sweep flips unseen listings to `expired` — same model as Hyperkitten (catalog is finite, no rotation-window concern like eBay).
+- ~382 active items as of 2026-04-26 across all 8 categories (infill 27, chisels 13, measuring 53, misc 144, molding 26, saws 30, stanley 28, wooden 61). Premium vintage skew: median price ~$200, top end well into four figures.
+- Polite scrape: 500ms delay between category-page fetches. Total run is ~10 seconds.
 
 ### eBay notes
 - `source_id` = eBay's `legacyItemId` (digits only, e.g. `127821750819`). Firestore docId: `ebay__127821750819`.
