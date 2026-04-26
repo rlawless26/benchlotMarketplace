@@ -240,10 +240,9 @@ const EmptyState = ({ onSearch }) => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder='Search for a tool (e.g. "Stanley No. 4", "Disston D-8")'
+              placeholder="Search for a tool — Stanley No. 4, Disston D-8…"
+              className="w-full pl-14 pr-14 sm:pr-44 py-5"
               style={{
-                width: '100%',
-                padding: '22px 178px 22px 58px',
                 background: '#f8f6f2',
                 border: '1.5px solid #1a3030',
                 borderRadius: 10,
@@ -257,13 +256,15 @@ const EmptyState = ({ onSearch }) => {
             />
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 cursor-pointer"
+              aria-label="Search listings"
+              className="inline-flex items-center justify-center gap-1.5 cursor-pointer"
               style={{
                 position: 'absolute',
                 right: 8,
                 top: 8,
                 bottom: 8,
-                padding: '0 22px',
+                paddingLeft: 14,
+                paddingRight: 14,
                 background: '#d4aa60',
                 color: '#0c1c1e',
                 border: 'none',
@@ -273,8 +274,11 @@ const EmptyState = ({ onSearch }) => {
                 fontSize: 14,
               }}
             >
-              Search listings
-              <ArrowRight size={14} />
+              {/* Text label hidden on mobile (icon-only) so the input has
+                 room for placeholder text; full label at sm+ where the
+                 input is wide enough to spare ~120px on the right. */}
+              <span className="hidden sm:inline">Search listings</span>
+              <ArrowRight size={16} aria-hidden />
             </button>
           </form>
 
