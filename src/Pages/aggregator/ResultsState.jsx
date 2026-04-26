@@ -263,8 +263,11 @@ const ResultsState = ({ state, actions }) => {
 
               {/* Right cluster — sort control + save-alert action. Sort is
                   conventionally right-aligned in aggregator toolbars (eBay,
-                  Etsy, Reverb) so put it here, opposite the title/count. */}
-              <div className="flex items-center flex-wrap" style={{ gap: 12 }}>
+                  Etsy, Reverb) so put it here, opposite the title/count.
+                  ml-auto keeps it right-aligned even when it wraps to its
+                  own row on mobile (justify-between alone leaves it stuck
+                  to the left of the wrapped row). */}
+              <div className="flex items-center flex-wrap ml-auto" style={{ gap: 12 }}>
                 <div className="relative flex items-center">
                   <label
                     htmlFor="results-sort"
