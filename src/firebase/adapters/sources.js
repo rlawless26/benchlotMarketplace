@@ -71,11 +71,12 @@ const SOURCES = [
   },
   {
     id: 'reddit',
-    name: 'r/handtools',
-    shortName: 'r/handtools',
+    name: 'Reddit',
+    shortName: 'Reddit',
     kind: 'Reddit',
-    descriptor: 'Reddit · 148k members',
-    indexed: false,
+    descriptor: 'r/handtools · r/AntiqueToolBroker',
+    homeUrl: 'https://www.reddit.com/r/handtools/new/',
+    indexed: true,
   },
   {
     id: 'ebay',

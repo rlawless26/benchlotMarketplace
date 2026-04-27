@@ -2805,6 +2805,51 @@ exports.scheduledIngestWoodnet = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — Reddit (r/handtools, r/AntiqueToolBroker).
+ *
+ * Runs nightly at 03:35 UTC, between Woodnet (03:30) and Hyperkitten
+ * (03:45). App-Only OAuth via Client Credentials grant — no user
+ * account credentials persisted, just an app-level Bearer token cached
+ * in memory for the run.
+ *
+ * v1 buckets: r/handtools (title-keyword sale detection — WTS / FS /
+ * For Sale / Selling / FT prefixes plus inline [WTS] tags) and
+ * r/AntiqueToolBroker (`link_flair_text === 'For Sale'` flair, with
+ * title-regex fallback for unflaired posts).
+ *
+ * PII hygiene mirrors the eBay Marketplace Account Deletion exemption
+ * posture — Reddit user-identifiable fields (author, author_fullname,
+ * author_flair_text, subreddit_subscribers, subreddit_id) are never
+ * persisted to externalListings or externalListingsRaw. Source
+ * attribution surfaces "via r/handtools" without naming the user.
+ *
+ * Reads REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET / REDDIT_USERNAME from
+ * process.env. Firebase Functions picks these up from functions/.env at
+ * deploy time. See docs/reddit-integration.md.
+ *
+ * Can also be invoked locally via `node functions/ingest/run-reddit.js`.
+ */
+const reddit = require('./ingest/reddit');
+
+exports.scheduledIngestReddit = onSchedule(
+  {
+    schedule: '35 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await reddit.runIngestion();
+      console.log('[scheduledIngestReddit] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestReddit] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — The Best Things (Bob Kaune).
  *
  * Runs nightly at 03:50 UTC, between Hyperkitten (03:45) and Jim Bode

@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`, `"reddit_post"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -100,6 +100,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `woodnet` | Woodnet Tool Swap N' Sell | `woodnet_thread` | M4 |
 | `ebay` | eBay Carpentry & Woodworking (category 13870) | `ebay_item_summary` | M5 |
 | `thebestthings` | The Best Things (Bob Kaune) | `thebestthings_item` | post-launch |
+| `reddit` | Reddit (r/handtools, r/AntiqueToolBroker) | `reddit_post` | post-launch |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -123,6 +124,20 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - Inventory skews power-tool heavy (Festool, Delta, Powermatic, Woodpecker, Atlas lathes, Shaper Origin) — complementary to Sawmill Creek's hand-tool lean. Power-tool threads fall to `canonical_type: Other` until the hand-tool-only vocabulary is expanded.
 - Price extraction is simple regex (first `$XXX` in title or body). Limitation: OPs that reference comparison prices ("recent eBay sales $103-$375") can confuse the regex when the actual asking price appears later. The normalizer may correct via description context.
 - `tags` carry `wn_author:<username>` for attribution.
+
+### Reddit notes
+- `source_id` = Reddit post id (base36, e.g. `1abc23`). Firestore docId: `reddit__1abc23`. We use the bare id rather than the full `t3_xxxxxx` fullname so the docId stays consistent with our other source patterns; the fullname is recoverable as `t3_${source_id}` if a future consumer needs it.
+- `source_url` = `https://www.reddit.com<permalink>` — full Reddit thread URL (e.g. `https://www.reddit.com/r/handtools/comments/1abc23/wts_stanley_no_5_jack_plane/`). Clickthrough lands on the thread itself.
+- `posted_at` IS populated from `created_utc` on every post.
+- Data source: Reddit App-Only OAuth (Application-Only Client Credentials grant, 24h token TTL, in-memory cache only). Endpoints: `/api/v1/access_token` for the token, `oauth.reddit.com/r/<sub>/new.json` for the list-sweep, `oauth.reddit.com/r/<sub>/comments/<id>.json` for per-thread detail. See `docs/reddit-integration.md`.
+- **Subreddit buckets** (v1): `r/handtools` (title-keyword sale detection), `r/AntiqueToolBroker` (`link_flair_text === 'For Sale'` flair). The detection mode is per-bucket configuration.
+- **Sale detection** (r/handtools): include if title matches `^\s*\[?\s*(WTS|FS|For Sale|Selling|FT)\s*\]?\b` or has inline `[WTS]`/`[FS]` etc. Skip first if title matches WTB/ISO/[SOLD]/[CLOSED] patterns. Skip stickied posts, NSFW posts, and posts where `selftext === '[removed]'` or `'[deleted]'`.
+- **PII hygiene** (defensive posture, mirrors eBay's exemption): we do NOT persist `author`, `author_fullname`, `author_flair_text`, `author_premium`, `subreddit_subscribers`, or `subreddit_id`. Source attribution on the UI is "via r/handtools" — never an author handle. Reddit accounts are user-deletable and we have no way to track deletions cleanly, so the safer posture is to never store the username in the first place. The `run-reddit.js` runner asserts on this and fails the run if any user-identifiable field appears in the serialized listing or raw payload.
+- **Image handling**: 4-case fallback in `extractImagesFromPost()` — gallery posts (`media_metadata` keyed by image id), single-image posts (`url_overridden_by_dest` if it points at i.redd.it / imgur), preview images (`preview.images[0].source.url`), or empty array for text-only posts. Critical: Reddit's `media_metadata.s.u` field returns HTML-encoded URLs (`&amp;` not `&`); the literal `&amp;` breaks the URL signature and 403s — must unescape.
+- **Crossposts**: prefer `crosspost_parent_list[0]` for body / media metadata (the crosspost shell often has empty selftext and metadata).
+- `tags` carry `r_subreddit:<sub>` (e.g. `r_subreddit:handtools`) and `r_flair:<slug>` when a flair is present (e.g. `r_flair:for_sale`). No author tags.
+- Standard markExpired sweep at end of full runs. Reddit's `/new` caps at ~1000 posts (~150 days of activity on r/handtools), well past the bucket's age cutoff (30 days for r/handtools, 60 for r/AntiqueToolBroker). Within that window, anything not seen this run is genuinely gone.
+- Cron slot: `35 3 * * *` UTC nightly, between Woodnet (03:30) and Hyperkitten (03:45).
 
 ### The Best Things notes
 - `source_id` = TBT's product code (e.g. `BM26029`, `WP25022`). Prefix encodes the category: BM (British Metal/Infill), CH (Chisels), ME (Measuring), MI (Misc), MP (Molding Plane), SA (Saw), ST (Stanley), WP (Wooden Plane). Firestore docId: `thebestthings__BM26029`.
