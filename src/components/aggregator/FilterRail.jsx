@@ -343,7 +343,7 @@ const FilterRail = ({
   const hasAnyFilter = useMemo(() => {
     if (!filters) return false;
     if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
-    for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+    for (const group of ['cat', 'maker', 'cond', 'src', 'age', 'pics']) {
       if (filters[group] && Object.keys(filters[group]).length > 0) return true;
     }
     return false;
@@ -392,6 +392,18 @@ const FilterRail = ({
             Clear all
           </button>
         )}
+      </div>
+
+      {/* Single-toggle quality filter — sits above the rest of the rail
+         because it's the most-asked browsing affordance ("just show me the
+         ones with photos"). Forum sources skew text-only so this is high-
+         signal when filtering by makers traded on forums (Veritas, etc.). */}
+      <div style={{ paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid #e4e2dc' }}>
+        <CheckboxRow
+          label="Only with photos"
+          checked={Boolean(filters?.pics?.yes)}
+          onChange={() => toggleFilter('pics', 'yes')}
+        />
       </div>
 
       {/* Category */}

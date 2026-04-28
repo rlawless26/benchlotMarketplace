@@ -84,6 +84,7 @@ function filterLocally(raw, state) {
     if (filters?.maker && !filters.maker[l.brand]) return false;
     if (filters?.cond && !filters.cond[l.condition]) return false;
     if (filters?.src && l.source && !filters.src[l.source]) return false;
+    if (filters?.pics?.yes && !l.imageUrl) return false;
     const price = filters?.price;
     if (price) {
       const p = l.price ?? null;

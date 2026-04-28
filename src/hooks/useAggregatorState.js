@@ -10,7 +10,13 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'age'];
+const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'age', 'pics'];
+
+// Some filter groups use opaque keys ("yes" for the pics toggle) where the
+// raw key isn't a great chip label. Map those here.
+const CHIP_LABEL_OVERRIDES = {
+  pics: { yes: 'With photos' },
+};
 const VALID_SORTS = ['best', 'newest', 'price_low', 'price_high', 'relevance'];
 const DEFAULT_SORT = 'best';
 
@@ -129,7 +135,10 @@ export function useAggregatorState() {
       const g = state.filters?.[group];
       if (!g) continue;
       for (const key of Object.keys(g)) {
-        if (g[key]) chips.push({ group, key, label: key });
+        if (g[key]) {
+          const label = CHIP_LABEL_OVERRIDES[group]?.[key] ?? key;
+          chips.push({ group, key, label });
+        }
       }
     }
     if (state.filters?.price) {
