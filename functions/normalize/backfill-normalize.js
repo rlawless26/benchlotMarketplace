@@ -38,13 +38,14 @@ const admin = require('firebase-admin');
 })();
 
 function parseArgs(argv) {
-  const args = { limit: Infinity, concurrency: 3, source: undefined, force: false, dryRun: false };
+  const args = { limit: Infinity, concurrency: 3, source: undefined, force: false, unknownOnly: false, dryRun: false };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--limit') args.limit = Number(argv[++i]);
     else if (a === '--concurrency') args.concurrency = Number(argv[++i]);
     else if (a === '--source') args.source = argv[++i];
     else if (a === '--force') args.force = true;
+    else if (a === '--unknown-only') args.unknownOnly = true;
     else if (a === '--dry-run') args.dryRun = true;
   }
   return args;
@@ -96,10 +97,13 @@ async function main() {
   const snap = await query.get();
   const all = snap.docs;
 
-  const candidates = (args.force ? all : all.filter((d) => !d.data().canonical_brand))
-    .slice(0, Number.isFinite(args.limit) ? args.limit : undefined);
+  let pool;
+  if (args.force) pool = all;
+  else if (args.unknownOnly) pool = all.filter((d) => d.data().canonical_brand === 'Unknown');
+  else pool = all.filter((d) => !d.data().canonical_brand);
+  const candidates = pool.slice(0, Number.isFinite(args.limit) ? args.limit : undefined);
 
-  console.log(`[backfill-normalize] ${all.length} total active; ${candidates.length} to normalize (force=${args.force}, limit=${args.limit})`);
+  console.log(`[backfill-normalize] ${all.length} total active; ${candidates.length} to normalize (force=${args.force}, unknownOnly=${args.unknownOnly}, limit=${args.limit})`);
 
   if (args.dryRun) {
     const sampleSize = Math.min(5, candidates.length);
@@ -121,7 +125,7 @@ async function main() {
 
   await runWithConcurrency(candidates, args.concurrency, async (doc, i) => {
     try {
-      const result = await normalizeListingDoc(doc.ref, doc.data(), { force: args.force });
+      const result = await normalizeListingDoc(doc.ref, doc.data(), { force: args.force || args.unknownOnly });
       if (result.normalized) {
         totals.normalized += 1;
         totals.input += result.usage.input_tokens;

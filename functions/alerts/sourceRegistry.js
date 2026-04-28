@@ -14,7 +14,7 @@ const SOURCES = [
   { id: 'sawmillcreek', name: 'Sawmill Creek', shortName: 'Sawmill Creek' },
   { id: 'woodnet', name: 'Woodnet', shortName: 'Woodnet' },
   { id: 'lumberjocks', name: 'LumberJocks', shortName: 'LumberJocks' },
-  { id: 'reddit', name: 'r/handtools', shortName: 'r/handtools' },
+  { id: 'reddit', name: 'Reddit', shortName: 'Reddit' },
   { id: 'ebay', name: 'eBay', shortName: 'eBay' },
   { id: 'thebestthings', name: 'The Best Things', shortName: 'Best Things' },
 ];

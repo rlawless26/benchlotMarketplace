@@ -5,6 +5,8 @@
 
 const admin = require('firebase-admin');
 
+const { classifyNonTool } = require('./heuristics');
+
 const COLLECTION = 'externalListings';
 const RAW_COLLECTION = 'externalListingsRaw';
 // Firestore batch hard limit is 500 ops. We write 2 ops per record (listing +
@@ -77,9 +79,16 @@ async function upsertListings(records, runStartedAt) {
       const listingRef = col.doc(id);
       const rawRef = rawCol.doc(id);
 
+      // Classify obvious non-tools (books, raw lumber, magazines, lots) so
+      // they don't pollute the aggregator. Re-runs on every ingestion so the
+      // detector and the catalog stay in sync — flipping a listing back to
+      // `active` if the title was edited or the detector relaxed.
+      const nonTool = classifyNonTool(rec.listing.title_raw);
+      const status = nonTool.nonTool ? 'excluded_non_tool' : 'active';
       const common = {
         ...rec.listing,
-        status: 'active',
+        status,
+        excluded_reason: nonTool.nonTool ? nonTool.reason : admin.firestore.FieldValue.delete(),
         scraped_at: runStartedAt,
         last_seen_at: runStartedAt,
       };

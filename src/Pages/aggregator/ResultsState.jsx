@@ -80,9 +80,9 @@ function filterLocally(raw, state) {
         .toLowerCase();
       if (!hay.includes(q)) return false;
     }
-    if (filters?.cat && l.category && !filters.cat[l.category]) return false;
-    if (filters?.maker && l.brand && !filters.maker[l.brand]) return false;
-    if (filters?.cond && l.condition && !filters.cond[l.condition]) return false;
+    if (filters?.cat && !filters.cat[l.category]) return false;
+    if (filters?.maker && !filters.maker[l.brand]) return false;
+    if (filters?.cond && !filters.cond[l.condition]) return false;
     if (filters?.src && l.source && !filters.src[l.source]) return false;
     const price = filters?.price;
     if (price) {
@@ -94,19 +94,24 @@ function filterLocally(raw, state) {
     return true;
   });
 
-  // When there's a search query, push accessory-language titles to the
-  // bottom so actual tools surface first. Stable within each group —
-  // preserves the adapter's sort order (mixed/newest/price). When there's
-  // no query, return matches verbatim — just-browsing should preserve
-  // whatever sort the user picked.
-  if (!q) return matches;
-  const tools = [];
-  const accessories = [];
-  for (const m of matches) {
-    if (isLikelyAccessory(m.name)) accessories.push(m);
-    else tools.push(m);
-  }
-  return tools.concat(accessories);
+  // De-rank by tier so the front of the feed is dominated by signal:
+  //   tier 0 — branded tool
+  //   tier 1 — branded accessory (only when there's a search query — without
+  //            one, accessory-vs-tool inference is too noisy to act on)
+  //   tier 2 — no-brand tool
+  //   tier 3 — no-brand accessory (with query)
+  // No-brand de-ranking only kicks in when no maker filter is active —
+  // when the user has explicitly picked a maker, the listings already share
+  // that brand and there's nothing to de-rank by. Stable within each tier so
+  // the adapter's sort order (best/newest/price) survives.
+  const makerFilterActive = !!(filters?.maker && Object.keys(filters.maker).length > 0);
+  const ranked = matches.map((m, i) => {
+    const noBrand = !m.brand && !makerFilterActive;
+    const acc = q ? isLikelyAccessory(m.name) : false;
+    return { m, i, rank: (noBrand ? 2 : 0) + (acc ? 1 : 0) };
+  });
+  ranked.sort((a, b) => a.rank - b.rank || a.i - b.i);
+  return ranked.map((r) => r.m);
 }
 
 function activeSourceIds(filters) {

@@ -216,4 +216,45 @@ function extractType(title) {
   return 'Other';
 }
 
-module.exports = { extractBrand, extractType, BRANDS };
+/**
+ * Recognize listings that aren't sellable woodworking tools — books, raw
+ * lumber/wood blanks, magazines, plans/DVDs, multi-tool grab-bag posts.
+ *
+ * Conservative by design: false positives (real tools flagged as non-tools)
+ * are worse than false negatives (a few non-tools slipping through). Rule of
+ * thumb — if any tool keyword appears in the title, leave it alone. The only
+ * signals strong enough to override are DVDs/CDs and explicit auction
+ * catalogs, which are media even when the topic is a tool.
+ *
+ * Returns `{nonTool: true, reason: '...'}` or `{nonTool: false}`.
+ */
+const TOOL_KEYWORD_RE = /\b(planes?|chisels?|saws?|gouges?|knives|knife|gauges?|braces?|drills?|mallets?|hammers?|spokeshaves?|rules?|rulers?|squares?|levels?|calipers?|vises?|clamps?|holdfasts?|pliers|adze|axe|hatchet|drawknife|scrapers?|froes?|jointers?|sanders?|routers?|lathes?|sharpeners?|jigs?|machines?|fixtures?|cutters?|bits?|irons?|blades?|totes?|knobs?|staplers?|planers?|trimmers?|rollers?|holders?|kits?|files?|wrenches?|tools?|screwdrivers?|screw\s+drivers?|hardware|stops?|fences?|tongue|miters?|mortises?|pegs?|hooks?|hones?|stones?|whetstones?|oilstones?|grinders?|sharpening|aprons?|nails?|centers?|wedges?|punches?|chucks?|tongs|spanners?|forks?|spades?|trowels?|burnishers?|reamers?|taps?|dies?|crayons?|pencils?|markers?|mills?|chainsaws?|grinder|sander)\b/;
+
+function classifyNonTool(title) {
+  if (!title || typeof title !== 'string') return { nonTool: false };
+  const t = title.toLowerCase();
+
+  // Strong non-tool signals — DVDs/CDs and named auction catalogs. Media
+  // about a tool is still media. Override the tool-keyword check below.
+  if (/\b(dvds?|cds?)\b/.test(t)) return { nonTool: true, reason: 'media' };
+  if (/\bauction\s+catalogs?\b/.test(t)) return { nonTool: true, reason: 'catalog' };
+
+  // If any tool keyword appears, treat the listing as a tool. Books about
+  // gauges, dowel jigs, magazine-fed drills, veneer scrapers, etc. all have
+  // tool keywords and should not be flagged.
+  if (TOOL_KEYWORD_RE.test(t)) return { nonTool: false };
+
+  // No tool keyword — now safe to flag explicit non-tool signals.
+  if (/\bbooks?\b/.test(t)) return { nonTool: true, reason: 'book' };
+  if (/\bmagazines?\b/.test(t)) return { nonTool: true, reason: 'magazine' };
+  if (/\b(catalogs?|catalogues?|pamphlets?|brochures?|manuals?)\b/.test(t)) return { nonTool: true, reason: 'catalog' };
+  if (/\bslabs?\b/.test(t)) return { nonTool: true, reason: 'lumber' };
+  if (/\b(lumber|board\s*feet|bd\.?\s*ft\.?|bdft)\b/.test(t)) return { nonTool: true, reason: 'lumber' };
+  if (/\bdowels?\b/.test(t)) return { nonTool: true, reason: 'lumber' };
+  if (/\bveneers?\b/.test(t)) return { nonTool: true, reason: 'lumber' };
+  if (/\b(garage\s+cleanup|three\s+generations|3\s+generations)\b/.test(t)) return { nonTool: true, reason: 'lot' };
+
+  return { nonTool: false };
+}
+
+module.exports = { extractBrand, extractType, BRANDS, classifyNonTool };

@@ -24,10 +24,11 @@ For each listing, output exactly one \`classify_listing\` tool call with these f
 
 \`canonical_brand\` is a free-form string, not a closed list. Antique tool catalogs have hundreds of small makers that no fixed vocabulary can cover. The rule:
 
-- **If the maker is named anywhere in the title**, output it in Title Case, punctuation preserved: \`J.R. Tolman\`, \`Atwater\`, \`Wenzloff\`, \`Worrall & Co.\`, \`Meriden Malleable Iron Co.\`, \`Dwight & French\`, \`Jim Leamy\`, etc. Do not truncate ("J.R. Tolman", not "Tolman"). Do not ALL-CAPS (titles often shout the maker in caps — convert to Title Case).
-- **If no maker is identifiable**, output the exact string \`"Unknown"\`.
+- **If the maker is named anywhere in the title**, output it in Title Case, punctuation preserved: \`J.R. Tolman\`, \`Atwater\`, \`Wenzloff\`, \`Worrall & Co.\`, \`Meriden Malleable Iron Co.\`, \`Dwight & French\`, \`Jim Leamy\`, \`Sandusky\`, \`Arrowmammett Works\`, \`Red Rose\`, \`Napoleon\`, \`Ohio Tool\`, etc. Do not truncate ("J.R. Tolman", not "Tolman"). Do not ALL-CAPS (titles often shout the maker in caps — convert to Title Case).
+- **Be assertive about extracting unfamiliar maker names.** This is an aggregator search engine — buyers search by whatever name appears on the tool. A title like "Tuell's Patent Double Edge Spokeshave", "Sandusky 34in no.4 Round", "RED ROSE Tiger Maple Spill Plane", or "Rare NAPOLEON Plane Iron" gives you the maker name the buyer will type — extract it (\`Tuell\`, \`Sandusky\`, \`Red Rose\`, \`Napoleon\`) rather than bailing to "Unknown". Possessive forms ("Tuell's") strip the apostrophe-s.
+- **If no maker is identifiable**, output the exact string \`"Unknown"\`. Reserve this for titles that genuinely contain no maker name (e.g. "Vintage antique chisel", "26pc Drill Bit Set", "Early, Unmarked Bit Brace").
 - **If multiple makers are named** (e.g. "E.W. CARPENTER Patent Plow Plane by JIM LEAMY"), use the one who MADE this specific instance, not the patent holder. "by JIM LEAMY" → \`Jim Leamy\`. "after CARPENTER" → the named maker.
-- **Patent-only attributions** (e.g. "KIMBERLY PATENT 3-Arm Plow Plane", "MITTELDORFER STRAUS PATENT Hammer") — a patent holder is not necessarily the maker. When only a patentee is named and no separate manufacturer is indicated, output \`"Unknown"\`. If the text says "PATENT MAKER" (e.g., "Preston Patent & Maker") or the patent holder's company is a known manufacturer (e.g., Stanley, Sargent), use that maker.
+- **Patent attributions** (e.g. "KIMBERLY PATENT 3-Arm Plow Plane", "MITTELDORFER STRAUS PATENT Hammer", "Tuell's Patent Spokeshave") — when only the patentee is named and no separate manufacturer is indicated, USE THE PATENTEE as the maker. The antique-tool community searches and catalogs these tools by the patent name, so it is the meaningful brand for this aggregator. \`Kimberly\`, \`Mitteldorfer Straus\`, \`Tuell\`. Only fall back to \`"Unknown"\` if the patent attribution is itself ambiguous (e.g. "Patent No. 12,345" with no name).
 
 When the maker is one of the well-known brands below, match the preferred canonical form exactly:
 
@@ -53,7 +54,7 @@ Common false positives to avoid:
 - "YANKEE" alone in a title like "Pre-Stanley Yankee No. 2100" refers to the North Brothers "Yankee" tool line — classify as \`Yankee\` (not the noun "yankee").
 - Model numbers that happen to be brand letters ("D-15" is a Disston saw model, not brand "D"). Use the actual named maker.
 
-When in doubt, prefer \`"Unknown"\` over a partial-match guess.
+When in doubt about an ambiguous quality descriptor or model letter, prefer \`"Unknown"\` over a partial-match guess. But when a clear capitalized name appears as the maker (even one you don't recognize), extract it — see the "be assertive" guidance above.
 
 ## Canonical tool-type list (closed — pick exactly one)
 
@@ -109,6 +110,8 @@ Some listings are raw materials, repair stock, or accessories tied to a tool but
 - **Raw materials** — lignum vitae blocks, rosewood blanks, steel stock, "lawn bowls for mallet heads" (these are turned wood blocks, NOT finished mallets).
 - **Parts / irons / hardware** — plane irons alone, replacement chipbreakers, saw nuts, brass handle hardware. Even when the title says "Plow Plane Irons" the product is irons, not a plane.
 - **Tool-adjacent objects** — tool chests, tool carriers, leather aprons, oil cans, books, saw benches (unless "Vise" applies).
+
+**Important — \`canonical_type=Other\` does NOT mean \`canonical_brand=Unknown\`.** Parts and replacement components carry the maker's name and that name IS the searchable brand. If the title is "Hearnshaw Brothers 1/8 Plow Plane Cutting Iron", the type is \`Other\` but the brand is \`Hearnshaw Brothers\` — that's the iron's maker. Same for "Sears Dunlap Plane Iron" → \`Sears Dunlap\`, "Gage No. 14 Plane Cap" → \`Gage\`, "Orig. Lever Cap for Stanley No. 4" → \`Stanley\`. Set brand to Unknown ONLY when the part/accessory truly has no identifying maker in the title (e.g. "Brass plane screw, generic", "Hickory adze handle, Amish Hand Made"). "Compatible with X" is the only case where the brand X is NOT the maker of this item.
 
 When a listing bundles a primary tool with an accessory (e.g. "Miniature Saw with Buffalo Horn Handle & Boxwood Saw Vise"), classify the PRIMARY item — the saw, not the vise.
 
