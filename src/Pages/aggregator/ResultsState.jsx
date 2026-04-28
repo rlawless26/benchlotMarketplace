@@ -94,21 +94,24 @@ function filterLocally(raw, state) {
     return true;
   });
 
-  // De-rank by tier so the front of the feed is dominated by signal:
-  //   tier 0 — branded tool
-  //   tier 1 — branded accessory (only when there's a search query — without
-  //            one, accessory-vs-tool inference is too noisy to act on)
-  //   tier 2 — no-brand tool
-  //   tier 3 — no-brand accessory (with query)
-  // No-brand de-ranking only kicks in when no maker filter is active —
-  // when the user has explicitly picked a maker, the listings already share
-  // that brand and there's nothing to de-rank by. Stable within each tier so
-  // the adapter's sort order (best/newest/price) survives.
+  // De-rank by tier so the front of the feed is dominated by signal. Three
+  // independent demotion bits, summed:
+  //   +4 — no image (sinks text-only forum posts below visual ones; forum
+  //        sellers commonly post text-only, especially Sawmill Creek where
+  //        ~70% of posts have no images)
+  //   +2 — no brand AND no maker filter active (when the user has explicitly
+  //        picked a maker, the listings already share that brand and there's
+  //        nothing to de-rank by)
+  //   +1 — accessory-language title AND there's a search query (without one,
+  //        accessory-vs-tool inference is too noisy to act on)
+  // Stable within each tier so the adapter's sort order (best/newest/price)
+  // survives.
   const makerFilterActive = !!(filters?.maker && Object.keys(filters.maker).length > 0);
   const ranked = matches.map((m, i) => {
+    const noImage = !m.imageUrl;
     const noBrand = !m.brand && !makerFilterActive;
     const acc = q ? isLikelyAccessory(m.name) : false;
-    return { m, i, rank: (noBrand ? 2 : 0) + (acc ? 1 : 0) };
+    return { m, i, rank: (noImage ? 4 : 0) + (noBrand ? 2 : 0) + (acc ? 1 : 0) };
   });
   ranked.sort((a, b) => a.rank - b.rank || a.i - b.i);
   return ranked.map((r) => r.m);
