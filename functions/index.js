@@ -2919,6 +2919,44 @@ exports.scheduledIngestEbay = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — Facebook Marketplace via Bright Data Scraper API.
+ *
+ * Runs WEEKLY at Sunday 04:30 UTC. Bright Data charges per record so a
+ * weekly cadence keeps spend in the $20–60/month range while still
+ * giving the catalog fresh local-tool inventory across major US metros.
+ *
+ * Trigger phase: ~5 cities × 5 keywords = 25 snapshots. Polling phase:
+ * ~5–30 minutes per snapshot, run in parallel so wall time is bounded
+ * by the slowest. Total run typically lands at 15–35 minutes.
+ *
+ * Memory bumped to 1GiB and timeout to 60 min — the response payload
+ * can be sizeable when many cities return hundreds of listings each.
+ *
+ * Reads BRIGHT_DATA_API_KEY from process.env (functions/.env at deploy
+ * time). Can also be invoked locally via
+ * `node functions/ingest/run-fbmarketplace.js`.
+ */
+const fbmarketplace = require('./ingest/fbmarketplace');
+
+exports.scheduledIngestFBMarketplace = onSchedule(
+  {
+    schedule: '30 4 * * 0', // Sundays at 04:30 UTC — weekly
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 3600,
+    memory: '1GiB',
+  },
+  async () => {
+    try {
+      const summary = await fbmarketplace.runIngestion();
+      console.log('[scheduledIngestFBMarketplace] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestFBMarketplace] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Normalize externalListings when they're written.
  *
  * Fires on create + update of any externalListings doc. The apply helper

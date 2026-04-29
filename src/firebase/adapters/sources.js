@@ -96,6 +96,15 @@ const SOURCES = [
     homeUrl: 'https://www.thebestthings.com/vintools.htm',
     indexed: true,
   },
+  {
+    id: 'fbmarketplace',
+    name: 'Facebook Marketplace',
+    shortName: 'FB Marketplace',
+    kind: 'Marketplace',
+    descriptor: 'Marketplace · Local listings',
+    homeUrl: 'https://www.facebook.com/marketplace',
+    indexed: true,
+  },
 ];
 
 /** Keyed lookup by source id, for O(1) access in cards/adapters. */
