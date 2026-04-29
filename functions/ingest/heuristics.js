@@ -228,7 +228,7 @@ function extractType(title) {
  *
  * Returns `{nonTool: true, reason: '...'}` or `{nonTool: false}`.
  */
-const TOOL_KEYWORD_RE = /\b(planes?|chisels?|saws?|gouges?|knives|knife|gauges?|braces?|drills?|mallets?|hammers?|spokeshaves?|rules?|rulers?|squares?|levels?|calipers?|vises?|clamps?|holdfasts?|pliers|adze|axe|hatchet|drawknife|scrapers?|froes?|jointers?|sanders?|routers?|lathes?|sharpeners?|jigs?|machines?|fixtures?|cutters?|bits?|irons?|blades?|totes?|knobs?|staplers?|planers?|trimmers?|rollers?|holders?|kits?|files?|wrenches?|tools?|screwdrivers?|screw\s+drivers?|hardware|stops?|fences?|tongue|miters?|mortises?|pegs?|hooks?|hones?|stones?|whetstones?|oilstones?|grinders?|sharpening|aprons?|nails?|centers?|wedges?|punches?|chucks?|tongs|spanners?|forks?|spades?|trowels?|burnishers?|reamers?|taps?|dies?|crayons?|pencils?|markers?|mills?|chainsaws?|grinder|sander)\b/;
+const TOOL_KEYWORD_RE = /\b(planes?|chisels?|saws?|gouges?|knives|knife|gauges?|braces?|drills?|mallets?|hammers?|spokeshaves?|rules?|rulers?|squares?|levels?|calipers?|vises?|clamps?|holdfasts?|pliers|adze|axe|hatchet|drawknife|scrapers?|froes?|jointers?|sanders?|routers?|lathes?|sharpeners?|jigs?|machines?|fixtures?|cutters?|bits?|irons?|blades?|totes?|knobs?|staplers?|planers?|trimmers?|rollers?|holders?|kits?|files?|wrenches?|tools?|screwdrivers?|screw\s+drivers?|hardware|stops?|fences?|tongue|miters?|mortises?|pegs?|hooks?|hones?|stones?|whetstones?|oilstones?|grinders?|sharpening|aprons?|nails?|centers?|wedges?|punches?|chucks?|tongs|spanners?|forks?|spades?|trowels?|burnishers?|reamers?|taps?|dies?|crayons?|pencils?|markers?|mills?|chainsaws?|grinder|sander|gun|guns|system|systems|vacuum|vacuums|compressor|compressors|motor|motors|cutterhead|extension|extensions|jointing|sharpening|domino|biscuit|router-table|workbench|benchtop|moulder|hopper|spline|tenon|dovetail|joinery)\b/;
 
 function classifyNonTool(title) {
   if (!title || typeof title !== 'string') return { nonTool: false };
@@ -253,6 +253,25 @@ function classifyNonTool(title) {
   if (/\bdowels?\b/.test(t)) return { nonTool: true, reason: 'lumber' };
   if (/\bveneers?\b/.test(t)) return { nonTool: true, reason: 'lumber' };
   if (/\b(garage\s+cleanup|three\s+generations|3\s+generations)\b/.test(t)) return { nonTool: true, reason: 'lot' };
+
+  // FBM-specific noise patterns. The Bright Data scraper returns broad
+  // results from a single keyword search ("Festool" pulls clothing brands,
+  // "Veritas" pulls homeschool books from Veritas Press, "Woodpeckers"
+  // pulls actual bird-feeder listings, etc.). These categories rarely
+  // contain tool keywords so the gate above won't catch them.
+  if (/\b\d+\s*(bed|bath)s?\b/.test(t)) return { nonTool: true, reason: 'real-estate' };
+  if (/\b(studio|townhouse|condo|apartment|duplex)\s*[-,/]?\s*(\d+\s*bath|home|house|rental|for\s+rent)/.test(t)) return { nonTool: true, reason: 'real-estate' };
+  if (/\b(swing\s+set|swing-set|playset|trampoline|treadmill|elliptical|exercise\s+bike|home\s+gym|stationary\s+bike|abs\s+(roller|trainer|workout))\b/.test(t)) return { nonTool: true, reason: 'fitness' };
+  if (/\b(dress|gown|trunks|jacket|coat|jeans|shorts|skirt|sneakers?|heels|boots\s+size|handbag|purse|backpack|wallet)\b/.test(t)) return { nonTool: true, reason: 'clothing' };
+  if (/\b(bird\s+feeder|peanut\s+hut|suet\s+(log|cake|feeder)|squirrel\s+feeder|hummingbird)\b/.test(t)) return { nonTool: true, reason: 'bird-feeder' };
+  if (/\b(canister\s+jar|enamel\s+ware|enamelware|cookware|dinnerware|silverware|stemware|glassware|china\s+set|cooking\s+pot|frying\s+pan|baking\s+(dish|sheet|pan))\b/.test(t)) return { nonTool: true, reason: 'kitchenware' };
+  if (/\b(storage\s+shed|garden\s+shed|outdoor\s+shed|plastic\s+shed|resin\s+shed)\b/.test(t)) return { nonTool: true, reason: 'shed' };
+  if (/\b(toy|toys|stuffed\s+animal|action\s+figure|plush|doll|board\s+game|video\s+game|playset|game\s+(set|board))\b/.test(t)) return { nonTool: true, reason: 'toy' };
+  if (/\b(scooter|skateboard|hoverboard|electric\s+bike|e-bike|kayak|surfboard)\b/.test(t)) return { nonTool: true, reason: 'sport-vehicle' };
+  if (/\b(wall\s+art|canvas\s+print|throw\s+pillow|blanket|comforter|bedding|drapes?|curtains?|rug|tapestry|sculpture|figurine|vase|planter)\b/.test(t)) return { nonTool: true, reason: 'home-decor' };
+  // Foreign-language food posts (FBM seller spam in non-English) — these
+  // never have tool keywords in any language we care about. Skip narrow
+  // detection and rely on the next-line "no English-tool-keyword" signal.
 
   return { nonTool: false };
 }
