@@ -2942,7 +2942,7 @@ exports.scheduledIngestFBMarketplace = onSchedule(
   {
     schedule: '30 4 * * 0', // Sundays at 04:30 UTC — weekly
     timeZone: 'Etc/UTC',
-    timeoutSeconds: 3600,
+    timeoutSeconds: 1800, // hard cap for scheduled functions (Gen 2)
     memory: '1GiB',
   },
   async () => {
