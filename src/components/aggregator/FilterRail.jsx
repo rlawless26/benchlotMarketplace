@@ -432,18 +432,14 @@ const FilterRail = ({
         ))}
       </CollapsibleGroup>
 
-      {/* Condition */}
-      <CollapsibleGroup label="Condition" defaultOpen>
-        {CONDITION_OPTIONS.map((opt) => (
-          <CheckboxRow
-            key={opt}
-            label={opt}
-            count={facets?.condition?.[opt]}
-            checked={Boolean(filters?.cond?.[opt])}
-            onChange={() => toggleFilter('cond', opt)}
-          />
-        ))}
-      </CollapsibleGroup>
+      {/* Condition filter intentionally removed 2026-04-29 — the FilterRail
+         options ("New / NOS", "Like New", "Excellent", "Good", "Project /
+         Parts") didn't match the actual condition_raw values in the catalog
+         (mostly raw eBay strings: "Used", "New", "Open box", "Brand New",
+         "For parts or not working", plus international variants like
+         "Nuovo"/"Neu"). The mismatch made every option except "Like New"
+         and "Good" return 0 results. Re-add when condition normalization
+         lands in the LLM normalizer. */}
 
       {/* Price */}
       <CollapsibleGroup label="Price" defaultOpen>

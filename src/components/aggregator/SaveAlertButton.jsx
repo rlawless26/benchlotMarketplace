@@ -169,7 +169,7 @@ const SaveAlertButton = ({ query, filters, sort }) => {
         disabled={busy}
         className="inline-flex items-center gap-1.5 cursor-pointer"
         style={{
-          padding: '10px 18px',
+          padding: '6px 12px',
           borderRadius: 6,
           background: '#d4aa60',
           color: '#0c1c1e',
@@ -183,7 +183,16 @@ const SaveAlertButton = ({ query, filters, sort }) => {
         }}
       >
         <Bell size={14} />
-        {busy ? 'Saving…' : user ? 'Create alert' : 'Sign in to create alert'}
+        {/* Two label lengths so we don't hog horizontal space on mobile.
+           "Sign in to create alert" is ~190px wide and pushes Filters/Sort
+           onto a third row at narrow widths. The mobile span shows just
+           "Alert" while the desktop span keeps the full CTA. */}
+        <span className="hidden md:inline">
+          {busy ? 'Saving…' : user ? 'Create alert' : 'Sign in to create alert'}
+        </span>
+        <span className="md:hidden">
+          {busy ? 'Saving…' : 'Alert'}
+        </span>
         <ArrowRight size={14} />
       </button>
       {error && (

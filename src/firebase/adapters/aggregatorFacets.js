@@ -72,7 +72,16 @@ export function computeFacets(listings) {
 
   for (const l of listings) {
     if (l.category) counts.category[l.category] = (counts.category[l.category] || 0) + 1;
-    if (l.brand && l.brand !== 'Unknown') counts.maker[l.brand] = (counts.maker[l.brand] || 0) + 1;
+    if (l.brand && l.brand !== 'Unknown') {
+      counts.maker[l.brand] = (counts.maker[l.brand] || 0) + 1;
+    } else {
+      // Synthesize an "Unknown" maker bucket. The adapter collapses both
+      // canonical "Unknown" and missing-brand into l.brand=null, so this
+      // is the only signal we have for "no maker identifiable." Surfacing
+      // it as a checkbox lets users explicitly include or exclude
+      // no-brand listings rather than just relying on the de-rank.
+      counts.maker.Unknown = (counts.maker.Unknown || 0) + 1;
+    }
     if (l.source) counts.source[l.source] = (counts.source[l.source] || 0) + 1;
     if (l.condition) counts.condition[l.condition] = (counts.condition[l.condition] || 0) + 1;
   }

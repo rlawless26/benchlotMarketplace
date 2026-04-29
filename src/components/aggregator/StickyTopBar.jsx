@@ -43,12 +43,10 @@ const StickyTopBar = ({ query, onQueryChange }) => {
   return (
     <div>
       <div
-        className="flex items-center flex-wrap gap-y-2 gap-x-3 md:gap-x-5 px-4 md:px-10"
+        className="flex items-center flex-wrap gap-y-2 gap-x-3 md:gap-x-5 px-4 md:px-10 aggregator-topbar"
         style={{
           maxWidth: 1280,
           margin: '0 auto',
-          paddingTop: 12,
-          paddingBottom: 12,
         }}
       >
         {/* Wordmark */}
@@ -97,9 +95,9 @@ const StickyTopBar = ({ query, onQueryChange }) => {
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search for a tool"
+            className="aggregator-search-input"
             style={{
               width: '100%',
-              padding: '12px 44px 12px 46px',
               background: '#ffffff',
               border: '1.5px solid #1a3030',
               borderRadius: 8,

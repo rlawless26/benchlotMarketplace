@@ -15,3 +15,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Aggregator mobile compaction. The sticky header (top bar + breadcrumb)
+   was eating ~50% of mobile viewport; tighten padding so content lands
+   above the fold. md+ keeps the original breathing room. */
+.aggregator-topbar { padding-top: 8px; padding-bottom: 8px; }
+.aggregator-search-input { padding: 10px 44px 10px 46px; }
+@media (min-width: 768px) {
+  .aggregator-topbar { padding-top: 12px; padding-bottom: 12px; }
+  .aggregator-search-input { padding: 12px 44px 12px 46px; }
+  .aggregator-header-title { font-size: 22px !important; }
+}

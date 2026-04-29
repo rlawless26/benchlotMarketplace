@@ -81,7 +81,12 @@ function filterLocally(raw, state) {
       if (!hay.includes(q)) return false;
     }
     if (filters?.cat && !filters.cat[l.category]) return false;
-    if (filters?.maker && !filters.maker[l.brand]) return false;
+    // Maker filter — null brand maps to the synthesized "Unknown" facet so
+    // users can include or exclude no-brand listings explicitly.
+    if (filters?.maker) {
+      const key = l.brand || 'Unknown';
+      if (!filters.maker[key]) return false;
+    }
     if (filters?.cond && !filters.cond[l.condition]) return false;
     if (filters?.src && l.source && !filters.src[l.source]) return false;
     if (filters?.pics?.yes && !l.imageUrl) return false;
@@ -245,17 +250,19 @@ const ResultsState = ({ state, actions }) => {
         />
 
         {/* Breadcrumb header — always shown; ResultsState only renders when
-            there's a query or active filters. */}
+            there's a query or active filters. Tighter vertical padding on
+            mobile (8px) so the sticky header doesn't eat the whole viewport
+            on narrow screens; desktop keeps the original 14px breathing room. */}
         <div style={{ borderTop: '1px solid #e4e2dc' }}>
             <div
               className="flex items-center flex-wrap px-4 md:px-10"
               style={{
                 maxWidth: 1280,
                 margin: '0 auto',
-                paddingTop: 14,
-                paddingBottom: 14,
-                rowGap: 12,
-                columnGap: 16,
+                paddingTop: 8,
+                paddingBottom: 8,
+                rowGap: 8,
+                columnGap: 12,
               }}
             >
               {/* Title cluster takes its own row on mobile (w-full) so the
@@ -263,12 +270,13 @@ const ResultsState = ({ state, actions }) => {
                  toolbar — Filters left, Sort right, mirroring the desktop
                  left-rail/right-sort split. On md+ it sits inline with the
                  right cluster as before. */}
-              <div className="flex items-baseline flex-wrap w-full md:w-auto" style={{ gap: 12 }}>
+              <div className="flex items-baseline flex-wrap w-full md:w-auto" style={{ gap: 8 }}>
                 <span
+                  className="aggregator-header-title"
                   style={{
                     fontFamily: "'Petrona', Georgia, serif",
                     fontWeight: 700,
-                    fontSize: 22,
+                    fontSize: 18,
                     letterSpacing: '-0.6px',
                     color: '#0c1c1e',
                   }}
@@ -349,10 +357,13 @@ const ResultsState = ({ state, actions }) => {
                   Etsy, Reverb). ml-auto pins it to the right edge regardless
                   of which row it lands on (mobile: paired with Filters on
                   row 2; desktop: inline with title/count on row 1). */}
-              <div className="flex items-center flex-wrap ml-auto" style={{ gap: 12 }}>
+              <div className="flex items-center flex-wrap ml-auto" style={{ gap: 8 }}>
                 <div className="relative flex items-center">
+                  {/* Hide "Sort:" label on mobile to save horizontal space —
+                     the dropdown's selected value is self-explanatory. */}
                   <label
                     htmlFor="results-sort"
+                    className="hidden md:inline"
                     style={{
                       fontFamily: "'Outfit', sans-serif",
                       fontWeight: 500,
