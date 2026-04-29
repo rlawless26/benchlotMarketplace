@@ -129,8 +129,6 @@ const CATEGORY_OPTIONS = [
   'Other',
 ];
 
-const CONDITION_OPTIONS = ['New / NOS', 'Like New', 'Excellent', 'Good', 'Project / Parts'];
-
 const AGE_OPTIONS = [
   { key: '24h', label: 'Last 24 hours' },
   { key: '3d', label: 'Last 3 days' },
