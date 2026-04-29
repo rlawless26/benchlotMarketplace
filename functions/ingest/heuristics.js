@@ -228,7 +228,10 @@ function extractType(title) {
  *
  * Returns `{nonTool: true, reason: '...'}` or `{nonTool: false}`.
  */
-const TOOL_KEYWORD_RE = /\b(planes?|chisels?|saws?|gouges?|knives|knife|gauges?|braces?|drills?|mallets?|hammers?|spokeshaves?|rules?|rulers?|squares?|levels?|calipers?|vises?|clamps?|holdfasts?|pliers|adze|axe|hatchet|drawknife|scrapers?|froes?|jointers?|sanders?|routers?|lathes?|sharpeners?|jigs?|machines?|fixtures?|cutters?|bits?|irons?|blades?|totes?|knobs?|staplers?|planers?|trimmers?|rollers?|holders?|kits?|files?|wrenches?|tools?|screwdrivers?|screw\s+drivers?|hardware|stops?|fences?|tongue|miters?|mortises?|pegs?|hooks?|hones?|stones?|whetstones?|oilstones?|grinders?|sharpening|aprons?|nails?|centers?|wedges?|punches?|chucks?|tongs|spanners?|forks?|spades?|trowels?|burnishers?|reamers?|taps?|dies?|crayons?|pencils?|markers?|mills?|chainsaws?|grinder|sander|gun|guns|system|systems|vacuum|vacuums|compressor|compressors|motor|motors|cutterhead|extension|extensions|jointing|sharpening|domino|biscuit|router-table|workbench|benchtop|moulder|hopper|spline|tenon|dovetail|joinery)\b/;
+// Note: aprons/pencils/crayons/markers used to live here, but the marketplace
+// is core shop tools only — they're consumables/apparel, not tools. Removed so
+// the non-tool patterns below can catch them.
+const TOOL_KEYWORD_RE = /\b(planes?|chisels?|saws?|gouges?|knives|knife|gauges?|braces?|drills?|mallets?|hammers?|spokeshaves?|rules?|rulers?|squares?|levels?|calipers?|vises?|clamps?|holdfasts?|pliers|adze|axe|hatchet|drawknife|scrapers?|froes?|jointers?|sanders?|routers?|lathes?|sharpeners?|jigs?|machines?|fixtures?|cutters?|bits?|irons?|blades?|totes?|knobs?|staplers?|planers?|trimmers?|rollers?|holders?|kits?|files?|wrenches?|tools?|screwdrivers?|screw\s+drivers?|hardware|stops?|fences?|tongue|miters?|mortises?|pegs?|hooks?|hones?|stones?|whetstones?|oilstones?|grinders?|sharpening|nails?|centers?|wedges?|punches?|chucks?|tongs|spanners?|forks?|spades?|trowels?|burnishers?|reamers?|taps?|dies?|mills?|chainsaws?|grinder|sander|gun|guns|system|systems|vacuum|vacuums|compressor|compressors|motor|motors|cutterhead|extension|extensions|jointing|sharpening|domino|biscuit|router-table|workbench|benchtop|moulder|hopper|spline|tenon|dovetail|joinery)\b/;
 
 function classifyNonTool(title) {
   if (!title || typeof title !== 'string') return { nonTool: false };
@@ -238,6 +241,14 @@ function classifyNonTool(title) {
   // about a tool is still media. Override the tool-keyword check below.
   if (/\b(dvds?|cds?)\b/.test(t)) return { nonTool: true, reason: 'media' };
   if (/\bauction\s+catalogs?\b/.test(t)) return { nonTool: true, reason: 'catalog' };
+
+  // Brand collisions where the brand name incidentally contains a tool
+  // keyword (e.g. "Nichols & Stone" → "stone"; "Restoration Hardware" →
+  // "hardware"). These run BEFORE the tool gate to override it.
+  if (/\bnichols\s*(?:&|and)\s*stone\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
+  if (/\brestoration\s+hardware\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
+  if (/\bdelta\s+children\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
+  if (/\bveritas\s+press\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
 
   // If any tool keyword appears, treat the listing as a tool. Books about
   // gauges, dowel jigs, magazine-fed drills, veneer scrapers, etc. all have
@@ -262,7 +273,33 @@ function classifyNonTool(title) {
   if (/\b\d+\s*(bed|bath)s?\b/.test(t)) return { nonTool: true, reason: 'real-estate' };
   if (/\b(studio|townhouse|condo|apartment|duplex)\s*[-,/]?\s*(\d+\s*bath|home|house|rental|for\s+rent)/.test(t)) return { nonTool: true, reason: 'real-estate' };
   if (/\b(swing\s+set|swing-set|playset|trampoline|treadmill|elliptical|exercise\s+bike|home\s+gym|stationary\s+bike|abs\s+(roller|trainer|workout))\b/.test(t)) return { nonTool: true, reason: 'fitness' };
-  if (/\b(dress|gown|trunks|jacket|coat|jeans|shorts|skirt|sneakers?|heels|boots\s+size|handbag|purse|backpack|wallet)\b/.test(t)) return { nonTool: true, reason: 'clothing' };
+  if (/\b(dress|gown|trunks|jacket|coat|jeans|shorts|skirt|sneakers?|heels|handbag|purse|backpack|wallet)\b/.test(t)) return { nonTool: true, reason: 'clothing' };
+  // Footwear — boots, plus the shoe-width pattern ("Size 13 EE") that catches
+  // listings whose title doesn't contain the word "boot" at all (e.g. "Hoss
+  // Cross Cut Logger Size 13 EE").
+  if (/\bboots?\b|\bsize\s+\d+\s*(ee|d|w|m)\b/.test(t)) return { nonTool: true, reason: 'footwear' };
+  // Apparel — aprons, gloves, shop coats, hats. Real woodworking aprons get
+  // dropped too; that's intentional (consumable, not core shop tool).
+  if (/\b(aprons?|coveralls?|shop\s+coats?|t-?shirts?|sweat\s*shirts?|hoodies?|hats?|workshirts?|gloves?)\b/.test(t)) return { nonTool: true, reason: 'apparel' };
+  // PPE / safety consumables.
+  if (/\b(dust\s+mask|respirator|n95|kn95|ppe|hearing\s+protection|ear\s*plugs?|ear\s*muffs?|safety\s+glasses)\b/.test(t)) return { nonTool: true, reason: 'ppe' };
+  // Marking / writing consumables — carpenter pencils, sharpies. Note that
+  // marking/mortise/bevel gauges already match TOOL_KEYWORD_RE via "gauges?".
+  if (/\b(carpenter\s+pencils?|pencils?|crayons?|markers?)\b/.test(t)) return { nonTool: true, reason: 'consumable' };
+  // Musical instruments — Gretsch guitars, etc.
+  if (/\b(guitars?|bass\s+guitar|amplifier|piano|keyboard|drum\s+kit|saxophone|violin|fiddle|banjo|mandolin|ukulele|microphone|pedal\s+board)\b/.test(t)) return { nonTool: true, reason: 'instrument' };
+  // Furniture — Harvard Windsor chairs, sofas, dressers. "Workbench" is a
+  // real tool keyword and matches above; chairs/sofas/etc. are not. Bare
+  // \bchairs?\b is broad on purpose — Harvard "Wood Chairs" doesn't put
+  // "Windsor" adjacent to "Chairs" so the multi-word forms miss.
+  if (/\b(chairs?|sofa|loveseat|recliner|ottoman|nightstand|dresser|hutch|armoire|bookshelf|bookcase)\b/.test(t)) return { nonTool: true, reason: 'furniture' };
+  // Watercraft / personal flotation — Stearns life vests, etc.
+  if (/\b(life\s+vest|life\s+jacket|pfd\b|flotation\s+device|kayak\s+paddle|canoe\s+paddle)\b/.test(t)) return { nonTool: true, reason: 'watercraft' };
+  // Baby / kids gear — Delta Children Play Yard.
+  if (/\b(play\s+yard|playyard|playpen|playard|stroller|car\s+seat|high\s*chair|crib|bassinet|baby\s+gate|diaper|onesie)\b/.test(t)) return { nonTool: true, reason: 'baby' };
+  // Paintball / goggles — JT Proflex masks. Drop all goggles; missing real
+  // shop goggles is acceptable, paintball masks slipping through is not.
+  if (/\b(paintball|airsoft|proflex|jt\s+proflex|goggles?)\b/.test(t)) return { nonTool: true, reason: 'paintball-or-goggles' };
   if (/\b(bird\s+feeder|peanut\s+hut|suet\s+(log|cake|feeder)|squirrel\s+feeder|hummingbird)\b/.test(t)) return { nonTool: true, reason: 'bird-feeder' };
   if (/\b(canister\s+jar|enamel\s+ware|enamelware|cookware|dinnerware|silverware|stemware|glassware|china\s+set|cooking\s+pot|frying\s+pan|baking\s+(dish|sheet|pan))\b/.test(t)) return { nonTool: true, reason: 'kitchenware' };
   if (/\b(storage\s+shed|garden\s+shed|outdoor\s+shed|plastic\s+shed|resin\s+shed)\b/.test(t)) return { nonTool: true, reason: 'shed' };
