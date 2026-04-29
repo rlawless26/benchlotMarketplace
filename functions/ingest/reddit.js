@@ -48,12 +48,15 @@ const RAW_FORMAT = 'reddit_post';
 
 const OAUTH_URL = 'https://www.reddit.com/api/v1/access_token';
 const OAUTH_API = 'https://oauth.reddit.com';
+const PUBLIC_BASE = 'https://www.reddit.com';
 const REQUEST_TIMEOUT_MS = 30000;
 
-// Polite spacing between paginated calls; we have plenty of headroom on
-// Reddit's 60-req/min OAuth quota. 1s × ~10 list pages × 2 subs + ~50
-// per-thread fetches = ~70 calls/run, well under 60/min.
-const REQUEST_DELAY_MS = 1000;
+// Polite spacing between paginated calls. OAuth (60 req/min) tolerates 1s
+// spacing easily; the unauth public endpoint is closer to 10 req/min so we
+// space at 6s. The active client object carries `delayMs` so callers
+// don't have to know which mode they're in.
+const OAUTH_DELAY_MS = 1000;
+const PUBLIC_DELAY_MS = 6000;
 
 // Cap selftext at 5000 chars before storing — same convention as
 // Sawmill Creek / Woodnet. Enough for the normalizer; bounded doc size.
@@ -189,12 +192,84 @@ async function getAppToken({ forceRefresh = false } = {}) {
 
 /**
  * Build the User-Agent string. Per Reddit API rules, the UA must be
- * descriptive and include the developer's username:
+ * descriptive. OAuth mode appends the developer's username (required for
+ * App-Only); public mode uses an aggregator-style identifier with a
+ * contact URL since unauth callers don't need the username.
  * https://github.com/reddit-archive/reddit/wiki/API
  */
-function userAgent() {
+function userAgent(mode) {
+  if (mode === 'public') {
+    return 'Benchlot/1.0 aggregator (+https://benchlot.com)';
+  }
   const username = process.env.REDDIT_USERNAME || 'unknown';
   return `Benchlot/1.0 by /u/${username}`;
+}
+
+/**
+ * Resolve the active client mode from env. Default is `oauth` for
+ * backwards compatibility — the public path is opt-in.
+ */
+function resolveMode() {
+  const raw = (process.env.REDDIT_AUTH_MODE || 'oauth').toLowerCase().trim();
+  if (raw !== 'oauth' && raw !== 'public') {
+    throw new Error(`[reddit] REDDIT_AUTH_MODE must be 'oauth' or 'public', got: ${raw}`);
+  }
+  return raw;
+}
+
+/**
+ * Build the http client config for this run. OAuth mode mints (or reuses)
+ * a token and points at oauth.reddit.com. Public mode hits www.reddit.com
+ * with no Authorization header. Both share the user-agent + request-spacing
+ * contract; downstream callers just receive `{ baseUrl, headers, delayMs, mode }`.
+ */
+async function getClient() {
+  const mode = resolveMode();
+  if (mode === 'oauth') {
+    const token = await getAppToken();
+    return {
+      mode,
+      baseUrl: OAUTH_API,
+      delayMs: OAUTH_DELAY_MS,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': userAgent(mode),
+      },
+    };
+  }
+  return {
+    mode,
+    baseUrl: PUBLIC_BASE,
+    delayMs: PUBLIC_DELAY_MS,
+    headers: {
+      'User-Agent': userAgent(mode),
+    },
+  };
+}
+
+/**
+ * Wrap an http GET with one round of exponential backoff on 429
+ * (rate-limit) responses. Reddit's unauth budget is bursty and one
+ * over-quota burst shouldn't tank a whole run. Two retries: 10s, 30s.
+ * Other errors propagate immediately — only 429 is retry-worthy here.
+ */
+async function with429Retry(fn) {
+  const backoffs = [10000, 30000];
+  let lastErr;
+  for (let attempt = 0; attempt <= backoffs.length; attempt += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = err.response?.status;
+      if (status !== 429 || attempt === backoffs.length) {
+        throw err;
+      }
+      lastErr = err;
+      console.warn(`[reddit] 429 received, backing off ${backoffs[attempt]}ms (attempt ${attempt + 1}/${backoffs.length})`);
+      await sleep(backoffs[attempt]);
+    }
+  }
+  throw lastErr;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,17 +287,15 @@ function sleep(ms) {
 /**
  * Fetch one page of /r/<sub>/new.json. `after` is the previous page's
  * last-post `name` (a t3_xxxxxx fullname) or null for the first page.
+ *
+ * `client` is the result of `getClient()` and carries the base URL,
+ * headers, and rate-limit delay. Same shape regardless of OAuth vs public.
  */
-async function fetchListing(subreddit, after, token) {
+async function fetchListing(subreddit, after, client) {
   const params = new URLSearchParams({ limit: '100' });
   if (after) params.set('after', after);
-  const url = `${OAUTH_API}/r/${encodeURIComponent(subreddit)}/new.json?${params.toString()}`;
-  const resp = await http.get(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'User-Agent': userAgent(),
-    },
-  });
+  const url = `${client.baseUrl}/r/${encodeURIComponent(subreddit)}/new.json?${params.toString()}`;
+  const resp = await with429Retry(() => http.get(url, { headers: client.headers }));
   return resp.data;
 }
 
@@ -232,15 +305,10 @@ async function fetchListing(subreddit, after, token) {
  * first child (the OP's full data, including possibly-truncated-on-/new
  * `selftext`, full `media_metadata`, etc.).
  */
-async function fetchThreadJson(permalink, token) {
+async function fetchThreadJson(permalink, client) {
   // permalink looks like '/r/handtools/comments/abc123/some_title/'
-  const url = `${OAUTH_API}${permalink}.json`;
-  const resp = await http.get(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'User-Agent': userAgent(),
-    },
-  });
+  const url = `${client.baseUrl}${permalink}.json`;
+  const resp = await with429Retry(() => http.get(url, { headers: client.headers }));
   const data = Array.isArray(resp.data) ? resp.data[0] : null;
   const child = data?.data?.children?.[0];
   return child?.data || null;
@@ -337,7 +405,7 @@ function parsePostedAt(createdUtc) {
  * doesn't quietly leak through.
  */
 function scrubForRaw(post) {
-  return {
+  const scrubbed = {
     id: post.id,
     name: post.name, // t3_xxxxxx — Reddit fullname (NOT a user name)
     subreddit: post.subreddit,
@@ -372,6 +440,13 @@ function scrubForRaw(post) {
     //   subreddit_subscribers, subreddit_id, distinguished, mod_reports,
     //   user_reports, etc.
   };
+  // Firestore rejects undefined values. Reddit posts legitimately omit
+  // optional fields (no preview on text-only, no gallery_data on single-image,
+  // etc.) — strip them before write.
+  for (const key of Object.keys(scrubbed)) {
+    if (scrubbed[key] === undefined) delete scrubbed[key];
+  }
+  return scrubbed;
 }
 
 /**
@@ -495,7 +570,7 @@ async function touchKnownListings(posts, runStartedAt) {
  * Returns the FILTERED list (skip patterns + bucket-mode classifier
  * applied) so the caller already has only candidate sale posts.
  */
-async function listSweep(bucket, token) {
+async function listSweep(bucket, client) {
   const cutoffMs = Date.now() - bucket.ageCutoffDays * 24 * 60 * 60 * 1000;
   const all = [];
   let after = null;
@@ -504,9 +579,9 @@ async function listSweep(bucket, token) {
   let reachedCutoff = false;
 
   for (let page = 0; page < bucket.maxPages; page += 1) {
-    if (page > 0) await sleep(REQUEST_DELAY_MS);
+    if (page > 0) await sleep(client.delayMs);
     pages += 1;
-    const resp = await fetchListing(bucket.subreddit, after, token);
+    const resp = await fetchListing(bucket.subreddit, after, client);
     const children = resp?.data?.children || [];
     if (children.length === 0) break;
     for (const c of children) {
@@ -545,7 +620,8 @@ async function scrapeAll(opts = {}) {
     ? SUBREDDIT_BUCKETS.filter((b) => b.subreddit.toLowerCase() === bucketFilter.toLowerCase())
     : SUBREDDIT_BUCKETS;
 
-  const token = await getAppToken();
+  const client = await getClient();
+  console.log(`[reddit] client mode=${client.mode}, baseUrl=${client.baseUrl}, delayMs=${client.delayMs}`);
   const knownIds = skipFirestoreLookup ? new Set() : await getKnownSourceIds();
 
   const allNew = []; // candidate posts that are new to us
@@ -557,7 +633,7 @@ async function scrapeAll(opts = {}) {
       ? { ...bucketBase, maxPages: Math.min(bucketBase.maxPages, maxPages) }
       : bucketBase;
 
-    const { posts, pages, scanned, reachedCutoff } = await listSweep(bucket, token);
+    const { posts, pages, scanned, reachedCutoff } = await listSweep(bucket, client);
     let newCount = 0;
     let knownCount = 0;
     for (const p of posts) {
@@ -588,10 +664,10 @@ async function scrapeAll(opts = {}) {
   const records = [];
   for (let i = 0; i < toFetch.length; i += 1) {
     const { post, bucket } = toFetch[i];
-    if (i > 0) await sleep(REQUEST_DELAY_MS);
+    if (i > 0) await sleep(client.delayMs);
     let detail = null;
     try {
-      detail = await fetchThreadJson(post.permalink, token);
+      detail = await fetchThreadJson(post.permalink, client);
     } catch (err) {
       console.error(`[reddit] detail fetch failed for ${post.id}: ${err.message}`);
     }

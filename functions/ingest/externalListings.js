@@ -83,17 +83,26 @@ async function upsertListings(records, runStartedAt) {
       // they don't pollute the aggregator. Re-runs on every ingestion so the
       // detector and the catalog stay in sync — flipping a listing back to
       // `active` if the title was edited or the detector relaxed.
+      //
+      // FieldValue.delete() is only legal in update() / set({merge:true}) —
+      // never in a fresh set(). So we split: existing docs get a merge-set
+      // that explicitly clears excluded_reason when the listing is no longer
+      // a non-tool; new docs get a clean payload that just omits the field.
       const nonTool = classifyNonTool(rec.listing.title_raw);
       const status = nonTool.nonTool ? 'excluded_non_tool' : 'active';
       const common = {
         ...rec.listing,
         status,
-        excluded_reason: nonTool.nonTool ? nonTool.reason : admin.firestore.FieldValue.delete(),
         scraped_at: runStartedAt,
         last_seen_at: runStartedAt,
       };
+      if (nonTool.nonTool) common.excluded_reason = nonTool.reason;
+
       if (existing.has(id)) {
-        batch.set(listingRef, common, { merge: true });
+        const mergePayload = nonTool.nonTool
+          ? common
+          : { ...common, excluded_reason: admin.firestore.FieldValue.delete() };
+        batch.set(listingRef, mergePayload, { merge: true });
         updated += 1;
       } else {
         batch.set(listingRef, { ...common, first_seen_at: runStartedAt });
