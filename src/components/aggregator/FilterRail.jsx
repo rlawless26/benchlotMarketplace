@@ -1,15 +1,24 @@
 /**
- * FilterRail — left column in results state.
+ * FilterRail — left column in results state (also rendered inside the mobile
+ * filter sheet).
  *
- * 6 collapsible groups per design spec: Category, Maker, Condition, Price,
- * Source, Listing Age. Option counts derived from the current result set
- * (WatchRecon pattern — see aggregatorFacets.computeFacets).
+ * Order is intentional: the SOURCE filter sits high on the rail because the
+ * "we aggregate from many places" pitch is the product's core differentiator
+ * — it shouldn't read as an afterthought. Category and Brand below are both
+ * driven from live facets (count desc, top N + Show more) so users see what
+ * the catalog actually contains, not a static list.
  *
- * Groups default-open except Listing Age. Header click toggles the group.
+ * Filter groups, top to bottom:
+ *   Only with photos  (single toggle, no header)
+ *   Source            (inline checkboxes, default open)
+ *   Category          (top 12 by count, Show more expands the rest)
+ *   Brand             (top 12 by count, excludes Unknown, Show more)
+ *   Price             (min/max numeric)
+ *   Listing age       (default collapsed)
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ChevronDown, SlidersHorizontal, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { SOURCES } from '../../firebase/adapters/sources';
 
@@ -36,97 +45,52 @@ const COUNT = {
   color: '#8a8a80',
 };
 
-// Canonical types to expose in the Category filter — mirrors
-// functions/normalize/vocabulary.js CANONICAL_TYPES but kept client-side to
-// avoid importing Cloud Functions code into the React bundle. Match labels.
+const SHOW_MORE_LINK = {
+  fontFamily: "'Outfit', sans-serif",
+  fontWeight: 500,
+  fontSize: 11,
+  color: '#4a5a54',
+  textDecoration: 'underline',
+  textUnderlineOffset: 2,
+  background: 'transparent',
+  border: 'none',
+  padding: '4px 0 0',
+  cursor: 'pointer',
+};
+
+// Curated list of canonical_type values mirrored from
+// functions/normalize/vocabulary.js. Used as a fallback ordering and as the
+// total set inside "Show more" when facets haven't loaded yet.
 const CATEGORY_OPTIONS = [
-  // Planes (hand)
-  'Bench Plane',
-  'Block Plane',
-  'Shoulder Plane',
-  'Router Plane',
-  'Plow Plane',
-  'Rabbet Plane',
-  'Moulding Plane',
-  'Infill Plane',
-  'Scrub Plane',
-  'Combination Plane',
-  'Chisel Plane',
-  'Hawk Plane',
-  'Spokeshave',
-  // Cutting / shaping (hand)
-  'Chisel',
-  'Gouge',
-  'Drawknife',
-  'Cabinet Scraper',
-  'Card Scraper',
-  'Knife',
-  // Saws (hand)
-  'Hand Saw',
-  'Back Saw',
-  'Japanese Saw',
-  'Coping Saw',
-  'Frame Saw',
-  // Boring (hand)
-  'Brace',
-  'Eggbeater Drill',
-  'Drill Bit',
-  'Auger Bit',
-  // Striking (hand)
-  'Hammer',
-  'Mallet',
-  'Axe',
-  'Adze',
-  'Hatchet',
-  // Measuring / marking
-  'Square',
-  'Bevel Gauge',
-  'Marking Gauge',
-  'Mortise Gauge',
-  'Rule',
-  'Caliper',
-  'Level',
-  // Workholding
-  'Vise',
-  'Clamp',
-  'Holdfast',
-  'Pliers',
-  // Stationary power (M5)
-  'Table Saw',
-  'Band Saw',
-  'Miter Saw',
-  'Jointer',
-  'Thickness Planer',
-  'Lathe',
-  'Drill Press',
-  'Router',
-  'Shaper',
-  'Mortiser',
-  'Drum Sander',
-  'Scroll Saw',
-  'Dust Collector',
-  'Air Compressor',
-  // Portable power (M5)
-  'Circular Saw',
-  'Track Saw',
-  'Jigsaw',
-  'Reciprocating Saw',
-  'Sander',
-  'Impact Driver',
-  'Drill',
-  'Angle Grinder',
-  'Biscuit Joiner',
-  'Domino',
-  'Multi-Tool',
-  // CNC (M5)
+  'Bench Plane', 'Block Plane', 'Shoulder Plane', 'Router Plane', 'Plow Plane',
+  'Rabbet Plane', 'Moulding Plane', 'Infill Plane', 'Scrub Plane',
+  'Combination Plane', 'Chisel Plane', 'Hawk Plane', 'Spokeshave',
+  'Chisel', 'Gouge', 'Drawknife', 'Cabinet Scraper', 'Card Scraper', 'Knife',
+  'Hand Saw', 'Back Saw', 'Japanese Saw', 'Coping Saw', 'Frame Saw',
+  'Brace', 'Eggbeater Drill', 'Drill Bit', 'Auger Bit',
+  'Hammer', 'Mallet', 'Axe', 'Adze', 'Hatchet',
+  'Square', 'Bevel Gauge', 'Marking Gauge', 'Mortise Gauge', 'Rule', 'Caliper', 'Level',
+  'Vise', 'Clamp', 'Holdfast', 'Pliers',
+  'Table Saw', 'Band Saw', 'Miter Saw', 'Jointer', 'Thickness Planer', 'Lathe',
+  'Drill Press', 'Router', 'Shaper', 'Mortiser', 'Drum Sander', 'Scroll Saw',
+  'Dust Collector', 'Air Compressor',
+  'Circular Saw', 'Track Saw', 'Jigsaw', 'Reciprocating Saw', 'Sander',
+  'Impact Driver', 'Drill', 'Angle Grinder', 'Biscuit Joiner', 'Domino', 'Multi-Tool',
   'CNC',
-  // Heavy / legacy
   'Boring Machine',
-  // Shop fixtures (M5)
-  'Workbench',
-  'Router Table',
-  // Catch-all
+  'Workbench', 'Router Table',
   'Other',
+];
+
+// Fallback brand list shown before facets arrive. Reflects the actual top
+// brands by listing count across the live catalog (mix of vintage hand-tool
+// and modern power-tool — was previously hand-tool-only). "Unknown" is
+// intentionally excluded; it leaks ~30% of the catalog and is not a useful
+// filter target.
+const FALLBACK_BRANDS = [
+  'Stanley', 'Festool', 'Delta', 'Craftsman', 'Powermatic', 'Veritas',
+  'Shopsmith', 'WoodRiver', 'Woodpeckers', 'Lie-Nielsen', 'Record',
+  'Bridge City',
 ];
 
 const AGE_OPTIONS = [
@@ -136,7 +100,9 @@ const AGE_OPTIONS = [
   { key: '30d', label: 'Last 30 days' },
 ];
 
-function CollapsibleGroup({ label, defaultOpen = true, children }) {
+const TOP_N = 12;
+
+function CollapsibleGroup({ label, defaultOpen = true, children, suffix }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div
@@ -157,7 +123,23 @@ function CollapsibleGroup({ label, defaultOpen = true, children }) {
           marginBottom: open ? 10 : 0,
         }}
       >
-        <span style={EYEBROW}>{label}</span>
+        <span className="inline-flex items-center" style={{ ...EYEBROW, gap: 6 }}>
+          {label}
+          {suffix != null && (
+            <span
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 500,
+                fontSize: 10,
+                letterSpacing: '0.04em',
+                color: '#8a8a80',
+                textTransform: 'none',
+              }}
+            >
+              {suffix}
+            </span>
+          )}
+        </span>
         <ChevronDown
           size={12}
           style={{
@@ -185,126 +167,42 @@ function CheckboxRow({ label, checked, count, onChange }) {
         style={{ accentColor: '#1a3030', cursor: 'pointer' }}
       />
       <span style={{ ...LABEL, flex: 1 }}>{label}</span>
-      {count != null && <span style={COUNT}>{count}</span>}
+      {count != null && <span style={COUNT}>{count.toLocaleString()}</span>}
     </label>
   );
 }
 
 /**
- * Multi-select dropdown for the Source filter. Opens a popup of checkable
- * options; selected count is shown on the trigger. Closes on outside click.
+ * Render a list of options with checkboxes. If `expandable` and there are
+ * more than TOP_N options, hide the tail behind a Show more / Show less
+ * toggle. Options pre-sorted by the caller (count desc with selected always
+ * pinned to the top).
  */
-function MultiSelectDropdown({ options, selected, onToggle, facets }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const handler = (e) => {
-      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const selectedCount = options.filter((o) => selected?.[o.key]).length;
-  const triggerLabel = selectedCount === 0
-    ? 'Any source'
-    : selectedCount === 1
-      ? options.find((o) => selected?.[o.key])?.label
-      : `${selectedCount} selected`;
-
+function CheckboxList({ options, selected, facets, onToggle, expandable = true }) {
+  const [expanded, setExpanded] = useState(false);
+  const overflow = expandable && options.length > TOP_N;
+  const visible = !overflow || expanded ? options : options.slice(0, TOP_N);
   return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between cursor-pointer"
-        style={{
-          padding: '8px 10px',
-          borderRadius: 6,
-          border: '1px solid #e4e2dc',
-          background: '#f2f0eb',
-          fontFamily: "'Outfit', sans-serif",
-          fontWeight: 400,
-          fontSize: 13,
-          color: '#0c1c1e',
-        }}
-      >
-        <span>{triggerLabel}</span>
-        <ChevronDown
-          size={14}
-          style={{
-            color: '#8a8a80',
-            transform: open ? 'rotate(180deg)' : 'none',
-            transition: 'transform 150ms',
-          }}
+    <>
+      {visible.map((opt) => (
+        <CheckboxRow
+          key={opt}
+          label={opt}
+          count={facets?.[opt]}
+          checked={Boolean(selected?.[opt])}
+          onChange={() => onToggle(opt)}
         />
-      </button>
-      {open && (
-        <div
-          className="absolute"
-          style={{
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            background: '#f8f6f2',
-            border: '1px solid #e4e2dc',
-            borderRadius: 8,
-            boxShadow: '0 4px 16px rgba(12,28,30,0.10)',
-            padding: 6,
-            zIndex: 10,
-            maxHeight: 280,
-            overflowY: 'auto',
-          }}
+      ))}
+      {overflow && (
+        <button
+          type="button"
+          style={SHOW_MORE_LINK}
+          onClick={() => setExpanded((v) => !v)}
         >
-          {options.map((opt) => {
-            const active = Boolean(selected?.[opt.key]);
-            return (
-              <button
-                key={opt.key}
-                type="button"
-                onClick={() => onToggle(opt.key)}
-                className="w-full flex items-center justify-between cursor-pointer"
-                style={{
-                  padding: '7px 8px',
-                  borderRadius: 4,
-                  background: active ? 'rgba(26,48,48,0.06)' : 'transparent',
-                  border: 'none',
-                  fontFamily: "'Outfit', sans-serif",
-                  fontWeight: 400,
-                  fontSize: 13,
-                  color: '#0c1c1e',
-                  textAlign: 'left',
-                }}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 3,
-                      border: '1px solid #d4d2cc',
-                      background: active ? '#1a3030' : '#f8f6f2',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {active && <Check size={10} color="#f2f0eb" />}
-                  </span>
-                  {opt.label}
-                </span>
-                {facets?.[opt.key] != null && (
-                  <span style={{ color: '#8a8a80', fontSize: 11 }}>{facets[opt.key]}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+          {expanded ? 'Show less' : `Show more (${options.length - TOP_N})`}
+        </button>
       )}
-    </div>
+    </>
   );
 }
 
@@ -316,23 +214,64 @@ const FilterRail = ({
   facets,
   priceRangeHelper,
 }) => {
-  const makerOptions = useMemo(() => {
-    const makerFacet = facets?.maker || {};
-    const entries = Object.entries(makerFacet).sort((a, b) => b[1] - a[1]);
-    // Fall back to a small default list if nothing is in the result set yet.
-    if (entries.length === 0) {
-      return [
-        ['Stanley', null],
-        ['Lie-Nielsen', null],
-        ['Veritas', null],
-        ['Record', null],
-        ['Disston', null],
-        ['Narex', null],
-        ['Sorby', null],
-      ];
+  // Indexed source list — only show what's actually live in the catalog.
+  const sourceOptions = useMemo(
+    () => SOURCES.filter((s) => s.indexed).map((s) => ({ key: s.id, label: s.name })),
+    []
+  );
+
+  // Category options ordered for display: any selected option pinned to top,
+  // then options that have facet counts in count-desc order, then any
+  // canonical types with no current matches in their original (semantic)
+  // order. The "Show more" expander reveals the long tail.
+  const categoryOptions = useMemo(() => {
+    const facetMap = facets?.category || {};
+    const selected = filters?.cat || {};
+    const result = [];
+    const seen = new Set();
+    // 1) Selected first so a user's narrowing choices never disappear into
+    //    "Show more" when results redistribute.
+    for (const k of Object.keys(selected)) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
     }
-    return entries.slice(0, 20);
-  }, [facets]);
+    // 2) Everything with a current facet count, sorted by count desc.
+    for (const [k] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    // 3) Curated canonical types not in the result set yet, in the original
+    //    semantic order so the "Show more" tail stays predictable when
+    //    facets are sparse.
+    for (const k of CATEGORY_OPTIONS) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    return result;
+  }, [facets, filters]);
+
+  // Brand options: same pattern as Category. "Unknown" is filtered out
+  // intentionally — it represents ~30% of listings (no brand identifiable)
+  // and isn't a useful filter target.
+  const brandOptions = useMemo(() => {
+    const facetMap = facets?.maker || {};
+    const selected = filters?.maker || {};
+    const result = [];
+    const seen = new Set();
+    for (const k of Object.keys(selected)) {
+      if (k === 'Unknown') continue;
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    for (const [k] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
+      if (k === 'Unknown') continue;
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    // Fallback list only kicks in pre-facets; once any facet data arrives
+    // we let the live counts drive ordering.
+    if (Object.keys(facetMap).length === 0) {
+      for (const k of FALLBACK_BRANDS) {
+        if (!seen.has(k)) { result.push(k); seen.add(k); }
+      }
+    }
+    return result;
+  }, [facets, filters]);
 
   const priceMin = filters?.price?.min ?? '';
   const priceMax = filters?.price?.max ?? '';
@@ -347,8 +286,10 @@ const FilterRail = ({
     return false;
   }, [filters]);
 
+  const indexedCount = sourceOptions.length;
+
   return (
-    <aside style={{ width: 240, alignSelf: 'flex-start' }}>
+    <aside style={{ width: '100%', maxWidth: 240, alignSelf: 'flex-start' }}>
       {/* Header */}
       <div
         className="flex items-center justify-between"
@@ -392,10 +333,9 @@ const FilterRail = ({
         )}
       </div>
 
-      {/* Single-toggle quality filter — sits above the rest of the rail
-         because it's the most-asked browsing affordance ("just show me the
-         ones with photos"). Forum sources skew text-only so this is high-
-         signal when filtering by makers traded on forums (Veritas, etc.). */}
+      {/* Single-toggle quality filter — sits at the very top because it's the
+         most-asked browsing affordance ("just show me the ones with photos").
+         Forum sources skew text-only so this is high-signal. */}
       <div style={{ paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid #e4e2dc' }}>
         <CheckboxRow
           label="Only with photos"
@@ -404,30 +344,46 @@ const FilterRail = ({
         />
       </div>
 
-      {/* Category */}
-      <CollapsibleGroup label="Category" defaultOpen>
-        {CATEGORY_OPTIONS.slice(0, 10).map((opt) => (
+      {/* Source — promoted near the top of the rail because the
+         multi-source aggregator is the product's core differentiator and
+         shouldn't read as an afterthought. Inline checkboxes (one per
+         indexed source) instead of the previous dropdown. The
+         "{n} indexed" eyebrow suffix anchors the value prop. */}
+      <CollapsibleGroup label="Source" suffix={`${indexedCount} indexed`} defaultOpen>
+        {sourceOptions.map((opt) => (
           <CheckboxRow
-            key={opt}
-            label={opt}
-            count={facets?.category?.[opt]}
-            checked={Boolean(filters?.cat?.[opt])}
-            onChange={() => toggleFilter('cat', opt)}
+            key={opt.key}
+            label={opt.label}
+            count={facets?.source?.[opt.key]}
+            checked={Boolean(filters?.src?.[opt.key])}
+            onChange={() => toggleFilter('src', opt.key)}
           />
         ))}
       </CollapsibleGroup>
 
-      {/* Maker */}
-      <CollapsibleGroup label="Maker" defaultOpen>
-        {makerOptions.map(([name, count]) => (
-          <CheckboxRow
-            key={name}
-            label={name}
-            count={count}
-            checked={Boolean(filters?.maker?.[name])}
-            onChange={() => toggleFilter('maker', name)}
-          />
-        ))}
+      {/* Category — driven from live facets, count desc, top 12 + Show more.
+         Previously was a hardcoded slice(0,10) of the curated CATEGORY_OPTIONS
+         list, which happened to be all planes — users never saw Chisel /
+         Hammer / Table Saw / etc. */}
+      <CollapsibleGroup label="Category" defaultOpen>
+        <CheckboxList
+          options={categoryOptions}
+          selected={filters?.cat}
+          facets={facets?.category}
+          onToggle={(k) => toggleFilter('cat', k)}
+        />
+      </CollapsibleGroup>
+
+      {/* Brand (was "Maker") — universal term covering both modern power-tool
+         brands (Festool, DeWalt) and vintage hand-tool brands (Stanley,
+         Lie-Nielsen). "Unknown" is filtered out of the option list. */}
+      <CollapsibleGroup label="Brand" defaultOpen>
+        <CheckboxList
+          options={brandOptions}
+          selected={filters?.maker}
+          facets={facets?.maker}
+          onToggle={(k) => toggleFilter('maker', k)}
+        />
       </CollapsibleGroup>
 
       {/* Condition filter intentionally removed 2026-04-29 — the FilterRail
@@ -484,19 +440,8 @@ const FilterRail = ({
         )}
       </CollapsibleGroup>
 
-      {/* Source — multi-select dropdown. Only show sources that are actually
-         indexed; aspirational entries in SOURCES (indexed:false) would
-         confuse users since they have zero matches. */}
-      <CollapsibleGroup label="Source" defaultOpen>
-        <MultiSelectDropdown
-          options={SOURCES.filter((s) => s.indexed).map((s) => ({ key: s.id, label: s.name }))}
-          selected={filters?.src}
-          onToggle={(key) => toggleFilter('src', key)}
-          facets={facets?.source}
-        />
-      </CollapsibleGroup>
-
-      {/* Listing age — default collapsed */}
+      {/* Listing age — default collapsed; freshness is implicit in the
+         newest-first sort, this filter is for users actively narrowing. */}
       <CollapsibleGroup label="Listing age" defaultOpen={false}>
         {AGE_OPTIONS.map(({ key, label }) => (
           <CheckboxRow
