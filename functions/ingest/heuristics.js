@@ -250,6 +250,16 @@ function classifyNonTool(title) {
   if (/\bdelta\s+children\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
   if (/\bveritas\s+press\b/.test(t)) return { nonTool: true, reason: 'brand-collision' };
 
+  // STRONG non-tool overrides — only patterns with zero shop-tool overlap go
+  // above the tool gate. Beauty appliances ("Vidal Sassoon Curling Iron")
+  // were getting through because "iron" is in the gate (kept for "plane
+  // iron"); paintball gear is similarly non-overlapping. Other categories
+  // (instruments, sport-vehicles, watercraft, baby gear) DO overlap with
+  // real shop tools — luthier planes, surfboard planes, lutherie chisels —
+  // so they live below the gate where the gate protects them.
+  if (/\b(curling\s+iron|flat\s+iron|steam\s+iron|clothes\s+iron|barrel\s+curling|hair\s+(iron|dryer|straightener|crimper)|blow\s+dryer|curling\s+wand)\b/.test(t)) return { nonTool: true, reason: 'beauty-appliance' };
+  if (/\b(paintball|airsoft|proflex|jt\s+proflex)\b/.test(t)) return { nonTool: true, reason: 'paintball' };
+
   // If any tool keyword appears, treat the listing as a tool. Books about
   // gauges, dowel jigs, magazine-fed drills, veneer scrapers, etc. all have
   // tool keywords and should not be flagged.
@@ -291,28 +301,28 @@ function classifyNonTool(title) {
   // here. The cost is that a pure "Sharpie Markers" listing slips through —
   // acceptable, those are rare on the platforms we ingest.
   if (/\b(carpenter\s+pencils?|crayons?)\b/.test(t)) return { nonTool: true, reason: 'consumable' };
-  // Musical instruments — Gretsch guitars, etc.
-  if (/\b(guitars?|bass\s+guitar|amplifier|piano|keyboard|drum\s+kit|saxophone|violin|fiddle|banjo|mandolin|ukulele|microphone|pedal\s+board)\b/.test(t)) return { nonTool: true, reason: 'instrument' };
   // Furniture — Harvard Windsor chairs, sofas, dressers. "Workbench" is a
   // real tool keyword and matches above; chairs/sofas/etc. are not. Bare
   // \bchairs?\b is broad on purpose — Harvard "Wood Chairs" doesn't put
   // "Windsor" adjacent to "Chairs" so the multi-word forms miss.
   if (/\b(chairs?|sofa|loveseat|recliner|ottoman|nightstand|dresser|hutch|armoire|bookshelf|bookcase)\b/.test(t)) return { nonTool: true, reason: 'furniture' };
-  // Watercraft / personal flotation — Stearns life vests, etc.
+  // Musical instruments — Gretsch guitars, etc. Below the tool gate so
+  // luthier tools like "Lie Nielsen Violin Makers Plane" or "Two Cherries
+  // Guitar Brace Carving Chisels" pass via "plane" / "chisel".
+  if (/\b(guitars?|bass\s+guitar|amplifier|piano|keyboard|drum\s+kit|saxophone|violin|fiddle|banjo|mandolin|ukulele|microphone|pedal\s+board)\b/.test(t)) return { nonTool: true, reason: 'instrument' };
+  // Watercraft / personal flotation. Below the gate so kayak/canoe-paddle
+  // making tools (which mention paddle) pass.
   if (/\b(life\s+vest|life\s+jacket|pfd\b|flotation\s+device|kayak\s+paddle|canoe\s+paddle)\b/.test(t)) return { nonTool: true, reason: 'watercraft' };
-  // Baby / kids gear — Delta Children Play Yard.
+  // Baby / kids gear. "Baby Gate extension" mentions "extension" (in tool
+  // gate) so that one slips through, accepted.
   if (/\b(play\s+yard|playyard|playpen|playard|stroller|car\s+seat|high\s*chair|crib|bassinet|baby\s+gate|diaper|onesie)\b/.test(t)) return { nonTool: true, reason: 'baby' };
-  // Paintball / airsoft masks — JT Proflex etc. Bare "goggles" used to live
-  // here but caught real tools that mention "wear safety goggles" in the
-  // listing copy (e.g. a vintage splitting maul). "Maul" is now in
-  // TOOL_KEYWORD_RE so the gate above catches that case; rely on the
-  // paintball-specific tokens here.
-  if (/\b(paintball|airsoft|proflex|jt\s+proflex)\b/.test(t)) return { nonTool: true, reason: 'paintball' };
+  // Sport vehicles. Below the gate so "Skil 100 type 4 surfboard plane"
+  // passes via "plane".
+  if (/\b(scooter|skateboard|hoverboard|electric\s+bike|e-bike|kayak|surfboard)\b/.test(t)) return { nonTool: true, reason: 'sport-vehicle' };
   if (/\b(bird\s+feeder|peanut\s+hut|suet\s+(log|cake|feeder)|squirrel\s+feeder|hummingbird)\b/.test(t)) return { nonTool: true, reason: 'bird-feeder' };
   if (/\b(canister\s+jar|enamel\s+ware|enamelware|cookware|dinnerware|silverware|stemware|glassware|china\s+set|cooking\s+pot|frying\s+pan|baking\s+(dish|sheet|pan))\b/.test(t)) return { nonTool: true, reason: 'kitchenware' };
   if (/\b(storage\s+shed|garden\s+shed|outdoor\s+shed|plastic\s+shed|resin\s+shed)\b/.test(t)) return { nonTool: true, reason: 'shed' };
   if (/\b(toy|toys|stuffed\s+animal|action\s+figure|plush|doll|board\s+game|video\s+game|playset|game\s+(set|board))\b/.test(t)) return { nonTool: true, reason: 'toy' };
-  if (/\b(scooter|skateboard|hoverboard|electric\s+bike|e-bike|kayak|surfboard)\b/.test(t)) return { nonTool: true, reason: 'sport-vehicle' };
   if (/\b(wall\s+art|canvas\s+print|throw\s+pillow|blanket|comforter|bedding|drapes?|curtains?|rug|tapestry|sculpture|figurine|vase|planter)\b/.test(t)) return { nonTool: true, reason: 'home-decor' };
   // Foreign-language food posts (FBM seller spam in non-English) — these
   // never have tool keywords in any language we care about. Skip narrow
