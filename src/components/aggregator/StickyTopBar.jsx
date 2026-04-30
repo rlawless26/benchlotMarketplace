@@ -23,11 +23,10 @@ const StickyTopBar = ({ query, onQueryChange }) => {
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
-  // X-clear is a tactical "forget this query" action, NOT a navigation back
-  // to the hero. Drop `q`, keep every other search param. If that would
-  // leave the URL truly empty (just `/`), fall through to `/?browse=1` so
-  // the user stays in the browsing shell rather than bouncing to EmptyState.
-  // Per nav handoff Q2.
+  // X-clear is a tactical "forget this query" action. Drop `q`, keep every
+  // other search param. If that would leave the URL truly empty (just `/`),
+  // fall through to `/?browse=1` so the HomeIntroBanner stays hidden — the
+  // user is mid-browse, not arriving cold. Per nav handoff Q2.
   const handleClear = () => {
     const params = new URLSearchParams(location.search);
     params.delete('q');
