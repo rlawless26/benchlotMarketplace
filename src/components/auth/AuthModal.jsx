@@ -37,7 +37,7 @@ function GoogleMark({ size = 18 }) {
 const LABELS = {
   'save-alert': 'Save this alert',
   'alerts-page': 'Your alerts',
-  default: 'Sign in to Benchlot',
+  default: 'Sign in',
 };
 
 const AuthModal = () => {

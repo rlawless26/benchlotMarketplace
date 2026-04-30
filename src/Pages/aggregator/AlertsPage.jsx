@@ -44,7 +44,7 @@ function alertToParams(alert) {
   const params = new URLSearchParams();
   if (alert.query && alert.query.trim()) params.set('q', alert.query.trim());
   const filters = alert.filters || {};
-  for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+  for (const group of ['cat', 'maker', 'cond', 'src']) {
     const g = filters[group];
     if (g && typeof g === 'object') {
       const keys = Object.keys(g).filter((k) => g[k]);

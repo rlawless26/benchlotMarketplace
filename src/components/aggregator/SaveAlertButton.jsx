@@ -39,7 +39,7 @@ function hasAnyIntent({ query, filters }) {
   if (query && query.trim()) return true;
   if (!filters) return false;
   if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
-  for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+  for (const group of ['cat', 'maker', 'cond', 'src']) {
     if (filters[group] && Object.keys(filters[group]).length > 0) return true;
   }
   return false;

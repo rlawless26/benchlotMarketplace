@@ -3,14 +3,14 @@
  * `{ query, filters, sort }` shape. Synced to URL search params so deep
  * links, refreshes, and share-URLs all round-trip cleanly.
  *
- * Filter groups: cat (type), maker, cond, src, age. Multi-select stored as
+ * Filter groups: cat (type), maker, cond, src. Multi-select stored as
  * Record<key, true>. Price handled as { min, max } separately.
  */
 
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'age', 'pics'];
+const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'pics'];
 
 // Some filter groups use opaque keys ("yes" for the pics toggle) where the
 // raw key isn't a great chip label. Map those here.

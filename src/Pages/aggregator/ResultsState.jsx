@@ -38,7 +38,6 @@ const CHIP_GROUP_PREFIX = {
   maker: 'Maker',
   cond: 'Condition',
   src: 'Source',
-  age: 'Age',
   price: 'Price',
 };
 
@@ -103,7 +102,6 @@ function filterLocally(raw, state) {
       if (price.min != null && (p == null || p < price.min)) return false;
       if (price.max != null && (p == null || p > price.max)) return false;
     }
-    // `age` filter not plumbed yet — posted_at vs now comparisons are TODO.
     return true;
   });
 
@@ -308,6 +306,7 @@ const ResultsState = ({ state, actions }) => {
         <StickyTopBar
           query={query}
           onQueryChange={actions.setQuery}
+          totalActive={totalActive}
         />
 
         {/* Breadcrumb header — always shown; ResultsState only renders when

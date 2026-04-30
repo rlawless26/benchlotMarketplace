@@ -9,19 +9,41 @@
  * top bar is just search + global nav (parallel to the homepage hero header).
  */
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 
 import { useAuth } from '../../firebase/hooks/useAuth';
 import { useAuthModal } from '../../context/AuthModalContext';
 
-const StickyTopBar = ({ query, onQueryChange }) => {
+const StickyTopBar = ({ query, onQueryChange, totalActive }) => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
   const location = useLocation();
   const navigate = useNavigate();
   const inputRef = useRef(null);
+
+  // Responsive placeholder. The full "try X or Y" version overflows narrow
+  // mobile viewports and gets ellipsized mid-example, which reads poorly.
+  // Switch to a shorter count-only string under 768px.
+  const [isMobile, setIsMobile] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  ));
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const placeholder = (() => {
+    if (totalActive == null) return 'Search woodworking tools…';
+    const n = totalActive.toLocaleString();
+    return isMobile
+      ? `Search ${n} listings…`
+      : `Search ${n} listings — try "Stanley No. 4" or "moulding plane"`;
+  })();
 
   // X-clear is a tactical "forget this query" action. Drop `q`, keep every
   // other search param. If that would leave the URL truly empty (just `/`),
@@ -84,7 +106,7 @@ const StickyTopBar = ({ query, onQueryChange }) => {
               left: 16,
               top: '50%',
               transform: 'translateY(-50%)',
-              color: '#d4aa60',
+              color: 'var(--fg-muted)',
               pointerEvents: 'none',
             }}
           />
@@ -93,19 +115,21 @@ const StickyTopBar = ({ query, onQueryChange }) => {
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Search for a tool"
+            placeholder={placeholder}
+            aria-label="Search listings"
             className="aggregator-search-input"
             style={{
               width: '100%',
-              background: '#ffffff',
-              border: '1.5px solid #1a3030',
+              background: 'var(--bone-light)',
+              border: '1px solid #e4e2dc',
               borderRadius: 8,
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 500,
-              fontSize: 15,
+              // 16px (not 15) to prevent iOS Safari auto-zooming the page
+              // when the input gets focus on mobile.
+              fontSize: 16,
               color: '#0c1c1e',
               outline: 'none',
-              boxShadow: '0 1px 2px rgba(12,28,30,0.06)',
             }}
           />
           {query && (
@@ -116,11 +140,13 @@ const StickyTopBar = ({ query, onQueryChange }) => {
               className="cursor-pointer"
               style={{
                 position: 'absolute',
-                right: 10,
+                right: 6,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: 26,
-                height: 26,
+                // 32x32 hit target — bumped from 26 so the clear button is
+                // comfortably tappable on mobile without growing the icon.
+                width: 32,
+                height: 32,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

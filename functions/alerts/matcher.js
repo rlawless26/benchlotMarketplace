@@ -42,7 +42,7 @@ function alertToUrl(alert) {
   const params = new URLSearchParams();
   if (alert.query && alert.query.trim()) params.set('q', alert.query.trim());
   const filters = alert.filters || {};
-  for (const group of ['cat', 'maker', 'cond', 'src', 'age']) {
+  for (const group of ['cat', 'maker', 'cond', 'src']) {
     const g = filters[group];
     if (g && typeof g === 'object') {
       const keys = Object.keys(g).filter((k) => g[k]);
@@ -61,7 +61,7 @@ function summarizeAlert(alert) {
   const parts = [];
   if (alert.query && alert.query.trim()) parts.push(`"${alert.query.trim()}"`);
   const filters = alert.filters || {};
-  const activeGroups = ['cat', 'maker', 'cond', 'src', 'age'].filter((g) => {
+  const activeGroups = ['cat', 'maker', 'cond', 'src'].filter((g) => {
     const m = filters[g];
     return m && Object.values(m).some(Boolean);
   });

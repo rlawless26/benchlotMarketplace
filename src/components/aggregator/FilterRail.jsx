@@ -14,7 +14,6 @@
  *   Category          (top 12 by count, Show more expands the rest)
  *   Brand             (top 12 by count, excludes Unknown, Show more)
  *   Price             (min/max numeric)
- *   Listing age       (default collapsed)
  */
 
 import React, { useState, useMemo } from 'react';
@@ -91,13 +90,6 @@ const FALLBACK_BRANDS = [
   'Stanley', 'Festool', 'Delta', 'Craftsman', 'Powermatic', 'Veritas',
   'Shopsmith', 'WoodRiver', 'Woodpeckers', 'Lie-Nielsen', 'Record',
   'Bridge City',
-];
-
-const AGE_OPTIONS = [
-  { key: '24h', label: 'Last 24 hours' },
-  { key: '3d', label: 'Last 3 days' },
-  { key: '7d', label: 'Last 7 days' },
-  { key: '30d', label: 'Last 30 days' },
 ];
 
 const TOP_N = 12;
@@ -330,7 +322,7 @@ const FilterRail = ({
   const hasAnyFilter = useMemo(() => {
     if (!filters) return false;
     if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
-    for (const group of ['cat', 'maker', 'cond', 'src', 'age', 'pics']) {
+    for (const group of ['cat', 'maker', 'cond', 'src', 'pics']) {
       if (filters[group] && Object.keys(filters[group]).length > 0) return true;
     }
     return false;
@@ -521,19 +513,6 @@ const FilterRail = ({
         {priceRangeHelper && (
           <div style={COUNT}>Range in current results: {priceRangeHelper}</div>
         )}
-      </CollapsibleGroup>
-
-      {/* Listing age — default collapsed; freshness is implicit in the
-         newest-first sort, this filter is for users actively narrowing. */}
-      <CollapsibleGroup label="Listing age" defaultOpen={false}>
-        {AGE_OPTIONS.map(({ key, label }) => (
-          <CheckboxRow
-            key={key}
-            label={label}
-            checked={Boolean(filters?.age?.[key])}
-            onChange={() => toggleFilter('age', key)}
-          />
-        ))}
       </CollapsibleGroup>
     </aside>
   );
