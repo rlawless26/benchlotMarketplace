@@ -306,7 +306,6 @@ const ResultsState = ({ state, actions }) => {
         <StickyTopBar
           query={query}
           onQueryChange={actions.setQuery}
-          totalActive={totalActive}
         />
 
         {/* Breadcrumb header — always shown; ResultsState only renders when

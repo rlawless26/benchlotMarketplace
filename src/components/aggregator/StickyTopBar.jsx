@@ -16,16 +16,15 @@ import { Search, X } from 'lucide-react';
 import { useAuth } from '../../firebase/hooks/useAuth';
 import { useAuthModal } from '../../context/AuthModalContext';
 
-const StickyTopBar = ({ query, onQueryChange, totalActive }) => {
+const StickyTopBar = ({ query, onQueryChange }) => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
   const location = useLocation();
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
-  // Responsive placeholder. The full "try X or Y" version overflows narrow
-  // mobile viewports and gets ellipsized mid-example, which reads poorly.
-  // Switch to a shorter count-only string under 768px.
+  // Responsive placeholder. Two examples fit comfortably on desktop; on
+  // mobile a single example avoids ellipsizing mid-quote.
   const [isMobile, setIsMobile] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   ));
@@ -37,13 +36,9 @@ const StickyTopBar = ({ query, onQueryChange, totalActive }) => {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const placeholder = (() => {
-    if (totalActive == null) return 'Search woodworking tools…';
-    const n = totalActive.toLocaleString();
-    return isMobile
-      ? `Search ${n} listings…`
-      : `Search ${n} listings — try "Stanley No. 4" or "moulding plane"`;
-  })();
+  const placeholder = isMobile
+    ? 'Try "Stanley No. 4"'
+    : 'Try "Stanley No. 4" or "moulding plane"';
 
   // X-clear is a tactical "forget this query" action. Drop `q`, keep every
   // other search param. If that would leave the URL truly empty (just `/`),
