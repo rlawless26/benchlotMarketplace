@@ -178,12 +178,54 @@ function CheckboxRow({ label, checked, count, onChange }) {
  * toggle. Options pre-sorted by the caller (count desc with selected always
  * pinned to the top).
  */
-function CheckboxList({ options, selected, facets, onToggle, expandable = true }) {
+function CheckboxList({
+  options,
+  selected,
+  facets,
+  onToggle,
+  expandable = true,
+  searchPlaceholder,
+}) {
   const [expanded, setExpanded] = useState(false);
-  const overflow = expandable && options.length > TOP_N;
-  const visible = !overflow || expanded ? options : options.slice(0, TOP_N);
+  const [search, setSearch] = useState('');
+  // Search input only appears once the list is long enough that scanning it
+  // visually breaks down. Below this threshold the Show-more collapse is
+  // enough on its own.
+  const showSearch = options.length > 20;
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? options.filter((o) => o.toLowerCase().includes(q))
+    : options;
+  // Searching bypasses the collapse — typing is itself a request for the
+  // long tail, and re-applying the top-N cap would hide matches the user
+  // explicitly asked for.
+  const overflow = expandable && !q && filtered.length > TOP_N;
+  const visible = !overflow || expanded ? filtered : filtered.slice(0, TOP_N);
   return (
     <>
+      {showSearch && (
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={searchPlaceholder || 'Filter…'}
+          style={{
+            width: '100%',
+            minWidth: 0,
+            padding: '6px 10px',
+            marginBottom: 8,
+            borderRadius: 6,
+            border: '1px solid #e4e2dc',
+            background: '#f8f6f2',
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 400,
+            fontSize: 12,
+            color: '#0c1c1e',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
+      )}
       {visible.map((opt) => (
         <CheckboxRow
           key={opt}
@@ -193,13 +235,16 @@ function CheckboxList({ options, selected, facets, onToggle, expandable = true }
           onChange={() => onToggle(opt)}
         />
       ))}
+      {q && filtered.length === 0 && (
+        <div style={{ ...COUNT, padding: '6px 0' }}>No matches</div>
+      )}
       {overflow && (
         <button
           type="button"
           style={SHOW_MORE_LINK}
           onClick={() => setExpanded((v) => !v)}
         >
-          {expanded ? 'Show less' : `Show more (${options.length - TOP_N})`}
+          {expanded ? 'Show less' : `Show more (${filtered.length - TOP_N})`}
         </button>
       )}
     </>
@@ -222,35 +267,38 @@ const FilterRail = ({
   );
 
   // Category options ordered for display: any selected option pinned to top,
-  // then options that have facet counts in count-desc order, then any
-  // canonical types with no current matches in their original (semantic)
-  // order. The "Show more" expander reveals the long tail.
+  // then options that have facet counts in count-desc order. The curated
+  // CATEGORY_OPTIONS list is only used as a pre-facets fallback — once
+  // facets arrive we drive the rail off real listing counts so users don't
+  // see 60 canonical types most of which return zero results.
   const categoryOptions = useMemo(() => {
     const facetMap = facets?.category || {};
     const selected = filters?.cat || {};
     const result = [];
     const seen = new Set();
-    // 1) Selected first so a user's narrowing choices never disappear into
-    //    "Show more" when results redistribute.
     for (const k of Object.keys(selected)) {
       if (!seen.has(k)) { result.push(k); seen.add(k); }
     }
-    // 2) Everything with a current facet count, sorted by count desc.
     for (const [k] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
       if (!seen.has(k)) { result.push(k); seen.add(k); }
     }
-    // 3) Curated canonical types not in the result set yet, in the original
-    //    semantic order so the "Show more" tail stays predictable when
-    //    facets are sparse.
-    for (const k of CATEGORY_OPTIONS) {
-      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    if (Object.keys(facetMap).length === 0) {
+      for (const k of CATEGORY_OPTIONS) {
+        if (!seen.has(k)) { result.push(k); seen.add(k); }
+      }
     }
     return result;
   }, [facets, filters]);
 
-  // Brand options: same pattern as Category. "Unknown" is filtered out
-  // intentionally — it represents ~30% of listings (no brand identifiable)
-  // and isn't a useful filter target.
+  // Brand options: same pattern as Category. Two filters applied:
+  //   - "Unknown" is excluded — it covers ~30% of listings (no brand
+  //     identifiable) and isn't a useful filter target.
+  //   - Singletons (count < 2) are excluded — the catalog has 1400+ unique
+  //     brand strings, the long tail is mostly normalization noise (typos,
+  //     bad scrapes, "Stanley Bailey" duplicates of "Stanley"). Hiding them
+  //     makes the rail navigable; if a real singleton brand exists, it's
+  //     still selectable via URL and rejoins the list once a second listing
+  //     is normalized to it.
   const brandOptions = useMemo(() => {
     const facetMap = facets?.maker || {};
     const selected = filters?.maker || {};
@@ -260,8 +308,9 @@ const FilterRail = ({
       if (k === 'Unknown') continue;
       if (!seen.has(k)) { result.push(k); seen.add(k); }
     }
-    for (const [k] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
+    for (const [k, count] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
       if (k === 'Unknown') continue;
+      if (count < 2) continue;
       if (!seen.has(k)) { result.push(k); seen.add(k); }
     }
     // Fallback list only kicks in pre-facets; once any facet data arrives
@@ -381,6 +430,7 @@ const FilterRail = ({
           selected={filters?.cat}
           facets={facets?.category}
           onToggle={(k) => toggleFilter('cat', k)}
+          searchPlaceholder="Filter categories…"
         />
       </CollapsibleGroup>
 
@@ -393,6 +443,7 @@ const FilterRail = ({
           selected={filters?.maker}
           facets={facets?.maker}
           onToggle={(k) => toggleFilter('maker', k)}
+          searchPlaceholder="Filter brands…"
         />
       </CollapsibleGroup>
 
@@ -405,17 +456,28 @@ const FilterRail = ({
          and "Good" return 0 results. Re-add when condition normalization
          lands in the LLM normalizer. */}
 
-      {/* Price */}
+      {/* Price — type="text" with inputMode="numeric" instead of type="number"
+         so we don't render the browser's native up/down spinners (visually
+         broken in a chrome-light rail) and so the inputs flex-shrink
+         properly when the rail is narrow. setPriceRange already coerces
+         and validates. */}
       <CollapsibleGroup label="Price" defaultOpen>
         <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
           <input
-            type="number"
-            min="0"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={priceMin}
-            onChange={(e) => setPriceRange(e.target.value || null, priceMax || null)}
+            onChange={(e) =>
+              setPriceRange(
+                e.target.value.replace(/\D+/g, '') || null,
+                priceMax || null
+              )
+            }
             placeholder="$ min"
             style={{
-              flex: 1,
+              flex: '1 1 0',
+              minWidth: 0,
               padding: '7px 10px',
               borderRadius: 6,
               border: '1px solid #e4e2dc',
@@ -423,17 +485,26 @@ const FilterRail = ({
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 400,
               fontSize: 12,
+              color: '#0c1c1e',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
           <input
-            type="number"
-            min="0"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={priceMax}
-            onChange={(e) => setPriceRange(priceMin || null, e.target.value || null)}
+            onChange={(e) =>
+              setPriceRange(
+                priceMin || null,
+                e.target.value.replace(/\D+/g, '') || null
+              )
+            }
             placeholder="$ max"
             style={{
-              flex: 1,
+              flex: '1 1 0',
+              minWidth: 0,
               padding: '7px 10px',
               borderRadius: 6,
               border: '1px solid #e4e2dc',
@@ -441,7 +512,9 @@ const FilterRail = ({
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 400,
               fontSize: 12,
+              color: '#0c1c1e',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
         </div>
