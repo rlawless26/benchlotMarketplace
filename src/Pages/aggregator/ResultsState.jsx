@@ -378,7 +378,7 @@ const ResultsState = ({ state, actions }) => {
                     onClick={recallHib}
                     aria-label="Show intro again"
                     title="Show intro again"
-                    className="md:hidden cursor-pointer"
+                    className="md:hidden inline-flex items-center justify-center cursor-pointer"
                     style={{
                       width: 28,
                       height: 28,
@@ -386,9 +386,6 @@ const ResultsState = ({ state, actions }) => {
                       border: '1px solid #e4e2dc',
                       background: '#f8f6f2',
                       color: '#4a5a54',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       padding: 0,
                     }}
                   >
