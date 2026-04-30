@@ -18,7 +18,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
-import { computeFacets, getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
+import { computeFacets, getAggregatorStats, getSourceCounts } from '../../firebase/adapters/aggregatorFacets';
+import { SOURCES } from '../../firebase/adapters/sources';
 
 import StickyTopBar from '../../components/aggregator/StickyTopBar';
 import FilterRail from '../../components/aggregator/FilterRail';
@@ -148,9 +149,17 @@ const ResultsState = ({ state, actions }) => {
   // per-source fetch cap below can stay aggressive without making the
   // displayed total look small.
   const [totalActive, setTotalActive] = useState(null);
+  // True per-source active counts — used by the Source filter so its
+  // numbers reflect the real catalog instead of the 2,500/source fetch cap.
+  // count() aggregates are a single roundtrip each with no doc reads.
+  const [sourceCounts, setSourceCounts] = useState(null);
   useEffect(() => {
     getAggregatorStats()
       .then((s) => setTotalActive(s.activeCount))
+      .catch(() => {});
+    const indexedIds = SOURCES.filter((s) => s.indexed).map((s) => s.id);
+    getSourceCounts(indexedIds)
+      .then((counts) => setSourceCounts(counts))
       .catch(() => {});
   }, []);
 
@@ -538,6 +547,7 @@ const ResultsState = ({ state, actions }) => {
               setPriceRange={actions.setPriceRange}
               clearAllFilters={actions.clearAllFilters}
               facets={facets}
+              sourceCounts={sourceCounts}
               priceRangeHelper={priceRangeHelper}
             />
           </div>

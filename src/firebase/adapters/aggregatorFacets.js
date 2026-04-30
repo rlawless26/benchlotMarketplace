@@ -62,6 +62,34 @@ export async function getAggregatorStats() {
 }
 
 /**
+ * True per-source active counts via Firestore count() aggregates — no doc
+ * reads, just one roundtrip per source. Used to populate the Source filter
+ * with the real catalog size rather than the per-source fetch cap (2,500).
+ * eBay alone has 5,000+ active listings, so the in-memory facet count
+ * understates by a lot otherwise.
+ *
+ * @param {string[]} sourceIds
+ * @returns {Promise<Object<string, number>>} sourceId → active count
+ */
+export async function getSourceCounts(sourceIds) {
+  if (!Array.isArray(sourceIds) || sourceIds.length === 0) return {};
+  const col = collection(db, COLLECTION);
+  const entries = await Promise.all(
+    sourceIds.map(async (id) => {
+      try {
+        const q = query(col, where('status', '==', 'active'), where('source', '==', id));
+        const snap = await getCountFromServer(q);
+        return [id, snap.data().count || 0];
+      } catch (e) {
+        console.warn(`[aggregatorFacets] getSourceCounts(${id}) failed:`, e.message);
+        return [id, null];
+      }
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
+/**
  * Reduce a result set into per-group counts for the filter rail.
  * Returns `{ category, maker, source, condition }` — each an object map of
  * option → count. Options with zero hits are omitted.

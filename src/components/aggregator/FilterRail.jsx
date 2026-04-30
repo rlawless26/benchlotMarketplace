@@ -212,6 +212,7 @@ const FilterRail = ({
   setPriceRange,
   clearAllFilters,
   facets,
+  sourceCounts,
   priceRangeHelper,
 }) => {
   // Indexed source list — only show what's actually live in the catalog.
@@ -348,17 +349,26 @@ const FilterRail = ({
          multi-source aggregator is the product's core differentiator and
          shouldn't read as an afterthought. Inline checkboxes (one per
          indexed source) instead of the previous dropdown. The
-         "{n} indexed" eyebrow suffix anchors the value prop. */}
+         "{n} indexed" eyebrow suffix anchors the value prop.
+         Counts come from `sourceCounts` (true catalog count via Firestore
+         count() aggregate) when available, falling back to `facets.source`
+         (which only reflects the per-source 2,500 fetch cap and so
+         understates eBay / FB Marketplace). */}
       <CollapsibleGroup label="Source" suffix={`${indexedCount} indexed`} defaultOpen>
-        {sourceOptions.map((opt) => (
-          <CheckboxRow
-            key={opt.key}
-            label={opt.label}
-            count={facets?.source?.[opt.key]}
-            checked={Boolean(filters?.src?.[opt.key])}
-            onChange={() => toggleFilter('src', opt.key)}
-          />
-        ))}
+        {sourceOptions.map((opt) => {
+          const count = sourceCounts?.[opt.key] != null
+            ? sourceCounts[opt.key]
+            : facets?.source?.[opt.key];
+          return (
+            <CheckboxRow
+              key={opt.key}
+              label={opt.label}
+              count={count}
+              checked={Boolean(filters?.src?.[opt.key])}
+              onChange={() => toggleFilter('src', opt.key)}
+            />
+          );
+        })}
       </CollapsibleGroup>
 
       {/* Category — driven from live facets, count desc, top 12 + Show more.
