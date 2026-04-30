@@ -6,6 +6,7 @@
 
 const admin = require('firebase-admin');
 const { normalizeListing } = require('./normalizer');
+const { canonicalizeBrand } = require('./vocabulary');
 
 /**
  * Normalize a single listing and persist canonical fields to its Firestore doc.
@@ -38,8 +39,13 @@ async function normalizeListingDoc(ref, data, opts = {}) {
     { model: opts.model }
   );
 
+  // Post-LLM alias canonicalization — collapses near-duplicates the model
+  // emits (case typos, "& Co." suffixes, Sears sub-brand prefixes). Cheap
+  // string lookup; see vocabulary.js BRAND_ALIASES for the full list.
+  const canonical_brand = canonicalizeBrand(result.canonical_brand);
+
   await ref.update({
-    canonical_brand: result.canonical_brand,
+    canonical_brand,
     canonical_type: result.canonical_type,
     canonical_model: result.canonical_model,
     canonical_size: result.canonical_size,
@@ -52,7 +58,7 @@ async function normalizeListingDoc(ref, data, opts = {}) {
     normalized: true,
     usage: result.usage,
     canonical: {
-      canonical_brand: result.canonical_brand,
+      canonical_brand,
       canonical_type: result.canonical_type,
       canonical_model: result.canonical_model,
       canonical_size: result.canonical_size,

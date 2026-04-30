@@ -260,7 +260,63 @@ const CANONICAL_TYPES = [
   'Other',
 ];
 
+/**
+ * Post-LLM brand alias map. The normalizer is intentionally permissive on
+ * canonical_brand (free-form so antique long-tail makers don't get
+ * "Unknown"-bucketed), but that permissiveness leaks near-duplicates into
+ * the brand facet — case-only typos, "& Co." suffix variants, and
+ * sub-brands the LLM occasionally prefixes with the parent retailer.
+ *
+ * Each alias key is lowercased and trimmed before lookup; values are the
+ * canonical form to write back. Keep this list small and high-confidence —
+ * the cost of a wrong merge is a real maker getting hidden from search.
+ *
+ * Add an entry here when:
+ *   1. Two strings clearly refer to the same maker, AND
+ *   2. The canonical form is unambiguous (matches CANONICAL_BRANDS, or is
+ *      the form the antique-tool community searches by).
+ *
+ * Skip cases where short form is ambiguous (e.g. "Buck" alone could mean
+ * Buck Brothers or Buck Knives) — leave those for vocabulary expansion.
+ */
+const BRAND_ALIASES = Object.freeze({
+  // Case / typo
+  'dewalt': 'DeWalt',
+  'woodpecker': 'Woodpeckers',
+  'snap-on': 'Snap-On',
+
+  // Punctuation / suffix variants
+  'snow and nealley': 'Snow & Nealley',
+  'ec atkins': 'E.C. Atkins',
+  'e.c. atkins & co.': 'E.C. Atkins',
+  'auburn tool co.': 'Auburn',
+  'auburn tool co': 'Auburn',
+  'sandusky tool co.': 'Sandusky',
+
+  // Sears sub-brand collapses — Craftsman and Dunlap are independently
+  // searchable brands that the LLM occasionally prefixes with "Sears".
+  // Roebuck is the retailer suffix; it collapses back to Sears.
+  'sears craftsman': 'Craftsman',
+  'sears dunlap': 'Dunlap',
+  'sears roebuck': 'Sears',
+});
+
+/**
+ * Apply the brand alias map to a normalized brand string. Safe to call with
+ * non-string values (returns input unchanged). Trim + lowercase the lookup
+ * key but preserve the canonical-form casing in the output.
+ */
+function canonicalizeBrand(raw) {
+  if (typeof raw !== 'string') return raw;
+  const trimmed = raw.trim();
+  if (!trimmed) return raw;
+  const aliased = BRAND_ALIASES[trimmed.toLowerCase()];
+  return aliased || trimmed;
+}
+
 module.exports = {
   CANONICAL_BRANDS,
   CANONICAL_TYPES,
+  BRAND_ALIASES,
+  canonicalizeBrand,
 };
