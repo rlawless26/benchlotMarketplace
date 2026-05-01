@@ -46,7 +46,12 @@ function parseFromParams(params) {
 
 function serializeToParams(state) {
   const params = new URLSearchParams();
-  if (state.query && state.query.trim()) params.set('q', state.query.trim());
+  // Don't trim the value — the input is controlled by URL state, so trimming
+  // on every keystroke makes trailing spaces impossible (the space the user
+  // just typed gets stripped before it round-trips back into the input). We
+  // still gate on `.trim()` so a whitespace-only query doesn't pollute the
+  // URL with `?q=+++`.
+  if (state.query && state.query.trim()) params.set('q', state.query);
   for (const group of MULTI_GROUPS) {
     const g = state.filters?.[group];
     if (g && typeof g === 'object') {
