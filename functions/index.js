@@ -2739,6 +2739,36 @@ exports.scheduledIngestJimbode = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — Vintage Vials Antique Tools.
+ *
+ * Runs nightly at 04:05 UTC, between Jim Bode (04:00) and the alert matcher
+ * (04:15). WooCommerce Store API source, same shape as Rouillard — paginates
+ * `/wp-json/wc/store/v1/products`, filters out anything not `is_in_stock`/
+ * `is_purchasable`, and lets `markExpired` handle products that disappear
+ * between runs. Catalog ~1,468 active items, mostly antique rules / levels /
+ * planes.
+ */
+const vintagevials = require('./ingest/vintagevials');
+
+exports.scheduledIngestVintagevials = onSchedule(
+  {
+    schedule: '5 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await vintagevials.runIngestion();
+      console.log('[scheduledIngestVintagevials] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestVintagevials] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — Hyperkitten Tool Company.
  *
  * Runs nightly at 03:45 UTC, before Jim Bode (04:00) and the alert matcher
