@@ -2739,6 +2739,38 @@ exports.scheduledIngestJimbode = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — OldTools.com.
+ *
+ * Runs nightly at 02:45 UTC. Deliberately off-band (the rest of the source
+ * crons cluster 03:00–04:05): oldtools' catalog is small (~200 items) and
+ * slow-moving (sitemap lastmods range to 2018), so the staleness window
+ * before the alert matcher at 04:15 doesn't matter, and the wider margin
+ * absorbs the per-item fetch loop comfortably.
+ *
+ * Strategy: pull `/shop/sitemap/sitemap-items-1.xml`, then fetch each
+ * item URL and parse Schema.org Product microdata.
+ */
+const oldtools = require('./ingest/oldtools');
+
+exports.scheduledIngestOldtools = onSchedule(
+  {
+    schedule: '45 2 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await oldtools.runIngestion();
+      console.log('[scheduledIngestOldtools] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestOldtools] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — Vintage Vials Antique Tools.
  *
  * Runs nightly at 04:05 UTC, between Jim Bode (04:00) and the alert matcher
