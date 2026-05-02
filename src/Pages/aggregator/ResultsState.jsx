@@ -75,16 +75,43 @@ function isLikelyAccessory(name) {
   );
 }
 
+// Strip the haystack and the query down to a normalized stream of
+// alphanumeric tokens separated by single spaces. Punctuation, hyphens,
+// `#`, `&`, curly quotes, etc. all collapse to whitespace so that:
+//   - `lie-nielsen`, `Lie Nielsen`, `lie/nielsen` all match the same set
+//   - `Stanley No. 112` is reachable via `stanley 112` or `stanley #112`
+//   - searches survive the entity-decoded curly quotes (`14″`) we ingest
+function normalizeForSearch(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Build a matcher that returns true when EVERY token in the query appears
+// as a whole word in the haystack. Word-boundary matching is critical for
+// numeric model numbers — `\b112\b` matches `no 112` but NOT `1120` or
+// `3112`, which the prior substring approach mis-handled in both directions
+// (false negatives like `Stanley No. 112` rejected, false positives like
+// `Stanley 1120` accepted via the non-boundary form).
+function buildQueryMatcher(query) {
+  const tokens = normalizeForSearch(query).split(' ').filter(Boolean);
+  if (tokens.length === 0) return null;
+  const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regexes = tokens.map((t) => new RegExp(`\\b${escape(t)}\\b`));
+  return (haystack) => regexes.every((re) => re.test(haystack));
+}
+
 function filterLocally(raw, state) {
   const { query, filters } = state;
-  const q = (query || '').trim().toLowerCase();
+  const matcher = buildQueryMatcher(query);
   const matches = (raw || []).filter((l) => {
-    if (q) {
-      const hay = [l.name, l.brand, l.category, l.canonical_model]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      if (!hay.includes(q)) return false;
+    if (matcher) {
+      const hay = normalizeForSearch(
+        [l.name, l.brand, l.category, l.canonical_model].filter(Boolean).join(' ')
+      );
+      if (!matcher(hay)) return false;
     }
     if (filters?.cat && !filters.cat[l.category]) return false;
     // Maker filter — null brand maps to the synthesized "Unknown" facet so
@@ -121,7 +148,7 @@ function filterLocally(raw, state) {
   const ranked = matches.map((m, i) => {
     const noImage = !m.imageUrl;
     const noBrand = !m.brand && !makerFilterActive;
-    const acc = q ? isLikelyAccessory(m.name) : false;
+    const acc = matcher ? isLikelyAccessory(m.name) : false;
     return { m, i, rank: (noImage ? 4 : 0) + (noBrand ? 2 : 0) + (acc ? 1 : 0) };
   });
   ranked.sort((a, b) => a.rank - b.rank || a.i - b.i);
