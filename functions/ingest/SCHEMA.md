@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`, `"reddit_post"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`, `"reddit_post"`, `"woocommerce_product"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -101,6 +101,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `ebay` | eBay Carpentry & Woodworking (category 13870) | `ebay_item_summary` | M5 |
 | `thebestthings` | The Best Things (Bob Kaune) | `thebestthings_item` | post-launch |
 | `reddit` | Reddit (r/handtools, r/AntiqueToolBroker) | `reddit_post` | post-launch |
+| `rouillard` | Michael Rouillard Antique Tools | `woocommerce_product` | post-launch |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -167,3 +168,14 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - `posted_at` is always `null` (Hyperkitten doesn't expose per-item timestamps). `first_seen_at` is the recency signal.
 - `tags` include `hk_type:<code>` (the dealer's pre-classification) and `hk_new` (items carrying the visible NEW badge). The normalizer reads these as hints.
 - Books (`data-tool_type="B"`) are skipped at ingestion — Benchlot surfaces tools, not reference literature.
+
+### Michael Rouillard notes
+- `source_id` = WooCommerce product `slug` (e.g. `minty-hard-to-find-pair-of-left-right-leon-robbins-panel-raising-planes...`). Firestore docId: `rouillard__{slug}`.
+- `source_url` = WC `permalink` (`https://michaelrouillardtools.com/product/{slug}/`). Direct deep link.
+- `posted_at` is `null` — the WC Store API does not expose `date_created`. `first_seen_at` is the recency signal.
+- Data source: WooCommerce Store API at `/wp-json/wc/store/v1/products?per_page=100&page=N&orderby=date&order=desc`. Public, no auth, returns rich JSON (name, slug, permalink, description HTML, prices in minor units, images, categories, stock flags). Catalog is small (~130 active items).
+- Title decoding: the Store API emits HTML entities (`&#038;`, `&#8243;`, etc.) in `name` — `decodeEntities()` runs before heuristic matching and storage so `Brown & Sharpe` matches the brand list.
+- Sold/unavailable filter: skip when `is_in_stock === false` or `is_purchasable === false`. Defensive title/tag scan for `sold`/`reserved` markers in case a product is left flagged in-stock manually.
+- `tags` include the WooCommerce category slugs (`planes`, `wood-planes`, `modern-makers`, etc.) — the strongest categorization signal here, since native `tags` are typically empty. The M2 normalizer reads these as hints.
+- `condition_raw` is left null — Rouillard describes condition in prose ("Minty", "Fine", etc.) and the normalizer reads it from `description_raw`.
+- Standard `markExpired` sweep handles products that disappear (fully removed listings or stock flips not caught at fetch time).
