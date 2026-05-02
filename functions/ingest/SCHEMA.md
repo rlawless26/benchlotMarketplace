@@ -102,6 +102,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `thebestthings` | The Best Things (Bob Kaune) | `thebestthings_item` | post-launch |
 | `reddit` | Reddit (r/handtools, r/AntiqueToolBroker) | `reddit_post` | post-launch |
 | `rouillard` | Michael Rouillard Antique Tools | `woocommerce_product` | post-launch |
+| `vintagevials` | Vintage Vials | `woocommerce_product` | post-launch |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -179,3 +180,10 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - `tags` include the WooCommerce category slugs (`planes`, `wood-planes`, `modern-makers`, etc.) — the strongest categorization signal here, since native `tags` are typically empty. The M2 normalizer reads these as hints.
 - `condition_raw` is left null — Rouillard describes condition in prose ("Minty", "Fine", etc.) and the normalizer reads it from `description_raw`.
 - Standard `markExpired` sweep handles products that disappear (fully removed listings or stock flips not caught at fetch time).
+
+### Vintage Vials notes
+- Same WooCommerce Store API integration as Rouillard — see that section for shared mechanics (`is_in_stock`/`is_purchasable` filter, entity decoding, category-slugs-as-tags, null `posted_at`, `markExpired` sweep).
+- `source_id` = WooCommerce product `slug`. Firestore docId: `vintagevials__{slug}`.
+- `source_url` = WC `permalink` (`https://shop.vintagevials.com/product/{slug}/`).
+- Catalog skews premium antique — strong specialty in measuring tools (rules, levels, inclinometers) plus planes / plow planes / marking gauges. ~170 active at first ingest. WC `x-wp-total` reports ~1,468 across the whole feed because Vintage Vials retains sold listings with `is_in_stock: false` rather than removing them; our `isAvailable` filter drops those at ingest, so the index only carries buyable inventory.
+- Cron slot: `5 4 * * *` UTC nightly, between Jim Bode (04:00) and the alert matcher (04:15).

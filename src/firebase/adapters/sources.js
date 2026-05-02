@@ -106,6 +106,15 @@ const SOURCES = [
     indexed: true,
   },
   {
+    id: 'vintagevials',
+    name: 'Vintage Vials',
+    shortName: 'Vintage Vials',
+    kind: 'Dealer',
+    descriptor: 'Dealer · Antique · Rules & planes',
+    homeUrl: 'https://shop.vintagevials.com',
+    indexed: true,
+  },
+  {
     id: 'fbmarketplace',
     name: 'Facebook Marketplace',
     shortName: 'FB Marketplace',
