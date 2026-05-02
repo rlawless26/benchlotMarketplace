@@ -255,6 +255,10 @@ function toRecord(item) {
   if (!legacyId) return null;
   const title = (item.title || '').trim();
   if (!title) return null;
+  // US-only filter. eBay's category sweeps return international listings
+  // by default; we positionally only index US inventory. itemLocation.country
+  // is present on every item_summary response.
+  if (item.itemLocation && item.itemLocation.country && item.itemLocation.country !== 'US') return null;
 
   const priceCents = priceToCents(item.price);
   const currency = item.price?.currency || 'USD';
