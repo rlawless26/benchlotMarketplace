@@ -44,6 +44,7 @@ const admin = require('firebase-admin');
 
 const { upsertListings } = require('./externalListings');
 const { extractBrand, extractType } = require('./heuristics');
+const { stateFromZip3 } = require('./location');
 
 const SOURCE = 'ebay';
 const RAW_FORMAT = 'ebay_item_summary';
@@ -287,6 +288,17 @@ function toRecord(item) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    // Location: every item_summary response carries `itemLocation` with
+    // `country` (full ISO code) and `postalCode` (masked to 3-digit prefix
+    // + `**`). The 3-digit prefix uniquely identifies a US state in nearly
+    // all cases via the USPS SCF mapping. Non-US listings end up with a
+    // null state and don't survive the US-only positioning anyway.
+    location_state: item.itemLocation?.country === 'US'
+      ? stateFromZip3(item.itemLocation.postalCode)
+      : null,
+    location_display: item.itemLocation?.country === 'US' && stateFromZip3(item.itemLocation.postalCode)
+      ? stateFromZip3(item.itemLocation.postalCode)
+      : null,
   };
 
   // PII-scrubbed raw payload. `seller` is the only top-level field the

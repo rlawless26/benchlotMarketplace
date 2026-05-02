@@ -116,11 +116,9 @@ function matchesAlert(listing, alert) {
   if (!multiMatch(filters.src, listing.source)) return false;
   if (!ageMatches(listing, filters.age)) return false;
   if (!priceMatches(listing, filters.price)) return false;
-  // Region: derive from listing.location_state. eBay listings have no state
-  // and are dropped when any region filter is active — same convention as
-  // the client-side filter so alerts and search results stay consistent.
+  // Region: derive from listing.location_state. eBay listings carry real
+  // state (from postal-code prefix), so no special-case handling.
   if (filters.region && Object.keys(filters.region).length > 0) {
-    if (listing.source === 'ebay') return false;
     if (!multiMatch(filters.region, regionForState(listing.location_state))) return false;
   }
 

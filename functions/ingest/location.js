@@ -125,9 +125,96 @@ function parseFbmLocation(str) {
   return null;
 }
 
+/**
+ * USPS ZIP-3 prefix → US state. eBay's Browse API returns `itemLocation.postalCode`
+ * masked as a 3-digit prefix + `**` (e.g. "044**", "025**"). The first three
+ * digits of a US zip code map (with very few cross-state exceptions) to a
+ * specific state, so we can recover state from the redacted postal code
+ * without any privacy concern.
+ *
+ * Table sourced from USPS Sectional Center Facility (SCF) ranges. A handful
+ * of prefixes legitimately straddle state lines (e.g. some 06x prefixes mix
+ * CT and NY); we pick the dominant state. Military/PO-Box prefixes (006-009
+ * Puerto Rico, 090-099 APO/FPO) return null since they don't fit the US
+ * states-only model.
+ */
+const ZIP3_RANGES = [
+  // [start, end (inclusive), state]
+  [5, 5, 'NY'],     // Holtsville, NY
+  [10, 27, 'MA'],   // Mostly MA; spans into NH/VT but MA dominates
+  [28, 29, 'RI'],
+  [30, 38, 'NH'],
+  [39, 49, 'ME'],
+  [50, 59, 'VT'],
+  [60, 69, 'CT'],
+  [70, 89, 'NJ'],
+  // 090-099 = APO/FPO military — return null
+  [100, 149, 'NY'],
+  [150, 196, 'PA'],
+  [197, 199, 'DE'],
+  [200, 205, 'DC'],
+  [206, 219, 'MD'],
+  [220, 246, 'VA'],
+  [247, 268, 'WV'],
+  [270, 289, 'NC'],
+  [290, 299, 'SC'],
+  [300, 319, 'GA'],
+  [320, 349, 'FL'],
+  [350, 369, 'AL'],
+  [370, 385, 'TN'],
+  [386, 397, 'MS'],
+  [400, 427, 'KY'],
+  [430, 459, 'OH'],
+  [460, 479, 'IN'],
+  [480, 499, 'MI'],
+  [500, 528, 'IA'],
+  [530, 549, 'WI'],
+  [550, 567, 'MN'],
+  [570, 577, 'SD'],
+  [580, 588, 'ND'],
+  [590, 599, 'MT'],
+  [600, 629, 'IL'],
+  [630, 658, 'MO'],
+  [660, 679, 'KS'],
+  [680, 693, 'NE'],
+  [700, 714, 'LA'],
+  [716, 729, 'AR'],
+  [730, 749, 'OK'],
+  [750, 799, 'TX'],
+  [800, 816, 'CO'],
+  [820, 831, 'WY'],
+  [832, 838, 'ID'],
+  [840, 847, 'UT'],
+  [850, 865, 'AZ'],
+  [870, 884, 'NM'],
+  [889, 898, 'NV'],
+  [900, 961, 'CA'],
+  [967, 968, 'HI'],
+  [970, 979, 'OR'],
+  [980, 994, 'WA'],
+  [995, 999, 'AK'],
+];
+
+/**
+ * Resolve a US state code from a 3-digit ZIP prefix string. Accepts the
+ * raw eBay-style "044**" form, a 5-digit zip "04401", or the bare prefix
+ * "044". Returns null for unknown / military / non-US prefixes.
+ */
+function stateFromZip3(input) {
+  if (typeof input !== 'string' || !input) return null;
+  const m = input.match(/^(\d{3})/);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  for (const [lo, hi, state] of ZIP3_RANGES) {
+    if (n >= lo && n <= hi) return state;
+  }
+  return null;
+}
+
 module.exports = {
   US_STATES,
   STATE_NAME_TO_CODE,
   parseLocationTag,
   parseFbmLocation,
+  stateFromZip3,
 };
