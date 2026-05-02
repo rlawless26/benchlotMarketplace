@@ -235,11 +235,10 @@ function recordFromForm($, $form, category) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
-    // TODO(location): TBT (Lee Richmond) doesn't publish a state on the site.
-    // Confirm via direct contact and backfill once known. Listings land in
-    // the "Other" region until then.
-    location_state: null,
-    location_display: null,
+    // TBT operates out of Herndon, VA (per philosop.htm / order.htm — the
+    // homepage and About page never mention it).
+    location_state: 'VA',
+    location_display: 'Herndon, VA',
   };
 
   const raw = {

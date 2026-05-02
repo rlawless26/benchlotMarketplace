@@ -413,13 +413,13 @@ const FilterRail = ({
         })}
       </CollapsibleGroup>
 
-      {/* Ships from — US-only v1. Region is derived at read time from the
-         per-listing `location_state` (dealer-tagged for the 6 dealers, regex-
-         parsed from FBM's "City, ST" string, bracket-parsed from forum/Reddit
-         titles). eBay listings carry no state in v1 (their item_summary API
-         doesn't expose it) so they're excluded from these counts and dropped
-         from results when any region chip is active — flagged in the suffix. */}
-      <CollapsibleGroup label="Ships from" suffix="excl. eBay" defaultOpen>
+      {/* Ships from — US-only. Region is derived at read time from each
+         listing's `location_state`. Coverage: dealers tagged at ingest,
+         FBM parsed from "City, ST", eBay derived from itemLocation postal-
+         code prefix (USPS SCF mapping). The "Other" bucket holds listings
+         we don't yet have state for (mostly forum/Reddit posts and a few
+         dealers whose state hasn't been verified). */}
+      <CollapsibleGroup label="Ships from" defaultOpen>
         {REGIONS.map((region) => (
           <CheckboxRow
             key={region}

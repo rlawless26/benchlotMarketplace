@@ -43,19 +43,17 @@ Per-source coverage:
 
 | Source | location_state populated by | Coverage |
 |---|---|---|
-| jimbode | hardcoded constant in `toRecord` | 100% |
-| hyperkitten | hardcoded constant | 100% |
-| vintagevials | hardcoded constant | 100% |
-| thebestthings | TBD — operator state unverified | 0% (lands in Other) |
-| rouillard | TBD — operator state unverified | 0% |
-| oldtools | TBD — operator state unverified | 0% |
-| fbmarketplace | `parseFbmLocation(item.location)` | ~99% (geo-targeted scrape, US-only filter) |
-| sawmillcreek | `parseLocationTag(title \|\| body)` | ~40-60% |
-| woodnet | same | ~40-60% |
-| reddit | same | ~30-50% |
-| ebay | not populated — `item_summary` API doesn't expose it; full detail would 6500× quota | 0% |
-
-The aggregator UI excludes eBay listings from the region facet count (since they all carry null state and would dominate "Other") and filters them out when any region chip is selected. Documented in the FilterRail. eBay coverage is a v2 concern.
+| jimbode | hardcoded `'NY'` (Elizaville) in `toRecord` | 100% |
+| hyperkitten | hardcoded `'CT'` (Oxford) | 100% |
+| vintagevials | hardcoded `'MA'` (Boston) | 100% |
+| thebestthings | hardcoded `'VA'` (Herndon — buried in philosop.htm/order.htm, not the homepage) | 100% |
+| rouillard | hardcoded `'CT'` (confirmed by operator) | 100% |
+| oldtools | TBD — operator state unverified | 0% (lands in Other) |
+| fbmarketplace | `parseFbmLocation(item.location)` over Bright Data's "City, ST" | ~99% |
+| ebay | `stateFromZip3(itemLocation.postalCode)` — eBay's Browse API exposes a 3-digit zip prefix per item, which uniquely identifies a US state via the USPS SCF mapping. Earlier "API doesn't expose location" claim was wrong | ~99% |
+| sawmillcreek | `parseLocationTag(title \|\| body)` | 0% (verified against full corpus — bracket tagging isn't used in practice) |
+| woodnet | same | 0% (same — community doesn't bracket-tag) |
+| reddit | same | 0% (small corpus, no bracket tags so far) |
 
 ### Baseline heuristics (populated at ingestion — superseded in M2)
 | Field | Type | Notes |
