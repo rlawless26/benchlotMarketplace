@@ -36,6 +36,7 @@ const admin = require('firebase-admin');
 
 const { upsertListings, markExpired } = require('./externalListings');
 const { extractBrand, extractType } = require('./heuristics');
+const { parseLocationTag } = require('./location');
 
 const SOURCE = 'woodnet';
 const RAW_FORMAT = 'woodnet_thread';
@@ -296,6 +297,7 @@ function toFullRecord({ thread, opData }) {
   const description = capDescription(bodyText);
   const priceCents = extractPriceCents(title, bodyText);
   const postedAt = parsePostedAt(thread.postedAt || opData.postedAt);
+  const locationState = parseLocationTag(title) || parseLocationTag(bodyText);
 
   const listing = {
     source: SOURCE,
@@ -316,6 +318,8 @@ function toFullRecord({ thread, opData }) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: locationState,
+    location_display: locationState,
   };
 
   const raw = {

@@ -59,6 +59,7 @@ const admin = require('firebase-admin');
 
 const { upsertListings, markExpired } = require('./externalListings');
 const { extractBrand, extractType } = require('./heuristics');
+const { parseFbmLocation } = require('./location');
 
 const SOURCE = 'fbmarketplace';
 const RAW_FORMAT = 'fbmarketplace_listing';
@@ -273,6 +274,10 @@ function toRecord(item) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    // Bright Data returns location as a "City, ST" string. Parse the state
+    // for the region filter; keep the full string for the card.
+    location_state: parseFbmLocation(item.location),
+    location_display: typeof item.location === 'string' ? item.location.trim() || null : null,
   };
 
   // Scrub seller-identifying fields before persisting raw. profile_id and

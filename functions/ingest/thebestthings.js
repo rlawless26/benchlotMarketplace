@@ -235,6 +235,11 @@ function recordFromForm($, $form, category) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    // TODO(location): TBT (Lee Richmond) doesn't publish a state on the site.
+    // Confirm via direct contact and backfill once known. Listings land in
+    // the "Other" region until then.
+    location_state: null,
+    location_display: null,
   };
 
   const raw = {

@@ -145,6 +145,8 @@ function toRecord(product) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: 'MA',
+    location_display: 'Boston, MA',
   };
 
   return {
