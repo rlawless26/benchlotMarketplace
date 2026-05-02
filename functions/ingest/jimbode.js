@@ -149,6 +149,8 @@ function toRecord(product) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: 'NY',
+    location_display: 'Elizaville, NY',
   };
 
   // Preserve the full, untouched Shopify product object. A future v2

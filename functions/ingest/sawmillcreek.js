@@ -26,6 +26,7 @@ const admin = require('firebase-admin');
 
 const { upsertListings, markExpired } = require('./externalListings');
 const { extractBrand, extractType } = require('./heuristics');
+const { parseLocationTag } = require('./location');
 
 const SOURCE = 'sawmillcreek';
 const RAW_FORMAT = 'sawmillcreek_thread';
@@ -219,6 +220,10 @@ function toFullRecord({ thread, opData }) {
   const description = capDescription(bodyText);
   const priceCents = extractPriceCents(title, bodyText);
   const postedAt = parsePostedAt(thread.postedAt || opData.postedAt);
+  // Bracket-tag location parse: title first (most likely), then leading body
+  // window. Hit rate ~40-60% — most posts don't tag location, and that's fine
+  // (those land in "Other"). See `functions/ingest/location.js`.
+  const locationState = parseLocationTag(title) || parseLocationTag(bodyText);
 
   const listing = {
     source: SOURCE,
@@ -239,6 +244,8 @@ function toFullRecord({ thread, opData }) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: locationState,
+    location_display: locationState,
   };
 
   const raw = {

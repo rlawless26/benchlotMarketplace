@@ -166,6 +166,11 @@ function toRecord(product) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    // TODO(location): Rouillard's site doesn't publish his state. His bio
+    // mentions a CT cabinet shop in his early career; current location
+    // unverified. Confirm and backfill.
+    location_state: null,
+    location_display: null,
   };
 
   return {

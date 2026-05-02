@@ -31,6 +31,32 @@ Example: `jimbode__stanley-no-5-type-11-jack-plane`
 | `posted_at` | Timestamp &#124; null | When the source created the listing. Best-effort. |
 | `tags` | string[] | Source-native tags, lowercased, deduped. Useful for M2 normalization hints. |
 
+### Location (US-only v1)
+| Field | Type | Notes |
+|---|---|---|
+| `location_state` | string &#124; null | ISO US state code (e.g. `"NY"`, `"MA"`). Null when source provides no per-listing or per-source location data. Used at read time to derive the region filter. |
+| `location_display` | string &#124; null | Human-readable location for the card (e.g. `"Boston, MA"`, `"Lansing, NY"`). Falls back to `location_state` if null. |
+
+Region (Northeast / Midwest / South / West / Other) is **derived at read time** from `location_state` via the Census Bureau 4-region split. Not stored. The `STATE_TO_REGION` map lives in two places (client `externalListingAdapter.js`, server `functions/alerts/predicates.js`) — same dual-bundle pattern as the source registry.
+
+Per-source coverage:
+
+| Source | location_state populated by | Coverage |
+|---|---|---|
+| jimbode | hardcoded constant in `toRecord` | 100% |
+| hyperkitten | hardcoded constant | 100% |
+| vintagevials | hardcoded constant | 100% |
+| thebestthings | TBD — operator state unverified | 0% (lands in Other) |
+| rouillard | TBD — operator state unverified | 0% |
+| oldtools | TBD — operator state unverified | 0% |
+| fbmarketplace | `parseFbmLocation(item.location)` | ~99% (geo-targeted scrape, US-only filter) |
+| sawmillcreek | `parseLocationTag(title \|\| body)` | ~40-60% |
+| woodnet | same | ~40-60% |
+| reddit | same | ~30-50% |
+| ebay | not populated — `item_summary` API doesn't expose it; full detail would 6500× quota | 0% |
+
+The aggregator UI excludes eBay listings from the region facet count (since they all carry null state and would dominate "Other") and filters them out when any region chip is selected. Documented in the FilterRail. eBay coverage is a v2 concern.
+
 ### Baseline heuristics (populated at ingestion — superseded in M2)
 | Field | Type | Notes |
 |---|---|---|

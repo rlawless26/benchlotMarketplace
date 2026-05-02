@@ -42,6 +42,7 @@ const admin = require('firebase-admin');
 
 const { upsertListings, markExpired } = require('./externalListings');
 const { extractBrand, extractType } = require('./heuristics');
+const { parseLocationTag } = require('./location');
 
 const SOURCE = 'reddit';
 const RAW_FORMAT = 'reddit_post';
@@ -476,6 +477,10 @@ function toRecord(post, bucket, detail = null) {
   const tags = [`r_subreddit:${bucket.subreddit}`];
   const flair = (merged.link_flair_text || post.link_flair_text || '').trim();
   if (flair) tags.push(`r_flair:${flair.toLowerCase().replace(/\s+/g, '_')}`);
+  // Bracket-tag location parse: title first, then selftext window. Hit rate
+  // is lower on Reddit (~30-50%) since location-tagging isn't enforced —
+  // misses fall to "Other".
+  const locationState = parseLocationTag(title) || parseLocationTag(selftext);
 
   const listing = {
     source: SOURCE,
@@ -496,6 +501,8 @@ function toRecord(post, bucket, detail = null) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: locationState,
+    location_display: locationState,
   };
 
   const raw = scrubForRaw(merged);

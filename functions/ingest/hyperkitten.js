@@ -147,6 +147,8 @@ function toRecord($, el) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
+    location_state: 'CT',
+    location_display: 'Oxford, CT',
   };
 
   // Raw: preserve the original HTML of the .store-item block so a future
