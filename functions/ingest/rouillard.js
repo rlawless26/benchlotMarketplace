@@ -166,10 +166,10 @@ function toRecord(product) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
-    // Rouillard's site doesn't publish his state, but he's in CT (confirmed
-    // by the operator).
+    // Rouillard's website never lists his location; his Facebook page
+    // shows "Sterling Road, Plainfield, CT".
     location_state: 'CT',
-    location_display: 'CT',
+    location_display: 'Plainfield, CT',
   };
 
   return {

@@ -47,7 +47,7 @@ Per-source coverage:
 | hyperkitten | hardcoded `'CT'` (Oxford) | 100% |
 | vintagevials | hardcoded `'MA'` (Boston) | 100% |
 | thebestthings | hardcoded `'VA'` (Herndon — buried in philosop.htm/order.htm, not the homepage) | 100% |
-| rouillard | hardcoded `'CT'` (confirmed by operator) | 100% |
+| rouillard | hardcoded `'CT'` (Plainfield — from Facebook page; site never lists it) | 100% |
 | oldtools | TBD — operator state unverified | 0% (lands in Other) |
 | fbmarketplace | `parseFbmLocation(item.location)` over Bright Data's "City, ST" | ~99% |
 | ebay | `stateFromZip3(itemLocation.postalCode)` — eBay's Browse API exposes a 3-digit zip prefix per item, which uniquely identifies a US state via the USPS SCF mapping. Earlier "API doesn't expose location" claim was wrong | ~99% |
