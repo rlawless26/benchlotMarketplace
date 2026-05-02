@@ -95,7 +95,7 @@ export async function getSourceCounts(sourceIds) {
  * option → count. Options with zero hits are omitted.
  */
 export function computeFacets(listings) {
-  const counts = { category: {}, maker: {}, source: {}, condition: {} };
+  const counts = { category: {}, maker: {}, source: {}, condition: {}, region: {} };
   if (!Array.isArray(listings)) return counts;
 
   for (const l of listings) {
@@ -112,6 +112,13 @@ export function computeFacets(listings) {
     }
     if (l.source) counts.source[l.source] = (counts.source[l.source] || 0) + 1;
     if (l.condition) counts.condition[l.condition] = (counts.condition[l.condition] || 0) + 1;
+    // Region facet — exclude eBay because every eBay listing carries null
+    // state in v1 (the Browse item_summary API doesn't expose location and
+    // per-item detail would 6500x quota). Including them would dump 17k+
+    // listings into "Other" and drown out the real per-region counts.
+    if (l.source !== 'ebay' && l.location_region) {
+      counts.region[l.location_region] = (counts.region[l.location_region] || 0) + 1;
+    }
   }
 
   return counts;

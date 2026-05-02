@@ -5,6 +5,31 @@
  * out, so it's trivially testable.
  */
 
+// Census Bureau 4-region split (DC bucketed with South). Mirrored client-side
+// in `src/firebase/adapters/externalListingAdapter.js` — small + stable, no
+// shared util because the ESM/CJS divide makes that more trouble than it's
+// worth at our scale.
+const STATE_TO_REGION = {
+  CT: 'Northeast', ME: 'Northeast', MA: 'Northeast', NH: 'Northeast',
+  NJ: 'Northeast', NY: 'Northeast', PA: 'Northeast', RI: 'Northeast',
+  VT: 'Northeast',
+  IL: 'Midwest', IN: 'Midwest', IA: 'Midwest', KS: 'Midwest',
+  MI: 'Midwest', MN: 'Midwest', MO: 'Midwest', NE: 'Midwest',
+  ND: 'Midwest', OH: 'Midwest', SD: 'Midwest', WI: 'Midwest',
+  AL: 'South', AR: 'South', DE: 'South', DC: 'South', FL: 'South',
+  GA: 'South', KY: 'South', LA: 'South', MD: 'South', MS: 'South',
+  NC: 'South', OK: 'South', SC: 'South', TN: 'South', TX: 'South',
+  VA: 'South', WV: 'South',
+  AK: 'West', AZ: 'West', CA: 'West', CO: 'West', HI: 'West',
+  ID: 'West', MT: 'West', NV: 'West', NM: 'West', OR: 'West',
+  UT: 'West', WA: 'West', WY: 'West',
+};
+
+function regionForState(state) {
+  if (!state) return 'Other';
+  return STATE_TO_REGION[state] || 'Other';
+}
+
 function normQuery(q) {
   return (q || '').trim().toLowerCase();
 }
@@ -91,6 +116,13 @@ function matchesAlert(listing, alert) {
   if (!multiMatch(filters.src, listing.source)) return false;
   if (!ageMatches(listing, filters.age)) return false;
   if (!priceMatches(listing, filters.price)) return false;
+  // Region: derive from listing.location_state. eBay listings have no state
+  // and are dropped when any region filter is active — same convention as
+  // the client-side filter so alerts and search results stay consistent.
+  if (filters.region && Object.keys(filters.region).length > 0) {
+    if (listing.source === 'ebay') return false;
+    if (!multiMatch(filters.region, regionForState(listing.location_state))) return false;
+  }
 
   return true;
 }
