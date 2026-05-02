@@ -166,10 +166,11 @@ function toRecord(product) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
-    // Rouillard's website never lists his location; the city/state are
-    // public on his Facebook page.
+    // Rouillard's website never lists his location; the state is public
+    // on his Facebook page. Card shows state-only — dealers are named, so
+    // their hometown isn't worth surfacing.
     location_state: 'CT',
-    location_display: 'Plainfield, CT',
+    location_display: null,
   };
 
   return {

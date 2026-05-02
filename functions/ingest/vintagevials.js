@@ -146,7 +146,7 @@ function toRecord(product) {
     canonical_size: null,
     era_estimate: null,
     location_state: 'MA',
-    location_display: 'Boston, MA',
+    location_display: null, // state-only on cards — dealers are named, no city
   };
 
   return {

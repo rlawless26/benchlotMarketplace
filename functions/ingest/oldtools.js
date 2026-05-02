@@ -157,9 +157,10 @@ function buildRecord(url, html) {
     canonical_size: null,
     era_estimate: null,
     // OldTools.com (Falcon-Wood) doesn't publish a state on the site or
-    // contact pages; operator confirmed Massachusetts.
+    // contact pages; operator confirmed Massachusetts. Card shows
+    // state-only via the adapter fallback.
     location_state: 'MA',
-    location_display: 'MA',
+    location_display: null,
   };
 
   // Preserve a compact raw payload for re-normalization. Storing the full

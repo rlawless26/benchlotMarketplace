@@ -235,10 +235,11 @@ function recordFromForm($, $form, category) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
-    // TBT operates out of Herndon, VA (per philosop.htm / order.htm — the
-    // homepage and About page never mention it).
+    // TBT operates out of VA (per philosop.htm / order.htm — the homepage
+    // and About page never mention it). Card shows state-only — dealers
+    // are named, so their hometown isn't worth surfacing.
     location_state: 'VA',
-    location_display: 'Herndon, VA',
+    location_display: null,
   };
 
   const raw = {

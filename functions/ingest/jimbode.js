@@ -150,7 +150,7 @@ function toRecord(product) {
     canonical_size: null,
     era_estimate: null,
     location_state: 'NY',
-    location_display: 'Elizaville, NY',
+    location_display: null, // state-only on cards — dealers are named, no city
   };
 
   // Preserve the full, untouched Shopify product object. A future v2

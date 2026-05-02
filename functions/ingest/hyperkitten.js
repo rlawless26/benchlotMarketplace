@@ -148,7 +148,7 @@ function toRecord($, el) {
     canonical_size: null,
     era_estimate: null,
     location_state: 'CT',
-    location_display: 'Oxford, CT',
+    location_display: null, // state-only on cards — dealers are named, no city
   };
 
   // Raw: preserve the original HTML of the .store-item block so a future
