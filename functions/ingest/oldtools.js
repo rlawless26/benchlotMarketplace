@@ -156,10 +156,10 @@ function buildRecord(url, html) {
     canonical_model: null,
     canonical_size: null,
     era_estimate: null,
-    // TODO(location): OldTools.com (run by "Falcon-Wood") doesn't publish a
-    // state on its site. Confirm via direct contact and backfill.
-    location_state: null,
-    location_display: null,
+    // OldTools.com (Falcon-Wood) doesn't publish a state on the site or
+    // contact pages; operator confirmed Massachusetts.
+    location_state: 'MA',
+    location_display: 'MA',
   };
 
   // Preserve a compact raw payload for re-normalization. Storing the full
