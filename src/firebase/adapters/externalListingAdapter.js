@@ -26,31 +26,17 @@ import { SOURCES, sourceDisplayName } from './sources';
 const COLLECTION = 'externalListings';
 const DEFAULT_LIMIT = 60;
 
-// Census Bureau 4-region split (DC bucketed with South). Derived at read
-// time from `location_state` — never stored. Mirrored server-side in
-// `functions/alerts/predicates.js` for alert matching.
-const STATE_TO_REGION = {
-  CT: 'Northeast', ME: 'Northeast', MA: 'Northeast', NH: 'Northeast',
-  NJ: 'Northeast', NY: 'Northeast', PA: 'Northeast', RI: 'Northeast',
-  VT: 'Northeast',
-  IL: 'Midwest', IN: 'Midwest', IA: 'Midwest', KS: 'Midwest',
-  MI: 'Midwest', MN: 'Midwest', MO: 'Midwest', NE: 'Midwest',
-  ND: 'Midwest', OH: 'Midwest', SD: 'Midwest', WI: 'Midwest',
-  AL: 'South', AR: 'South', DE: 'South', DC: 'South', FL: 'South',
-  GA: 'South', KY: 'South', LA: 'South', MD: 'South', MS: 'South',
-  NC: 'South', OK: 'South', SC: 'South', TN: 'South', TX: 'South',
-  VA: 'South', WV: 'South',
-  AK: 'West', AZ: 'West', CA: 'West', CO: 'West', HI: 'West',
-  ID: 'West', MT: 'West', NV: 'West', NM: 'West', OR: 'West',
-  UT: 'West', WA: 'West', WY: 'West',
-};
-
-export const REGIONS = ['Northeast', 'Midwest', 'South', 'West', 'Other'];
-
-export function regionForState(state) {
-  if (!state) return 'Other';
-  return STATE_TO_REGION[state] || 'Other';
-}
+// Full US state list (50 states + DC), used to seed the Ships-from filter
+// so chips for low-volume states still appear (gated by CheckboxList's
+// top-N + Show more pattern).
+export const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL',
+  'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
+  'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH',
+  'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
+  'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI',
+  'WY',
+];
 
 /**
  * Reshape one raw Firestore doc into a tool-card-compatible object.
@@ -66,12 +52,11 @@ export function adaptExternalListing(docId, data) {
     typeof data.price_cents === 'number' ? data.price_cents / 100 : null;
   const imageUrl = Array.isArray(data.images) && data.images.length > 0 ? data.images[0] : null;
 
-  // Location: state is stored, region is derived. `listing.location` is
+  // Location: state is what filtering keys on. `listing.location` is
   // populated for the existing MapPin UI on the card — falls back through
   // display → state → null so a row with only a state code still renders.
   const locationState = data.location_state || null;
   const locationDisplay = data.location_display || null;
-  const locationRegion = regionForState(locationState);
   const cardLocation = locationDisplay || locationState || null;
 
   return {
@@ -92,9 +77,8 @@ export function adaptExternalListing(docId, data) {
     source_url: data.source_url,
     sourceName: sourceDisplayName(data.source),
 
-    // location fields — used by the region filter and card metadata
+    // location fields — used by the Ships-from filter and card metadata
     location_state: locationState,
-    location_region: locationRegion,
     location_display: locationDisplay,
 
     // raw canonical fields preserved for downstream consumers (search, alerts).

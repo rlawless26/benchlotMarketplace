@@ -20,7 +20,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { SOURCES } from '../../firebase/adapters/sources';
-import { REGIONS } from '../../firebase/adapters/externalListingAdapter';
+import { US_STATES } from '../../firebase/adapters/externalListingAdapter';
 
 const EYEBROW = {
   fontFamily: "'Outfit', sans-serif",
@@ -316,6 +316,27 @@ const FilterRail = ({
     return result;
   }, [facets, filters]);
 
+  // State options: same selected-pinned-then-count-desc pattern as Brand
+  // and Category. Unlike those, we DO pad with the full US_STATES list at
+  // the end so a low-volume state (ND, WY) is still selectable via the
+  // CheckboxList's "Show more" expand even if zero listings match today.
+  const stateOptions = useMemo(() => {
+    const facetMap = facets?.state || {};
+    const selected = filters?.state || {};
+    const result = [];
+    const seen = new Set();
+    for (const k of Object.keys(selected)) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    for (const [k] of Object.entries(facetMap).sort((a, b) => b[1] - a[1])) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    for (const k of US_STATES) {
+      if (!seen.has(k)) { result.push(k); seen.add(k); }
+    }
+    return result;
+  }, [facets, filters]);
+
   const priceMin = filters?.price?.min ?? '';
   const priceMax = filters?.price?.max ?? '';
 
@@ -323,7 +344,7 @@ const FilterRail = ({
   const hasAnyFilter = useMemo(() => {
     if (!filters) return false;
     if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
-    for (const group of ['cat', 'maker', 'cond', 'src', 'pics', 'region']) {
+    for (const group of ['cat', 'maker', 'cond', 'src', 'pics', 'state']) {
       if (filters[group] && Object.keys(filters[group]).length > 0) return true;
     }
     return false;
@@ -413,22 +434,18 @@ const FilterRail = ({
         })}
       </CollapsibleGroup>
 
-      {/* Ships from — US-only. Region is derived at read time from each
-         listing's `location_state`. Coverage: dealers tagged at ingest,
-         FBM parsed from "City, ST", eBay derived from itemLocation postal-
-         code prefix (USPS SCF mapping). The "Other" bucket holds listings
-         we don't yet have state for (mostly forum/Reddit posts and a few
-         dealers whose state hasn't been verified). */}
+      {/* Ships from — state-level US filter. Listings without a state
+         (small forum/Reddit residue, plus FBM listings whose location
+         couldn't be parsed) silently fall through and don't appear under
+         any chip — they DO show up in the default unfiltered view. */}
       <CollapsibleGroup label="Ships from" defaultOpen>
-        {REGIONS.map((region) => (
-          <CheckboxRow
-            key={region}
-            label={region}
-            count={facets?.region?.[region]}
-            checked={Boolean(filters?.region?.[region])}
-            onChange={() => toggleFilter('region', region)}
-          />
-        ))}
+        <CheckboxList
+          options={stateOptions}
+          selected={filters?.state}
+          facets={facets?.state}
+          onToggle={(k) => toggleFilter('state', k)}
+          searchPlaceholder="Filter states…"
+        />
       </CollapsibleGroup>
 
       {/* Category — driven from live facets, count desc, top 12 + Show more.

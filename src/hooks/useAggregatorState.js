@@ -10,7 +10,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'pics', 'region'];
+const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'pics', 'state'];
 
 // Some filter groups use opaque keys ("yes" for the pics toggle) where the
 // raw key isn't a great chip label. Map those here.
