@@ -39,6 +39,7 @@ const CHIP_GROUP_PREFIX = {
   cond: 'Condition',
   src: 'Source',
   price: 'Price',
+  region: 'Ships from',
 };
 
 /**
@@ -122,6 +123,14 @@ function filterLocally(raw, state) {
     }
     if (filters?.cond && !filters.cond[l.condition]) return false;
     if (filters?.src && l.source && !filters.src[l.source]) return false;
+    // Region filter — eBay is always dropped when a region is selected, since
+    // eBay v1 has no per-listing state data and would otherwise show up in
+    // every region by accident. Documented in SCHEMA.md and the FilterRail
+    // tooltip. eBay reappears the moment the user clears the region filter.
+    if (filters?.region && Object.keys(filters.region).length > 0) {
+      if (l.source === 'ebay') return false;
+      if (!filters.region[l.location_region]) return false;
+    }
     if (filters?.pics?.yes && !l.imageUrl) return false;
     const price = filters?.price;
     if (price) {

@@ -20,6 +20,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { SOURCES } from '../../firebase/adapters/sources';
+import { REGIONS } from '../../firebase/adapters/externalListingAdapter';
 
 const EYEBROW = {
   fontFamily: "'Outfit', sans-serif",
@@ -322,7 +323,7 @@ const FilterRail = ({
   const hasAnyFilter = useMemo(() => {
     if (!filters) return false;
     if (filters.price && (filters.price.min != null || filters.price.max != null)) return true;
-    for (const group of ['cat', 'maker', 'cond', 'src', 'pics']) {
+    for (const group of ['cat', 'maker', 'cond', 'src', 'pics', 'region']) {
       if (filters[group] && Object.keys(filters[group]).length > 0) return true;
     }
     return false;
@@ -410,6 +411,24 @@ const FilterRail = ({
             />
           );
         })}
+      </CollapsibleGroup>
+
+      {/* Ships from — US-only v1. Region is derived at read time from the
+         per-listing `location_state` (dealer-tagged for the 6 dealers, regex-
+         parsed from FBM's "City, ST" string, bracket-parsed from forum/Reddit
+         titles). eBay listings carry no state in v1 (their item_summary API
+         doesn't expose it) so they're excluded from these counts and dropped
+         from results when any region chip is active — flagged in the suffix. */}
+      <CollapsibleGroup label="Ships from" suffix="excl. eBay" defaultOpen>
+        {REGIONS.map((region) => (
+          <CheckboxRow
+            key={region}
+            label={region}
+            count={facets?.region?.[region]}
+            checked={Boolean(filters?.region?.[region])}
+            onChange={() => toggleFilter('region', region)}
+          />
+        ))}
       </CollapsibleGroup>
 
       {/* Category — driven from live facets, count desc, top 12 + Show more.
