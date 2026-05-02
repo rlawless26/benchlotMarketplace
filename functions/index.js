@@ -2679,6 +2679,36 @@ exports.onConversationMessageCreated = onDocumentCreated(
 );
 
 /**
+ * Scheduled ingestion — Michael Rouillard Antique Tools.
+ *
+ * Runs nightly at 03:55 UTC, between The Best Things (03:50) and Jim Bode
+ * (04:00). WooCommerce Store API source — small catalog (~130 active),
+ * paginates `/wp-json/wc/store/v1/products`, filters out anything not
+ * `is_in_stock`/`is_purchasable`, and lets `markExpired` handle products
+ * that disappear between runs.
+ */
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const rouillard = require('./ingest/rouillard');
+
+exports.scheduledIngestRouillard = onSchedule(
+  {
+    schedule: '55 3 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    try {
+      const summary = await rouillard.runIngestion();
+      console.log('[scheduledIngestRouillard] done', summary);
+    } catch (err) {
+      console.error('[scheduledIngestRouillard] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — Jim Bode Tools Value Guide.
  *
  * First-ever scheduled function in this repo. Runs nightly at 04:00 UTC
@@ -2688,7 +2718,6 @@ exports.onConversationMessageCreated = onDocumentCreated(
  *
  * Can also be invoked locally via `node functions/ingest/run-jimbode.js`.
  */
-const { onSchedule } = require('firebase-functions/v2/scheduler');
 const jimbode = require('./ingest/jimbode');
 
 exports.scheduledIngestJimbode = onSchedule(

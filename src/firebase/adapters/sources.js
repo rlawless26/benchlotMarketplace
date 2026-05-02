@@ -97,6 +97,15 @@ const SOURCES = [
     indexed: true,
   },
   {
+    id: 'rouillard',
+    name: 'Michael Rouillard Antique Tools',
+    shortName: 'Rouillard',
+    kind: 'Dealer',
+    descriptor: 'Dealer · Antique · Since 1994',
+    homeUrl: 'https://michaelrouillardtools.com',
+    indexed: true,
+  },
+  {
     id: 'fbmarketplace',
     name: 'Facebook Marketplace',
     shortName: 'FB Marketplace',
