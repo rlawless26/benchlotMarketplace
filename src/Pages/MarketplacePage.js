@@ -7,8 +7,9 @@
 // Intentionally no subcategory/condition/verified/location filters — those
 // were marketplace concepts. Price + search + canonical type + source are
 // what survive the pivot.
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import posthog from 'posthog-js';
 import {
   ChevronDown,
   X,
@@ -98,6 +99,8 @@ const MarketplacePage = () => {
   const [error, setError] = useState(null);
   const [rawListings, setRawListings] = useState([]);
 
+  const filtersMounted = useRef(false);
+
   useEffect(() => {
     document.title = 'Search | Benchlot';
   }, []);
@@ -166,6 +169,15 @@ const MarketplacePage = () => {
         setLoading(false);
       }
     };
+    if (filtersMounted.current) {
+      posthog.capture('search_performed', {
+        type: selectedType !== 'All types' ? selectedType : null,
+        source: selectedSource || null,
+        sort: sortBy,
+      });
+    } else {
+      filtersMounted.current = true;
+    }
     load();
     updateUrlParams();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,6 +188,15 @@ const MarketplacePage = () => {
     updateUrlParams();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceRange, searchQuery]);
+
+  // Track search query changes with debounce (500ms).
+  useEffect(() => {
+    if (!searchQuery) return;
+    const timer = setTimeout(() => {
+      posthog.capture('search_performed', { query: searchQuery });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Client-side text + price filter over the current fetched slice.
   const visibleListings = useMemo(() => {

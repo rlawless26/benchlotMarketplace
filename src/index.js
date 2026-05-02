@@ -20,7 +20,7 @@ if (process.env.REACT_APP_SENTRY_DSN) {
 // Initialize PostHog product analytics
 if (process.env.REACT_APP_POSTHOG_KEY) {
   posthog.init(process.env.REACT_APP_POSTHOG_KEY, {
-    api_host: 'https://us.i.posthog.com',
+    api_host: process.env.REACT_APP_POSTHOG_HOST || 'https://us.i.posthog.com',
     autocapture: true,
     capture_pageview: true,
     capture_pageleave: true,

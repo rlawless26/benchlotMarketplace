@@ -54,6 +54,20 @@ try {
 }
 
 const db = admin.firestore();
+// Initialize PostHog for server-side event tracking. Guarded against the
+// Firebase analysis phase, which loads this module BEFORE the .env file is
+// applied — without the guard, `new PostHog('')` throws and blocks every
+// deploy. At runtime the key is loaded from .env and the real client is
+// constructed; in analysis-time / dev contexts where the key is missing,
+// `posthog.capture()` becomes a no-op so call sites don't need to branch.
+const { PostHog } = require('posthog-node');
+const posthog = process.env.POSTHOG_API_KEY
+  ? new PostHog(process.env.POSTHOG_API_KEY, {
+      host: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      enableExceptionAutocapture: true,
+    })
+  : { capture: () => {}, flush: () => Promise.resolve(), shutdown: () => Promise.resolve() };
+
 
 // Import the new Resend-based email module (replaces emailService.js)
 const { sendEmail } = require('./email');
@@ -534,6 +548,12 @@ app.post('/confirm-payment', async (req, res) => {
     }
     
     if (paymentIntent.status !== 'succeeded') {
+      const uid = req.body.userId || 'anonymous';
+      posthog.capture({
+        distinctId: uid,
+        event: 'payment_failed',
+        properties: { paymentIntentId, status: paymentIntent.status },
+      });
       return res.status(400).json({
         error: `Payment has not succeeded. Current status: ${paymentIntent.status}`,
         code: 'payment_not_succeeded'
@@ -580,6 +600,12 @@ app.post('/confirm-payment', async (req, res) => {
         });
         
         console.log(`Guest order created: ${orderRef.id}`);
+
+        posthog.capture({
+          distinctId: guestEmail || 'guest',
+          event: 'order_completed',
+          properties: { orderId: orderRef.id, orderTotal: cartTotal || 0, isGuest: true },
+        });
 
         // Send Templates 5 (buyer) + 6 (one per seller) for the new order.
         try {
@@ -642,6 +668,12 @@ app.post('/confirm-payment', async (req, res) => {
       });
       
       console.log(`Order created: ${orderRef.id}`);
+
+      posthog.capture({
+        distinctId: cart.userId,
+        event: 'order_completed',
+        properties: { orderId: orderRef.id, orderTotal: cart.totalAmount, isGuest: false },
+      });
 
       // Send Templates 5 (buyer) + 6 (one per seller) for the new order.
       try {
@@ -1945,6 +1977,12 @@ app.post('/create-refund', async (req, res) => {
     const refund = await stripe.refunds.create(refundParams);
 
     console.log(`Refund created: ${refund.id}, order=${orderId}, amount=$${refund.amount / 100}`);
+
+    posthog.capture({
+      distinctId: req.body.userId || order.userId || 'admin',
+      event: 'refund_initiated',
+      properties: { orderId, refundId: refund.id, amount: refund.amount / 100, reason: reason || 'requested_by_customer' },
+    });
 
     // Reverse associated transfers to sellers
     const transfersSnapshot = await db.collection('transfers')

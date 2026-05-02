@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../config';
+import posthog from 'posthog-js';
 
 const COLLECTION = 'saved_searches';
 export const ALERT_CAP = 8;
@@ -87,6 +88,11 @@ export async function createSavedSearch(userId, state) {
     lastMatchedAt: null,
     notifications: { email: true },
   });
+  posthog.capture('alert_created', {
+    query: (state.query || '').trim() || null,
+    filters: state.filters || {},
+    sort: state.sort || 'newest',
+  });
   return { exists: false, id: docRef.id, hash };
 }
 
@@ -124,6 +130,7 @@ export function subscribeSavedSearches(userId, onChange, onError) {
 export async function deleteSavedSearch(id) {
   if (!id) return;
   await deleteDoc(doc(db, COLLECTION, id));
+  posthog.capture('alert_deleted', { alertId: id });
 }
 
 /**

@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
+import posthog from 'posthog-js';
 import { useWishlist } from '../firebase/hooks/useWishlist';
 import { useAuth } from '../firebase/hooks/useAuth';
 
@@ -50,6 +51,7 @@ const SaveToolButton = ({
       
       if (result.success) {
         setIsInWishlist(result.inWishlist);
+        posthog.capture(result.inWishlist ? 'tool_watched' : 'tool_unwatched', { toolId });
         onSaveSuccess(result.inWishlist);
       } else {
         onSaveError(result.error || 'Failed to update wishlist');

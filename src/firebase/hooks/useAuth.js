@@ -147,6 +147,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      posthog.capture('user_signed_in', { method: 'email' });
       setError(null); // Clear any previous errors
       return { user: userCredential.user, error: null };
     } catch (err) {
@@ -182,6 +183,7 @@ export function AuthProvider({ children }) {
       // Welcome email is sent by the users/{uid} onCreate Cloud Function trigger
       // (Template 3: Welcome Full Account). No direct email call here.
 
+      posthog.capture('user_signed_up', { method: 'email' });
       setError(null); // Clear any previous errors
       return { user: userCredential.user, error: null };
     } catch (err) {
@@ -250,8 +252,11 @@ export function AuthProvider({ children }) {
         await setDoc(userRef, userProfile);
         
         // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
+        posthog.capture('user_signed_up', { method: 'google' });
+      } else {
+        posthog.capture('user_signed_in', { method: 'google' });
       }
-      
+
       setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
@@ -295,8 +300,11 @@ export function AuthProvider({ children }) {
         await setDoc(userRef, userProfile);
         
         // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
+        posthog.capture('user_signed_up', { method: 'facebook' });
+      } else {
+        posthog.capture('user_signed_in', { method: 'facebook' });
       }
-      
+
       setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
@@ -344,8 +352,11 @@ export function AuthProvider({ children }) {
         await setDoc(userRef, userProfile);
         
         // Welcome email handled by users/{uid} onCreate Cloud Function trigger.
+        posthog.capture('user_signed_up', { method: 'apple' });
+      } else {
+        posthog.capture('user_signed_in', { method: 'apple' });
       }
-      
+
       setError(null); // Clear any previous errors
       return { user: result.user, error: null };
     } catch (err) {
@@ -438,6 +449,9 @@ export function AuthProvider({ children }) {
         };
         const userRef = doc(db, 'users', result.user.uid);
         await setDoc(userRef, userProfile);
+        posthog.capture('user_signed_up', { method: 'email_link' });
+      } else {
+        posthog.capture('user_signed_in', { method: 'email_link' });
       }
       return { success: true, user: result.user, isNewUser };
     } catch (err) {

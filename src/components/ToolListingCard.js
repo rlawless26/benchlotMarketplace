@@ -12,6 +12,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
+import posthog from 'posthog-js';
 import ToolImage from './ToolImage';
 import SaveToolButton from './SaveToolButton';
 
@@ -34,6 +35,16 @@ const ToolListingCard = ({ tool, featured = false }) => {
 
   const isExternal = tool.external === true;
 
+  const handleExternalClick = () => {
+    posthog.capture('listing_click', {
+      toolId: tool.id,
+      toolName: tool.name,
+      source: tool.source || tool.sourceName,
+      price: displayPrice,
+      category: tool.category,
+    });
+  };
+
   // Wrapper for the image + title area. Internal tools navigate within the
   // app; external tools open the source listing in a new tab.
   const MediaLink = ({ children, className }) =>
@@ -43,6 +54,7 @@ const ToolListingCard = ({ tool, featured = false }) => {
         target="_blank"
         rel="noopener noreferrer"
         className={className}
+        onClick={handleExternalClick}
       >
         {children}
       </a>
@@ -155,6 +167,7 @@ const ToolListingCard = ({ tool, featured = false }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-spruce hover:text-honey transition-colors text-xs font-medium"
+              onClick={handleExternalClick}
             >
               View listing
               <ExternalLink className="h-3 w-3" />
