@@ -115,6 +115,15 @@ const SOURCES = [
     indexed: true,
   },
   {
+    id: 'oldtools',
+    name: 'OldTools.com',
+    shortName: 'OldTools',
+    kind: 'Dealer',
+    descriptor: 'Dealer · Antique woodworking',
+    homeUrl: 'https://www.oldtools.com/shop',
+    indexed: true,
+  },
+  {
     id: 'fbmarketplace',
     name: 'Facebook Marketplace',
     shortName: 'FB Marketplace',

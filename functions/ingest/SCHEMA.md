@@ -80,7 +80,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 |---|---|---|
 | `source` | string | Same as main listing. |
 | `source_id` | string | Same as main listing. |
-| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`, `"reddit_post"`, `"woocommerce_product"`. |
+| `raw_format` | string | Discriminator. Current values: `"shopify_product"`, `"hyperkitten_item"`, `"sawmillcreek_thread"`, `"woodnet_thread"`, `"ebay_item_summary"`, `"thebestthings_item"`, `"reddit_post"`, `"woocommerce_product"`, `"oldtools_item"`. |
 | `raw` | object | The full untouched source payload. Shape depends on `raw_format`. |
 | `scraped_at` | Timestamp | When this raw payload was captured. |
 
@@ -103,6 +103,7 @@ The scraper preserves the untouched source payload so future normalizer versions
 | `reddit` | Reddit (r/handtools, r/AntiqueToolBroker) | `reddit_post` | post-launch |
 | `rouillard` | Michael Rouillard Antique Tools | `woocommerce_product` | post-launch |
 | `vintagevials` | Vintage Vials | `woocommerce_product` | post-launch |
+| `oldtools` | OldTools.com | `oldtools_item` | post-launch |
 
 Future sources register here and must respect the `(source, source_id)` ID convention.
 
@@ -187,3 +188,14 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - `source_url` = WC `permalink` (`https://shop.vintagevials.com/product/{slug}/`).
 - Catalog skews premium antique — strong specialty in measuring tools (rules, levels, inclinometers) plus planes / plow planes / marking gauges. ~170 active at first ingest. WC `x-wp-total` reports ~1,468 across the whole feed because Vintage Vials retains sold listings with `is_in_stock: false` rather than removing them; our `isAvailable` filter drops those at ingest, so the index only carries buyable inventory.
 - Cron slot: `5 4 * * *` UTC nightly, between Jim Bode (04:00) and the alert matcher (04:15).
+
+### OldTools.com notes
+- `source_id` = item URL slug (e.g. `Keen-Kutter-Corner-Chisel-1-inch-2422`). Firestore docId: `oldtools__{slug}`. The trailing numeric id is stable but baked into the slug, so the slug alone is unique.
+- `source_url` = `https://www.oldtools.com/item/{slug}`.
+- `posted_at` is `null` — oldtools doesn't expose a per-item posted-at. Sitemap `lastmod` exists but reflects the page's last edit, not when the item was listed; `first_seen_at` remains the recency signal.
+- Data source: a single sitemap (`/shop/sitemap/sitemap-items-1.xml`, ~200 URLs) walked once per run; each item page is fetched and parsed with cheerio, pulling Schema.org Product microdata (`itemprop="name"`, `itemprop="price"`, `itemprop="description"`, etc.).
+- Two `itemprop="price"` values per page: the first is a hard-coded `0.00` placeholder, the second is the canonical Offer price. We take the max non-zero value.
+- `itemprop="brand"` is the seller's storefront brand ("Falcon-Wood"), NOT the tool brand — ignored at ingest. The heuristic brand matcher works the title.
+- Hero image preference: `og:image` (full-size) over `itemprop="image"` (thumbnail with `_th` suffix), since the latter is significantly worse on the card.
+- `tags` left empty for now — the categories sitemap exists but mapping requires per-category page scraping (deferred).
+- Cron slot: `45 2 * * *` UTC. Deliberately off-band from the 03:00–04:05 cluster — small, slow-moving catalog tolerates the staleness window, and the wider margin absorbs the ~5-minute per-item fetch loop comfortably.
