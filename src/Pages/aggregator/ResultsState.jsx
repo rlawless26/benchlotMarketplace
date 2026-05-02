@@ -39,7 +39,7 @@ const CHIP_GROUP_PREFIX = {
   cond: 'Condition',
   src: 'Source',
   price: 'Price',
-  region: 'Ships from',
+  state: 'Ships from',
 };
 
 /**
@@ -123,11 +123,10 @@ function filterLocally(raw, state) {
     }
     if (filters?.cond && !filters.cond[l.condition]) return false;
     if (filters?.src && l.source && !filters.src[l.source]) return false;
-    // Region filter — straightforward match against location_region. eBay
-    // items carry real state data (derived from postal-code prefix), so no
-    // special-case handling needed.
-    if (filters?.region && Object.keys(filters.region).length > 0) {
-      if (!filters.region[l.location_region]) return false;
+    // Ships-from filter — match against the listing's location_state. A
+    // listing with no state never matches when this filter is active.
+    if (filters?.state && Object.keys(filters.state).length > 0) {
+      if (!l.location_state || !filters.state[l.location_state]) return false;
     }
     if (filters?.pics?.yes && !l.imageUrl) return false;
     const price = filters?.price;

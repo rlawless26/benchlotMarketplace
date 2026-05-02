@@ -95,7 +95,7 @@ export async function getSourceCounts(sourceIds) {
  * option → count. Options with zero hits are omitted.
  */
 export function computeFacets(listings) {
-  const counts = { category: {}, maker: {}, source: {}, condition: {}, region: {} };
+  const counts = { category: {}, maker: {}, source: {}, condition: {}, state: {} };
   if (!Array.isArray(listings)) return counts;
 
   for (const l of listings) {
@@ -112,11 +112,12 @@ export function computeFacets(listings) {
     }
     if (l.source) counts.source[l.source] = (counts.source[l.source] || 0) + 1;
     if (l.condition) counts.condition[l.condition] = (counts.condition[l.condition] || 0) + 1;
-    // Region facet. eBay items DO carry state (derived from itemLocation
-    // postal-code prefix at ingest), so they participate in the count
-    // alongside everything else.
-    if (l.location_region) {
-      counts.region[l.location_region] = (counts.region[l.location_region] || 0) + 1;
+    // State facet. Listings without a state are silently omitted — they'll
+    // still show up in default unfiltered results, but no chip claims them
+    // (a "no-state" chip would be a UX trap, since the label can't honestly
+    // describe what selecting it would do).
+    if (l.location_state) {
+      counts.state[l.location_state] = (counts.state[l.location_state] || 0) + 1;
     }
   }
 

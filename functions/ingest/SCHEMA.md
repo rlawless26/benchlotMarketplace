@@ -37,7 +37,7 @@ Example: `jimbode__stanley-no-5-type-11-jack-plane`
 | `location_state` | string &#124; null | ISO US state code (e.g. `"NY"`, `"MA"`). Null when source provides no per-listing or per-source location data. Used at read time to derive the region filter. |
 | `location_display` | string &#124; null | Human-readable location for the card (e.g. `"Boston, MA"`, `"Lansing, NY"`). Falls back to `location_state` if null. |
 
-Region (Northeast / Midwest / South / West / Other) is **derived at read time** from `location_state` via the Census Bureau 4-region split. Not stored. The `STATE_TO_REGION` map lives in two places (client `externalListingAdapter.js`, server `functions/alerts/predicates.js`) — same dual-bundle pattern as the source registry.
+The Ships-from filter keys directly off `location_state` — 50 chips (state codes), top-N + Show more pattern. We previously bucketed states into 4 regions (NE/MW/S/W); pulled because users don't drive cross-region for hand tools, so regions were too coarse to be actionable. The `location_region` derivation, `STATE_TO_REGION` map, and `regionForState` helper are gone.
 
 Per-source coverage:
 
