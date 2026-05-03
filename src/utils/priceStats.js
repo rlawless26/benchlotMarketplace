@@ -1,22 +1,25 @@
 /**
  * Client-side mirror of `functions/pricestats/cluster.js`.
  *
- * Cluster-key derivation, reference-block selection, and tier classification
- * for the price-guide system. Logic must stay byte-for-byte identical to
- * the server-side module so that a key computed in the browser routes to
- * the same priceStats doc the build job wrote.
+ * Cluster-key derivation and reference-block selection for the price
+ * guide. Logic must stay byte-for-byte identical to the server-side
+ * module so that a key computed in the browser routes to the same
+ * priceStats doc the build job wrote. If you change anything here,
+ * mirror it in `functions/pricestats/cluster.js`.
  *
- * If you change anything here, mirror it in
- *   functions/pricestats/cluster.js
- * and vice versa.
+ * Trust-first v1 (2026-05-03): NO auto-tier classification. Both Jim
+ * Bode-only sold-comp data and asking-block data are too biased on
+ * their own to support confident tier judgments. Use the popover to
+ * show users both distributions plus per-source-kind breakdowns; let
+ * them reason. Auto-tier returns in v2 once stratified data + a
+ * condition signal exist.
  */
 
 export const SOLD_MIN_FOR_REFERENCE = 8;
 export const ASKING_MIN_FOR_REFERENCE = 10;
-export const N_FOR_FIVE_TIER = 20;
 
 export const ASKING_WINDOW_DAYS = 365;
-export const SOLD_WINDOW_DAYS = 730;
+export const SOLD_WINDOW_DAYS = null; // unwindowed by design
 
 export function slug(s) {
   if (!s) return '_';
@@ -48,71 +51,66 @@ export function hasDisplayableStats(stats) {
   return sold || asking;
 }
 
+/**
+ * Single popover-headline reference distribution.
+ *
+ * v1 rule: prefer asking-block when it has comps (broader market mix —
+ * dealers, eBay, FB, forums all included), fall back to sold-block.
+ * Sold-block is dealer-skewed (Jim Bode-only today) so we don't lead
+ * with it, but it's still shown alongside in the popover so users see
+ * the gap themselves.
+ *
+ * Returns null when neither block meets its threshold.
+ */
 export function pickReference(stats) {
   if (!stats) return null;
-  if ((stats.sold_count || 0) >= SOLD_MIN_FOR_REFERENCE) {
-    return {
-      source: 'sold',
-      count: stats.sold_count,
-      p10: stats.sold_p10 ?? null,
-      p25: stats.sold_p25,
-      p50: stats.sold_p50,
-      p75: stats.sold_p75,
-      p90: stats.sold_p90 ?? null,
-      mean: stats.sold_mean,
-    };
-  }
   if ((stats.asking_count || 0) >= ASKING_MIN_FOR_REFERENCE) {
     return {
       source: 'asking',
       count: stats.asking_count,
-      p10: stats.asking_p10 ?? null,
       p25: stats.asking_p25,
       p50: stats.asking_p50,
       p75: stats.asking_p75,
-      p90: stats.asking_p90 ?? null,
       mean: stats.asking_mean,
+    };
+  }
+  if ((stats.sold_count || 0) >= SOLD_MIN_FOR_REFERENCE) {
+    return {
+      source: 'sold',
+      count: stats.sold_count,
+      p25: stats.sold_p25,
+      p50: stats.sold_p50,
+      p75: stats.sold_p75,
+      mean: stats.sold_mean,
     };
   }
   return null;
 }
 
 /**
- * Returns one of the canonical tier ids:
- *   '5-tier': 'sleeper' | 'good_deal' | 'fair' | 'high' | 'overpriced'
- *   '3-tier': 'below_market' | 'around_market' | 'above_market'
- *   null if no badge should render
+ * Per-source-kind sub-blocks from the priceStats doc, returned as an
+ * iterable of `{ kind, count, p25, p50, p75, mean }` for kinds where
+ * the build job wrote a non-null sub-block. Used by the popover and
+ * /guide pages to show "Dealer $X · Marketplace $Y · Forum $Z".
+ *
+ * `block` is 'sold' or 'asking'.
  */
-export function classifyDealTier(listingPrice, reference) {
-  if (!reference) return null;
-  if (typeof listingPrice !== 'number' || !Number.isFinite(listingPrice)) return null;
-
-  const useFiveTier =
-    reference.count >= N_FOR_FIVE_TIER &&
-    reference.p10 != null &&
-    reference.p90 != null;
-
-  if (useFiveTier) {
-    if (listingPrice < reference.p10) return 'sleeper';
-    if (listingPrice < reference.p25) return 'good_deal';
-    if (listingPrice <= reference.p75) return 'fair';
-    if (listingPrice <= reference.p90) return 'high';
-    return 'overpriced';
-  }
-
-  if (listingPrice < reference.p25) return 'below_market';
-  if (listingPrice <= reference.p75) return 'around_market';
-  return 'above_market';
+export function perKindBlocks(stats, block) {
+  if (!stats) return [];
+  const root = block === 'sold' ? stats.sold_by_kind : stats.asking_by_kind;
+  if (!root || typeof root !== 'object') return [];
+  return ['Dealer', 'Marketplace', 'Forum']
+    .map((kind) => {
+      const sub = root[kind];
+      if (!sub || !sub.count) return null;
+      return {
+        kind,
+        count: sub.count,
+        p25: sub.p25,
+        p50: sub.p50,
+        p75: sub.p75,
+        mean: sub.mean,
+      };
+    })
+    .filter(Boolean);
 }
-
-/** Human-readable label for each tier. */
-export const TIER_LABELS = {
-  sleeper: 'Sleeper',
-  good_deal: 'Good deal',
-  fair: 'Fair',
-  high: 'High',
-  overpriced: 'Overpriced',
-  below_market: 'Below market',
-  around_market: 'Around market',
-  above_market: 'Above market',
-};

@@ -79,7 +79,7 @@ M2's LLM normalizer reads these as seed hints but is expected to overwrite with 
 | `scraped_at` | Timestamp | Most recent scrape that touched this row. |
 | `first_seen_at` | Timestamp | Set once on first upsert, never updated. |
 | `last_seen_at` | Timestamp | Updated on every scrape that sees this `source_id`. Drives expiry for active/expired lifecycle. |
-| `sold_at` | Timestamp \| null | When the listing sold. Populated on `status: 'sold'` rows; null elsewhere. For `jimbode_valueguide`, sourced from the Shopify product's `updated_at` (closest signal for "moved to Value Guide"). |
+| `sold_at` | Timestamp \| null | When the listing actually sold. Populated only when the source publishes an authoritative per-item sale date; left null otherwise. Future eBay completed-listings ingestion will populate from eBay's `soldDate`; Jim Bode Value Guide deliberately leaves null because Shopify's `updated_at` reflects bulk admin touches, not sale dates. UI surfaces `sold_at` when known and omits the date when null. The price-guide build does NOT window the sold scan, so null-`sold_at` rows still aggregate. |
 
 ## Expiry rule
 
@@ -92,8 +92,8 @@ After each ingestion run completes, any `status === "active"` document with matc
 ## priceStats / build interaction
 
 The price-guide build job partitions `externalListings` by status:
-- **Sold block** — rows where `status === "sold"`, primarily ingested from `jimbode_valueguide`. 730d window.
-- **Asking block** — rows where `status IN ("active", "expired")`. 365d window.
+- **Sold block** — rows where `status === "sold"`, primarily ingested from `jimbode_valueguide`. **Unwindowed** — sold prices are reference anchors, not freshness signals, and some sold sources don't publish per-item sale dates. The build orders the sold scan by `first_seen_at` (always populated) for stable cursor pagination.
+- **Asking block** — rows where `status IN ("active", "expired")`. 365d window on `last_seen_at` (asking prices need freshness; sellers post wishful prices and stale relists hang around).
 
 The build does NOT filter by the source's `indexed` flag — that flag is purely a UI concern (does aggregator search render this source?). Sold-archive sources are typically `indexed: false` so they don't appear as live listings in search, but their pricing data still flows into the price guide.
 
@@ -244,7 +244,7 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - `source_id` = Shopify product `handle`. Firestore docId: `jimbode_valueguide__{handle}`.
 - `source_url` = `https://www.jimbodetools.com/products/{handle}`.
 - `posted_at` = Shopify `created_at` (when the product was first listed for sale).
-- `sold_at` = Shopify `updated_at`. Closest signal for "when the item moved to the Value Guide." Falls back to null (not `first_seen_at`) when `updated_at` is missing — the build job tolerates null `sold_at` rows.
+- `sold_at` is **deliberately null** for this source. Shopify's `updated_at` reflects bulk admin touches (Jim periodically re-indexes the entire catalog, setting every item's `updated_at` to the same recent date), not actual sale dates. We refuse to lie to downstream consumers about a date we don't actually know. UI displays the source name ("JB Value Guide") in the date column instead of a fake date. When future sources publish authoritative `soldDate` (e.g. eBay completed-listings) the field gets populated honestly and the UI surfaces it automatically.
 - Status: every row is upserted with `status: 'sold'`. Terminal state.
 - **`markExpired` is intentionally NOT called** for this source. If Jim later trims an item from the Guide, the historical sold price stays useful as a comp.
 - `indexed: false` in `src/firebase/adapters/sources.js` — the sold archive does NOT appear in aggregator search results. The price-guide build (`functions/pricestats/build.js`) reads sold rows by `status: 'sold'`, independent of the indexed flag.

@@ -549,7 +549,6 @@ const ResultsState = ({ state, actions }) => {
                     >
                       <option value="best">Best match</option>
                       <option value="newest">Newest</option>
-                      <option value="deal_rating">Best deal first</option>
                       <option value="price_low">Price: low to high</option>
                       <option value="price_high">Price: high to low</option>
                     </select>

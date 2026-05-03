@@ -139,13 +139,17 @@ const ToolScanCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canonicalType, canonicalBrand, scanId]);
 
-  // Resolve the price band: prefer the data-driven reference when the
-  // priceStats cluster has enough comps; otherwise fall back to the LLM's
-  // suggested_price_low/high (the original behavior).
+  // Trust-first v1 (2026-05-03): the LLM's `suggested_price_low/high`
+  // stays as the headline price band on the card. Benchlot's data
+  // appears as a separate "Recent listings" line below the band so the
+  // user sees both the AI suggestion and the data context, side by
+  // side, without us silently overriding one with the other. When v2
+  // stratified pricing earns the right to make confident judgments we
+  // can revisit.
   const ref = pickReference(priceStats.stats);
-  const dataBandApplied = Boolean(ref);
-  const displayPriceLow = dataBandApplied ? Math.round(ref.p25) : tool.suggested_price_low;
-  const displayPriceHigh = dataBandApplied ? Math.round(ref.p75) : tool.suggested_price_high;
+  const benchlotIndexBand = ref
+    ? { low: Math.round(ref.p25), high: Math.round(ref.p75), count: ref.count, source: ref.source }
+    : null;
 
   const guideHref = priceStats.stats
     ? (priceStats.grain === 'fine' && priceStats.stats.canonical_size
@@ -322,14 +326,37 @@ const ToolScanCard = ({
               )}
               <span className="flex items-center gap-1 text-honey font-semibold">
                 <DollarSign className="w-4 h-4" />
-                ${displayPriceLow} – ${displayPriceHigh}
+                ${tool.suggested_price_low} – ${tool.suggested_price_high}
               </span>
-              {dataBandApplied && (
-                <span className="inline-flex items-center text-xs font-body text-secondary px-2 py-0.5 rounded-full bg-bone border border-stone-200">
-                  Benchlot data · {ref.count} comp{ref.count === 1 ? '' : 's'} ({ref.source === 'sold' ? 'sold' : 'asking'})
-                </span>
-              )}
+              <span className="inline-flex items-center text-xs font-body text-secondary px-2 py-0.5 rounded-full bg-bone border border-stone-200">
+                AI estimate
+              </span>
             </div>
+
+            {/* Benchlot index context — sits below the LLM band so users
+                see both numbers side by side rather than us silently
+                overriding the AI suggestion with biased data. Only renders
+                when priceStats has enough comps for a meaningful range. */}
+            {benchlotIndexBand && (
+              <div className="mt-2 text-sm font-body text-secondary">
+                Benchlot index: <strong className="text-dark-teal">${benchlotIndexBand.low} – ${benchlotIndexBand.high}</strong> across {benchlotIndexBand.count} {benchlotIndexBand.source === 'sold' ? 'sold comps (Jim Bode Value Guide)' : 'recent listings'}
+                {guideHref && (
+                  <>
+                    {' · '}
+                    <a
+                      href={guideHref}
+                      onClick={() => track('toolscan_price_guide_link_clicked', {
+                        scanId: scanId || null,
+                        cluster_key: priceStats.cluster_key || null,
+                      })}
+                      className="text-honey hover:text-honey-dark underline"
+                    >
+                      view price guide →
+                    </a>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 mt-2">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${confidenceColors[tool.confidence] || 'bg-gray-100 text-gray-800'}`}>

@@ -31,6 +31,7 @@ import { adaptExternalListing } from '../../firebase/adapters/externalListingAda
 import {
   clusterKeyFromSlugs,
   hasDisplayableStats,
+  perKindBlocks,
   pickReference,
 } from '../../utils/priceStats';
 import { track } from '../../utils/analytics';
@@ -91,11 +92,16 @@ async function fetchActiveListings({ canonical_type, canonical_brand, canonical_
 }
 
 async function fetchRecentSold({ canonical_type, canonical_brand, canonical_size }) {
+  // Order by `first_seen_at desc` (always populated) rather than
+  // `sold_at desc` because not all sold sources expose per-item sale
+  // dates — Jim Bode Value Guide doesn't. orderBy on a nullable field
+  // silently drops null-valued rows. We display sold_at when known and
+  // omit the date column when it isn't.
   const constraints = [
     where('status', '==', 'sold'),
     where('canonical_type', '==', canonical_type),
     where('canonical_brand', '==', canonical_brand),
-    orderBy('sold_at', 'desc'),
+    orderBy('first_seen_at', 'desc'),
     limitQ(SOLD_LIMIT),
   ];
   const snap = await getDocs(query(collection(db, LISTINGS_COLLECTION), ...constraints));
@@ -103,7 +109,8 @@ async function fetchRecentSold({ canonical_type, canonical_brand, canonical_size
     id: d.id,
     title: d.data().title_raw,
     price: typeof d.data().price_cents === 'number' ? d.data().price_cents / 100 : null,
-    sold_at: d.data().sold_at,
+    sold_at: d.data().sold_at || null,
+    source: d.data().source,
     source_url: d.data().source_url,
     canonical_size: d.data().canonical_size || null,
   }));
@@ -333,7 +340,7 @@ const PriceGuidePage = () => {
             p25={stats.sold_p25}
             p50={stats.sold_p50}
             p75={stats.sold_p75}
-            footnote="Source: Jim Bode Value Guide"
+            footnote="Source: Jim Bode Value Guide · dealer-grade specimens"
           />
         )}
         {(stats.asking_count || 0) > 0 && (
@@ -347,6 +354,50 @@ const PriceGuidePage = () => {
           />
         )}
       </div>
+
+      {/* Per-source-kind asking breakdown — surfaces the dealer-vs-
+          marketplace-vs-forum gap that's otherwise hidden in the overall
+          asking-block median. The build job only writes per-kind blocks
+          when each kind has ≥10 comps in the cluster, so this section
+          is automatically hidden when coverage is too thin. */}
+      {(() => {
+        const askingByKind = perKindBlocks(stats, 'asking');
+        if (askingByKind.length === 0) return null;
+        return (
+          <div
+            style={{
+              marginTop: 16,
+              padding: '14px 16px',
+              background: '#fffefb',
+              border: '1px solid #e4e2dc',
+              borderRadius: 8,
+              fontFamily: "'Outfit', sans-serif",
+            }}
+          >
+            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4a5a54', marginBottom: 8 }}>
+              Asking prices by source kind
+            </div>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              {askingByKind.map((b) => (
+                <div key={b.kind} style={{ minWidth: 140 }}>
+                  <div style={{ fontSize: 11, color: '#4a5a54', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {b.kind}
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#1a3030', marginTop: 2 }}>
+                    {formatPrice(b.p50)}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#4a5a54', marginTop: 2 }}>
+                    range {formatPrice(b.p25)}–{formatPrice(b.p75)} · {b.count} comp{b.count === 1 ? '' : 's'}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: '#4a5a54', marginTop: 10 }}>
+              Dealer kind covers Jim Bode, Hyperkitten, The Best Things, Rouillard, etc. Marketplace covers eBay and Facebook Marketplace. Forum covers Sawmill Creek and Woodnet classifieds. Listings without enough coverage in a kind are omitted from this breakdown.
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Histogram */}
       {histogramSamples.length > 0 && (
@@ -426,6 +477,9 @@ const PriceGuidePage = () => {
                 })}
                 style={{
                   display: 'grid',
+                  // Three-column when we have a sold_at; two-column when
+                  // it's null (Jim Bode VG today). Mixed lists collapse
+                  // to two-column so date alignment stays consistent.
                   gridTemplateColumns: '1fr 100px 100px',
                   gap: 12,
                   padding: '10px 14px',
@@ -437,7 +491,9 @@ const PriceGuidePage = () => {
               >
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.title}</span>
                 <span style={{ color: '#d4aa60', fontWeight: 600, textAlign: 'right' }}>{formatPrice(row.price)}</span>
-                <span style={{ color: '#4a5a54', textAlign: 'right' }}>{formatDate(row.sold_at)}</span>
+                <span style={{ color: '#4a5a54', textAlign: 'right', fontSize: 11 }}>
+                  {row.sold_at ? formatDate(row.sold_at) : (row.source === 'jimbode_valueguide' ? 'JB Value Guide' : '—')}
+                </span>
               </a>
             ))}
           </div>
@@ -446,7 +502,7 @@ const PriceGuidePage = () => {
 
       {/* Disclaimer */}
       <p style={{ marginTop: 32, fontSize: 11, color: '#4a5a54', maxWidth: 720 }}>
-        Sold prices sourced from Jim Bode's published Value Guide. Asking prices from active and recent listings indexed by Benchlot. Reference distribution: <strong>{reference?.source || 'asking'}</strong>. Not an appraisal.
+        Sold prices sourced from Jim Bode's published Value Guide; per-item sale dates aren't published for that source. Asking prices from active and recent listings indexed by Benchlot (last 365 days). Reference distribution: <strong>{reference?.source || 'asking'}</strong>. Not an appraisal.
       </p>
     </div>
   );

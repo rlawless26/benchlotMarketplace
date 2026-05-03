@@ -2249,12 +2249,19 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
       console.warn(`[scan-results] could not generate password reset link for ${email}:`, linkErr.message);
     }
 
-    // Resolve the price band: prefer Benchlot's priceStats when the
-    // scan came in with canonical_* fields AND that cluster has enough
-    // comps. Fall back to the LLM's suggested_price_low/high otherwise.
-    let bandLow = scanResult.suggested_price_low;
-    let bandHigh = scanResult.suggested_price_high;
-    let bandSource = 'llm';
+    // Trust-first v1 (2026-05-03): the LLM's suggested band stays as
+    // the headline price in the email. Benchlot's priceStats data is
+    // surfaced as a separate "Benchlot index" line so recipients see
+    // both — the AI estimate and the data context — without us
+    // silently overriding one with biased data. Auto-override returns
+    // when v2 stratified pricing earns it back.
+    const valueLow = scanResult.suggested_price_low ? `$${scanResult.suggested_price_low}` : '';
+    const valueHigh = scanResult.suggested_price_high ? `$${scanResult.suggested_price_high}` : '';
+
+    let benchlotIndexLow = '';
+    let benchlotIndexHigh = '';
+    let benchlotIndexCount = 0;
+    let benchlotIndexSource = '';
     try {
       if (scanResult.canonical_type && scanResult.canonical_brand) {
         const { lookupStats, pickReference } = require('./pricestats/lookup');
@@ -2265,18 +2272,17 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         });
         const ref = pickReference(stats);
         if (ref && ref.p25 != null && ref.p75 != null) {
-          bandLow = Math.round(ref.p25);
-          bandHigh = Math.round(ref.p75);
-          bandSource = ref.source; // 'sold' or 'asking'
+          benchlotIndexLow = `$${Math.round(ref.p25)}`;
+          benchlotIndexHigh = `$${Math.round(ref.p75)}`;
+          benchlotIndexCount = ref.count;
+          benchlotIndexSource = ref.source; // 'sold' or 'asking'
         }
       }
     } catch (e) {
       // Decorative — never let a stats lookup break an email send.
-      console.warn('[send-scan-results] priceStats lookup failed, using LLM band:', e.message);
+      console.warn('[send-scan-results] priceStats lookup failed:', e.message);
     }
-    const valueLow = bandLow ? `$${bandLow}` : '';
-    const valueHigh = bandHigh ? `$${bandHigh}` : '';
-    console.log(`[send-scan-results] band source=${bandSource} low=${bandLow} high=${bandHigh}`);
+    console.log(`[send-scan-results] llm band ${valueLow}-${valueHigh}; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
 
     const result = await sendEmail({
       templateId: '01-scan-welcome',
@@ -2287,8 +2293,15 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         model: scanResult.model || '',
         era: scanResult.era || '',
         condition: scanResult.condition || '',
+        // Headline AI estimate.
         valueLow,
         valueHigh,
+        // Benchlot index context — empty strings when no priceStats
+        // coverage (template should conditionally render).
+        benchlotIndexLow,
+        benchlotIndexHigh,
+        benchlotIndexCount,
+        benchlotIndexSource,
         confidence: scanResult.confidence || '',
         scanPageUrl: `${process.env.BENCHLOT_BASE_URL || 'https://benchlot.com'}/scan`,
         setPasswordUrl,

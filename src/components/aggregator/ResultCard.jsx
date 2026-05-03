@@ -26,10 +26,9 @@ import { relativeTime } from './relativeTime';
 import { track } from '../../utils/analytics';
 import usePriceStats from '../../firebase/hooks/usePriceStats';
 import usePriceHistory from '../../firebase/hooks/usePriceHistory';
-import DealRatingBadge from './DealRatingBadge';
+import PriceContextChip from './PriceContextChip';
 import PriceDropBadge from './PriceDropBadge';
 import PreviousListingsPopover from './PreviousListingsPopover';
-import { classifyDealTier } from '../../utils/priceStats';
 
 const KIND_ICON = {
   Dealer: Store,
@@ -110,12 +109,8 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const maker = listing.brand && listing.brand !== 'Unknown' ? listing.brand : null;
   const title = listing.name || '(untitled listing)';
 
-  // Compute deal tier for telemetry on `result_clicked` so dashboards can
-  // segment CTR by tier without needing a join.
-  const dealTier =
-    typeof listing.price === 'number' && priceStats.reference
-      ? classifyDealTier(listing.price, priceStats.reference)
-      : null;
+  // Surface the listing's source kind for the chip and telemetry.
+  const listingKind = source?.kind || null;
 
   const handleAlertClick = (e) => {
     e.preventDefault();
@@ -142,13 +137,13 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
       query: ctx.query || null,
       active_sort: ctx.activeSort || null,
       active_filter_count: ctx.activeFilterCount ?? 0,
-      // Deal-rating telemetry — populated when the listing's cluster has
-      // enough comps for a tier judgment. Lets dashboards segment CTR by
-      // tier without a join.
-      deal_tier: dealTier,
-      deal_reference: priceStats.reference?.source || null,
+      // Price-context telemetry — populated when the cluster has comps.
+      // No tier judgment in v1 (trust-first); we just record cluster
+      // identity + reference source for click-through analysis.
       cluster_key: priceStats.cluster_key || null,
       cluster_grain: priceStats.grain || null,
+      reference_source: priceStats.reference?.source || null,
+      listing_kind: listingKind,
     });
   };
 
@@ -296,12 +291,12 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
             >
               {priceDisplay || '—'}
             </span>
-            {typeof listing.price === 'number' && priceStats.stats && (
-              <DealRatingBadge
-                listingPrice={listing.price}
+            {priceStats.stats && (
+              <PriceContextChip
                 stats={priceStats.stats}
                 grain={priceStats.grain}
                 clusterKey={priceStats.cluster_key}
+                listingKind={listingKind}
               />
             )}
             {priceHistory.latestDrop && (

@@ -5,8 +5,12 @@
  * summaries written to the `priceStats` Firestore collection. Each
  * priceStats doc holds two stat blocks:
  *
- *   - sold block   — rows with `status === 'sold'`,   730d window
- *   - asking block — rows with `status IN ['active','expired']`, 365d window
+ *   - sold block   — rows with `status === 'sold'` (no time window;
+ *                    sold prices are reference anchors, not freshness
+ *                    signals, and some sold sources can't expose
+ *                    per-item sale dates)
+ *   - asking block — rows with `status IN ['active','expired']`,
+ *                    365d window on `last_seen_at`
  *
  * Two clustering grains are written as separate docs:
  *
@@ -25,15 +29,53 @@ const admin = require('firebase-admin');
 const {
   clusterKey,
   ASKING_WINDOW_DAYS,
-  SOLD_WINDOW_DAYS,
-  N_FOR_FIVE_TIER,
 } = require('./cluster');
+
+// We still persist `p10` and `p90` percentiles when the sample is
+// large enough (n >= 20). v1 doesn't read them — the trust-first
+// design uses only p25/p50/p75 — but writing them keeps the
+// priceStats doc shape stable for v2 when tier classification
+// returns with kind+condition stratification.
+const N_FOR_TAIL_PERCENTILES = 20;
 
 const COLLECTION = 'externalListings';
 const STATS_COLLECTION = 'priceStats';
 
 const SCAN_BATCH = 500;
 const WRITE_BATCH = 400; // priceStats writes are 1 op each — well under 500
+
+// Source-kind mapping. Mirrors src/firebase/adapters/sources.js — kept
+// here as a small flat object (not a require/import) because the React-
+// side sources.js uses ES module exports incompatible with the
+// CommonJS Cloud Functions runtime. Update both files when adding a new
+// source. The build only cares about `kind`; full source metadata stays
+// in the React module.
+const SOURCE_KINDS = Object.freeze({
+  jimbode:            'Dealer',
+  jimbode_valueguide: 'Dealer',
+  hyperkitten:        'Dealer',
+  thebestthings:      'Dealer',
+  rouillard:          'Dealer',
+  vintagevials:       'Dealer',
+  oldtools:           'Dealer',
+  leach:              'Dealer',
+  sawmillcreek:       'Forum',
+  woodnet:            'Forum',
+  lumberjocks:        'Forum',
+  reddit:             'Reddit',
+  ebay:               'Marketplace',
+  fbmarketplace:      'Marketplace',
+});
+
+// The set of kinds the build job ever computes per-kind sub-blocks for.
+// Any kind not in this list is dropped from per-kind aggregation — the
+// row still contributes to the overall block. Reddit excluded for now;
+// volume is too low to make per-kind percentiles meaningful.
+const PER_KIND_TRACKED = ['Dealer', 'Marketplace', 'Forum'];
+
+function kindForSource(source) {
+  return SOURCE_KINDS[source] || null;
+}
 
 // Sample-selection guardrails (mirrors the plan's B.1 rules).
 const PRICE_CENTS_MIN = 1;
@@ -104,9 +146,10 @@ async function streamScan(query, onRow) {
 
 /**
  * Add a sample to a cluster bucket inside `acc`. Mutates acc.
- * `block` is 'sold' or 'asking'.
+ * `block` is 'sold' or 'asking'. `kind` is the source-kind
+ * (Dealer / Marketplace / Forum / Reddit / null).
  */
-function pushSample(acc, key, fields, priceCents, block) {
+function pushSample(acc, key, fields, priceCents, block, kind) {
   let bucket = acc.get(key);
   if (!bucket) {
     bucket = {
@@ -118,13 +161,24 @@ function pushSample(acc, key, fields, priceCents, block) {
       asking: [],
       asking_count_active: 0,
       asking_count_expired: 0,
+      // Per-kind sub-arrays. Initialized lazily.
+      sold_by_kind: {},
+      asking_by_kind: {},
     };
     acc.set(key, bucket);
   }
   if (block === 'sold') {
     bucket.sold.push(priceCents);
+    if (kind && PER_KIND_TRACKED.includes(kind)) {
+      if (!bucket.sold_by_kind[kind]) bucket.sold_by_kind[kind] = [];
+      bucket.sold_by_kind[kind].push(priceCents);
+    }
   } else {
     bucket.asking.push(priceCents);
+    if (kind && PER_KIND_TRACKED.includes(kind)) {
+      if (!bucket.asking_by_kind[kind]) bucket.asking_by_kind[kind] = [];
+      bucket.asking_by_kind[kind].push(priceCents);
+    }
   }
 }
 
@@ -140,7 +194,7 @@ function computeBlock(prices) {
   }
   const sorted = [...prices].sort((a, b) => a - b);
   const dollars = (cents) => Math.round(cents) / 100;
-  const enoughForTails = sorted.length >= N_FOR_FIVE_TIER;
+  const enoughForTails = sorted.length >= N_FOR_TAIL_PERCENTILES;
   return {
     count: sorted.length,
     p10: enoughForTails ? dollars(percentile(sorted, 10)) : null,
@@ -174,7 +228,12 @@ async function runBuild() {
 
   const now = Date.now();
   const askingCutoff = admin.firestore.Timestamp.fromMillis(now - ASKING_WINDOW_DAYS * ONE_DAY_MS);
-  const soldCutoff = admin.firestore.Timestamp.fromMillis(now - SOLD_WINDOW_DAYS * ONE_DAY_MS);
+  // Sold samples are reference anchors, not freshness signals — woodworking-
+  // tool prices don't move fast and a years-old sold comp on a Stanley No. 5
+  // still anchors today's market. We deliberately do NOT window the sold
+  // scan. This also sidesteps sources that can't expose per-item sale dates
+  // (Jim Bode Value Guide today). When future sources DO have authoritative
+  // dates we'll still write `sold_at` and surface them in the UI.
 
   // acc maps cluster_key (fine OR coarse) → bucket. Fine and coarse keys
   // never collide because the size segment differs ('no-5' vs '_').
@@ -194,13 +253,15 @@ async function runBuild() {
     if (block === 'sold') samples_qualified_sold += 1;
     else samples_qualified_asking += 1;
 
+    const kind = kindForSource(row.source);
+
     // Coarse grain
     const coarseFields = {
       canonical_type: row.canonical_type,
       canonical_brand: row.canonical_brand,
       canonical_size: null,
     };
-    pushSample(acc, clusterKey(coarseFields), coarseFields, row.price_cents, block);
+    pushSample(acc, clusterKey(coarseFields), coarseFields, row.price_cents, block, kind);
 
     // Fine grain — only when size is non-null
     if (row.canonical_size) {
@@ -209,7 +270,7 @@ async function runBuild() {
         canonical_brand: row.canonical_brand,
         canonical_size: row.canonical_size,
       };
-      pushSample(acc, clusterKey(fineFields), fineFields, row.price_cents, block);
+      pushSample(acc, clusterKey(fineFields), fineFields, row.price_cents, block, kind);
     }
 
     if (block === 'asking') {
@@ -231,9 +292,11 @@ async function runBuild() {
     }
   }
 
-  // Sold scan: status == 'sold' AND sold_at >= cutoff
+  // Sold scan: every row with status == 'sold' qualifies. Order by
+  // `first_seen_at asc` (always populated) so pagination cursors are
+  // stable regardless of whether the source populates `sold_at`.
   await streamScan(
-    col.where('status', '==', 'sold').where('sold_at', '>=', soldCutoff).orderBy('sold_at', 'asc'),
+    col.where('status', '==', 'sold').orderBy('first_seen_at', 'asc'),
     (row) => ingest(row, 'sold')
   );
 
@@ -269,6 +332,21 @@ async function runBuild() {
     if (sold.count > 0) clusters_with_sold += 1;
     if (asking.count > 0) clusters_with_asking += 1;
 
+    // Per-kind sub-blocks. We persist each kind's stats only when it has
+    // at least 10 comps — below that the percentile estimates are too
+    // noisy to render. Sparse fields are stored as `null` rather than
+    // omitted so consumers can read uniformly without existence checks.
+    const perKindBlock = (samples) => {
+      const block = computeBlock(samples);
+      return block.count >= 10 ? block : null;
+    };
+    const sold_by_kind = {};
+    const asking_by_kind = {};
+    for (const k of PER_KIND_TRACKED) {
+      sold_by_kind[k] = perKindBlock(bucket.sold_by_kind[k] || []);
+      asking_by_kind[k] = perKindBlock(bucket.asking_by_kind[k] || []);
+    }
+
     const doc = {
       cluster_key: bucket.cluster_key,
       canonical_type: bucket.canonical_type,
@@ -276,7 +354,7 @@ async function runBuild() {
       canonical_size: bucket.canonical_size,
       grain: bucket.canonical_size ? 'fine' : 'coarse',
 
-      // Sold block (Jim Bode Value Guide today; future ebay_sold etc.)
+      // Sold block — overall (Jim Bode Value Guide today; future ebay_sold etc.)
       sold_count: sold.count,
       sold_p10: sold.p10,
       sold_p25: sold.p25,
@@ -285,7 +363,7 @@ async function runBuild() {
       sold_p90: sold.p90,
       sold_mean: sold.mean,
 
-      // Asking block (active + expired)
+      // Asking block — overall (active + expired)
       asking_count: asking.count,
       asking_count_active: bucket.asking_count_active,
       asking_count_expired: bucket.asking_count_expired,
@@ -296,9 +374,17 @@ async function runBuild() {
       asking_p90: asking.p90,
       asking_mean: asking.mean,
 
+      // Per-source-kind sub-blocks. Each is the same shape as the
+      // overall block ({count, p10..p90, mean}) or null when the kind
+      // has fewer than 10 comps in this cluster. Surfaces the
+      // dealer-vs-marketplace pricing gap on the popover and /guide
+      // pages without making auto-tier judgments.
+      sold_by_kind,
+      asking_by_kind,
+
       // Metadata
       asking_window_days: ASKING_WINDOW_DAYS,
-      sold_window_days: SOLD_WINDOW_DAYS,
+      sold_window_days: null, // sold block is unwindowed by design
       last_built_at,
     };
 

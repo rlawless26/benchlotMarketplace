@@ -273,6 +273,14 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "last_seen_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "source", "order": "ASCENDING" },
         { "fieldPath": "first_seen_at", "order": "DESCENDING" }
       ]
@@ -303,6 +311,16 @@
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "canonical_type", "order": "ASCENDING" },
+        { "fieldPath": "canonical_brand", "order": "ASCENDING" },
+        { "fieldPath": "first_seen_at", "order": "DESCENDING" }
       ]
     },
     {

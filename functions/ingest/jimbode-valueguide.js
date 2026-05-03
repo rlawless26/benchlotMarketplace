@@ -14,9 +14,17 @@
  *   - We do NOT call `markExpired` on this source. Sold is terminal; if
  *     Jim ever trims an item from the Guide, the price-comp data stays
  *     valuable.
- *   - `sold_at` is populated from Shopify's `updated_at` (the closest
- *     proxy for "when it moved to the Value Guide"), falling back to
- *     `first_seen_at` at write time when the field is missing.
+ *   - `sold_at` is **deliberately left null**. Shopify's `updated_at`
+ *     reflects when Jim last bulk-touched the catalog in his admin
+ *     (and on inspection has been bulk-set to a single recent date for
+ *     the entire archive), not when each item actually sold. Using it
+ *     would lie to every downstream consumer. We want `sold_at` to mean
+ *     "real sold date, when known." Future sources (eBay completed
+ *     listings have an authoritative `soldDate`; a Jim Bode description
+ *     parser for "sold for $X in 2019" prose could backfill) will
+ *     populate it honestly. The build job does NOT window the sold
+ *     block — sold prices are reference anchors, not freshness signals,
+ *     so missing dates don't harm the aggregation.
  *
  * The `externalListings` schema's `status` field is extended to accept
  * 'sold' alongside 'active' and 'expired'. See SCHEMA.md.
@@ -99,11 +107,12 @@ function toRecord(product) {
   const variants = Array.isArray(product.variants) ? product.variants : [];
   const price_cents = variants.length ? parsePriceToCents(variants[0].price) : null;
 
-  // sold_at: Shopify's `updated_at` is the moment Jim moved the product to
-  // the Value Guide (or last touched it after that). Closest signal we have
-  // for "when sold." Falls back to null; the upsert path will leave it null
-  // and the build job tolerates that.
-  const sold_at = parseShopifyTimestamp(product.updated_at);
+  // `sold_at` is deliberately null for this source — see header comment.
+  // Shopify's `updated_at` is unreliable (Jim periodically bulk-touches the
+  // catalog, setting `updated_at` to today across the entire archive). We
+  // refuse to pretend it's a sale date. Future eBay/elsewhere sold sources
+  // will populate `sold_at` honestly when they have it.
+  const sold_at = null;
 
   const listing = {
     source: SOURCE,
