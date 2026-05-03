@@ -1,5 +1,5 @@
 /**
- * PriceContextChip — neutral info chip rendered next to a listing's
+ * PriceContextChip — honey-tinted info chip rendered next to a listing's
  * price when priceStats exist for its cluster. Click reveals a popover
  * showing the full asking + sold distributions plus per-source-kind
  * breakdowns.
@@ -10,13 +10,16 @@
  * data and lets the user reason. Auto-tier badges return in v2 once
  * stratified data + a condition signal exist.
  *
- * Replaced the original DealRatingBadge (5-tier Sleeper/Good
- * deal/Fair/High/Overpriced) — see plan file for the architectural
- * rationale.
+ * Layout note: the popover is rendered into document.body via
+ * createPortal because the parent card uses `overflow-hidden` to clip
+ * the rounded image edges, which would otherwise hide popover content
+ * extending beyond the card's footprint. Position is computed from the
+ * chip's bounding rect at open time.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Info } from 'lucide-react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Info, ArrowRight } from 'lucide-react';
 
 import { perKindBlocks } from '../../utils/priceStats';
 import { track } from '../../utils/analytics';
@@ -44,20 +47,18 @@ function guideHref(stats) {
 
 const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
   const [open, setOpen] = useState(false);
+  const [popPos, setPopPos] = useState({ top: 0, left: 0, width: 320 });
   const popoverRef = useRef(null);
   const buttonRef = useRef(null);
   const firedShownRef = useRef(false);
 
-  // Render only when we actually have data to show.
   const askingCount = stats?.asking_count || 0;
   const soldCount = stats?.sold_count || 0;
   const showable = askingCount >= 10 || soldCount >= 8;
 
-  // Per-kind asking blocks (Dealer / Marketplace / Forum), each null
-  // when below the per-kind threshold. The build job already gates this.
   const askingByKind = stats ? perKindBlocks(stats, 'asking') : [];
+  const soldByKind = stats ? perKindBlocks(stats, 'sold') : [];
 
-  // Fire `price_chip_shown` once per chip per session at first render.
   useEffect(() => {
     if (firedShownRef.current || !showable) return;
     firedShownRef.current = true;
@@ -75,6 +76,30 @@ const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Compute popover position from chip's bounding rect when it opens.
+  // Re-runs on resize / scroll so the popover follows the chip if the
+  // viewport moves.
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return undefined;
+    const recompute = () => {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const POP_WIDTH = 320;
+      const margin = 12;
+      let left = rect.left + window.scrollX;
+      // Keep it on-screen on the right edge.
+      const overhang = left + POP_WIDTH - (window.innerWidth - margin);
+      if (overhang > 0) left = Math.max(margin + window.scrollX, left - overhang);
+      setPopPos({ top: rect.bottom + window.scrollY + 6, left, width: POP_WIDTH });
+    };
+    recompute();
+    window.addEventListener('scroll', recompute, true);
+    window.addEventListener('resize', recompute);
+    return () => {
+      window.removeEventListener('scroll', recompute, true);
+      window.removeEventListener('resize', recompute);
+    };
+  }, [open]);
 
   // Dismiss popover on outside click.
   useEffect(() => {
@@ -121,6 +146,113 @@ const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
 
   const totalComps = askingCount + soldCount;
 
+  const popoverContent = open ? (
+    <div
+      ref={popoverRef}
+      role="dialog"
+      aria-label="Price context details"
+      style={{
+        position: 'absolute',
+        top: popPos.top,
+        left: popPos.left,
+        zIndex: 1000,
+        width: popPos.width,
+        padding: '14px 16px 12px',
+        background: '#fffefb',
+        border: '1px solid #e4e2dc',
+        borderRadius: 8,
+        boxShadow: '0 8px 24px rgba(12,28,30,0.20)',
+        fontFamily: "'Outfit', sans-serif",
+        fontSize: 12,
+        color: '#1a3030',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {askingCount >= 10 && (
+        <div style={{ marginBottom: soldCount >= 8 ? 14 : 0 }}>
+          <div
+            style={{
+              fontWeight: 600,
+              color: '#4a5a54',
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}
+          >
+            Currently asking on Benchlot
+          </div>
+          <div>
+            Median <strong>{fmtPrice(stats.asking_p50)}</strong>
+            {' · '}range {fmtPrice(stats.asking_p25)}–{fmtPrice(stats.asking_p75)}
+            <span style={{ color: '#4a5a54' }}> · {askingCount} listings</span>
+          </div>
+          {askingByKind.length > 0 && (
+            <div style={{ color: '#4a5a54', fontSize: 11, marginTop: 4 }}>
+              {askingByKind
+                .map((b) => `${b.kind} ${fmtPrice(b.p50)} (${b.count})`)
+                .join(' · ')}
+            </div>
+          )}
+        </div>
+      )}
+      {soldCount >= 8 && (
+        <div>
+          <div
+            style={{
+              fontWeight: 600,
+              color: '#4a5a54',
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}
+          >
+            Recent sold prices
+          </div>
+          <div>
+            Median <strong>{fmtPrice(stats.sold_p50)}</strong>
+            {' · '}range {fmtPrice(stats.sold_p25)}–{fmtPrice(stats.sold_p75)}
+            <span style={{ color: '#4a5a54' }}> · {soldCount} comps</span>
+          </div>
+          {soldByKind.length > 0 && (
+            <div style={{ color: '#4a5a54', fontSize: 11, marginTop: 4 }}>
+              {soldByKind
+                .map((b) => `${b.kind} ${fmtPrice(b.p50)} (${b.count})`)
+                .join(' · ')}
+            </div>
+          )}
+          <div style={{ color: '#8a8a80', fontSize: 11, marginTop: 4 }}>
+            Includes Jim Bode Value Guide + listings that disappeared from dealer / forum / FB sources.
+          </div>
+        </div>
+      )}
+      {href && (
+        <a
+          href={href}
+          onClick={handleGuideClick}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            marginTop: 14,
+            padding: '8px 14px',
+            background: '#d4aa60', // honey
+            color: '#0c1c1e',     // dark teal
+            fontWeight: 600,
+            fontSize: 12,
+            borderRadius: 6,
+            textDecoration: 'none',
+            border: '1px solid #b08a40',
+          }}
+        >
+          View full price guide
+          <ArrowRight size={12} />
+        </a>
+      )}
+    </div>
+  ) : null;
+
   return (
     <span style={{ position: 'relative', display: 'inline-block' }}>
       <button
@@ -132,113 +264,25 @@ const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
         aria-label="Show price context for this cluster"
         className="inline-flex items-center cursor-pointer"
         style={{
-          gap: 4,
-          padding: '2px 8px',
+          gap: 5,
+          padding: '3px 9px',
           borderRadius: 4,
-          background: '#f2f0eb', // bone — neutral
-          color: '#4a5a54',     // fg-secondary
-          border: '1px solid #e4e2dc',
+          background: '#f6e9cd',          // honey-tinted bone
+          color: '#5a4720',                // dark honey
+          border: '1px solid #d4aa60',     // honey
           fontFamily: "'Outfit', sans-serif",
-          fontSize: 11,
-          fontWeight: 500,
+          fontSize: 11.5,
+          fontWeight: 600,
           letterSpacing: '0.02em',
           lineHeight: 1.4,
+          whiteSpace: 'nowrap',
         }}
       >
-        <Info size={11} />
-        {totalComps} comp{totalComps === 1 ? '' : 's'}
+        <Info size={12} />
+        {totalComps} comps
       </button>
 
-      {open && (
-        <div
-          ref={popoverRef}
-          role="dialog"
-          aria-label="Price context details"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            left: 0,
-            zIndex: 20,
-            width: 320,
-            padding: '12px 14px',
-            background: '#fffefb',
-            border: '1px solid #e4e2dc',
-            borderRadius: 8,
-            boxShadow: '0 6px 20px rgba(12,28,30,0.18)',
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: 12,
-            color: '#1a3030',
-          }}
-        >
-          {askingCount >= 10 && (
-            <div style={{ marginBottom: soldCount >= 8 ? 12 : 0 }}>
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: '#4a5a54',
-                  fontSize: 10,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Currently asking on Benchlot
-              </div>
-              <div style={{ marginTop: 2 }}>
-                Median <strong>{fmtPrice(stats.asking_p50)}</strong>
-                {' · '}range {fmtPrice(stats.asking_p25)}–{fmtPrice(stats.asking_p75)}
-              </div>
-              <div style={{ color: '#4a5a54', fontSize: 11 }}>
-                {askingCount} listing{askingCount === 1 ? '' : 's'} across all sources
-              </div>
-              {askingByKind.length > 0 && (
-                <div style={{ color: '#4a5a54', fontSize: 11, marginTop: 4 }}>
-                  {askingByKind
-                    .map((b) => `${b.kind} ${fmtPrice(b.p50)} (${b.count})`)
-                    .join(' · ')}
-                </div>
-              )}
-            </div>
-          )}
-          {soldCount >= 8 && (
-            <div>
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: '#4a5a54',
-                  fontSize: 10,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Recent sold prices
-              </div>
-              <div style={{ marginTop: 2 }}>
-                Median <strong>{fmtPrice(stats.sold_p50)}</strong>
-                {' · '}range {fmtPrice(stats.sold_p25)}–{fmtPrice(stats.sold_p75)}
-              </div>
-              <div style={{ color: '#4a5a54', fontSize: 11 }}>
-                {soldCount} comp{soldCount === 1 ? '' : 's'} from Jim Bode Value Guide
-                <span style={{ color: '#8a8a80' }}> · dealer-grade specimens</span>
-              </div>
-            </div>
-          )}
-          {href && (
-            <a
-              href={href}
-              onClick={handleGuideClick}
-              style={{
-                display: 'inline-block',
-                marginTop: 12,
-                color: '#d4aa60',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              View full price guide →
-            </a>
-          )}
-        </div>
-      )}
+      {popoverContent && createPortal(popoverContent, document.body)}
     </span>
   );
 };

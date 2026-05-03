@@ -174,11 +174,29 @@ async function upsertListings(records, runStartedAt) {
 
 /**
  * Flip any `active` listings for `source` whose `last_seen_at` predates
- * `runStartedAt` to `status = "expired"`. Batched, paginated.
+ * `runStartedAt` to `status = "sold"`. Sets `sold_at = runStartedAt` (the
+ * moment we noticed the listing disappeared — closest signal we have to
+ * "when it sold"). Batched, paginated.
+ *
+ * Why "sold" instead of "expired" (changed 2026-05-03):
+ * In dealer/forum/Reddit/FB classifieds, a listing disappearing almost
+ * always means the seller transacted. Treating it as "expired" and
+ * lumping it with active asking-prices in the priceStats build was a
+ * silent mismatch — those rows ARE the sold comps we want to grow our
+ * sold-block beyond just Jim Bode's Value Guide. eBay is the deliberate
+ * exception: it doesn't run markExpired (rotation off the newlyListed
+ * frontier ≠ sale; that gap is filled by a future eBay completed-
+ * listings adapter).
+ *
+ * Caller contract: only invoke for sources where disappearance reliably
+ * implies a sale. All current sources except eBay meet that bar; the
+ * eBay scraper deliberately omits this call.
  *
  * @param {string} source
  * @param {FirebaseFirestore.Timestamp} runStartedAt
- * @returns {Promise<{expired:number}>}
+ * @returns {Promise<{expired:number}>} (key kept as `expired` for
+ *   backwards compat with existing scheduled-function logging; the
+ *   value reflects the count of rows transitioned out of `active`)
  */
 async function markExpired(source, runStartedAt) {
   const db = admin.firestore();
@@ -202,7 +220,10 @@ async function markExpired(source, runStartedAt) {
 
     const batch = db.batch();
     snap.docs.forEach((doc) => {
-      batch.update(doc.ref, { status: 'expired' });
+      batch.update(doc.ref, {
+        status: 'sold',
+        sold_at: runStartedAt,
+      });
     });
     await batch.commit();
     expired += snap.size;

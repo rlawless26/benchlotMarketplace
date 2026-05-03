@@ -83,7 +83,11 @@ M2's LLM normalizer reads these as seed hints but is expected to overwrite with 
 
 ## Expiry rule
 
-After each ingestion run completes, any `status === "active"` document with matching `source` and `last_seen_at < this_run_start_time` is flipped to `status = "expired"`. Expired documents are not deleted — they preserve price history for M2+ analysis.
+After each ingestion run completes, any `status === "active"` document with matching `source` and `last_seen_at < this_run_start_time` is flipped to `status = "sold"` with `sold_at = run_start_time`. **Why "sold" instead of "expired" (changed 2026-05-03):** for dealer / forum / Reddit / FB Marketplace sources, a listing disappearing almost always means the seller transacted. Treating it as a sold comp is the honest semantic — it grows the priceStats sold-block beyond just Jim Bode's Value Guide and gives us actual transaction prices across the full source mix.
+
+eBay is the deliberate exception. The eBay scraper does NOT call `markExpired` because items rotating off the newlyListed window ≠ sale (per the eBay-source notes below). That gap is filled by a future eBay completed-listings adapter, deferred.
+
+Pre-2026-05-03 rows that were flipped to `status === "expired"` under the old semantics have been backfilled to `status === "sold"` (with `sold_at = last_seen_at`) for non-eBay sources — see `functions/pricestats/backfill-expired-as-sold.js`. The `"expired"` status is retained in the schema for any future use case where disappearance ≠ sale, but no current source writes it.
 
 ## Sold rule
 
