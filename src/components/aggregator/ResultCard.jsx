@@ -23,6 +23,7 @@ import {
 
 import { getSource, KIND_COLORS } from '../../firebase/adapters/sources';
 import { relativeTime } from './relativeTime';
+import { track } from '../../utils/analytics';
 
 const KIND_ICON = {
   Dealer: Store,
@@ -74,7 +75,7 @@ function formatPrice(price, currency = '$') {
 
 const PLACEHOLDER_BG = '#e8e6e0'; // var(--bone-dark) — shown when image is missing
 
-const ResultCard = ({ listing, onSaveAlert }) => {
+const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const [hover, setHover] = useState(false);
 
   if (!listing) return null;
@@ -95,6 +96,31 @@ const ResultCard = ({ listing, onSaveAlert }) => {
     if (typeof onSaveAlert === 'function') onSaveAlert(listing);
   };
 
+  const handleCardClick = () => {
+    // Don't preventDefault — the outer anchor still navigates in a new tab.
+    // Fire-and-forget; track() swallows errors so this can never block the
+    // navigation.
+    const ctx = searchContext || {};
+    track('result_clicked', {
+      listing_id: listing.id,
+      source: listing.source,
+      source_kind: source?.kind || null,
+      has_image: Boolean(imageUrl),
+      has_price: typeof listing.price === 'number',
+      price_usd: typeof listing.price === 'number' ? listing.price : null,
+      brand: listing.brand || null,
+      type: listing.canonical_type || listing.type || null,
+      position: ctx.position ?? null,
+      total_results: ctx.totalResults ?? null,
+      query: ctx.query || null,
+      active_sort: ctx.activeSort || null,
+      active_filter_count: ctx.activeFilterCount ?? 0,
+      // Placeholder for future price-vs-comp badging — present from day one
+      // so badge CTR can be sliced without a schema change.
+      deal_score: listing.deal_score ?? null,
+    });
+  };
+
   return (
     <a
       href={listing.source_url || '#'}
@@ -102,6 +128,7 @@ const ResultCard = ({ listing, onSaveAlert }) => {
       rel="noopener noreferrer"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={handleCardClick}
       className="block overflow-hidden rounded-card no-underline text-inherit"
       style={{
         background: '#f8f6f2',

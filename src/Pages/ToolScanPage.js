@@ -7,6 +7,7 @@ import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
+import { track } from '../utils/analytics';
 // Tool model imports preserved for future marketplace features
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
@@ -129,6 +130,12 @@ const ToolScanPage = () => {
     setScanning(true);
     setScanError(null);
     setScanResults(null);
+    const scanStartedAt = Date.now();
+    track('toolscan_started', {
+      image_count: selectedFiles.length,
+      has_context: Boolean(context.trim()),
+      is_authed: Boolean(user),
+    });
 
     try {
       const images = await Promise.all(
@@ -171,9 +178,27 @@ const ToolScanPage = () => {
 
       setScanResults(data.results);
       setScanId(data.scanId);
+      const tools = (data.results && data.results.tools) || [];
+      const primary = tools[0] || {};
+      track('toolscan_completed', {
+        status: tools.length === 0 ? 'no_tools' : 'success',
+        tool_count: tools.length,
+        primary_brand: primary.maker || null,
+        primary_type: primary.suggested_subcategory || primary.suggested_category || null,
+        primary_confidence: primary.confidence || null,
+        duration_ms: Date.now() - scanStartedAt,
+        is_authed: Boolean(user),
+      });
     } catch (error) {
       console.error('ToolScan error:', error);
       setScanError(error.message || 'Something went wrong. Please try again.');
+      track('toolscan_completed', {
+        status: 'error',
+        tool_count: 0,
+        error_message: error.message || 'unknown',
+        duration_ms: Date.now() - scanStartedAt,
+        is_authed: Boolean(user),
+      });
     } finally {
       setScanning(false);
     }
