@@ -262,6 +262,23 @@ service cloud.firestore {
       allow write: if isServiceAccount() || isAdmin();
     }
 
+    // Aggregator: per-cluster price-distribution summaries.
+    // Written exclusively by the nightly priceStats build (service account).
+    // Publicly readable — drives the PriceContextChip popover and the
+    // /guide/... pages, both rendered to anonymous visitors.
+    match /priceStats/{clusterKey} {
+      allow read;
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
+    // Aggregator: per-listing price-history snapshots, written by
+    // upsertListings on every price/status change. Readable by anyone —
+    // drives the Price-Drop badge and the previous-listings popover.
+    match /priceSnapshots/{listingId}/snapshots/{snapshotId} {
+      allow read;
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
     // Aggregator: saved searches (alerts).
     // Owned by the user. Each doc describes a {query, filters, sort} that
     // the matcher function polls against new externalListings arrivals and
