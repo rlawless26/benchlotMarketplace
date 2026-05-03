@@ -10,10 +10,12 @@
  *   - `stats` is the raw priceStats doc (sold and asking blocks, etc.)
  *     for the chosen grain, or null when neither grain meets display
  *     thresholds.
- *   - `reference` is the chosen distribution (pickReference) — sold-block
- *     when sold_count >= 8, otherwise asking-block when asking >= 10,
- *     otherwise null. Consumers should usually use this rather than
- *     reading the per-block fields directly.
+ *   - `reference` is the chosen distribution (pickReference) — asking-
+ *     block when asking_count >= 10, otherwise sold-block when
+ *     sold_count >= 8, otherwise null. Asking is preferred for the
+ *     popover headline because it covers the broader market mix; sold
+ *     remains visible in the popover alongside but isn't the primary
+ *     anchor. See src/utils/priceStats.js for the rationale.
  *   - `grain` indicates which doc was returned, useful for telemetry.
  *
  * Cache: per-page-load Map keyed on cluster_key. priceStats only update
