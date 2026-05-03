@@ -17,7 +17,7 @@ const MULTI_GROUPS = ['cat', 'maker', 'cond', 'src', 'pics', 'state'];
 const CHIP_LABEL_OVERRIDES = {
   pics: { yes: 'With photos' },
 };
-const VALID_SORTS = ['best', 'newest', 'price_low', 'price_high', 'relevance'];
+const VALID_SORTS = ['best', 'newest', 'price_low', 'price_high', 'relevance', 'deal_rating'];
 const DEFAULT_SORT = 'best';
 
 function parseFromParams(params) {

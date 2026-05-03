@@ -19,6 +19,7 @@ import LandingPageNew from './Pages/LandingPageNew';
 import WaitlistLandingPage from './Pages/WaitlistLandingPage';
 import AggregatorHomePage from './Pages/aggregator/AggregatorHomePage';
 import AlertsPage from './Pages/aggregator/AlertsPage';
+import PriceGuidePage from './Pages/aggregator/PriceGuidePage';
 import FoundingSellersPage from './Pages/FoundingSellersPage';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
@@ -179,6 +180,12 @@ function AppLayout() {
           {/* Aggregator: saved-search management (/alerts). Gated to signed-in
               users at the page level — anonymous visitors see a sign-in CTA. */}
           <Route path="/alerts" element={<AlertsPage />} />
+
+          {/* Aggregator: per-cluster price guide (Reverb-style detail pages).
+              Coarse: /guide/:typeSlug/:brandSlug
+              Fine:   /guide/:typeSlug/:brandSlug/:sizeSlug */}
+          <Route path="/guide/:typeSlug/:brandSlug" element={<PriceGuidePage />} />
+          <Route path="/guide/:typeSlug/:brandSlug/:sizeSlug" element={<PriceGuidePage />} />
 
           {/* Founding Sellers campaign landing — live seller funnel.
               Gated off when the aggregator is on; page file preserved for future marketplace relaunch. */}

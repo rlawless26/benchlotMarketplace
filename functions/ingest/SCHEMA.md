@@ -75,14 +75,27 @@ M2's LLM normalizer reads these as seed hints but is expected to overwrite with 
 ### Lifecycle (always populated)
 | Field | Type | Notes |
 |---|---|---|
-| `status` | string | `"active"` while visible on source; `"expired"` when not seen in a subsequent scrape. |
+| `status` | string | `"active"` while visible on source; `"expired"` when not seen in a subsequent scrape; `"sold"` for terminal sold-archive sources (see `jimbode_valueguide`); `"excluded_non_tool"` when the non-tool classifier matched the title. |
 | `scraped_at` | Timestamp | Most recent scrape that touched this row. |
 | `first_seen_at` | Timestamp | Set once on first upsert, never updated. |
-| `last_seen_at` | Timestamp | Updated on every scrape that sees this `source_id`. Drives expiry. |
+| `last_seen_at` | Timestamp | Updated on every scrape that sees this `source_id`. Drives expiry for active/expired lifecycle. |
+| `sold_at` | Timestamp \| null | When the listing sold. Populated on `status: 'sold'` rows; null elsewhere. For `jimbode_valueguide`, sourced from the Shopify product's `updated_at` (closest signal for "moved to Value Guide"). |
 
 ## Expiry rule
 
 After each ingestion run completes, any `status === "active"` document with matching `source` and `last_seen_at < this_run_start_time` is flipped to `status = "expired"`. Expired documents are not deleted — they preserve price history for M2+ analysis.
+
+## Sold rule
+
+`status: "sold"` is a terminal state used by sold-archive sources (currently `jimbode_valueguide`). Sold rows are NOT swept by `markExpired` — the runner intentionally skips that step — so a sold listing's price stays as ingested even if the source later trims the item from its archive. The on-write normalizer trigger still canonicalizes title/maker/type/size on sold rows, so the price-guide build job (`functions/pricestats/build.js`) can group them by cluster.
+
+## priceStats / build interaction
+
+The price-guide build job partitions `externalListings` by status:
+- **Sold block** — rows where `status === "sold"`, primarily ingested from `jimbode_valueguide`. 730d window.
+- **Asking block** — rows where `status IN ("active", "expired")`. 365d window.
+
+The build does NOT filter by the source's `indexed` flag — that flag is purely a UI concern (does aggregator search render this source?). Sold-archive sources are typically `indexed: false` so they don't appear as live listings in search, but their pricing data still flows into the price guide.
 
 ## Composite indexes
 
@@ -118,7 +131,8 @@ The scraper preserves the untouched source payload so future normalizer versions
 
 | `source` value | Human name | `raw_format` | First indexed |
 |---|---|---|---|
-| `jimbode` | Jim Bode Tools (Value Guide) | `shopify_product` | M1 |
+| `jimbode` | Jim Bode Tools (live What's New) | `shopify_product` | M1 |
+| `jimbode_valueguide` | Jim Bode Value Guide (sold archive) | `shopify_product` | post-launch (price-guide) |
 | `hyperkitten` | Hyperkitten Tool Company | `hyperkitten_item` | M4 |
 | `sawmillcreek` | Sawmill Creek Classifieds | `sawmillcreek_thread` | M4 |
 | `woodnet` | Woodnet Tool Swap N' Sell | `woodnet_thread` | M4 |
@@ -223,3 +237,16 @@ Future sources register here and must respect the `(source, source_id)` ID conve
 - Hero image preference: `og:image` (full-size) over `itemprop="image"` (thumbnail with `_th` suffix), since the latter is significantly worse on the card.
 - `tags` left empty for now — the categories sitemap exists but mapping requires per-category page scraping (deferred).
 - Cron slot: `45 2 * * *` UTC. Deliberately off-band from the 03:00–04:05 cluster — small, slow-moving catalog tolerates the staleness window, and the wider margin absorbs the ~5-minute per-item fetch loop comfortably.
+
+### Jim Bode Value Guide notes
+
+- `source` = `jimbode_valueguide`. Source-of-truth for **sold** comp data in the price guide.
+- `source_id` = Shopify product `handle`. Firestore docId: `jimbode_valueguide__{handle}`.
+- `source_url` = `https://www.jimbodetools.com/products/{handle}`.
+- `posted_at` = Shopify `created_at` (when the product was first listed for sale).
+- `sold_at` = Shopify `updated_at`. Closest signal for "when the item moved to the Value Guide." Falls back to null (not `first_seen_at`) when `updated_at` is missing — the build job tolerates null `sold_at` rows.
+- Status: every row is upserted with `status: 'sold'`. Terminal state.
+- **`markExpired` is intentionally NOT called** for this source. If Jim later trims an item from the Guide, the historical sold price stays useful as a comp.
+- `indexed: false` in `src/firebase/adapters/sources.js` — the sold archive does NOT appear in aggregator search results. The price-guide build (`functions/pricestats/build.js`) reads sold rows by `status: 'sold'`, independent of the indexed flag.
+- Same Shopify `products.json` pagination contract as `jimbode` (250/page, 25k storefront cap). At current Value Guide size the cap is far out of reach.
+- Cron slot: `20 4 * * *` UTC. Lands after the alert matcher (04:15) and before the pricestats build (04:35).

@@ -24,6 +24,12 @@ import {
 import { getSource, KIND_COLORS } from '../../firebase/adapters/sources';
 import { relativeTime } from './relativeTime';
 import { track } from '../../utils/analytics';
+import usePriceStats from '../../firebase/hooks/usePriceStats';
+import usePriceHistory from '../../firebase/hooks/usePriceHistory';
+import DealRatingBadge from './DealRatingBadge';
+import PriceDropBadge from './PriceDropBadge';
+import PreviousListingsPopover from './PreviousListingsPopover';
+import { classifyDealTier } from '../../utils/priceStats';
 
 const KIND_ICON = {
   Dealer: Store,
@@ -78,6 +84,20 @@ const PLACEHOLDER_BG = '#e8e6e0'; // var(--bone-dark) — shown when image is mi
 const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const [hover, setHover] = useState(false);
 
+  // Hooks must run unconditionally — pull priceStats before any early
+  // return below. Adapter exposes canonical_* on every listing today;
+  // pass through and let usePriceStats no-op when type/brand are missing.
+  const priceStats = usePriceStats({
+    canonical_type: listing?.canonical_type || null,
+    canonical_brand: listing?.canonical_brand || null,
+    canonical_size: listing?.canonical_size || null,
+  });
+
+  // Price history (snapshots) — drives the Price-Drop badge and the
+  // previous-listings popover. Hits priceSnapshots/{listingId}/snapshots
+  // and is cached per-tab.
+  const priceHistory = usePriceHistory(listing?.id || null);
+
   if (!listing) return null;
 
   const source = getSource(listing.source);
@@ -89,6 +109,13 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const postedDisplay = relativeTime(listing.posted_at || listing.scraped_at);
   const maker = listing.brand && listing.brand !== 'Unknown' ? listing.brand : null;
   const title = listing.name || '(untitled listing)';
+
+  // Compute deal tier for telemetry on `result_clicked` so dashboards can
+  // segment CTR by tier without needing a join.
+  const dealTier =
+    typeof listing.price === 'number' && priceStats.reference
+      ? classifyDealTier(listing.price, priceStats.reference)
+      : null;
 
   const handleAlertClick = (e) => {
     e.preventDefault();
@@ -115,9 +142,13 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
       query: ctx.query || null,
       active_sort: ctx.activeSort || null,
       active_filter_count: ctx.activeFilterCount ?? 0,
-      // Placeholder for future price-vs-comp badging — present from day one
-      // so badge CTR can be sliced without a schema change.
-      deal_score: listing.deal_score ?? null,
+      // Deal-rating telemetry — populated when the listing's cluster has
+      // enough comps for a tier judgment. Lets dashboards segment CTR by
+      // tier without a join.
+      deal_tier: dealTier,
+      deal_reference: priceStats.reference?.source || null,
+      cluster_key: priceStats.cluster_key || null,
+      cluster_grain: priceStats.grain || null,
     });
   };
 
@@ -251,18 +282,31 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
           {title}
         </h3>
 
-        {/* Price + location */}
+        {/* Price + (deal badge) + location */}
         <div className="flex items-baseline justify-between gap-2.5 mb-2.5">
-          <span
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 700,
-              fontSize: 20,
-              letterSpacing: '-0.01em',
-              color: '#d4aa60', // honey
-            }}
-          >
-            {priceDisplay || '—'}
+          <span className="inline-flex items-baseline gap-2">
+            <span
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 700,
+                fontSize: 20,
+                letterSpacing: '-0.01em',
+                color: '#d4aa60', // honey
+              }}
+            >
+              {priceDisplay || '—'}
+            </span>
+            {typeof listing.price === 'number' && priceStats.stats && (
+              <DealRatingBadge
+                listingPrice={listing.price}
+                stats={priceStats.stats}
+                grain={priceStats.grain}
+                clusterKey={priceStats.cluster_key}
+              />
+            )}
+            {priceHistory.latestDrop && (
+              <PriceDropBadge listingId={listing.id} drop={priceHistory.latestDrop} />
+            )}
           </span>
           {listing.location && (
             <span
@@ -296,15 +340,23 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
             <KindDot kind={source?.kind} />
             Listed at {source?.name || 'external source'}
           </span>
-          <span
-            className="inline-flex items-center gap-1"
-            style={{
-              color: hover ? '#d4aa60' : '#1a3030', // honey on hover, spruce rest
-              transition: 'color 200ms',
-            }}
-          >
-            View source
-            <ExternalLink size={11} />
+          <span className="inline-flex items-center gap-3">
+            {priceHistory.snapshots.length >= 2 && (
+              <PreviousListingsPopover
+                listingId={listing.id}
+                snapshots={priceHistory.snapshots}
+              />
+            )}
+            <span
+              className="inline-flex items-center gap-1"
+              style={{
+                color: hover ? '#d4aa60' : '#1a3030', // honey on hover, spruce rest
+                transition: 'color 200ms',
+              }}
+            >
+              View source
+              <ExternalLink size={11} />
+            </span>
           </span>
         </div>
       </div>

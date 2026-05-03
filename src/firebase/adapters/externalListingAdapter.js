@@ -18,10 +18,13 @@ import {
   orderBy,
   limit as limitQ,
   getDocs,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 
 import { db } from '../config';
 import { SOURCES, sourceDisplayName } from './sources';
+import { clusterKey, hasDisplayableStats, pickReference } from '../../utils/priceStats';
 
 const COLLECTION = 'externalListings';
 const DEFAULT_LIMIT = 60;
@@ -220,6 +223,8 @@ export async function getAggregatedListings(opts = {}) {
     tools = [...tools].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
   } else if (sort === 'price_high') {
     tools = [...tools].sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+  } else if (sort === 'deal_rating') {
+    tools = await sortByDealRating(tools);
   }
 
   // Return the full merged pool — the consumer (ResultsState) applies client-
@@ -227,4 +232,73 @@ export async function getAggregatedListings(opts = {}) {
   // Slicing to `limit` here would defeat the whole purpose of the per-source
   // fetch strategy.
   return { tools };
+}
+
+/**
+ * Annotate each listing with a `deal_score` (positive = better deal vs.
+ * cluster reference median) and sort descending. Listings with no
+ * priceStats coverage or no price get a -Infinity score so they sort to
+ * the bottom — preserving discoverability for low-coverage clusters
+ * without claiming false confidence.
+ *
+ * Implementation: collect every unique (fine + coarse) cluster_key the
+ * result set needs, batch-fetch the matching priceStats docs in parallel
+ * (typically 5–20 unique keys for a 60-listing page), then score+sort.
+ */
+async function sortByDealRating(tools) {
+  const keys = new Set();
+  for (const t of tools) {
+    if (!t.canonical_type || !t.canonical_brand) continue;
+    if (t.canonical_size) {
+      keys.add(clusterKey({
+        canonical_type: t.canonical_type,
+        canonical_brand: t.canonical_brand,
+        canonical_size: t.canonical_size,
+      }));
+    }
+    keys.add(clusterKey({
+      canonical_type: t.canonical_type,
+      canonical_brand: t.canonical_brand,
+      canonical_size: null,
+    }));
+  }
+  const statsCol = collection(db, 'priceStats');
+  const entries = await Promise.all(
+    Array.from(keys).map(async (k) => {
+      const snap = await getDoc(doc(statsCol, k));
+      if (!snap.exists()) return [k, null];
+      const data = snap.data();
+      return [k, hasDisplayableStats(data) ? data : null];
+    })
+  );
+  const statsByKey = new Map(entries);
+
+  const scoreFor = (t) => {
+    if (typeof t.price !== 'number' || !Number.isFinite(t.price)) return -Infinity;
+    if (!t.canonical_type || !t.canonical_brand) return -Infinity;
+    let stats = null;
+    if (t.canonical_size) {
+      stats = statsByKey.get(clusterKey({
+        canonical_type: t.canonical_type,
+        canonical_brand: t.canonical_brand,
+        canonical_size: t.canonical_size,
+      }));
+    }
+    if (!stats) {
+      stats = statsByKey.get(clusterKey({
+        canonical_type: t.canonical_type,
+        canonical_brand: t.canonical_brand,
+        canonical_size: null,
+      }));
+    }
+    if (!stats) return -Infinity;
+    const ref = pickReference(stats);
+    if (!ref || !ref.p50) return -Infinity;
+    return (ref.p50 - t.price) / ref.p50;
+  };
+
+  return [...tools]
+    .map((t) => ({ t, score: scoreFor(t) }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.t);
 }

@@ -304,6 +304,25 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "canonical_type", "order": "ASCENDING" },
+        { "fieldPath": "canonical_brand", "order": "ASCENDING" },
+        { "fieldPath": "sold_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "externalListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "source", "order": "ASCENDING" },
+        { "fieldPath": "sold_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

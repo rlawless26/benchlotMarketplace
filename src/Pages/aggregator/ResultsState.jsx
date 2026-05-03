@@ -524,7 +524,15 @@ const ResultsState = ({ state, actions }) => {
                     <select
                       id="results-sort"
                       value={sort}
-                      onChange={(e) => actions.setSort(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        track('sort_changed', {
+                          from_sort: sort,
+                          to_sort: next,
+                          query: query || null,
+                        });
+                        actions.setSort(next);
+                      }}
                       style={{
                         appearance: 'none',
                         padding: '6px 28px 6px 12px',
@@ -541,6 +549,7 @@ const ResultsState = ({ state, actions }) => {
                     >
                       <option value="best">Best match</option>
                       <option value="newest">Newest</option>
+                      <option value="deal_rating">Best deal first</option>
                       <option value="price_low">Price: low to high</option>
                       <option value="price_high">Price: high to low</option>
                     </select>

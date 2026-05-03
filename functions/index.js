@@ -2777,6 +2777,107 @@ exports.scheduledIngestJimbode = onSchedule(
 );
 
 /**
+ * Scheduled ingestion — Jim Bode Value Guide (sold archive).
+ *
+ * Runs nightly at 04:20 UTC, after the alert matcher (04:15) and before
+ * the pricestats build (04:35). This source is the cornerstone of the
+ * sold-comp data block in priceStats — see Track B.0 in the plan.
+ *
+ * Items are upserted with `status: 'sold'` and `sold_at` populated; we do
+ * NOT call `markExpired` (sold is terminal). Source is registered with
+ * `indexed: false` in src/firebase/adapters/sources.js so the archive
+ * does not appear in aggregator search results.
+ *
+ * Locally: `node functions/ingest/run-jimbode-valueguide.js`.
+ */
+const jimbodeValueGuide = require('./ingest/jimbode-valueguide');
+
+exports.scheduledIngestJimbodeValueGuide = onSchedule(
+  {
+    schedule: '20 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    const t0 = Date.now();
+    try {
+      const summary = await jimbodeValueGuide.runIngestion();
+      console.log('[scheduledIngestJimbodeValueGuide] done', summary);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_source_ingested',
+        properties: {
+          source: jimbodeValueGuide.SOURCE,
+          items_seen: summary.scraped,
+          items_inserted: summary.inserted,
+          items_updated: summary.updated,
+          snapshots_written: summary.snapshots_written ?? 0,
+          duration_ms: summary.durationMs,
+        },
+      });
+    } catch (err) {
+      console.error('[scheduledIngestJimbodeValueGuide] failed:', err.message, err.stack);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_source_ingest_failed',
+        properties: {
+          source: jimbodeValueGuide.SOURCE,
+          error_message: err.message,
+          duration_ms: Date.now() - t0,
+        },
+      });
+      throw err;
+    }
+  }
+);
+
+/**
+ * Scheduled aggregation — priceStats build.
+ *
+ * Runs nightly at 04:35 UTC, after the alert matcher (04:15) and after
+ * the Jim Bode Value Guide refresh (04:20). Aggregates externalListings
+ * into per-cluster price-distribution summaries written to the
+ * `priceStats` collection. See functions/pricestats/build.js for full
+ * sample-selection rules and clustering grain logic.
+ *
+ * Locally: `node functions/pricestats/run-build.js`.
+ */
+const pricestatsBuild = require('./pricestats/build');
+
+exports.scheduledPriceStatsBuild = onSchedule(
+  {
+    schedule: '35 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    const t0 = Date.now();
+    try {
+      const summary = await pricestatsBuild.runBuild();
+      console.log('[scheduledPriceStatsBuild] done', summary);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_build_completed',
+        properties: summary,
+      });
+    } catch (err) {
+      console.error('[scheduledPriceStatsBuild] failed:', err.message, err.stack);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_build_failed',
+        properties: {
+          error_message: err.message,
+          duration_ms: Date.now() - t0,
+        },
+      });
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — OldTools.com.
  *
  * Runs nightly at 02:45 UTC. Deliberately off-band (the rest of the source
