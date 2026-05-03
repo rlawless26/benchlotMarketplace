@@ -2249,9 +2249,34 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
       console.warn(`[scan-results] could not generate password reset link for ${email}:`, linkErr.message);
     }
 
-    // Map ToolScan-shaped fields to Template 1 vars
-    const valueLow = scanResult.suggested_price_low ? `$${scanResult.suggested_price_low}` : '';
-    const valueHigh = scanResult.suggested_price_high ? `$${scanResult.suggested_price_high}` : '';
+    // Resolve the price band: prefer Benchlot's priceStats when the
+    // scan came in with canonical_* fields AND that cluster has enough
+    // comps. Fall back to the LLM's suggested_price_low/high otherwise.
+    let bandLow = scanResult.suggested_price_low;
+    let bandHigh = scanResult.suggested_price_high;
+    let bandSource = 'llm';
+    try {
+      if (scanResult.canonical_type && scanResult.canonical_brand) {
+        const { lookupStats, pickReference } = require('./pricestats/lookup');
+        const stats = await lookupStats({
+          canonical_type: scanResult.canonical_type,
+          canonical_brand: scanResult.canonical_brand,
+          canonical_size: scanResult.canonical_size || null,
+        });
+        const ref = pickReference(stats);
+        if (ref && ref.p25 != null && ref.p75 != null) {
+          bandLow = Math.round(ref.p25);
+          bandHigh = Math.round(ref.p75);
+          bandSource = ref.source; // 'sold' or 'asking'
+        }
+      }
+    } catch (e) {
+      // Decorative — never let a stats lookup break an email send.
+      console.warn('[send-scan-results] priceStats lookup failed, using LLM band:', e.message);
+    }
+    const valueLow = bandLow ? `$${bandLow}` : '';
+    const valueHigh = bandHigh ? `$${bandHigh}` : '';
+    console.log(`[send-scan-results] band source=${bandSource} low=${bandLow} high=${bandHigh}`);
 
     const result = await sendEmail({
       templateId: '01-scan-welcome',
