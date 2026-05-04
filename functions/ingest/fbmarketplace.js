@@ -374,6 +374,18 @@ async function scrapeAll(opts = {}) {
 
 /**
  * Full ingestion run: scrape → upsert → markExpired.
+ *
+ * Sweep guard: a total scrape failure (every bucket errored, 0 records)
+ * almost always means an upstream outage — Bright Data billing lapse,
+ * API shape change, network — not that every FBM listing simultaneously
+ * sold. Without a guard, markExpired would dutifully flip every active
+ * listing to expired. Triggered on 2026-05-03 when Bright Data deactivated
+ * the account and a single bad cron run wiped the entire source.
+ *
+ * We skip the sweep (and throw) when records=0 AND every bucket errored.
+ * A partial-failure run still sweeps — that's a real signal. Throwing
+ * surfaces the failure to Cloud Functions error reporting / alerting
+ * instead of silently completing with expired=0.
  */
 async function runIngestion(opts = {}) {
   const runStartedAt = admin.firestore.Timestamp.now();
@@ -384,21 +396,40 @@ async function runIngestion(opts = {}) {
 
   // Skip the expiry sweep when a custom bucket subset is passed — partial
   // runs would falsely expire listings the subset didn't reach.
-  const shouldSweep = !opts.buckets;
+  const isPartialRun = !!opts.buckets;
+  const allBucketsErrored = perBucket.length > 0 && perBucket.every((b) => b.error);
+  const totalScrapeFailure = records.length === 0 && allBucketsErrored;
+  const shouldSweep = !isPartialRun && !totalScrapeFailure;
+
   const expireSummary = shouldSweep
     ? await markExpired(SOURCE, runStartedAt)
     : { expired: 0 };
 
-  return {
+  const summary = {
     source: SOURCE,
     inserted: upsertSummary.inserted,
     updated: upsertSummary.updated,
     expired: expireSummary.expired,
     sweep_skipped: !shouldSweep,
+    sweep_skip_reason: isPartialRun
+      ? 'partial_run'
+      : (totalScrapeFailure ? 'total_scrape_failure' : null),
     per_bucket: perBucket,
     durationMs: Date.now() - t0,
     runStartedAt: runStartedAt.toDate(),
   };
+
+  if (totalScrapeFailure) {
+    const sampleErrors = perBucket
+      .map((b) => b.error)
+      .filter(Boolean)
+      .slice(0, 3);
+    throw new Error(
+      `[fbmarketplace] total scrape failure — ${perBucket.length} buckets errored, 0 records. Sweep skipped. Sample: ${sampleErrors.join(' | ')}`
+    );
+  }
+
+  return summary;
 }
 
 module.exports = {
