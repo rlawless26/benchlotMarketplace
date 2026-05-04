@@ -31,6 +31,20 @@ export const MARKETPLACE_BETA = getFeatureFlag('MARKETPLACE_BETA', true);
 // localStorage.setItem('AGGREGATOR_MODE', 'false') restores the pre-pivot view.
 export const AGGREGATOR_MODE = getFeatureFlag('AGGREGATOR_MODE', true);
 
+// Price-guide — when true, render PriceContextChip on result cards, the
+// /guide/:type/:brand/:size? routes, and the "Benchlot index" line in
+// ToolScan results. When false (current default), all that UI stays
+// hidden so we can accrue real organic sold-comp data via the nightly
+// pipelines before exposing the surface publicly.
+//
+// Server-side data pipelines (markExpired flips to sold, priceSnapshots
+// writes, jimbode_valueguide ingestion, nightly pricestats build) run
+// regardless of this flag — the flag only gates user-facing rendering.
+//
+// Local dev override: `localStorage.setItem('PRICE_GUIDE_ENABLED', 'true')`.
+// Public launch: change the default below from `false` to `true`, ship.
+export const PRICE_GUIDE_ENABLED = getFeatureFlag('PRICE_GUIDE_ENABLED', false);
+
 // Default path for seller onboarding
 export const SELLER_ENTRY_PATH = '/sell';
 
@@ -40,6 +54,7 @@ export const featureFlags = {
   SELLER_ENTRY_PATH,
   MARKETPLACE_BETA,
   AGGREGATOR_MODE,
+  PRICE_GUIDE_ENABLED,
 };
 
 // Auth modal event - create a custom event to trigger the auth modal

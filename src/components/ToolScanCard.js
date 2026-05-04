@@ -17,6 +17,7 @@ import usePriceStats from '../firebase/hooks/usePriceStats';
 import { pickReference } from '../utils/priceStats';
 import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
 import { track } from '../utils/analytics';
+import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
 
 const confidenceColors = {
   High: 'bg-green-100 text-green-800',
@@ -336,8 +337,9 @@ const ToolScanCard = ({
             {/* Benchlot index context — sits below the LLM band so users
                 see both numbers side by side rather than us silently
                 overriding the AI suggestion with biased data. Only renders
-                when priceStats has enough comps for a meaningful range. */}
-            {benchlotIndexBand && (
+                when priceStats has enough comps for a meaningful range
+                AND the price-guide feature is exposed publicly. */}
+            {PRICE_GUIDE_ENABLED && benchlotIndexBand && (
               <div className="mt-2 text-sm font-body text-secondary">
                 Benchlot index: <strong className="text-dark-teal">${benchlotIndexBand.low} – ${benchlotIndexBand.high}</strong> across {benchlotIndexBand.count} {benchlotIndexBand.source === 'sold' ? 'sold comps (Jim Bode Value Guide)' : 'recent listings'}
                 {guideHref && (
@@ -604,7 +606,7 @@ const ToolScanCard = ({
             <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide">
               Active listings on Benchlot
             </h4>
-            {guideHref && (
+            {PRICE_GUIDE_ENABLED && guideHref && (
               <a
                 href={guideHref}
                 onClick={() => track('toolscan_price_guide_link_clicked', {

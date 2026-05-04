@@ -2262,25 +2262,33 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
     let benchlotIndexHigh = '';
     let benchlotIndexCount = 0;
     let benchlotIndexSource = '';
-    try {
-      if (scanResult.canonical_type && scanResult.canonical_brand) {
-        const { lookupStats, pickReference } = require('./pricestats/lookup');
-        const stats = await lookupStats({
-          canonical_type: scanResult.canonical_type,
-          canonical_brand: scanResult.canonical_brand,
-          canonical_size: scanResult.canonical_size || null,
-        });
-        const ref = pickReference(stats);
-        if (ref && ref.p25 != null && ref.p75 != null) {
-          benchlotIndexLow = `$${Math.round(ref.p25)}`;
-          benchlotIndexHigh = `$${Math.round(ref.p75)}`;
-          benchlotIndexCount = ref.count;
-          benchlotIndexSource = ref.source; // 'sold' or 'asking'
+    // Mirror the client-side `PRICE_GUIDE_ENABLED` flag server-side so
+    // the email's "Benchlot index" line stays hidden in production
+    // until we expose the price guide publicly. Data still accumulates
+    // — this only gates the user-facing surface. Set
+    // `PRICE_GUIDE_ENABLED=true` in functions env to flip on.
+    const priceGuideExposed = process.env.PRICE_GUIDE_ENABLED === 'true';
+    if (priceGuideExposed) {
+      try {
+        if (scanResult.canonical_type && scanResult.canonical_brand) {
+          const { lookupStats, pickReference } = require('./pricestats/lookup');
+          const stats = await lookupStats({
+            canonical_type: scanResult.canonical_type,
+            canonical_brand: scanResult.canonical_brand,
+            canonical_size: scanResult.canonical_size || null,
+          });
+          const ref = pickReference(stats);
+          if (ref && ref.p25 != null && ref.p75 != null) {
+            benchlotIndexLow = `$${Math.round(ref.p25)}`;
+            benchlotIndexHigh = `$${Math.round(ref.p75)}`;
+            benchlotIndexCount = ref.count;
+            benchlotIndexSource = ref.source; // 'sold' or 'asking'
+          }
         }
+      } catch (e) {
+        // Decorative — never let a stats lookup break an email send.
+        console.warn('[send-scan-results] priceStats lookup failed:', e.message);
       }
-    } catch (e) {
-      // Decorative — never let a stats lookup break an email send.
-      console.warn('[send-scan-results] priceStats lookup failed:', e.message);
     }
     console.log(`[send-scan-results] llm band ${valueLow}-${valueHigh}; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
 

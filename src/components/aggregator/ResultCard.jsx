@@ -24,6 +24,7 @@ import {
 import { getSource, KIND_COLORS } from '../../firebase/adapters/sources';
 import { relativeTime } from './relativeTime';
 import { track } from '../../utils/analytics';
+import { PRICE_GUIDE_ENABLED } from '../../utils/featureFlags';
 import usePriceStats from '../../firebase/hooks/usePriceStats';
 import usePriceHistory from '../../firebase/hooks/usePriceHistory';
 import PriceContextChip from './PriceContextChip';
@@ -84,18 +85,24 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const [hover, setHover] = useState(false);
 
   // Hooks must run unconditionally — pull priceStats before any early
-  // return below. Adapter exposes canonical_* on every listing today;
-  // pass through and let usePriceStats no-op when type/brand are missing.
-  const priceStats = usePriceStats({
-    canonical_type: listing?.canonical_type || null,
-    canonical_brand: listing?.canonical_brand || null,
-    canonical_size: listing?.canonical_size || null,
-  });
+  // return below. When PRICE_GUIDE_ENABLED is false, pass nulls so the
+  // hooks short-circuit on their own (no Firestore reads, no chip).
+  const priceStats = usePriceStats(
+    PRICE_GUIDE_ENABLED
+      ? {
+          canonical_type: listing?.canonical_type || null,
+          canonical_brand: listing?.canonical_brand || null,
+          canonical_size: listing?.canonical_size || null,
+        }
+      : {}
+  );
 
   // Price history (snapshots) — drives the Price-Drop badge and the
   // previous-listings popover. Hits priceSnapshots/{listingId}/snapshots
-  // and is cached per-tab.
-  const priceHistory = usePriceHistory(listing?.id || null);
+  // and is cached per-tab. Skipped entirely when the flag is off.
+  const priceHistory = usePriceHistory(
+    PRICE_GUIDE_ENABLED ? (listing?.id || null) : null
+  );
 
   if (!listing) return null;
 
@@ -291,7 +298,7 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
             >
               {priceDisplay || '—'}
             </span>
-            {priceStats.stats && (
+            {PRICE_GUIDE_ENABLED && priceStats.stats && (
               <PriceContextChip
                 stats={priceStats.stats}
                 grain={priceStats.grain}
@@ -299,7 +306,7 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
                 listingKind={listingKind}
               />
             )}
-            {priceHistory.latestDrop && (
+            {PRICE_GUIDE_ENABLED && priceHistory.latestDrop && (
               <PriceDropBadge listingId={listing.id} drop={priceHistory.latestDrop} />
             )}
           </span>
@@ -336,7 +343,7 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
             Listed at {source?.name || 'external source'}
           </span>
           <span className="inline-flex items-center gap-3">
-            {priceHistory.snapshots.length >= 2 && (
+            {PRICE_GUIDE_ENABLED && priceHistory.snapshots.length >= 2 && (
               <PreviousListingsPopover
                 listingId={listing.id}
                 snapshots={priceHistory.snapshots}

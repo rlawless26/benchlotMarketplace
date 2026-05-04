@@ -57,7 +57,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Feature flags
-import { MARKETPLACE_BETA, AGGREGATOR_MODE } from './utils/featureFlags';
+import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED } from './utils/featureFlags';
 
 // Styles
 import './styles/design-system.css';
@@ -183,9 +183,17 @@ function AppLayout() {
 
           {/* Aggregator: per-cluster price guide (Reverb-style detail pages).
               Coarse: /guide/:typeSlug/:brandSlug
-              Fine:   /guide/:typeSlug/:brandSlug/:sizeSlug */}
-          <Route path="/guide/:typeSlug/:brandSlug" element={<PriceGuidePage />} />
-          <Route path="/guide/:typeSlug/:brandSlug/:sizeSlug" element={<PriceGuidePage />} />
+              Fine:   /guide/:typeSlug/:brandSlug/:sizeSlug
+              Hidden until PRICE_GUIDE_ENABLED flips to true so we can
+              accrue real organic sold-comp data via the nightly
+              pipelines before exposing the surface publicly. When the
+              flag is off, /guide/* hits the wildcard 404 below. */}
+          {PRICE_GUIDE_ENABLED && (
+            <>
+              <Route path="/guide/:typeSlug/:brandSlug" element={<PriceGuidePage />} />
+              <Route path="/guide/:typeSlug/:brandSlug/:sizeSlug" element={<PriceGuidePage />} />
+            </>
+          )}
 
           {/* Founding Sellers campaign landing — live seller funnel.
               Gated off when the aggregator is on; page file preserved for future marketplace relaunch. */}
