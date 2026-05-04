@@ -19,6 +19,7 @@ import LandingPageNew from './Pages/LandingPageNew';
 import WaitlistLandingPage from './Pages/WaitlistLandingPage';
 import AggregatorHomePage from './Pages/aggregator/AggregatorHomePage';
 import AlertsPage from './Pages/aggregator/AlertsPage';
+import PriceGuidePage from './Pages/aggregator/PriceGuidePage';
 import FoundingSellersPage from './Pages/FoundingSellersPage';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
@@ -56,7 +57,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Feature flags
-import { MARKETPLACE_BETA, AGGREGATOR_MODE } from './utils/featureFlags';
+import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED } from './utils/featureFlags';
 
 // Styles
 import './styles/design-system.css';
@@ -179,6 +180,20 @@ function AppLayout() {
           {/* Aggregator: saved-search management (/alerts). Gated to signed-in
               users at the page level — anonymous visitors see a sign-in CTA. */}
           <Route path="/alerts" element={<AlertsPage />} />
+
+          {/* Aggregator: per-cluster price guide (Reverb-style detail pages).
+              Coarse: /guide/:typeSlug/:brandSlug
+              Fine:   /guide/:typeSlug/:brandSlug/:sizeSlug
+              Hidden until PRICE_GUIDE_ENABLED flips to true so we can
+              accrue real organic sold-comp data via the nightly
+              pipelines before exposing the surface publicly. When the
+              flag is off, /guide/* hits the wildcard 404 below. */}
+          {PRICE_GUIDE_ENABLED && (
+            <>
+              <Route path="/guide/:typeSlug/:brandSlug" element={<PriceGuidePage />} />
+              <Route path="/guide/:typeSlug/:brandSlug/:sizeSlug" element={<PriceGuidePage />} />
+            </>
+          )}
 
           {/* Founding Sellers campaign landing — live seller funnel.
               Gated off when the aggregator is on; page file preserved for future marketplace relaunch. */}

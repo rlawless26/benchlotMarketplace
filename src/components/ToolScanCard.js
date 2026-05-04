@@ -1,5 +1,5 @@
 // src/components/ToolScanCard.js
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -8,7 +8,16 @@ import {
   Camera,
   DollarSign,
   Pencil,
+  ExternalLink,
+  Bell,
 } from 'lucide-react';
+
+import { bridgeToCanonicalType } from '../utils/toolscanCategoryBridge';
+import usePriceStats from '../firebase/hooks/usePriceStats';
+import { pickReference } from '../utils/priceStats';
+import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
+import { track } from '../utils/analytics';
+import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
 
 const confidenceColors = {
   High: 'bg-green-100 text-green-800',
@@ -25,6 +34,20 @@ const conditionColors = {
 
 const conditionOptions = ['Excellent', 'Good', 'Fair', 'Project'];
 
+// Helpers for the active-listings + price-guide panel.
+
+// Slug builder mirrors src/utils/priceStats.js#slug. Used to derive the
+// /guide/... URL when stats exist for the cluster.
+const slug = (s) =>
+  String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || '_';
+
+const fmtDollars = (d) => `$${Math.round(d)}`;
+
 const ToolScanCard = ({
   tool,
   index,
@@ -39,6 +62,112 @@ const ToolScanCard = ({
 
   // Feedback state: null → 'correcting' → 'saved_correct' | 'saved_corrected'
   const [feedbackState, setFeedbackState] = useState(null);
+
+  // ── Active-listings + price-guide panel state ──────────────────────────
+  const canonicalType = useMemo(
+    () => bridgeToCanonicalType({
+      suggested_category: tool.suggested_category,
+      suggested_subcategory: tool.suggested_subcategory,
+      tool_name: tool.tool_name,
+    }),
+    [tool.suggested_category, tool.suggested_subcategory, tool.tool_name]
+  );
+  const canonicalBrand = useMemo(() => {
+    const m = tool.maker;
+    if (!m || m === 'Unknown' || tool.confidence === 'Low') return null;
+    return m;
+  }, [tool.maker, tool.confidence]);
+  const canonicalSize = tool.model || null;
+
+  const priceStats = usePriceStats({
+    canonical_type: canonicalType,
+    canonical_brand: canonicalBrand,
+    canonical_size: canonicalSize,
+  });
+
+  const [activeListings, setActiveListings] = useState([]);
+  const [activeListingsLoaded, setActiveListingsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!canonicalType) {
+      // Telemetry on bridge misses — informs which subcategories need new
+      // bridge entries.
+      track('toolscan_category_bridge_missed', {
+        suggested_category: tool.suggested_category || null,
+        suggested_subcategory: tool.suggested_subcategory || null,
+        tool_name: tool.tool_name || null,
+      });
+      setActiveListings([]);
+      setActiveListingsLoaded(true);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setActiveListingsLoaded(false);
+    getAggregatedListings({
+      canonicalType,
+      canonicalBrand: canonicalBrand || undefined,
+      limit: 8,
+    })
+      .then(({ tools }) => {
+        if (cancelled) return;
+        const listings = tools.slice(0, 6);
+        setActiveListings(listings);
+        setActiveListingsLoaded(true);
+
+        track('toolscan_active_listings_shown', {
+          scanId: scanId || null,
+          primary_type: canonicalType,
+          primary_brand: canonicalBrand,
+          listings_returned: listings.length,
+          filter_strategy: canonicalBrand ? 'type_and_brand' : 'type_only',
+          cluster_key: priceStats.cluster_key || null,
+          data_band_applied: Boolean(priceStats.reference),
+        });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[ToolScanCard] active-listings fetch failed:', err);
+        }
+        setActiveListings([]);
+        setActiveListingsLoaded(true);
+      });
+    return () => { cancelled = true; };
+    // priceStats.cluster_key + .reference are in the telemetry payload
+    // but adding them as deps would re-run the listings fetch on every
+    // priceStats settle — wasteful. Refire only on identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canonicalType, canonicalBrand, scanId]);
+
+  // Trust-first v1 (2026-05-03): the LLM's `suggested_price_low/high`
+  // stays as the headline price band on the card. Benchlot's data
+  // appears as a separate "Recent listings" line below the band so the
+  // user sees both the AI suggestion and the data context, side by
+  // side, without us silently overriding one with the other. When v2
+  // stratified pricing earns the right to make confident judgments we
+  // can revisit.
+  const ref = pickReference(priceStats.stats);
+  const benchlotIndexBand = ref
+    ? { low: Math.round(ref.p25), high: Math.round(ref.p75), count: ref.count, source: ref.source }
+    : null;
+
+  const guideHref = priceStats.stats
+    ? (priceStats.grain === 'fine' && priceStats.stats.canonical_size
+        ? `/guide/${slug(priceStats.stats.canonical_type)}/${slug(priceStats.stats.canonical_brand)}/${slug(priceStats.stats.canonical_size)}`
+        : `/guide/${slug(priceStats.stats.canonical_type)}/${slug(priceStats.stats.canonical_brand)}`)
+    : null;
+
+  const searchHref = (() => {
+    const params = new URLSearchParams();
+    const queryBits = [];
+    if (canonicalBrand) queryBits.push(canonicalBrand);
+    if (canonicalSize) queryBits.push(canonicalSize);
+    if (queryBits.length) params.set('q', queryBits.join(' '));
+    if (canonicalType) params.set('cat', canonicalType);
+    if (canonicalBrand) params.set('maker', canonicalBrand);
+    return params.toString() ? `/?${params.toString()}` : '/';
+  })();
 
   const [reviewFields, setReviewFields] = useState({
     tool_name: tool.tool_name || '',
@@ -200,7 +329,36 @@ const ToolScanCard = ({
                 <DollarSign className="w-4 h-4" />
                 ${tool.suggested_price_low} – ${tool.suggested_price_high}
               </span>
+              <span className="inline-flex items-center text-xs font-body text-secondary px-2 py-0.5 rounded-full bg-bone border border-stone-200">
+                AI estimate
+              </span>
             </div>
+
+            {/* Benchlot index context — sits below the LLM band so users
+                see both numbers side by side rather than us silently
+                overriding the AI suggestion with biased data. Only renders
+                when priceStats has enough comps for a meaningful range
+                AND the price-guide feature is exposed publicly. */}
+            {PRICE_GUIDE_ENABLED && benchlotIndexBand && (
+              <div className="mt-2 text-sm font-body text-secondary">
+                Benchlot index: <strong className="text-dark-teal">${benchlotIndexBand.low} – ${benchlotIndexBand.high}</strong> across {benchlotIndexBand.count} {benchlotIndexBand.source === 'sold' ? 'sold comps (Jim Bode Value Guide)' : 'recent listings'}
+                {guideHref && (
+                  <>
+                    {' · '}
+                    <a
+                      href={guideHref}
+                      onClick={() => track('toolscan_price_guide_link_clicked', {
+                        scanId: scanId || null,
+                        cluster_key: priceStats.cluster_key || null,
+                      })}
+                      className="text-honey hover:text-honey-dark underline"
+                    >
+                      view price guide →
+                    </a>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 mt-2">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${confidenceColors[tool.confidence] || 'bg-gray-100 text-gray-800'}`}>
@@ -438,6 +596,108 @@ const ToolScanCard = ({
           </div>
         )}
       </div>
+
+      {/* Active listings on Benchlot — connects ToolScan back to the
+          aggregator. Shown whenever we could resolve a canonical_type;
+          empty-state with a save-alert nudge otherwise. */}
+      {canonicalType && (
+        <div className="border-t border-[#e4e2dc] px-5 py-5">
+          <div className="flex items-baseline justify-between mb-3">
+            <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide">
+              Active listings on Benchlot
+            </h4>
+            {PRICE_GUIDE_ENABLED && guideHref && (
+              <a
+                href={guideHref}
+                onClick={() => track('toolscan_price_guide_link_clicked', {
+                  scanId: scanId || null,
+                  cluster_key: priceStats.cluster_key || null,
+                })}
+                className="text-sm font-body text-honey hover:text-honey-dark transition-colors"
+              >
+                View full price guide →
+              </a>
+            )}
+          </div>
+
+          {!activeListingsLoaded && (
+            <p className="text-sm text-secondary font-body">Searching…</p>
+          )}
+
+          {activeListingsLoaded && activeListings.length === 0 && (
+            <div className="flex items-start gap-3 p-4 bg-bone rounded-lg">
+              <Bell className="w-5 h-5 text-honey flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-body text-dark-teal mb-2">
+                  No matching listings on Benchlot right now.
+                </p>
+                <a
+                  href={searchHref}
+                  onClick={() => track('toolscan_save_alert_clicked', {
+                    scanId: scanId || null,
+                    has_brand: Boolean(canonicalBrand),
+                    canonical_type: canonicalType,
+                  })}
+                  className="text-sm font-body font-medium text-honey hover:text-honey-dark transition-colors"
+                >
+                  Save an alert → we'll email when one shows up
+                </a>
+              </div>
+            </div>
+          )}
+
+          {activeListingsLoaded && activeListings.length > 0 && (
+            <>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {activeListings.map((listing, i) => (
+                  <li key={listing.id}>
+                    <a
+                      href={listing.source_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track('toolscan_active_listing_clicked', {
+                        scanId: scanId || null,
+                        source: listing.source,
+                        position: i,
+                        cluster_key: priceStats.cluster_key || null,
+                      })}
+                      className="block p-3 rounded-lg border border-[#e4e2dc] bg-bone-light hover:border-honey hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        {listing.imageUrl && (
+                          <div className="flex-shrink-0 w-14 h-14 rounded overflow-hidden bg-bone-dark">
+                            <img src={listing.imageUrl} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-body text-dark-teal line-clamp-2">{listing.name}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-honey font-semibold font-body">
+                              {typeof listing.price === 'number' ? fmtDollars(listing.price) : '—'}
+                            </span>
+                            <span className="text-xs text-secondary font-body inline-flex items-center gap-1">
+                              {listing.sourceName || listing.source}
+                              <ExternalLink className="w-3 h-3" />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 text-right">
+                <a
+                  href={searchHref}
+                  className="text-sm font-body font-medium text-honey hover:text-honey-dark transition-colors"
+                >
+                  See all matches →
+                </a>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* AI Analysis — era reasoning, condition notes, collectibility */}
       {(tool.era_reasoning || tool.condition_notes || tool.collectibility_notes) && (

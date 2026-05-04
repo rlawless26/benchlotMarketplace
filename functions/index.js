@@ -2249,9 +2249,48 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
       console.warn(`[scan-results] could not generate password reset link for ${email}:`, linkErr.message);
     }
 
-    // Map ToolScan-shaped fields to Template 1 vars
+    // Trust-first v1 (2026-05-03): the LLM's suggested band stays as
+    // the headline price in the email. Benchlot's priceStats data is
+    // surfaced as a separate "Benchlot index" line so recipients see
+    // both — the AI estimate and the data context — without us
+    // silently overriding one with biased data. Auto-override returns
+    // when v2 stratified pricing earns it back.
     const valueLow = scanResult.suggested_price_low ? `$${scanResult.suggested_price_low}` : '';
     const valueHigh = scanResult.suggested_price_high ? `$${scanResult.suggested_price_high}` : '';
+
+    let benchlotIndexLow = '';
+    let benchlotIndexHigh = '';
+    let benchlotIndexCount = 0;
+    let benchlotIndexSource = '';
+    // Mirror the client-side `PRICE_GUIDE_ENABLED` flag server-side so
+    // the email's "Benchlot index" line stays hidden in production
+    // until we expose the price guide publicly. Data still accumulates
+    // — this only gates the user-facing surface. Set
+    // `PRICE_GUIDE_ENABLED=true` in functions env to flip on.
+    const priceGuideExposed = process.env.PRICE_GUIDE_ENABLED === 'true';
+    if (priceGuideExposed) {
+      try {
+        if (scanResult.canonical_type && scanResult.canonical_brand) {
+          const { lookupStats, pickReference } = require('./pricestats/lookup');
+          const stats = await lookupStats({
+            canonical_type: scanResult.canonical_type,
+            canonical_brand: scanResult.canonical_brand,
+            canonical_size: scanResult.canonical_size || null,
+          });
+          const ref = pickReference(stats);
+          if (ref && ref.p25 != null && ref.p75 != null) {
+            benchlotIndexLow = `$${Math.round(ref.p25)}`;
+            benchlotIndexHigh = `$${Math.round(ref.p75)}`;
+            benchlotIndexCount = ref.count;
+            benchlotIndexSource = ref.source; // 'sold' or 'asking'
+          }
+        }
+      } catch (e) {
+        // Decorative — never let a stats lookup break an email send.
+        console.warn('[send-scan-results] priceStats lookup failed:', e.message);
+      }
+    }
+    console.log(`[send-scan-results] llm band ${valueLow}-${valueHigh}; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
 
     const result = await sendEmail({
       templateId: '01-scan-welcome',
@@ -2262,8 +2301,15 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         model: scanResult.model || '',
         era: scanResult.era || '',
         condition: scanResult.condition || '',
+        // Headline AI estimate.
         valueLow,
         valueHigh,
+        // Benchlot index context — empty strings when no priceStats
+        // coverage (template should conditionally render).
+        benchlotIndexLow,
+        benchlotIndexHigh,
+        benchlotIndexCount,
+        benchlotIndexSource,
         confidence: scanResult.confidence || '',
         scanPageUrl: `${process.env.BENCHLOT_BASE_URL || 'https://benchlot.com'}/scan`,
         setPasswordUrl,
@@ -2771,6 +2817,107 @@ exports.scheduledIngestJimbode = onSchedule(
       console.log('[scheduledIngestJimbode] done', summary);
     } catch (err) {
       console.error('[scheduledIngestJimbode] failed:', err.message, err.stack);
+      throw err;
+    }
+  }
+);
+
+/**
+ * Scheduled ingestion — Jim Bode Value Guide (sold archive).
+ *
+ * Runs nightly at 04:20 UTC, after the alert matcher (04:15) and before
+ * the pricestats build (04:35). This source is the cornerstone of the
+ * sold-comp data block in priceStats — see Track B.0 in the plan.
+ *
+ * Items are upserted with `status: 'sold'` and `sold_at` populated; we do
+ * NOT call `markExpired` (sold is terminal). Source is registered with
+ * `indexed: false` in src/firebase/adapters/sources.js so the archive
+ * does not appear in aggregator search results.
+ *
+ * Locally: `node functions/ingest/run-jimbode-valueguide.js`.
+ */
+const jimbodeValueGuide = require('./ingest/jimbode-valueguide');
+
+exports.scheduledIngestJimbodeValueGuide = onSchedule(
+  {
+    schedule: '20 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    const t0 = Date.now();
+    try {
+      const summary = await jimbodeValueGuide.runIngestion();
+      console.log('[scheduledIngestJimbodeValueGuide] done', summary);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_source_ingested',
+        properties: {
+          source: jimbodeValueGuide.SOURCE,
+          items_seen: summary.scraped,
+          items_inserted: summary.inserted,
+          items_updated: summary.updated,
+          snapshots_written: summary.snapshots_written ?? 0,
+          duration_ms: summary.durationMs,
+        },
+      });
+    } catch (err) {
+      console.error('[scheduledIngestJimbodeValueGuide] failed:', err.message, err.stack);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_source_ingest_failed',
+        properties: {
+          source: jimbodeValueGuide.SOURCE,
+          error_message: err.message,
+          duration_ms: Date.now() - t0,
+        },
+      });
+      throw err;
+    }
+  }
+);
+
+/**
+ * Scheduled aggregation — priceStats build.
+ *
+ * Runs nightly at 04:35 UTC, after the alert matcher (04:15) and after
+ * the Jim Bode Value Guide refresh (04:20). Aggregates externalListings
+ * into per-cluster price-distribution summaries written to the
+ * `priceStats` collection. See functions/pricestats/build.js for full
+ * sample-selection rules and clustering grain logic.
+ *
+ * Locally: `node functions/pricestats/run-build.js`.
+ */
+const pricestatsBuild = require('./pricestats/build');
+
+exports.scheduledPriceStatsBuild = onSchedule(
+  {
+    schedule: '35 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async () => {
+    const t0 = Date.now();
+    try {
+      const summary = await pricestatsBuild.runBuild();
+      console.log('[scheduledPriceStatsBuild] done', summary);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_build_completed',
+        properties: summary,
+      });
+    } catch (err) {
+      console.error('[scheduledPriceStatsBuild] failed:', err.message, err.stack);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'pricestats_build_failed',
+        properties: {
+          error_message: err.message,
+          duration_ms: Date.now() - t0,
+        },
+      });
       throw err;
     }
   }

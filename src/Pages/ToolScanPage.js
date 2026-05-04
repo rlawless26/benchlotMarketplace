@@ -7,7 +7,7 @@ import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
-// Tool model imports preserved for future marketplace features
+import { track } from '../utils/analytics';
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
   'https://api-sed2e4p6ua-uc.a.run.app',
@@ -21,7 +21,6 @@ const MAX_IMAGES = 5;
 const ToolScanPage = () => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
-  // const { isSeller } = useSeller(); // Preserved for marketplace launch
 
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -44,10 +43,6 @@ const ToolScanPage = () => {
   const [captureEmail, setCaptureEmail] = useState('');
   const [emailSubmitting, setEmailSubmitting] = useState(false);
 
-  // Bottom waitlist state
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
-  const [waitlistStatus, setWaitlistStatus] = useState({ type: '', message: '' });
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
@@ -129,6 +124,12 @@ const ToolScanPage = () => {
     setScanning(true);
     setScanError(null);
     setScanResults(null);
+    const scanStartedAt = Date.now();
+    track('toolscan_started', {
+      image_count: selectedFiles.length,
+      has_context: Boolean(context.trim()),
+      is_authed: Boolean(user),
+    });
 
     try {
       const images = await Promise.all(
@@ -171,9 +172,27 @@ const ToolScanPage = () => {
 
       setScanResults(data.results);
       setScanId(data.scanId);
+      const tools = (data.results && data.results.tools) || [];
+      const primary = tools[0] || {};
+      track('toolscan_completed', {
+        status: tools.length === 0 ? 'no_tools' : 'success',
+        tool_count: tools.length,
+        primary_brand: primary.maker || null,
+        primary_type: primary.suggested_subcategory || primary.suggested_category || null,
+        primary_confidence: primary.confidence || null,
+        duration_ms: Date.now() - scanStartedAt,
+        is_authed: Boolean(user),
+      });
     } catch (error) {
       console.error('ToolScan error:', error);
       setScanError(error.message || 'Something went wrong. Please try again.');
+      track('toolscan_completed', {
+        status: 'error',
+        tool_count: 0,
+        error_message: error.message || 'unknown',
+        duration_ms: Date.now() - scanStartedAt,
+        is_authed: Boolean(user),
+      });
     } finally {
       setScanning(false);
     }
@@ -239,14 +258,35 @@ const ToolScanPage = () => {
     } finally {
       setEmailSubmitting(false);
 
-      // Send scan results email (always fires, non-blocking)
+      // Send scan results email (always fires, non-blocking).
+      // Enrich with canonical_* hints so the server can join priceStats
+      // and use the data-driven band when it exists.
       const tools = scanResults?.tools || [];
       const firstTool = tools[0];
       if (firstTool && email) {
+        // Lazy-import the bridge so this isn't loaded on the upload path.
+        const { bridgeToCanonicalType } = await import('../utils/toolscanCategoryBridge');
+        const canonical_type = bridgeToCanonicalType({
+          suggested_category: firstTool.suggested_category,
+          suggested_subcategory: firstTool.suggested_subcategory,
+          tool_name: firstTool.tool_name,
+        });
+        const canonical_brand =
+          firstTool.maker && firstTool.maker !== 'Unknown' && firstTool.confidence !== 'Low'
+            ? firstTool.maker
+            : null;
         fetch(`${API_URL}/send-scan-results`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, scanResult: firstTool }),
+          body: JSON.stringify({
+            email,
+            scanResult: {
+              ...firstTool,
+              canonical_type,
+              canonical_brand,
+              canonical_size: firstTool.model || null,
+            },
+          }),
         }).catch(err => console.error('Scan results email error:', err));
       }
     }
@@ -255,28 +295,6 @@ const ToolScanPage = () => {
   // Skip email gate if user is already signed in
   const showEmailGate = scanResults && !emailCollected && !user;
   const showFullResults = scanResults && (emailCollected || user);
-
-  const handleWaitlistSubmit = async (e) => {
-    e.preventDefault();
-    const email = waitlistEmail.trim().toLowerCase();
-    if (!email) return;
-    setWaitlistSubmitting(true);
-    try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-      await addDoc(collection(db, 'waitlist'), {
-        email,
-        signed_up_at: serverTimestamp(),
-        source: 'scan_page',
-      });
-      setWaitlistStatus({ type: 'success', message: "You're on the list. We'll be in touch." });
-      setWaitlistEmail('');
-    } catch (error) {
-      setWaitlistStatus({ type: 'error', message: 'Something went wrong. Please try again.' });
-    } finally {
-      setWaitlistSubmitting(false);
-    }
-  };
 
   const handleFeedback = async (feedback) => {
     try {
@@ -311,9 +329,6 @@ const ToolScanPage = () => {
     setCaptureEmail('');
     setEmailError(null);
   };
-
-  // mapCondition preserved for marketplace launch
-  // const mapCondition = (c) => ({ 'Excellent': 'Like New', 'Good': 'Good', 'Fair': 'Fair', 'Project': 'Poor' }[c] || 'Good');
 
   return (
     <div className="min-h-screen bg-bone">
@@ -355,7 +370,7 @@ const ToolScanPage = () => {
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                Photograph a tool and we'll do our best to identify it — maker, model, era, and condition. We're not always right, but we're pretty good.
+                Photograph a tool and we'll identify it — maker, model, era, condition — then show you what it's worth and any active listings on Benchlot right now.
               </p>
 
               {/* Upload area */}
@@ -404,16 +419,16 @@ const ToolScanPage = () => {
               </div>
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
 
-              {/* Waitlist nudge */}
+              {/* Browse-current-index nudge */}
               <div className="mt-16 max-w-md mx-auto text-center">
                 <p className="text-base text-secondary font-body mb-3">
-                  Nothing to scan right now? Leave your email and we'll let you know when search and alerts go live.
+                  Nothing to scan right now? Browse what's currently on the bench.
                 </p>
                 <a
-                  href="#scan-waitlist"
+                  href="/"
                   className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                 >
-                  Get early access →
+                  See all listings →
                 </a>
               </div>
             </div>
@@ -438,13 +453,13 @@ const ToolScanPage = () => {
                 </div>
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">2</div>
-                  <h3 className="font-display font-semibold text-dark-teal mb-1">Scan</h3>
-                  <p className="text-sm text-secondary font-body">Photograph your tool. We'll take a crack at identifying it.</p>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Identify</h3>
+                  <p className="text-sm text-secondary font-body">We name the tool, the maker, the era, and the condition — and tell you how confident we are.</p>
                 </div>
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
-                  <h3 className="font-display font-semibold text-dark-teal mb-1">Know</h3>
-                  <p className="text-sm text-secondary font-body">See what it is, what era it's from, and a rough sense of what it's worth.</p>
+                  <h3 className="font-display font-semibold text-dark-teal mb-1">Compare</h3>
+                  <p className="text-sm text-secondary font-body">See what it sells for and any matching listings indexed across Benchlot's sources.</p>
                 </div>
               </div>
             </div>
@@ -468,19 +483,19 @@ const ToolScanPage = () => {
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Hunting something specific?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    A pre-war No. 7. A Lie-Nielsen shoulder plane. A Starrett square. Soon you'll be able to save a search and we'll email you when a matching listing hits.
+                    A pre-war No. 7. A Lie-Nielsen shoulder plane. A Starrett square. Save a search and we'll email you when a matching listing hits any of our sources.
                   </p>
                   <a
-                    href="#scan-waitlist"
+                    href="/"
                     className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                   >
-                    Get early access →
+                    Search the index →
                   </a>
                 </div>
                 <div className="bg-[#fafaf8] rounded-xl border border-[#e4e2dc] p-6">
                   <h3 className="text-lg font-display font-semibold text-spruce mb-3">Curious what it's worth?</h3>
                   <p className="text-base font-body text-secondary mb-4">
-                    Snap a photo and we'll identify the tool, estimate its era, and give you a rough sense of where it sits in the market.
+                    Snap a photo and we'll identify the tool, estimate its era, and compare its expected price to recent sold and asking-price comps from Benchlot's index.
                   </p>
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -492,37 +507,18 @@ const ToolScanPage = () => {
               </div>
             </div>
 
-            {/* Section 5: Bottom Waitlist */}
-            <div id="scan-waitlist" className="mb-12 text-center max-w-md mx-auto">
-              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Get early access</h2>
+            {/* Section 5: Browse + Save Alert CTA */}
+            <div className="mb-12 text-center max-w-md mx-auto">
+              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Or skip the scan</h2>
               <p className="text-base text-secondary font-body mb-6">
-                Leave your email and we'll let you know the moment search and alerts go live.
+                Browse listings indexed from dealers, forums, and auctions across the web. Save an alert and we'll email you when matching listings appear.
               </p>
-              <form onSubmit={handleWaitlistSubmit}>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="flex-1 px-4 py-3 border border-[#e4e2dc] rounded-lg focus:outline-none focus:ring-2 focus:ring-spruce focus:border-transparent font-body bg-bone-light"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    required
-                    disabled={waitlistSubmitting}
-                  />
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors whitespace-nowrap font-body"
-                    disabled={waitlistSubmitting}
-                  >
-                    {waitlistSubmitting ? 'Joining...' : 'Join Waitlist'}
-                  </button>
-                </div>
-                {waitlistStatus.message && (
-                  <p className={`mt-3 text-sm font-body ${waitlistStatus.type === 'success' ? 'text-success' : 'text-error'}`}>
-                    {waitlistStatus.message}
-                  </p>
-                )}
-              </form>
+              <a
+                href="/"
+                className="inline-block px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors font-body"
+              >
+                Browse the index →
+              </a>
             </div>
           </div>
         )}
@@ -777,13 +773,13 @@ const ToolScanPage = () => {
                 Scan another tool →
               </button>
               <p className="text-sm text-secondary font-body mt-3">
-                We'll email you when Benchlot's search goes live so you can save your first alert.
+                Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
               </p>
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
-                Benchlot uses AI to identify tools and suggest prices. Identifications and price estimates are suggestions only — not appraisals. Always review and verify before publishing.
+                Benchlot uses AI to identify tools and surface matching listings. Identifications and price estimates are suggestions, not appraisals — always verify before buying or selling.
               </p>
             </div>
           </div>

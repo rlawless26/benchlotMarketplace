@@ -22,6 +22,7 @@ import { getAggregatedListings } from '../../firebase/adapters/externalListingAd
 import { computeFacets, getAggregatorStats, getSourceCounts } from '../../firebase/adapters/aggregatorFacets';
 import { SOURCES } from '../../firebase/adapters/sources';
 import { useAuth } from '../../firebase/hooks/useAuth';
+import { track } from '../../utils/analytics';
 
 import StickyTopBar from '../../components/aggregator/StickyTopBar';
 import FilterRail from '../../components/aggregator/FilterRail';
@@ -291,6 +292,34 @@ const ResultsState = ({ state, actions }) => {
   const filtered = useMemo(() => filterLocally(raw, { query, filters }), [raw, query, filters]);
   const visible = useMemo(() => filtered.slice(0, visibleLimit), [filtered, visibleLimit]);
 
+  // search_submitted analytics event — fires once per stabilized query with
+  // the post-filter result count. Debounced 600ms so typing "festool" doesn't
+  // produce 7 events. Skipped when query is empty (no intent signal).
+  const lastTrackedQueryRef = useRef('');
+  useEffect(() => {
+    const trimmed = (query || '').trim();
+    if (!trimmed) {
+      lastTrackedQueryRef.current = '';
+      return undefined;
+    }
+    if (loading) return undefined;
+    if (trimmed === lastTrackedQueryRef.current) return undefined;
+    const t = setTimeout(() => {
+      lastTrackedQueryRef.current = trimmed;
+      const filterCount = activeFilterChips.length;
+      track('search_submitted', {
+        query: trimmed,
+        query_length: trimmed.length,
+        has_active_filters: filterCount > 0,
+        active_filter_count: filterCount,
+        active_sort: sort,
+        result_count: filtered.length,
+        was_zero_results: filtered.length === 0,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [query, filtered.length, loading, sort, activeFilterChips.length]);
+
   const facets = useMemo(() => computeFacets(filtered), [filtered]);
 
   const priceRangeHelper = useMemo(() => {
@@ -495,7 +524,15 @@ const ResultsState = ({ state, actions }) => {
                     <select
                       id="results-sort"
                       value={sort}
-                      onChange={(e) => actions.setSort(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        track('sort_changed', {
+                          from_sort: sort,
+                          to_sort: next,
+                          query: query || null,
+                        });
+                        actions.setSort(next);
+                      }}
                       style={{
                         appearance: 'none',
                         padding: '6px 28px 6px 12px',
@@ -865,8 +902,18 @@ const ResultsState = ({ state, actions }) => {
                   gap: 20,
                 }}
               >
-                {visible.map((tool) => (
-                  <ResultCard key={tool.id} listing={tool} />
+                {visible.map((tool, index) => (
+                  <ResultCard
+                    key={tool.id}
+                    listing={tool}
+                    searchContext={{
+                      position: index,
+                      totalResults: filtered.length,
+                      query: (query || '').trim() || null,
+                      activeSort: sort,
+                      activeFilterCount: activeFilterChips.length,
+                    }}
+                  />
                 ))}
               </div>
             )}

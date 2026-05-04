@@ -23,6 +23,13 @@ import {
 
 import { getSource, KIND_COLORS } from '../../firebase/adapters/sources';
 import { relativeTime } from './relativeTime';
+import { track } from '../../utils/analytics';
+import { PRICE_GUIDE_ENABLED } from '../../utils/featureFlags';
+import usePriceStats from '../../firebase/hooks/usePriceStats';
+import usePriceHistory from '../../firebase/hooks/usePriceHistory';
+import PriceContextChip from './PriceContextChip';
+import PriceDropBadge from './PriceDropBadge';
+import PreviousListingsPopover from './PreviousListingsPopover';
 
 const KIND_ICON = {
   Dealer: Store,
@@ -74,8 +81,28 @@ function formatPrice(price, currency = '$') {
 
 const PLACEHOLDER_BG = '#e8e6e0'; // var(--bone-dark) — shown when image is missing
 
-const ResultCard = ({ listing, onSaveAlert }) => {
+const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
   const [hover, setHover] = useState(false);
+
+  // Hooks must run unconditionally — pull priceStats before any early
+  // return below. When PRICE_GUIDE_ENABLED is false, pass nulls so the
+  // hooks short-circuit on their own (no Firestore reads, no chip).
+  const priceStats = usePriceStats(
+    PRICE_GUIDE_ENABLED
+      ? {
+          canonical_type: listing?.canonical_type || null,
+          canonical_brand: listing?.canonical_brand || null,
+          canonical_size: listing?.canonical_size || null,
+        }
+      : {}
+  );
+
+  // Price history (snapshots) — drives the Price-Drop badge and the
+  // previous-listings popover. Hits priceSnapshots/{listingId}/snapshots
+  // and is cached per-tab. Skipped entirely when the flag is off.
+  const priceHistory = usePriceHistory(
+    PRICE_GUIDE_ENABLED ? (listing?.id || null) : null
+  );
 
   if (!listing) return null;
 
@@ -89,10 +116,42 @@ const ResultCard = ({ listing, onSaveAlert }) => {
   const maker = listing.brand && listing.brand !== 'Unknown' ? listing.brand : null;
   const title = listing.name || '(untitled listing)';
 
+  // Surface the listing's source kind for the chip and telemetry.
+  const listingKind = source?.kind || null;
+
   const handleAlertClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (typeof onSaveAlert === 'function') onSaveAlert(listing);
+  };
+
+  const handleCardClick = () => {
+    // Don't preventDefault — the outer anchor still navigates in a new tab.
+    // Fire-and-forget; track() swallows errors so this can never block the
+    // navigation.
+    const ctx = searchContext || {};
+    track('result_clicked', {
+      listing_id: listing.id,
+      source: listing.source,
+      source_kind: source?.kind || null,
+      has_image: Boolean(imageUrl),
+      has_price: typeof listing.price === 'number',
+      price_usd: typeof listing.price === 'number' ? listing.price : null,
+      brand: listing.brand || null,
+      type: listing.canonical_type || listing.type || null,
+      position: ctx.position ?? null,
+      total_results: ctx.totalResults ?? null,
+      query: ctx.query || null,
+      active_sort: ctx.activeSort || null,
+      active_filter_count: ctx.activeFilterCount ?? 0,
+      // Price-context telemetry — populated when the cluster has comps.
+      // No tier judgment in v1 (trust-first); we just record cluster
+      // identity + reference source for click-through analysis.
+      cluster_key: priceStats.cluster_key || null,
+      cluster_grain: priceStats.grain || null,
+      reference_source: priceStats.reference?.source || null,
+      listing_kind: listingKind,
+    });
   };
 
   return (
@@ -102,6 +161,7 @@ const ResultCard = ({ listing, onSaveAlert }) => {
       rel="noopener noreferrer"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={handleCardClick}
       className="block overflow-hidden rounded-card no-underline text-inherit"
       style={{
         background: '#f8f6f2',
@@ -224,18 +284,31 @@ const ResultCard = ({ listing, onSaveAlert }) => {
           {title}
         </h3>
 
-        {/* Price + location */}
+        {/* Price + (deal badge) + location */}
         <div className="flex items-baseline justify-between gap-2.5 mb-2.5">
-          <span
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 700,
-              fontSize: 20,
-              letterSpacing: '-0.01em',
-              color: '#d4aa60', // honey
-            }}
-          >
-            {priceDisplay || '—'}
+          <span className="inline-flex items-baseline gap-2">
+            <span
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 700,
+                fontSize: 20,
+                letterSpacing: '-0.01em',
+                color: '#d4aa60', // honey
+              }}
+            >
+              {priceDisplay || '—'}
+            </span>
+            {PRICE_GUIDE_ENABLED && priceStats.stats && (
+              <PriceContextChip
+                stats={priceStats.stats}
+                grain={priceStats.grain}
+                clusterKey={priceStats.cluster_key}
+                listingKind={listingKind}
+              />
+            )}
+            {PRICE_GUIDE_ENABLED && priceHistory.latestDrop && (
+              <PriceDropBadge listingId={listing.id} drop={priceHistory.latestDrop} />
+            )}
           </span>
           {listing.location && (
             <span
@@ -269,15 +342,23 @@ const ResultCard = ({ listing, onSaveAlert }) => {
             <KindDot kind={source?.kind} />
             Listed at {source?.name || 'external source'}
           </span>
-          <span
-            className="inline-flex items-center gap-1"
-            style={{
-              color: hover ? '#d4aa60' : '#1a3030', // honey on hover, spruce rest
-              transition: 'color 200ms',
-            }}
-          >
-            View source
-            <ExternalLink size={11} />
+          <span className="inline-flex items-center gap-3">
+            {PRICE_GUIDE_ENABLED && priceHistory.snapshots.length >= 2 && (
+              <PreviousListingsPopover
+                listingId={listing.id}
+                snapshots={priceHistory.snapshots}
+              />
+            )}
+            <span
+              className="inline-flex items-center gap-1"
+              style={{
+                color: hover ? '#d4aa60' : '#1a3030', // honey on hover, spruce rest
+                transition: 'color 200ms',
+              }}
+            >
+              View source
+              <ExternalLink size={11} />
+            </span>
           </span>
         </div>
       </div>

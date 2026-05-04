@@ -14,7 +14,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Camera } from 'lucide-react';
 
 import { getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 import { relativeTime } from './relativeTime';
@@ -229,23 +229,46 @@ const HomeIntroBanner = ({ visible, onDismiss }) => {
             ))}
           </div>
 
-          <Link
-            to="/faq"
-            className="inline-flex items-center"
-            style={{
-              gap: 4,
-              color: '#a87f3b',
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 600,
-              fontSize: 11,
-              letterSpacing: '0.02em',
-              textDecoration: 'none',
-              borderBottom: '1px solid currentColor',
-              paddingBottom: 1,
-            }}
-          >
-            Read the RAQ <ArrowRight size={11} aria-hidden />
-          </Link>
+          <div className="inline-flex items-center" style={{ gap: 16 }}>
+            {/* "Not sure what you have?" — reverse link from the
+                aggregator into ToolScan. Matches the RAQ link's visual
+                weight so neither dominates. */}
+            <Link
+              to="/scan"
+              className="inline-flex items-center"
+              style={{
+                gap: 4,
+                color: '#a87f3b',
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 600,
+                fontSize: 11,
+                letterSpacing: '0.02em',
+                textDecoration: 'none',
+                borderBottom: '1px solid currentColor',
+                paddingBottom: 1,
+              }}
+            >
+              <Camera size={11} aria-hidden /> Not sure what you have? Scan it
+            </Link>
+
+            <Link
+              to="/faq"
+              className="inline-flex items-center"
+              style={{
+                gap: 4,
+                color: '#a87f3b',
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 600,
+                fontSize: 11,
+                letterSpacing: '0.02em',
+                textDecoration: 'none',
+                borderBottom: '1px solid currentColor',
+                paddingBottom: 1,
+              }}
+            >
+              Read the RAQ <ArrowRight size={11} aria-hidden />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

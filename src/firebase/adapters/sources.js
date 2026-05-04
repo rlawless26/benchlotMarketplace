@@ -26,6 +26,21 @@ const SOURCES = [
     indexed: true,
   },
   {
+    // Jim Bode's published "Value Guide" — a curated archive of his sold
+    // inventory with historical sold prices. Powers the sold-comp block of
+    // the priceStats aggregator (see functions/pricestats/build.js). Not a
+    // live-for-sale source; intentionally `indexed: false` so it never
+    // appears in aggregator search. The price-guide build reads it by
+    // `status: 'sold'` regardless of this flag.
+    id: 'jimbode_valueguide',
+    name: 'Jim Bode Value Guide',
+    shortName: 'JB Value Guide',
+    kind: 'Dealer',
+    descriptor: 'Sold archive · Katonah NY',
+    homeUrl: 'https://www.jimbodetools.com/collections/jim-bodes-value-guide-to-antique-tools',
+    indexed: false,
+  },
+  {
     id: 'leach',
     name: 'Patrick Leach',
     shortName: 'P. Leach',
