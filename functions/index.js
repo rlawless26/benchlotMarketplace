@@ -2213,6 +2213,322 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
   }
 });
 
+// ─── Unified Check Endpoints ────────────────────────────────────────────────
+// Internal name "check" — user-facing surface is just "Benchlot". Powers the
+// /check page where a user pastes a listing URL or uploads a photo and gets
+// back a price verdict + comp range + cheaper alternatives + share permalink.
+
+const crypto = require('crypto');
+const { parseEbayUrl, fetchEbayItemById } = require('./check/ebay-fetch');
+const { computeVerdict } = require('./check/verdict');
+const { normalizeListing } = require('./normalize/normalizer');
+const { canonicalizeBrand } = require('./normalize/vocabulary');
+const {
+  clusterKey: csClusterKey,
+  clusterKeyModel: csClusterKeyModel,
+  clusterKeyType: csClusterKeyType,
+  pickReferenceWithFallback: csPickReferenceWithFallback,
+} = require('./pricestats/cluster');
+
+const checkLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { ip: false },
+  message: { error: 'Too many checks, please try again later.' },
+});
+
+// 8 char base64url ≈ 48 bits of entropy — plenty for share permalinks.
+function makeShareHash(len = 8) {
+  return crypto.randomBytes(Math.ceil(len * 0.75)).toString('base64url').slice(0, len);
+}
+
+function buildClusterTries(canonical) {
+  const tries = [];
+  if (Number.isInteger(canonical.plane_type_number) && canonical.canonical_model) {
+    tries.push(csClusterKeyType({
+      canonical_type: canonical.canonical_type,
+      canonical_brand: canonical.canonical_brand,
+      canonical_model: canonical.canonical_model,
+      plane_type_number: canonical.plane_type_number,
+    }));
+  }
+  if (canonical.canonical_model) {
+    tries.push(csClusterKeyModel({
+      canonical_type: canonical.canonical_type,
+      canonical_brand: canonical.canonical_brand,
+      canonical_model: canonical.canonical_model,
+    }));
+  }
+  tries.push(csClusterKey({
+    canonical_type: canonical.canonical_type,
+    canonical_brand: canonical.canonical_brand,
+    canonical_size: null,
+  }));
+  return [...new Set(tries)];
+}
+
+async function resolveClusterAndComp(canonical) {
+  const tries = buildClusterTries(canonical);
+  const snaps = await Promise.all(
+    tries.map((k) => db.collection('priceStats').doc(k).get())
+  );
+  const docs = snaps
+    .map((s) => (s.exists ? { ...s.data(), _key: s.ref.id } : null))
+    .filter(Boolean);
+  const ref = csPickReferenceWithFallback(docs);
+  if (!ref) return { cluster_key: null, cluster_grain: null, reference: null };
+  return {
+    cluster_key: ref._stats._key,
+    cluster_grain: ref._stats.grain,
+    reference: {
+      source: ref.source,
+      count: ref.count,
+      p25: ref.p25,
+      p50: ref.p50,
+      p75: ref.p75,
+      p10: ref._stats[`${ref.source}_p10`] != null ? ref._stats[`${ref.source}_p10`] : null,
+      p90: ref._stats[`${ref.source}_p90`] != null ? ref._stats[`${ref.source}_p90`] : null,
+    },
+  };
+}
+
+async function fetchAlternatives(canonical, options) {
+  const { maxPrice = null, limit = 3 } = options || {};
+  // Use the existing (status, canonical_type, scraped_at) composite index.
+  // Filter brand + model + plane_type_number client-side to avoid creating
+  // a new composite index per cluster grain.
+  const snap = await db.collection('externalListings')
+    .where('status', '==', 'active')
+    .where('canonical_type', '==', canonical.canonical_type)
+    .orderBy('first_seen_at', 'desc')
+    .limit(200)
+    .get();
+  const filtered = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((r) => r.canonical_brand === canonical.canonical_brand)
+    .filter((r) => !canonical.canonical_model || r.canonical_model === canonical.canonical_model)
+    .filter((r) => !Number.isInteger(canonical.plane_type_number) || r.plane_type_number === canonical.plane_type_number)
+    .filter((r) => typeof r.price_cents === 'number');
+
+  let candidates;
+  if (Number.isFinite(maxPrice)) {
+    candidates = filtered
+      .filter((r) => (r.price_cents / 100) < maxPrice)
+      .sort((a, b) => a.price_cents - b.price_cents);
+  } else {
+    candidates = filtered.sort((a, b) => a.price_cents - b.price_cents);
+  }
+
+  return candidates.slice(0, limit).map((r) => ({
+    id: r.id,
+    title: r.title_raw,
+    price: r.price_cents / 100,
+    source: r.source,
+    source_url: r.source_url,
+    image_url: (r.images && r.images[0]) || null,
+  }));
+}
+
+async function persistDealCheck({ inputType, sourceUrl, legacyId, userId, listing, cluster, verdict, alternatives }) {
+  const hash = makeShareHash();
+  const doc = {
+    hash,
+    input_type: inputType,
+    source_url: sourceUrl || null,
+    legacy_item_id: legacyId || null,
+    fetched_at: admin.firestore.FieldValue.serverTimestamp(),
+    user_id: userId || null,
+    listing,
+    cluster_key: cluster.cluster_key,
+    cluster_grain: cluster.cluster_grain,
+    reference: cluster.reference,
+    verdict,
+    alternatives,
+  };
+  await db.collection('dealChecks').doc(hash).set(doc);
+  return hash;
+}
+
+/**
+ * POST /url-check
+ * Body: { url }
+ * Handles a pasted eBay URL → identifies tool → returns verdict + comp + alternatives.
+ */
+app.post('/url-check', checkLimiter, optionalAuth, async (req, res) => {
+  try {
+    const { url } = req.body || {};
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'Missing url' });
+    }
+    const parsed = parseEbayUrl(url);
+    if (!parsed) {
+      return res.status(400).json({ error: "We couldn't read that URL. v1 supports eBay listings — paste a URL like https://www.ebay.com/itm/123456789012" });
+    }
+
+    const legacyId = parsed.legacyItemId;
+    const docId = `ebay__${legacyId}`;
+
+    // Cache check — if the bulk scraper already indexed this listing, reuse it
+    let listing = null;
+    const cached = await db.collection('externalListings').doc(docId).get();
+    if (cached.exists) {
+      listing = cached.data();
+    } else {
+      // Live fetch + normalize on demand
+      const record = await fetchEbayItemById(legacyId);
+      listing = record.listing;
+      const norm = await normalizeListing({
+        title_raw: listing.title_raw,
+        description_raw: listing.description_raw,
+        tags: listing.tags,
+        heuristic_brand: listing.heuristic_brand,
+        heuristic_type: listing.heuristic_type,
+      });
+      listing.canonical_brand = canonicalizeBrand(norm.canonical_brand);
+      listing.canonical_type = norm.canonical_type;
+      listing.canonical_model = norm.canonical_model;
+      listing.canonical_size = norm.canonical_size;
+      listing.era_estimate = norm.era_estimate;
+      listing.plane_type_number = Number.isInteger(norm.plane_type_number) ? norm.plane_type_number : null;
+    }
+
+    if (!listing.canonical_brand || !listing.canonical_type) {
+      return res.status(422).json({ error: "We couldn't identify this tool from the listing." });
+    }
+
+    const canonical = {
+      canonical_brand: listing.canonical_brand,
+      canonical_type: listing.canonical_type,
+      canonical_model: listing.canonical_model,
+      plane_type_number: listing.plane_type_number,
+    };
+    const cluster = await resolveClusterAndComp(canonical);
+    const price = typeof listing.price_cents === 'number' ? listing.price_cents / 100 : null;
+    const verdict = computeVerdict({ price, reference: cluster.reference });
+    const alternatives = await fetchAlternatives(canonical, {
+      maxPrice: Number.isFinite(price) ? price : null,
+      limit: 3,
+    });
+
+    const hash = await persistDealCheck({
+      inputType: 'url',
+      sourceUrl: listing.source_url || url,
+      legacyId,
+      userId: (req.user && req.user.uid) || null,
+      listing: {
+        title: listing.title_raw,
+        price,
+        condition: listing.condition_raw || null,
+        images: listing.images || [],
+        canonical,
+      },
+      cluster,
+      verdict,
+      alternatives,
+    });
+
+    res.json({
+      success: true,
+      hash,
+      share_url: `/check/${hash}`,
+      cluster_key: cluster.cluster_key,
+      cluster_grain: cluster.cluster_grain,
+      reference: cluster.reference,
+      verdict,
+      alternatives,
+      listing: {
+        title: listing.title_raw,
+        price,
+        condition: listing.condition_raw || null,
+        images: listing.images || [],
+        source_url: listing.source_url || url,
+        canonical,
+      },
+    });
+  } catch (error) {
+    console.error('url-check error:', error.message || error);
+    if (error.code === 'non_us_listing') {
+      return res.status(422).json({ error: error.message });
+    }
+    if (error.response && error.response.status === 404) {
+      return res.status(404).json({ error: "That eBay listing wasn't found — it may have been removed or sold." });
+    }
+    res.status(500).json({ error: error.message || 'An error occurred during the check.' });
+  }
+});
+
+/**
+ * POST /check-from-canonical
+ * Body: { canonical_brand, canonical_type, canonical_model?, plane_type_number?, price?, source_label?, listing_summary? }
+ * Used by the photo-upload flow (after /toolscan returns canonical fields)
+ * to do the comp lookup + persist the share-permalink snapshot. Same
+ * downstream logic as /url-check, just without the URL→listing fetch.
+ */
+app.post('/check-from-canonical', checkLimiter, optionalAuth, async (req, res) => {
+  try {
+    const {
+      canonical_brand,
+      canonical_type,
+      canonical_model,
+      plane_type_number,
+      price,
+      source_label,
+      listing_summary,
+    } = req.body || {};
+    if (!canonical_brand || !canonical_type) {
+      return res.status(400).json({ error: 'canonical_brand and canonical_type are required' });
+    }
+    const canonical = {
+      canonical_brand,
+      canonical_type,
+      canonical_model: canonical_model || null,
+      plane_type_number: Number.isInteger(plane_type_number) ? plane_type_number : null,
+    };
+
+    const cluster = await resolveClusterAndComp(canonical);
+    const verdict = Number.isFinite(price)
+      ? computeVerdict({ price, reference: cluster.reference })
+      : null;
+    const alternatives = await fetchAlternatives(canonical, {
+      maxPrice: Number.isFinite(price) ? price : null,
+      limit: 3,
+    });
+
+    const hash = await persistDealCheck({
+      inputType: source_label === 'photo' ? 'photo' : 'canonical',
+      sourceUrl: null,
+      legacyId: null,
+      userId: (req.user && req.user.uid) || null,
+      listing: {
+        title: (listing_summary && listing_summary.title) || null,
+        price: Number.isFinite(price) ? price : null,
+        condition: (listing_summary && listing_summary.condition) || null,
+        images: (listing_summary && listing_summary.images) || [],
+        canonical,
+      },
+      cluster,
+      verdict,
+      alternatives,
+    });
+
+    res.json({
+      success: true,
+      hash,
+      share_url: `/check/${hash}`,
+      cluster_key: cluster.cluster_key,
+      cluster_grain: cluster.cluster_grain,
+      reference: cluster.reference,
+      verdict,
+      alternatives,
+    });
+  } catch (error) {
+    console.error('check-from-canonical error:', error.message || error);
+    res.status(500).json({ error: error.message || 'An error occurred.' });
+  }
+});
+
 // Export the API as a Firebase Function
 // CORS is handled by the Express cors middleware configured above
 exports.api = functions.https.onRequest(app);

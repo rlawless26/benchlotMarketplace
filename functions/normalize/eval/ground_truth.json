@@ -1842,8 +1842,390 @@
         "type: heuristic=Domino vs opus=Other"
       ],
       "_cohort": "powertools_m5"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__001",
+      "source": "synthetic",
+      "source_id": "planes_v1_001",
+      "title_raw": "Stanley No. 5 Type 11 Jack Plane c. 1910-1918",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "canonical_size": null,
+        "era_estimate": "Type 11, c. 1910-1918",
+        "plane_type_number": 11
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__002",
+      "source": "synthetic",
+      "source_id": "planes_v1_002",
+      "title_raw": "Stanley Bailey No. 4 Type 13 Sweetheart Smoothing Plane",
+      "truth": {
+        "canonical_brand": "Stanley-Bailey",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": "Type 13, c. 1925-1928",
+        "plane_type_number": 13
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__003",
+      "source": "synthetic",
+      "source_id": "planes_v1_003",
+      "title_raw": "Stanley No. 4 Type 16 Smoothing Plane c. 1933-1941",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": "Type 16, c. 1933-1941",
+        "plane_type_number": 16
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__004",
+      "source": "synthetic",
+      "source_id": "planes_v1_004",
+      "title_raw": "Stanley No. 7 Type 11 Jointer Plane Pre-WWI",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 7",
+        "canonical_size": null,
+        "era_estimate": "Type 11, c. 1910-1918",
+        "plane_type_number": 11
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__005",
+      "source": "synthetic",
+      "source_id": "planes_v1_005",
+      "title_raw": "Type 19 Stanley No. 5 Jack Plane Blue Bed Post-War",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "canonical_size": null,
+        "era_estimate": "Type 19, c. 1948-1961",
+        "plane_type_number": 19
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__006",
+      "source": "synthetic",
+      "source_id": "planes_v1_006",
+      "title_raw": "Stanley Bailey No. 3 Type 9 Smoothing Plane Early Lateral",
+      "truth": {
+        "canonical_brand": "Stanley-Bailey",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 3",
+        "canonical_size": null,
+        "era_estimate": "Type 9, c. 1902-1907",
+        "plane_type_number": 9
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__007",
+      "source": "synthetic",
+      "source_id": "planes_v1_007",
+      "title_raw": "Stanley No. 4 Type 17 WWII-Era Smoothing Plane",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": "Type 17, c. 1942-1945",
+        "plane_type_number": 17
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__008",
+      "source": "synthetic",
+      "source_id": "planes_v1_008",
+      "title_raw": "Stanley No. 8 Type 13 Jointer Plane Sweetheart",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 8",
+        "canonical_size": null,
+        "era_estimate": "Type 13, c. 1925-1928",
+        "plane_type_number": 13
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__009",
+      "source": "synthetic",
+      "source_id": "planes_v1_009",
+      "title_raw": "Type 20 Stanley No. 4 Smoothing Plane Plastic Handles",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": "Type 20, c. 1962-1967+",
+        "plane_type_number": 20
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__010",
+      "source": "synthetic",
+      "source_id": "planes_v1_010",
+      "title_raw": "Stanley No. 5 Type 14 Sweetheart Jack Plane c. 1925",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "canonical_size": null,
+        "era_estimate": "Type 14, c. 1929-1932",
+        "plane_type_number": 14
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__011",
+      "source": "synthetic",
+      "source_id": "planes_v1_011",
+      "title_raw": "Stanley Bailey No. 4 1/2 Type 11 Wide Smoother",
+      "truth": {
+        "canonical_brand": "Stanley-Bailey",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4 1/2",
+        "canonical_size": null,
+        "era_estimate": "Type 11, c. 1910-1918",
+        "plane_type_number": 11
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__012",
+      "source": "synthetic",
+      "source_id": "planes_v1_012",
+      "title_raw": "Stanley No. 7 Type 19 Jointer Plane Blue",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 7",
+        "canonical_size": null,
+        "era_estimate": "Type 19, c. 1948-1961",
+        "plane_type_number": 19
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["synthetic test case for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__013",
+      "source": "synthetic",
+      "source_id": "planes_v1_013",
+      "title_raw": "Stanley No. 9 1/2 Block Plane",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Block Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — block planes are out of scope for v1 plane_type extraction"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__014",
+      "source": "synthetic",
+      "source_id": "planes_v1_014",
+      "title_raw": "Stanley Bedrock No. 605 Type 6 Jack Plane",
+      "truth": {
+        "canonical_brand": "Stanley Bedrock",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 605",
+        "canonical_size": null,
+        "era_estimate": "Type 6",
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — Bedrocks are deferred for v1 even though they share the bench-plane type system"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__015",
+      "source": "synthetic",
+      "source_id": "planes_v1_015",
+      "title_raw": "Lie-Nielsen No. 4 Smoothing Plane",
+      "truth": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Lie-Nielsen",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — non-Stanley brand"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__016",
+      "source": "synthetic",
+      "source_id": "planes_v1_016",
+      "title_raw": "Stanley No. 71 Router Plane",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Router Plane",
+        "canonical_model": "No. 71",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Router Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — Stanley specialty plane (No. 71 router), not a bench plane"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__017",
+      "source": "synthetic",
+      "source_id": "planes_v1_017",
+      "title_raw": "Stanley No. 4 Jack Plane",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Bench Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — Stanley bench plane but no type indication; should output null rather than guess"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__018",
+      "source": "synthetic",
+      "source_id": "planes_v1_018",
+      "title_raw": "Stanley No. 60 1/2 Block Plane Sweetheart",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "canonical_size": null,
+        "era_estimate": "Sweetheart era",
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Block Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — block plane (Sweetheart era is a separate type study from bench planes)"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__019",
+      "source": "synthetic",
+      "source_id": "planes_v1_019",
+      "title_raw": "Stanley No. 45 Combination Plane",
+      "truth": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Combination Plane",
+        "canonical_model": "No. 45",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Stanley",
+      "_heuristic_type": "Combination Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — Stanley specialty/combination plane"],
+      "_cohort": "plane_types_v1"
+    },
+    {
+      "doc_id": "synthetic_planes_v1__020",
+      "source": "synthetic",
+      "source_id": "planes_v1_020",
+      "title_raw": "Norris A5 Smoother Infill Plane",
+      "truth": {
+        "canonical_brand": "Norris",
+        "canonical_type": "Infill Plane",
+        "canonical_model": "A5",
+        "canonical_size": null,
+        "era_estimate": null,
+        "plane_type_number": null
+      },
+      "_heuristic_brand": "Norris",
+      "_heuristic_type": "Infill Plane",
+      "_tags": [],
+      "_bootstrap_review": ["negative case — non-Stanley brand (Norris infill)"],
+      "_cohort": "plane_types_v1"
     }
   ],
   "m5_expanded_at": "2026-04-24T13:09:49.746Z",
-  "m5_expanded_count": 30
+  "m5_expanded_count": 30,
+  "plane_types_v1_added_at": "2026-05-06T00:00:00.000Z",
+  "plane_types_v1_count": 20
 }

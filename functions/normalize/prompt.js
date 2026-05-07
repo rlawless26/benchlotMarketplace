@@ -128,6 +128,22 @@ Good values:
 - Bridge City: "AS-14", "PV-2", "FC-1"
 - Use "No." prefix for numerically-designated models. Prefer ASCII fractions: "No. 60 1/2", not "60½".
 
+### Strict canonical forms — Stanley pattern planes
+
+Plane comp clustering depends on a single canonical spelling per model. For Stanley and Stanley-pattern brands, ALWAYS emit one of these exact forms (note the period after "No" and the space before the number):
+
+- **Stanley bench planes**: \`No. 1\`, \`No. 2\`, \`No. 3\`, \`No. 4\`, \`No. 4 1/2\`, \`No. 5\`, \`No. 5 1/2\`, \`No. 6\`, \`No. 7\`, \`No. 8\`
+- **Stanley Bedrocks**: \`No. 602\`, \`No. 603\`, \`No. 604\`, \`No. 604 1/2\`, \`No. 605\`, \`No. 605 1/2\`, \`No. 606\`, \`No. 607\`, \`No. 608\`
+- **Stanley block planes**: \`No. 9 1/2\`, \`No. 60 1/2\`, \`No. 65\`, \`No. 102\`, \`No. 110\`, \`No. 220\`
+- **Stanley specialty/combination**: \`No. 45\`, \`No. 50\`, \`No. 55\`, \`No. 71\`, \`No. 78\`, \`No. 80\`, \`No. 95\`, \`No. 151\`
+
+Reject prose / shorthand forms — always normalize:
+- "5", "Number 5", "#5", "no 5", "No.5", "stanley 5" → \`No. 5\`
+- "4-1/2", "4½", "4.5" → \`No. 4 1/2\`
+- "6051/2", "605½" → \`No. 605 1/2\`
+
+Brands that follow the Stanley numbering convention (Sargent's own line, Millers Falls, Union, Record, Lie-Nielsen, WoodRiver) should also use the \`No. X\` strict form when the listing names a numeric model. Record and WoodRiver mirror Stanley numbers with their own prefix conventions ("Record No. 04" → \`No. 4\` is acceptable; "Record 04" → \`No. 4\` is also acceptable). Norris models (A1, A5, A71) keep their own letter-number form — no "No." prefix.
+
 **Null** when the listing doesn't state a distinct model designation. Examples where you should emit null:
 - "Brass Back Dovetail Saw" — that's a type + description, not a model.
 - "Quick Adjust Tiger Wrench" — tool name, not a model.
@@ -135,6 +151,29 @@ Good values:
 - "Dual Iron Dovetailed Rosewood Infill Rabbet Plane" — all adjectives + type, no model.
 
 Do not repeat the tool type (already in canonical_type) or the maker (already in canonical_brand) inside the model value. "No. 5" is a model; "No. 5 Jack Plane" is a model + redundant type — prefer the shorter form.
+
+## plane_type_number guidance
+
+For Stanley BENCH PLANES (#1–#8) AND Stanley BEDROCKS (#602–#608). Both share the Stanley bench-plane Type 1-20 system — same dating cues apply (rosewood vs stained hardwood handles, lateral lever presence, "S" casting, sweetheart cutter, blue paint, etc.). Output the integer Type Study number 1-20 if you can identify it from the title, description, or visible features. Output \`null\` for:
+
+- Non-Stanley brands (Lie-Nielsen, Record, Sargent, Norris, Millers Falls, etc.)
+- Stanley block planes (#9 1/2, #60 1/2, #65, #102, #220) — separate type study, not yet covered
+- Stanley combination/specialty planes (#45, #71, #80, #95, #151, etc.)
+- Stanley bench planes / Bedrocks where the type cannot be reasonably inferred
+
+Type identification cues (consistent with the era_estimate guidance below):
+- **Pre-lateral (Type 1–6, 1867–1892)**: no lateral adjustment lever; "BAILEY" cast on iron
+- **Early lateral (Type 7–11, 1893–1910)**: first lateral lever; "S" casting behind frog; kidney-shaped lever cap hole
+- **Classic (Type 11–15, 1910–1932)**: "STANLEY" on lateral lever; hard rubber adjuster; rosewood tote and knob; patent dates behind frog
+- **Sweetheart (Type 13–14, 1919–1932)**: "SW" trademark cartouche on cutter
+- **Type 16 (1933–1941)**: stained hardwood handles replace rosewood; hard rubber depth wheel
+- **Type 17 (1942–1945, WWII)**: stained hardwood handles, slightly rougher casting quality
+- **Type 19 (1948–1961)**: blue-painted bed/frog; ribbed depth adjustment nut
+- **Type 20 (1962–1967+)**: blue paint; "STANLEY" in rectangular cartouche; later examples have plastic handles
+
+When the listing only narrows to a range (e.g. "Type 11-13"), pick the middle value (12). When you cannot narrow to a specific type with confidence, output \`null\` — don't guess. The downstream comp engine relies on this field for variant-level price clustering, and a wrong integer is more harmful than a null.
+
+The free-form \`era_estimate\` field continues to capture human-readable era prose ("Type 11, c. 1910-1918"). \`plane_type_number\` is the structured derivative used for clustering — they should agree when both are populated.
 
 ## canonical_size guidance
 

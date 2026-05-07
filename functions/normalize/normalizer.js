@@ -50,8 +50,14 @@ const CLASSIFY_TOOL = {
         type: ['string', 'null'],
         description: 'Era shorthand (e.g. "1920s", "c. 1900-1915", "Type 11, c. 1910-1918"). Null if unknown.',
       },
+      plane_type_number: {
+        type: ['integer', 'null'],
+        description: 'Stanley bench plane Type Study number (1-20). Populated only when the listing is a Stanley bench plane (#1-#8) AND the type can be identified with reasonable confidence. Null otherwise (non-Stanley brands, block planes, Bedrocks, specialty planes, or unidentifiable types).',
+        minimum: 1,
+        maximum: 20,
+      },
     },
-    required: ['canonical_brand', 'canonical_type', 'canonical_model', 'canonical_size', 'era_estimate'],
+    required: ['canonical_brand', 'canonical_type', 'canonical_model', 'canonical_size', 'era_estimate', 'plane_type_number'],
   },
 };
 

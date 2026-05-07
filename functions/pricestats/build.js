@@ -28,6 +28,8 @@ const admin = require('firebase-admin');
 
 const {
   clusterKey,
+  clusterKeyModel,
+  clusterKeyType,
   ASKING_WINDOW_DAYS,
 } = require('./cluster');
 
@@ -156,7 +158,12 @@ function pushSample(acc, key, fields, priceCents, block, kind) {
       cluster_key: key,
       canonical_type: fields.canonical_type,
       canonical_brand: fields.canonical_brand,
-      canonical_size: fields.canonical_size,
+      // Optional grain-discriminating fields. Populated only on the bucket
+      // whose grain consumes them; null on others. Used at doc-write time
+      // to derive the `grain` label and to render the variant on the page.
+      canonical_size: fields.canonical_size ?? null,
+      canonical_model: fields.canonical_model ?? null,
+      plane_type_number: Number.isInteger(fields.plane_type_number) ? fields.plane_type_number : null,
       sold: [],
       asking: [],
       asking_count_active: 0,
@@ -255,7 +262,7 @@ async function runBuild() {
 
     const kind = kindForSource(row.source);
 
-    // Coarse grain
+    // Coarse grain — always
     const coarseFields = {
       canonical_type: row.canonical_type,
       canonical_brand: row.canonical_brand,
@@ -263,7 +270,7 @@ async function runBuild() {
     };
     pushSample(acc, clusterKey(coarseFields), coarseFields, row.price_cents, block, kind);
 
-    // Fine grain — only when size is non-null
+    // Fine grain — when size is non-null (chisels, saws, etc.)
     if (row.canonical_size) {
       const fineFields = {
         canonical_type: row.canonical_type,
@@ -273,8 +280,31 @@ async function runBuild() {
       pushSample(acc, clusterKey(fineFields), fineFields, row.price_cents, block, kind);
     }
 
+    // Model-fine grain — when canonical_model is non-null. Planes
+    // especially benefit because the model number IS the size descriptor
+    // and canonical_size is typically null for planes.
+    if (row.canonical_model) {
+      const modelFields = {
+        canonical_type: row.canonical_type,
+        canonical_brand: row.canonical_brand,
+        canonical_model: row.canonical_model,
+      };
+      pushSample(acc, clusterKeyModel(modelFields), modelFields, row.price_cents, block, kind);
+    }
+
+    // Type-fine grain — Stanley bench planes with a known type number.
+    if (row.canonical_model && Number.isInteger(row.plane_type_number)) {
+      const typeFields = {
+        canonical_type: row.canonical_type,
+        canonical_brand: row.canonical_brand,
+        canonical_model: row.canonical_model,
+        plane_type_number: row.plane_type_number,
+      };
+      pushSample(acc, clusterKeyType(typeFields), typeFields, row.price_cents, block, kind);
+    }
+
     if (block === 'asking') {
-      // Bookkeep active/expired split for both grains.
+      // Bookkeep active/expired split across all grains the row contributed to.
       const incrementOn = (key) => {
         const b = acc.get(key);
         if (!b) return;
@@ -287,6 +317,21 @@ async function runBuild() {
           canonical_type: row.canonical_type,
           canonical_brand: row.canonical_brand,
           canonical_size: row.canonical_size,
+        }));
+      }
+      if (row.canonical_model) {
+        incrementOn(clusterKeyModel({
+          canonical_type: row.canonical_type,
+          canonical_brand: row.canonical_brand,
+          canonical_model: row.canonical_model,
+        }));
+      }
+      if (row.canonical_model && Number.isInteger(row.plane_type_number)) {
+        incrementOn(clusterKeyType({
+          canonical_type: row.canonical_type,
+          canonical_brand: row.canonical_brand,
+          canonical_model: row.canonical_model,
+          plane_type_number: row.plane_type_number,
         }));
       }
     }
@@ -347,12 +392,22 @@ async function runBuild() {
       asking_by_kind[k] = perKindBlock(bucket.asking_by_kind[k] || []);
     }
 
+    // Derive grain from which discriminating field the bucket carries.
+    // Priority: type-fine > model-fine > fine > coarse.
+    let grain;
+    if (Number.isInteger(bucket.plane_type_number)) grain = 'type-fine';
+    else if (bucket.canonical_model) grain = 'model-fine';
+    else if (bucket.canonical_size) grain = 'fine';
+    else grain = 'coarse';
+
     const doc = {
       cluster_key: bucket.cluster_key,
       canonical_type: bucket.canonical_type,
       canonical_brand: bucket.canonical_brand,
       canonical_size: bucket.canonical_size,
-      grain: bucket.canonical_size ? 'fine' : 'coarse',
+      canonical_model: bucket.canonical_model,
+      plane_type_number: bucket.plane_type_number,
+      grain,
 
       // Sold block — overall (Jim Bode Value Guide today; future ebay_sold etc.)
       sold_count: sold.count,

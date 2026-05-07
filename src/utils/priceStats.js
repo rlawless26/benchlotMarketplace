@@ -32,6 +32,16 @@ export function slug(s) {
   return out || '_';
 }
 
+/**
+ * Cluster-key grains (priority order, finest first):
+ *   - type-fine    pt::{type}::{brand}::m-{model}::t-{plane_type_number}
+ *   - model-fine   pt::{type}::{brand}::m-{model}
+ *   - fine         pt::{type}::{brand}::{size}
+ *   - coarse       pt::{type}::{brand}::_
+ *
+ * The `m-` and `t-` prefixes are namespace markers that prevent collision
+ * with the existing size-based fine grain.
+ */
 export function clusterKey({ canonical_type, canonical_brand, canonical_size }) {
   return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::${slug(canonical_size)}`;
 }
@@ -42,6 +52,14 @@ export function clusterKeyFromSlugs(typeSlug, brandSlug, sizeSlug) {
 
 export function buildKeyFromUrlSlugs({ typeSlug, brandSlug, sizeSlug }) {
   return clusterKeyFromSlugs(typeSlug, brandSlug, sizeSlug);
+}
+
+export function clusterKeyModel({ canonical_type, canonical_brand, canonical_model }) {
+  return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::m-${slug(canonical_model)}`;
+}
+
+export function clusterKeyType({ canonical_type, canonical_brand, canonical_model, plane_type_number }) {
+  return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::m-${slug(canonical_model)}::t-${plane_type_number}`;
 }
 
 export function hasDisplayableStats(stats) {
@@ -113,4 +131,28 @@ export function perKindBlocks(stats, block) {
       };
     })
     .filter(Boolean);
+}
+
+/**
+ * Pick the best-grain reference from an ordered array of priceStats docs.
+ * Iterates finest → coarsest (caller-supplied order) and returns the first
+ * doc that produces a non-null `pickReference`. Returns null if no doc in
+ * the array meets the display thresholds.
+ *
+ * Typical usage from a consumer:
+ *   const docs = await Promise.all([
+ *     getStats(clusterKeyType({...})),
+ *     getStats(clusterKeyModel({...})),
+ *     getStats(clusterKey({...})),       // existing fine grain (size)
+ *     getStats(clusterKey({..., canonical_size: null})), // coarse
+ *   ]);
+ *   const ref = pickReferenceWithFallback(docs);
+ */
+export function pickReferenceWithFallback(statsDocsInPriorityOrder) {
+  if (!Array.isArray(statsDocsInPriorityOrder)) return null;
+  for (const stats of statsDocsInPriorityOrder) {
+    const ref = pickReference(stats);
+    if (ref) return { ...ref, _stats: stats };
+  }
+  return null;
 }

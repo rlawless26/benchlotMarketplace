@@ -170,9 +170,9 @@ async function main() {
   const durationSec = ((Date.now() - t0) / 1000).toFixed(1);
 
   // Score
-  const scores = { brand: 0, type: 0, model: 0 };
-  const total = { brand: 0, type: 0, model: 0 };
-  const misses = { brand: [], type: [], model: [] };
+  const scores = { brand: 0, type: 0, model: 0, plane_type: 0 };
+  const total = { brand: 0, type: 0, model: 0, plane_type: 0 };
+  const misses = { brand: [], type: [], model: [], plane_type: [] };
   const errored = [];
 
   for (const r of results) {
@@ -198,6 +198,21 @@ async function main() {
         misses.model.push({ title: r.entry.title_raw, truth: truth.canonical_model, pred: pred.canonical_model });
       }
     }
+
+    // plane_type_number — only counted when truth declares it (existing
+    // pre-v1 entries omit the field and are skipped, same pattern as
+    // canonical_model). Both `null` and integer truth are scored:
+    // negative cases (block planes, non-Stanley, deferred Bedrocks)
+    // earn a hit when the predicted value is also null.
+    if (truth.plane_type_number !== undefined) {
+      total.plane_type += 1;
+      const t = truth.plane_type_number;
+      const p = pred.plane_type_number;
+      const tNorm = Number.isInteger(t) ? t : null;
+      const pNorm = Number.isInteger(p) ? p : null;
+      if (tNorm === pNorm) scores.plane_type += 1;
+      else misses.plane_type.push({ title: r.entry.title_raw, truth: t, pred: p });
+    }
   }
 
   // Cost estimate (Haiku 4.5 pricing as default; Opus 4.7 for comparison)
@@ -215,9 +230,10 @@ async function main() {
   console.log('=== Results ===');
   console.log(`Scored: ${total.brand}  Errored: ${errored.length}  Duration: ${durationSec}s`);
   console.log('');
-  console.log(`Brand:  ${scores.brand}/${total.brand}  ${pct(scores.brand, total.brand)}  (gate: 95%)`);
-  console.log(`Type:   ${scores.type}/${total.type}  ${pct(scores.type, total.type)}  (gate: 100%)`);
-  console.log(`Model:  ${scores.model}/${total.model}  ${pct(scores.model, total.model)}  (gate: 90%)`);
+  console.log(`Brand:        ${scores.brand}/${total.brand}  ${pct(scores.brand, total.brand)}  (gate: 95%)`);
+  console.log(`Type:         ${scores.type}/${total.type}  ${pct(scores.type, total.type)}  (gate: 100%)`);
+  console.log(`Model:        ${scores.model}/${total.model}  ${pct(scores.model, total.model)}  (gate: 90%)`);
+  console.log(`Plane type:   ${scores.plane_type}/${total.plane_type}  ${pct(scores.plane_type, total.plane_type)}  (gate: 80%)`);
   console.log('');
   console.log('=== Tokens ===');
   console.log(`input: ${totals.input}  output: ${totals.output}  cache_write: ${totals.cacheCreate}  cache_read: ${totals.cacheRead}`);
@@ -237,6 +253,10 @@ async function main() {
       console.log(`--- Model misses (${misses.model.length}) ---`);
       for (const m of misses.model.slice(0, 20)) console.log(`  truth=${m.truth}  pred=${m.pred}  | ${m.title}`);
     }
+    if (misses.plane_type.length) {
+      console.log(`--- Plane type misses (${misses.plane_type.length}) ---`);
+      for (const m of misses.plane_type) console.log(`  truth=${m.truth}  pred=${m.pred}  | ${m.title}`);
+    }
     if (errored.length) {
       console.log(`--- Errored (${errored.length}) ---`);
       for (const e of errored) console.log(`  ${e.error}  | ${e.title}`);
@@ -245,7 +265,8 @@ async function main() {
 
   const pass = scores.brand / total.brand >= 0.95
     && scores.type === total.type
-    && scores.model / Math.max(total.model, 1) >= 0.90;
+    && scores.model / Math.max(total.model, 1) >= 0.90
+    && (total.plane_type === 0 || scores.plane_type / total.plane_type >= 0.80);
   console.log('');
   console.log(pass ? 'PASS — exit criteria met. Proceed to backfill + M3.' : 'FAIL — iterate the prompt and re-run.');
   process.exit(pass ? 0 : 1);

@@ -50,6 +50,7 @@ async function normalizeListingDoc(ref, data, opts = {}) {
     canonical_model: result.canonical_model,
     canonical_size: result.canonical_size,
     era_estimate: result.era_estimate,
+    plane_type_number: result.plane_type_number ?? null,
     normalized_at: admin.firestore.FieldValue.serverTimestamp(),
     normalizer_model: result.model,
   });
@@ -63,6 +64,7 @@ async function normalizeListingDoc(ref, data, opts = {}) {
       canonical_model: result.canonical_model,
       canonical_size: result.canonical_size,
       era_estimate: result.era_estimate,
+      plane_type_number: result.plane_type_number ?? null,
     },
   };
 }

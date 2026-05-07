@@ -279,6 +279,17 @@ service cloud.firestore {
       allow write: if isServiceAccount() || isAdmin();
     }
 
+    // Check page snapshots — frozen-in-time records of a tool check
+    // (URL paste or photo upload). Created server-side by /url-check and
+    // /check-from-canonical; read client-side via /check/:hash share
+    // permalinks. Public read by design — share permalinks need to work
+    // for anyone with the URL. Writes locked to service account so
+    // browsers can't fabricate verdicts.
+    match /dealChecks/{hash} {
+      allow read;
+      allow write: if isServiceAccount() || isAdmin();
+    }
+
     // Aggregator: saved searches (alerts).
     // Owned by the user. Each doc describes a {query, filters, sort} that
     // the matcher function polls against new externalListings arrivals and

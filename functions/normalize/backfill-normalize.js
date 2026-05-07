@@ -5,12 +5,14 @@
  * already-normalized rows.
  *
  * Usage:
- *   node functions/normalize/backfill-normalize.js                  # all unnormalized
- *   node functions/normalize/backfill-normalize.js --limit 50       # first 50 only (smoke)
- *   node functions/normalize/backfill-normalize.js --concurrency 5  # default 3
- *   node functions/normalize/backfill-normalize.js --source jimbode # filter by source
- *   node functions/normalize/backfill-normalize.js --force          # re-normalize all
- *   node functions/normalize/backfill-normalize.js --dry-run        # print summary, no writes
+ *   node functions/normalize/backfill-normalize.js                                  # all unnormalized
+ *   node functions/normalize/backfill-normalize.js --limit 50                       # first 50 only (smoke)
+ *   node functions/normalize/backfill-normalize.js --concurrency 5                  # default 3
+ *   node functions/normalize/backfill-normalize.js --source jimbode                 # filter by source
+ *   node functions/normalize/backfill-normalize.js --canonical-type 'Bench Plane'   # filter by canonical_type (exact)
+ *   node functions/normalize/backfill-normalize.js --canonical-type 'Bench Plane,Block Plane,Shoulder Plane'  # multi-type (Firestore `in`, max 30)
+ *   node functions/normalize/backfill-normalize.js --force                          # re-normalize all matching
+ *   node functions/normalize/backfill-normalize.js --dry-run                        # print summary, no writes
  */
 
 const path = require('path');
@@ -38,12 +40,26 @@ const admin = require('firebase-admin');
 })();
 
 function parseArgs(argv) {
-  const args = { limit: Infinity, concurrency: 3, source: undefined, force: false, unknownOnly: false, dryRun: false };
+  const args = { limit: Infinity, concurrency: 3, source: undefined, canonicalTypes: [], status: 'active', force: false, unknownOnly: false, dryRun: false };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--limit') args.limit = Number(argv[++i]);
     else if (a === '--concurrency') args.concurrency = Number(argv[++i]);
     else if (a === '--source') args.source = argv[++i];
+    else if (a === '--canonical-type') {
+      args.canonicalTypes = String(argv[++i]).split(',').map((s) => s.trim()).filter(Boolean);
+      if (args.canonicalTypes.length > 30) {
+        console.error('[backfill-normalize] --canonical-type accepts up to 30 values (Firestore `in` limit)');
+        process.exit(2);
+      }
+    }
+    else if (a === '--status') {
+      args.status = argv[++i];
+      if (!['active', 'sold', 'expired', 'all'].includes(args.status)) {
+        console.error(`[backfill-normalize] --status must be one of: active, sold, expired, all (got: ${args.status})`);
+        process.exit(2);
+      }
+    }
     else if (a === '--force') args.force = true;
     else if (a === '--unknown-only') args.unknownOnly = true;
     else if (a === '--dry-run') args.dryRun = true;
@@ -89,11 +105,22 @@ async function main() {
   const col = db.collection('externalListings');
 
   // Fetch candidates. Firestore can't express "canonical_brand is null"
-  // cleanly in compound queries with our current indexes, so we filter the
-  // 'active' set client-side. At current scale (≤25k rows) this is fine.
-  let query = col.where('status', '==', 'active');
+  // cleanly in compound queries with our current indexes, so we filter
+  // client-side after the status/type/source query. At current scale
+  // (≤30k rows) this is fine.
+  let query = col;
+  if (args.status !== 'all') query = query.where('status', '==', args.status);
   if (args.source) query = query.where('source', '==', args.source);
-  console.log(`[backfill-normalize] querying active listings${args.source ? ` for source=${args.source}` : ''}...`);
+  if (args.canonicalTypes.length === 1) {
+    query = query.where('canonical_type', '==', args.canonicalTypes[0]);
+  } else if (args.canonicalTypes.length > 1) {
+    query = query.where('canonical_type', 'in', args.canonicalTypes);
+  }
+  const filterDescParts = [];
+  filterDescParts.push(`status=${args.status}`);
+  if (args.source) filterDescParts.push(`source=${args.source}`);
+  if (args.canonicalTypes.length) filterDescParts.push(`canonical_type IN [${args.canonicalTypes.join(', ')}]`);
+  console.log(`[backfill-normalize] querying listings (${filterDescParts.join(', ')})...`);
   const snap = await query.get();
   const all = snap.docs;
 
@@ -103,7 +130,7 @@ async function main() {
   else pool = all.filter((d) => !d.data().canonical_brand);
   const candidates = pool.slice(0, Number.isFinite(args.limit) ? args.limit : undefined);
 
-  console.log(`[backfill-normalize] ${all.length} total active; ${candidates.length} to normalize (force=${args.force}, unknownOnly=${args.unknownOnly}, limit=${args.limit})`);
+  console.log(`[backfill-normalize] ${all.length} total matching; ${candidates.length} to normalize (force=${args.force}, unknownOnly=${args.unknownOnly}, limit=${args.limit})`);
 
   if (args.dryRun) {
     const sampleSize = Math.min(5, candidates.length);

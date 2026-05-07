@@ -20,6 +20,8 @@ import WaitlistLandingPage from './Pages/WaitlistLandingPage';
 import AggregatorHomePage from './Pages/aggregator/AggregatorHomePage';
 import AlertsPage from './Pages/aggregator/AlertsPage';
 import PriceGuidePage from './Pages/aggregator/PriceGuidePage';
+import PlaneTypePage from './Pages/aggregator/PlaneTypePage';
+import CheckPage from './Pages/aggregator/CheckPage';
 import FoundingSellersPage from './Pages/FoundingSellersPage';
 import MarketplacePage from './Pages/MarketplacePage';
 import ToolDetailPage from './Pages/ToolDetailPage';
@@ -57,7 +59,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Feature flags
-import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED } from './utils/featureFlags';
+import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED, PLANE_PAGES_ENABLED, TOOL_CHECK_ENABLED } from './utils/featureFlags';
 
 // Styles
 import './styles/design-system.css';
@@ -192,6 +194,31 @@ function AppLayout() {
             <>
               <Route path="/guide/:typeSlug/:brandSlug" element={<PriceGuidePage />} />
               <Route path="/guide/:typeSlug/:brandSlug/:sizeSlug" element={<PriceGuidePage />} />
+            </>
+          )}
+
+          {/* Aggregator: canonical plane type pages — the user-facing
+              surface for the model-fine and type-fine priceStats grains
+              shipped 2026-05-06. Stanley bench planes (#1-#8) and
+              Bedrocks (#602-#608) only in v1.
+              Model-level: /planes/:brand/:model
+              Type-level:  /planes/:brand/:model/:type */}
+          {PLANE_PAGES_ENABLED && (
+            <>
+              <Route path="/planes/:brandSlug/:modelSlug" element={<PlaneTypePage />} />
+              <Route path="/planes/:brandSlug/:modelSlug/:typeSlug" element={<PlaneTypePage />} />
+            </>
+          )}
+
+          {/* Aggregator: unified tool-check page (URL paste + photo upload).
+              Internal name "check" — externally just Benchlot. Powers the
+              viral wedge: paste an eBay listing or drop a photo, get back
+              identification + price verdict + cheaper alternatives + a
+              shareable permalink. */}
+          {TOOL_CHECK_ENABLED && (
+            <>
+              <Route path="/check" element={<CheckPage />} />
+              <Route path="/check/:hash" element={<CheckPage />} />
             </>
           )}
 

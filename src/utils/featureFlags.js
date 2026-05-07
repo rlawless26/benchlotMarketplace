@@ -45,6 +45,24 @@ export const AGGREGATOR_MODE = getFeatureFlag('AGGREGATOR_MODE', true);
 // Public launch: change the default below from `false` to `true`, ship.
 export const PRICE_GUIDE_ENABLED = getFeatureFlag('PRICE_GUIDE_ENABLED', false);
 
+// Plane-pages — when true, render canonical plane type pages at
+// /planes/:brand/:model and /planes/:brand/:model/:type. These consume the
+// model-fine and type-fine priceStats grains shipped on 2026-05-06. The
+// /guide/... legacy URLs continue to work; this flag only gates the new
+// /planes/... surface.
+//
+// Local dev override: `localStorage.setItem('PLANE_PAGES_ENABLED', 'true')`.
+// Public launch: flip the default to true after spot-check passes.
+export const PLANE_PAGES_ENABLED = getFeatureFlag('PLANE_PAGES_ENABLED', false);
+
+// Tool check (`/check`) — when true, render the unified check page that
+// accepts either a pasted listing URL or an uploaded photo and returns a
+// price verdict + comparable sales + cheaper alternatives. Internal name
+// is "check" / "deal-check" — the user-facing surface is just Benchlot.
+//
+// Local dev override: `localStorage.setItem('TOOL_CHECK_ENABLED', 'true')`.
+export const TOOL_CHECK_ENABLED = getFeatureFlag('TOOL_CHECK_ENABLED', false);
+
 // Default path for seller onboarding
 export const SELLER_ENTRY_PATH = '/sell';
 
@@ -55,6 +73,8 @@ export const featureFlags = {
   MARKETPLACE_BETA,
   AGGREGATOR_MODE,
   PRICE_GUIDE_ENABLED,
+  PLANE_PAGES_ENABLED,
+  TOOL_CHECK_ENABLED,
 };
 
 // Auth modal event - create a custom event to trigger the auth modal

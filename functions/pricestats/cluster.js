@@ -40,6 +40,17 @@ function slug(s) {
 /**
  * Build a cluster key from canonical fields. Stable, deterministic.
  * Format: `pt::{typeSlug}::{brandSlug}::{sizeSlug}`
+ *
+ * Cluster-key grains (in priority order, finest first):
+ *   - type-fine    pt::{type}::{brand}::m-{model}::t-{plane_type_number}
+ *   - model-fine   pt::{type}::{brand}::m-{model}
+ *   - fine         pt::{type}::{brand}::{size}
+ *   - coarse       pt::{type}::{brand}::_
+ *
+ * The `m-` and `t-` prefixes are namespace markers that prevent collision
+ * with the existing `(type, brand, size)` fine grain — a model slug like
+ * "no-5" sharing the size slot with a literal size string would otherwise
+ * occupy the same key.
  */
 function clusterKey({ canonical_type, canonical_brand, canonical_size }) {
   return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::${slug(canonical_size)}`;
@@ -51,6 +62,30 @@ function clusterKeyFromSlugs(typeSlug, brandSlug, sizeSlug) {
 
 function buildKeyFromUrlSlugs({ typeSlug, brandSlug, sizeSlug }) {
   return clusterKeyFromSlugs(typeSlug, brandSlug, sizeSlug);
+}
+
+/**
+ * Model-fine cluster key. Used when canonical_model is non-null — e.g.,
+ * Stanley "No. 5" across all type numbers, Lie-Nielsen "No. 4", etc.
+ *
+ * Distinct from the size-based fine grain: planes typically don't carry
+ * a populated canonical_size (the model number IS the size), so the
+ * model-fine grain is what produces useful per-model price clusters.
+ */
+function clusterKeyModel({ canonical_type, canonical_brand, canonical_model }) {
+  return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::m-${slug(canonical_model)}`;
+}
+
+/**
+ * Type-fine cluster key. Used when both canonical_model is non-null and
+ * plane_type_number is an integer 1-20 — only Stanley bench planes today.
+ *
+ * Hyper-fine grain. Sample sizes will be small per cluster; rely on the
+ * existing display thresholds (>=8 sold, >=10 asking) and the model-fine
+ * fallback for clusters that don't meet them.
+ */
+function clusterKeyType({ canonical_type, canonical_brand, canonical_model, plane_type_number }) {
+  return `pt::${slug(canonical_type)}::${slug(canonical_brand)}::m-${slug(canonical_model)}::t-${plane_type_number}`;
 }
 
 /**
@@ -101,6 +136,33 @@ function pickReference(stats) {
   return null;
 }
 
+/**
+ * Pick the best-grain reference from an ordered array of priceStats docs.
+ * Iterates finest → coarsest (caller-supplied order) and returns the first
+ * doc that produces a non-null `pickReference`. Returns null if no doc in
+ * the array meets the display thresholds.
+ *
+ * Typical usage from a consumer:
+ *   const docs = await Promise.all([
+ *     getStats(clusterKeyType({...})),
+ *     getStats(clusterKeyModel({...})),
+ *     getStats(clusterKey({...})),         // existing fine grain (size)
+ *     getStats(clusterKey({..., canonical_size: null})), // coarse
+ *   ]);
+ *   const ref = pickReferenceWithFallback(docs);
+ *
+ * The single-doc `pickReference` is unchanged — callers that already have
+ * one stats doc and want a reference shape should keep using it.
+ */
+function pickReferenceWithFallback(statsDocsInPriorityOrder) {
+  if (!Array.isArray(statsDocsInPriorityOrder)) return null;
+  for (const stats of statsDocsInPriorityOrder) {
+    const ref = pickReference(stats);
+    if (ref) return { ...ref, _stats: stats };
+  }
+  return null;
+}
+
 module.exports = {
   // constants
   SOLD_MIN_FOR_REFERENCE,
@@ -112,6 +174,9 @@ module.exports = {
   clusterKey,
   clusterKeyFromSlugs,
   buildKeyFromUrlSlugs,
+  clusterKeyModel,
+  clusterKeyType,
   hasDisplayableStats,
   pickReference,
+  pickReferenceWithFallback,
 };
