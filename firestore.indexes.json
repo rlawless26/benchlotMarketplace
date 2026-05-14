@@ -341,6 +341,31 @@
         { "fieldPath": "source", "order": "ASCENDING" },
         { "fieldPath": "sold_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "training_examples",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "label_provenance", "order": "ASCENDING" },
+        { "fieldPath": "added_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "training_examples",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "canonical_type", "order": "ASCENDING" },
+        { "fieldPath": "canonical_brand", "order": "ASCENDING" },
+        { "fieldPath": "label_confidence", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "training_examples",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cluster_key", "order": "ASCENDING" },
+        { "fieldPath": "added_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

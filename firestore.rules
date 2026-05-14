@@ -243,6 +243,14 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Training examples corpus — paired (image, canonical_label) tuples used
+    // as the data moat for future ML training. Written by backfill scripts +
+    // scheduled corrections-promotion job (admin SDK bypasses these rules).
+    // No public reads — this is internal training data.
+    match /training_examples/{docId} {
+      allow read, write: if isServiceAccount() || isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();

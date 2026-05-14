@@ -3346,6 +3346,48 @@ exports.scheduledPriceStatsBuild = onSchedule(
 );
 
 /**
+ * Scheduled promotion of scan corrections into the training_examples corpus.
+ *
+ * Runs nightly at 04:30 UTC, between the alert matcher (04:15) and the
+ * pricestats build (04:35). Reads new scan_feedback rows and writes them as
+ * `label_provenance: 'user_correction'` training_examples docs. Cumulative
+ * cursor in `system/training_corrections_promotion`.
+ */
+const promoteScanCorrections = require('./training-data/promote-scan-corrections');
+
+exports.scheduledPromoteScanCorrections = onSchedule(
+  {
+    schedule: '30 4 * * *',
+    timeZone: 'Etc/UTC',
+    timeoutSeconds: 540,
+    memory: '256MiB',
+  },
+  async () => {
+    const t0 = Date.now();
+    try {
+      const summary = await promoteScanCorrections.run();
+      console.log('[scheduledPromoteScanCorrections] done', summary);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'training_corrections_promoted',
+        properties: summary,
+      });
+    } catch (err) {
+      console.error('[scheduledPromoteScanCorrections] failed:', err.message, err.stack);
+      posthog.capture({
+        distinctId: 'system',
+        event: 'training_corrections_promotion_failed',
+        properties: {
+          error_message: err.message,
+          duration_ms: Date.now() - t0,
+        },
+      });
+      throw err;
+    }
+  }
+);
+
+/**
  * Scheduled ingestion — OldTools.com.
  *
  * Runs nightly at 02:45 UTC. Deliberately off-band (the rest of the source
