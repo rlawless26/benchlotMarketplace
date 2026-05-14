@@ -233,6 +233,16 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Category interest (anon email signups from the BenchFind category gate
+    // when a user uploads a tool outside the v1 supported categories).
+    match /category_interest/{docId} {
+      allow create: if request.resource.data.keys().hasAll(['email', 'created_at'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() > 0
+                    && request.resource.data.email.size() < 320;
+      allow read, update, delete: if isAdmin();
+    }
+
     // Diagnostics collection for service testing
     match /_diagnostics/{docId} {
       allow read, write: if isServiceAccount() || isAdmin();

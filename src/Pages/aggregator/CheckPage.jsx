@@ -19,7 +19,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 import { db } from '../../firebase/config';
-import { getConfig } from '../../utils/environment';
+import { getConfig, brandName } from '../../utils/environment';
 import { track } from '../../utils/analytics';
 
 const API_URL = process.env.REACT_APP_API_URL
@@ -332,7 +332,7 @@ const CheckPage = () => {
 
   // Document title
   useEffect(() => {
-    document.title = 'Benchlot';
+    document.title = brandName();
   }, [hash, result]);
 
   const submitUrl = useCallback(async (e) => {
@@ -406,14 +406,10 @@ const CheckPage = () => {
 
       setSubmitStatus('Checking comparable sales…');
 
-      // 3) POST /check-from-canonical to do the comp lookup + persist
-      const dataUrl = await new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      });
-
+      // 3) POST /check-from-canonical to do the comp lookup + persist.
+      // The user's photo is already persisted to Storage by /toolscan; we
+      // pass scan_id + image_paths so the share permalink links back to
+      // the underlying scan (and its corrected labels in scan_feedback).
       const checkResp = await fetch(`${API_URL}/check-from-canonical`, {
         method: 'POST',
         headers,
@@ -423,12 +419,12 @@ const CheckPage = () => {
           canonical_model: tool.canonical_model || null,
           plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
           source_label: 'photo',
+          scan_id: scanData.scanId || null,
+          image_paths: Array.isArray(scanData.imagePaths) ? scanData.imagePaths : null,
           listing_summary: {
             title: [tool.canonical_brand, tool.canonical_model, tool.plane_type_number ? `Type ${tool.plane_type_number}` : null]
               .filter(Boolean).join(' '),
             condition: tool.condition || null,
-            // Store the user's photo as data URL for the share permalink view
-            images: [dataUrl],
           },
         }),
       });
@@ -470,7 +466,7 @@ const CheckPage = () => {
         </Link>
 
         <h1 style={{ fontFamily: "'Petrona', serif", fontSize: 28, fontWeight: 600, margin: '8px 0 24px' }}>
-          Benchlot
+          {brandName()}
         </h1>
 
         {listing && listing.canonical && <TypologyHeader canonical={listing.canonical} />}

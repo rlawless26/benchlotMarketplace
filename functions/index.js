@@ -45,12 +45,18 @@ const getConfig = (key, envVarName, defaultValue) => {
 try {
   const serviceAccount = require('./service-account.json');
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: `${serviceAccount.project_id}.firebasestorage.app`,
   });
 } catch (error) {
   console.error('Error initializing with service account, falling back to default:', error);
-  // Fall back to default credentials
-  admin.initializeApp();
+  // Fall back to default credentials. Storage bucket is derived from the
+  // GCLOUD_PROJECT env var Firebase sets at runtime.
+  admin.initializeApp({
+    storageBucket: process.env.GCLOUD_PROJECT
+      ? `${process.env.GCLOUD_PROJECT}.firebasestorage.app`
+      : undefined,
+  });
 }
 
 const db = admin.firestore();
@@ -2071,16 +2077,28 @@ const toolscanLimiter = rateLimit({
   message: { error: 'Too many scan requests, please try again later.' }
 });
 
+// Map of media_type → file extension for stored scan images.
+const MEDIA_TYPE_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+};
+
 /**
  * POST /toolscan
  * Accepts a base64-encoded image (or array of images) and optional context.
  * Returns structured tool identifications via Claude vision.
  *
+ * Images are persisted to gs://<bucket>/toolscans/{scanId}/{i}.{ext} so the
+ * paired (image, identification, correction) tuples form a queryable training
+ * set for future model improvements.
+ *
  * Body: { images: [{ data: "base64...", media_type: "image/jpeg" }], context?: string }
  */
 app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
   try {
-    const { images, context } = req.body;
+    const { images, context, previous_scan_id } = req.body;
 
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: 'At least one image is required.' });
@@ -2108,6 +2126,47 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
       return res.status(500).json({ error: 'ToolScan is not configured. Missing API key.' });
     }
 
+    // Follow-up (multi-turn) scan: fetch the prior scan's result so we can
+    // prepend it as context to the model. The follow-up is a new scan with
+    // a new id; lineage is tracked in `previousScanId` on the new doc.
+    let previousScan = null;
+    if (previous_scan_id && typeof previous_scan_id === 'string') {
+      try {
+        const prevSnap = await db.collection('toolscans').doc(previous_scan_id).get();
+        if (prevSnap.exists) {
+          previousScan = prevSnap.data();
+        }
+      } catch (e) {
+        console.warn('[toolscan] previous_scan_id lookup failed:', e.message);
+      }
+    }
+
+    // Pre-generate scanId so image storage paths and Firestore doc share an
+    // identity. Doc.set() instead of collection.add() locks in the id.
+    const scanRef = db.collection('toolscans').doc();
+    const scanId = scanRef.id;
+
+    // Persist images to Storage in parallel with the Anthropic call. We don't
+    // await the upload before calling the model — if Storage is slow, the
+    // user shouldn't wait. We do collect the promises and resolve before
+    // writing the Firestore doc so imagePaths can be persisted alongside.
+    const bucket = admin.storage().bucket();
+    const imagePaths = [];
+    const uploadPromises = images.map((img, i) => {
+      const ext = MEDIA_TYPE_EXT[img.media_type] || 'bin';
+      const path = `toolscans/${scanId}/${i}.${ext}`;
+      imagePaths.push(path);
+      const buffer = Buffer.from(img.data, 'base64');
+      return bucket.file(path).save(buffer, {
+        metadata: { contentType: img.media_type },
+        resumable: false,
+      }).catch((err) => {
+        // Non-fatal — scan still returns results; we just note the upload failure.
+        console.warn(`[toolscan] image upload failed for ${path}:`, err.message);
+        return null;
+      });
+    });
+
     const anthropic = new Anthropic({ apiKey: anthropicKey });
 
     // Build the user message content: image blocks + optional context
@@ -2125,9 +2184,19 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
     }
 
     // Add user context if provided
-    let userText = 'Identify all hand tools visible in the image(s) and generate listing details.';
+    let userText = 'Identify the tool in this image.';
+    if (previousScan && previousScan.results && previousScan.results.tool) {
+      // Multi-turn: prepend the prior identification so the model can refine
+      // rather than start from scratch.
+      const prev = previousScan.results.tool;
+      const prevName = [prev.canonical_brand, prev.canonical_model].filter(Boolean).join(' ') || prev.canonical_type || 'unknown';
+      const prevHint = (prev.next_photo_hint || 'a different angle').replace(/"/g, '');
+      userText = `On the previous photo you identified this as ${prevName}`
+        + (Number.isInteger(prev.plane_type_number) ? `, Type ${prev.plane_type_number}` : '')
+        + ` with ${prev.confidence || 'Medium'} confidence. The user is now sending the ${prevHint} view you requested. Refine your identification — your confidence should escalate if the new view confirms what you saw, or change if it reveals a different tool.`;
+    }
     if (context && context.trim()) {
-      userText += `\n\nSeller context: "${context.trim()}"`;
+      userText += `\n\nUser context: "${context.trim()}"`;
     }
     content.push({ type: 'text', text: userText });
 
@@ -2163,14 +2232,21 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
       });
     }
 
-    // Store the scan session in Firestore
+    // Wait for image uploads so imagePaths can be persisted alongside the doc.
+    await Promise.all(uploadPromises);
+
+    // Store the scan session in Firestore. v5 emits a single `tool` object;
+    // toolCount is 1 when populated, 0 otherwise. `previousScanId` links
+    // multi-turn refinement scans back to their origin.
     const scanSession = {
       userId: req.user?.uid || 'anonymous',
       imageCount: images.length,
-      toolCount: parsed.tools ? parsed.tools.length : 0,
+      imagePaths,
+      toolCount: parsed.tool ? 1 : 0,
       context: context || null,
       results: parsed,
       model: 'claude-sonnet-4-20250514',
+      previousScanId: previous_scan_id || null,
       usage: {
         input_tokens: message.usage?.input_tokens || 0,
         output_tokens: message.usage?.output_tokens || 0,
@@ -2180,12 +2256,11 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
         : new Date(),
     };
 
-    let scanRefId;
+    let scanRefId = scanId;
     try {
-      const scanRef = await db.collection('toolscans').add(scanSession);
-      scanRefId = scanRef.id;
+      await scanRef.set(scanSession);
     } catch (firestoreError) {
-      // Don't fail the scan if Firestore write fails — still return results
+      // Don't fail the scan if Firestore write fails — still return results.
       console.error('Failed to store scan session:', firestoreError.message);
       scanRefId = null;
     }
@@ -2193,6 +2268,7 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
     res.json({
       success: true,
       scanId: scanRefId,
+      imagePaths,
       results: parsed,
     });
   } catch (error) {
@@ -2331,7 +2407,7 @@ async function fetchAlternatives(canonical, options) {
   }));
 }
 
-async function persistDealCheck({ inputType, sourceUrl, legacyId, userId, listing, cluster, verdict, alternatives }) {
+async function persistDealCheck({ inputType, sourceUrl, legacyId, userId, listing, cluster, verdict, alternatives, scanId, imagePaths }) {
   const hash = makeShareHash();
   const doc = {
     hash,
@@ -2346,6 +2422,10 @@ async function persistDealCheck({ inputType, sourceUrl, legacyId, userId, listin
     reference: cluster.reference,
     verdict,
     alternatives,
+    // Photo-flow provenance — links the snapshot to the underlying scan
+    // (and its persisted images) for correction-pair traceability.
+    scan_id: scanId || null,
+    image_paths: Array.isArray(imagePaths) ? imagePaths : null,
   };
   await db.collection('dealChecks').doc(hash).set(doc);
   return hash;
@@ -2476,6 +2556,8 @@ app.post('/check-from-canonical', checkLimiter, optionalAuth, async (req, res) =
       price,
       source_label,
       listing_summary,
+      scan_id,
+      image_paths,
     } = req.body || {};
     if (!canonical_brand || !canonical_type) {
       return res.status(400).json({ error: 'canonical_brand and canonical_type are required' });
@@ -2505,12 +2587,18 @@ app.post('/check-from-canonical', checkLimiter, optionalAuth, async (req, res) =
         title: (listing_summary && listing_summary.title) || null,
         price: Number.isFinite(price) ? price : null,
         condition: (listing_summary && listing_summary.condition) || null,
-        images: (listing_summary && listing_summary.images) || [],
+        // Photo-flow no longer embeds the image as a dataURL — the
+        // canonical reference is image_paths above, which is the
+        // gs:// Storage path. The listing.images array stays for URL
+        // flows where it carries source-site image URLs.
+        images: (listing_summary && Array.isArray(listing_summary.images)) ? listing_summary.images : [],
         canonical,
       },
       cluster,
       verdict,
       alternatives,
+      scanId: scan_id || null,
+      imagePaths: Array.isArray(image_paths) ? image_paths : null,
     });
 
     res.json({
@@ -2542,8 +2630,8 @@ exports.stripeApi = exports.api;
  * Public endpoint, rate-limited. Generates a Firebase password reset link
  * server-side so the recipient can claim their pending account.
  *
- * Body: { email, scanResult: { tool_name, maker, model, era, condition, confidence,
- *         suggested_price_low, suggested_price_high, ... } }
+ * Body: { email, scanResult: { canonical_brand, canonical_type, canonical_model,
+ *         plane_type_number, era_estimate, condition, confidence, condition_notes } }
  */
 app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
   try {
@@ -2565,14 +2653,19 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
       console.warn(`[scan-results] could not generate password reset link for ${email}:`, linkErr.message);
     }
 
-    // Trust-first v1 (2026-05-03): the LLM's suggested band stays as
-    // the headline price in the email. Benchlot's priceStats data is
-    // surfaced as a separate "Benchlot index" line so recipients see
-    // both — the AI estimate and the data context — without us
-    // silently overriding one with biased data. Auto-override returns
-    // when v2 stratified pricing earns it back.
-    const valueLow = scanResult.suggested_price_low ? `$${scanResult.suggested_price_low}` : '';
-    const valueHigh = scanResult.suggested_price_high ? `$${scanResult.suggested_price_high}` : '';
+    // v5 doesn't emit a suggested price band; pricing context comes from
+    // the priceStats lookup below ("Benchlot index" line). Headline price
+    // vars are empty strings so the template hides that block.
+    const valueLow = '';
+    const valueHigh = '';
+
+    // Compose a display name from canonical fields.
+    const toolNameParts = [scanResult.canonical_brand, scanResult.canonical_model].filter(Boolean);
+    let toolName = toolNameParts.join(' ');
+    if (Number.isInteger(scanResult.plane_type_number)) {
+      toolName = toolName ? `${toolName} · Type ${scanResult.plane_type_number}` : `Type ${scanResult.plane_type_number}`;
+    }
+    if (!toolName) toolName = scanResult.canonical_type || '';
 
     let benchlotIndexLow = '';
     let benchlotIndexHigh = '';
@@ -2591,7 +2684,8 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
           const stats = await lookupStats({
             canonical_type: scanResult.canonical_type,
             canonical_brand: scanResult.canonical_brand,
-            canonical_size: scanResult.canonical_size || null,
+            // priceStats clusters on `canonical_size`; v5's canonical_model maps to it.
+            canonical_size: scanResult.canonical_model || null,
           });
           const ref = pickReference(stats);
           if (ref && ref.p25 != null && ref.p75 != null) {
@@ -2606,18 +2700,18 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         console.warn('[send-scan-results] priceStats lookup failed:', e.message);
       }
     }
-    console.log(`[send-scan-results] llm band ${valueLow}-${valueHigh}; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
+    console.log(`[send-scan-results] tool="${toolName}"; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
 
     const result = await sendEmail({
       templateId: '01-scan-welcome',
       to: email,
       vars: {
-        toolName: scanResult.tool_name || scanResult.suggested_title || '',
-        maker: scanResult.maker || '',
-        model: scanResult.model || '',
-        era: scanResult.era || '',
+        toolName,
+        maker: scanResult.canonical_brand || '',
+        model: scanResult.canonical_model || '',
+        era: scanResult.era_estimate || '',
         condition: scanResult.condition || '',
-        // Headline AI estimate.
+        // Empty in v5 — template should conditionally hide the AI estimate block.
         valueLow,
         valueHigh,
         // Benchlot index context — empty strings when no priceStats
@@ -2627,7 +2721,19 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         benchlotIndexCount,
         benchlotIndexSource,
         confidence: scanResult.confidence || '',
-        scanPageUrl: `${process.env.BENCHLOT_BASE_URL || 'https://benchlot.com'}/scan`,
+        // Derive scanPageUrl from the request Origin so a scan submitted from
+        // benchfind.com gets a benchfind.com link in the email.
+        scanPageUrl: (() => {
+          const origin = req.headers.origin || req.headers.referer;
+          if (origin && typeof origin === 'string') {
+            try {
+              const u = new URL(origin);
+              if (u.hostname.includes('benchfind')) return `${u.protocol}//${u.host}/`;
+              if (u.hostname.includes('benchlot')) return `${u.protocol}//${u.host}/scan`;
+            } catch (e) { /* fall through */ }
+          }
+          return `${process.env.BENCHLOT_BASE_URL || 'https://benchlot.com'}/scan`;
+        })(),
         setPasswordUrl,
       },
     });

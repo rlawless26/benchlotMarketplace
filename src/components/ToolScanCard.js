@@ -6,18 +6,127 @@ import {
   Check,
   AlertTriangle,
   Camera,
-  DollarSign,
   Pencil,
   ExternalLink,
   Bell,
 } from 'lucide-react';
 
-import { bridgeToCanonicalType } from '../utils/toolscanCategoryBridge';
 import usePriceStats from '../firebase/hooks/usePriceStats';
 import { pickReference } from '../utils/priceStats';
 import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
 import { track } from '../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
+import { brandName } from '../utils/environment';
+
+// ── Category gate ────────────────────────────────────────────────────────────
+// Rendered when v5 returns canonical_type === 'Other' (or no canonical_type) —
+// the model identified something that isn't in the supported category set.
+// Converts a "we don't cover this yet" moment into a category-interest signal.
+const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    track('category_gate_shown', {
+      scanId: scanId || null,
+      canonical_type: tool?.canonical_type || null,
+    });
+  }, [scanId, tool?.canonical_type]);
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !email.includes('@')) {
+      setError('Enter a valid email.');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      await addDoc(collection(db, 'category_interest'), {
+        email: email.trim().toLowerCase(),
+        requested_category: tool?.canonical_type || 'unknown',
+        scanId: scanId || null,
+        imagePaths: imagePaths || [],
+        created_at: serverTimestamp(),
+      });
+      setSubmitted(true);
+      track('category_gate_email_captured', {
+        scanId: scanId || null,
+        canonical_type: tool?.canonical_type || null,
+      });
+    } catch (err) {
+      console.error('[category_gate] save error:', err);
+      setError('Something went wrong. Try again?');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const brand = brandName();
+  return (
+    <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6">
+      <div className="flex items-start gap-4 mb-4">
+        {previewImage && (
+          <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-[#e4e2dc]">
+            <img src={previewImage} alt="Uploaded tool" className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="flex-1">
+          <h3 className="text-xl font-display font-semibold text-spruce">
+            Not a plane — yet
+          </h3>
+          <p className="text-base font-body text-secondary mt-1">
+            {brand} is plane-first today. Hand planes are the only category we identify and price reliably right now.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-bone rounded-lg p-4 mb-4">
+        <p className="text-sm font-semibold font-body text-dark-teal mb-2">Coming next</p>
+        <ul className="text-sm font-body text-secondary space-y-1">
+          <li>· Hand saws — medallion, etch, and tooth-count identification</li>
+          <li>· Chisels — maker, style, and era</li>
+          <li>· Router planes, shoulder planes, and other specialty bench tools</li>
+        </ul>
+      </div>
+
+      {submitted ? (
+        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <Check className="w-5 h-5 text-green-600" />
+          <span className="text-sm font-body text-green-800">Thanks — we'll let you know when this category goes live.</span>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit}>
+          <label className="block text-sm font-medium font-body text-secondary mb-1">
+            Email me when {brand} covers this category
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(null); }}
+              placeholder="you@example.com"
+              disabled={submitting}
+              className="flex-1 px-3 py-2 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-5 py-2 bg-honey text-dark-teal rounded-lg text-sm font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {submitting ? 'Saving…' : 'Notify me'}
+            </button>
+          </div>
+          {error && <p className="text-sm text-error mt-2">{error}</p>}
+        </form>
+      )}
+    </div>
+  );
+};
 
 const confidenceColors = {
   High: 'bg-green-100 text-green-800',
@@ -34,10 +143,23 @@ const conditionColors = {
 
 const conditionOptions = ['Excellent', 'Good', 'Fair', 'Project'];
 
-// Helpers for the active-listings + price-guide panel.
+// Closed list of canonical_type values v5 emits. Used by the correction-flow
+// select. Mirrors functions/toolscan-prompt.js.
+const canonicalTypeOptions = [
+  'Bench Plane',
+  'Block Plane',
+  'Shoulder Plane',
+  'Router Plane',
+  'Plow Plane',
+  'Rabbet Plane',
+  'Moulding Plane',
+  'Infill Plane',
+  'Scrub Plane',
+  'Combination Plane',
+  'Spokeshave',
+  'Other',
+];
 
-// Slug builder mirrors src/utils/priceStats.js#slug. Used to derive the
-// /guide/... URL when stats exist for the cluster.
 const slug = (s) =>
   String(s || '')
     .trim()
@@ -48,36 +170,45 @@ const slug = (s) =>
 
 const fmtDollars = (d) => `$${Math.round(d)}`;
 
-const ToolScanCard = ({
+// Thin dispatcher: route non-plane scans to the category gate, everything
+// else to the full identification card.
+const ToolScanCard = (props) => {
+  const { tool } = props;
+  if (tool && (tool.canonical_type === 'Other' || !tool.canonical_type)) {
+    return (
+      <CategoryGate
+        tool={tool}
+        scanId={props.scanId}
+        imagePaths={props.imagePaths}
+        previewImage={props.previewImage}
+      />
+    );
+  }
+  return <ToolScanCardFull {...props} />;
+};
+
+const ToolScanCardFull = ({
   tool,
-  index,
   scanId,
   previewImage,
   onUpdate,
   onFeedback,
+  onFollowupPhoto,
+  followupInProgress,
 }) => {
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
-  const [editing, setEditing] = useState(null);
-  const [editValue, setEditValue] = useState('');
 
   // Feedback state: null → 'correcting' → 'saved_correct' | 'saved_corrected'
   const [feedbackState, setFeedbackState] = useState(null);
 
-  // ── Active-listings + price-guide panel state ──────────────────────────
-  const canonicalType = useMemo(
-    () => bridgeToCanonicalType({
-      suggested_category: tool.suggested_category,
-      suggested_subcategory: tool.suggested_subcategory,
-      tool_name: tool.tool_name,
-    }),
-    [tool.suggested_category, tool.suggested_subcategory, tool.tool_name]
-  );
+  // priceStats lookup keys come straight from v5 canonical fields — no bridge.
+  const canonicalType = tool.canonical_type || null;
   const canonicalBrand = useMemo(() => {
-    const m = tool.maker;
-    if (!m || m === 'Unknown' || tool.confidence === 'Low') return null;
-    return m;
-  }, [tool.maker, tool.confidence]);
-  const canonicalSize = tool.model || null;
+    const b = tool.canonical_brand;
+    if (!b || b === 'Unknown' || tool.confidence === 'Low') return null;
+    return b;
+  }, [tool.canonical_brand, tool.confidence]);
+  const canonicalSize = tool.canonical_model || null;
 
   const priceStats = usePriceStats({
     canonical_type: canonicalType,
@@ -89,14 +220,7 @@ const ToolScanCard = ({
   const [activeListingsLoaded, setActiveListingsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!canonicalType) {
-      // Telemetry on bridge misses — informs which subcategories need new
-      // bridge entries.
-      track('toolscan_category_bridge_missed', {
-        suggested_category: tool.suggested_category || null,
-        suggested_subcategory: tool.suggested_subcategory || null,
-        tool_name: tool.tool_name || null,
-      });
+    if (!canonicalType || canonicalType === 'Other') {
       setActiveListings([]);
       setActiveListingsLoaded(true);
       return undefined;
@@ -117,8 +241,8 @@ const ToolScanCard = ({
 
         track('toolscan_active_listings_shown', {
           scanId: scanId || null,
-          primary_type: canonicalType,
-          primary_brand: canonicalBrand,
+          canonical_type: canonicalType,
+          canonical_brand: canonicalBrand,
           listings_returned: listings.length,
           filter_strategy: canonicalBrand ? 'type_and_brand' : 'type_only',
           cluster_key: priceStats.cluster_key || null,
@@ -134,19 +258,9 @@ const ToolScanCard = ({
         setActiveListingsLoaded(true);
       });
     return () => { cancelled = true; };
-    // priceStats.cluster_key + .reference are in the telemetry payload
-    // but adding them as deps would re-run the listings fetch on every
-    // priceStats settle — wasteful. Refire only on identity change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canonicalType, canonicalBrand, scanId]);
 
-  // Trust-first v1 (2026-05-03): the LLM's `suggested_price_low/high`
-  // stays as the headline price band on the card. Benchlot's data
-  // appears as a separate "Recent listings" line below the band so the
-  // user sees both the AI suggestion and the data context, side by
-  // side, without us silently overriding one with the other. When v2
-  // stratified pricing earns the right to make confident judgments we
-  // can revisit.
   const ref = pickReference(priceStats.stats);
   const benchlotIndexBand = ref
     ? { low: Math.round(ref.p25), high: Math.round(ref.p75), count: ref.count, source: ref.source }
@@ -157,6 +271,20 @@ const ToolScanCard = ({
         ? `/guide/${slug(priceStats.stats.canonical_type)}/${slug(priceStats.stats.canonical_brand)}/${slug(priceStats.stats.canonical_size)}`
         : `/guide/${slug(priceStats.stats.canonical_type)}/${slug(priceStats.stats.canonical_brand)}`)
     : null;
+
+  // Link to the canonical plane type page when applicable. Mirrors
+  // CheckPage.jsx#planeTypePagePath.
+  const planeTypeHref = (() => {
+    if (canonicalType !== 'Bench Plane') return null;
+    if (!canonicalBrand || !canonicalSize) return null;
+    let brandSlug = slug(canonicalBrand);
+    if (canonicalBrand === 'Stanley-Bailey') brandSlug = 'stanley';
+    const modelSlug = slug(canonicalSize);
+    if (Number.isInteger(tool.plane_type_number)) {
+      return `/planes/${brandSlug}/${modelSlug}/type-${tool.plane_type_number}`;
+    }
+    return `/planes/${brandSlug}/${modelSlug}`;
+  })();
 
   const searchHref = (() => {
     const params = new URLSearchParams();
@@ -169,14 +297,22 @@ const ToolScanCard = ({
     return params.toString() ? `/?${params.toString()}` : '/';
   })();
 
+  // Display name composed from canonical fields. e.g. "Stanley No. 5 · Type 11".
+  const displayName = useMemo(() => {
+    const parts = [tool.canonical_brand, tool.canonical_model].filter(Boolean);
+    let name = parts.join(' ');
+    if (Number.isInteger(tool.plane_type_number)) {
+      name = name ? `${name} · Type ${tool.plane_type_number}` : `Type ${tool.plane_type_number}`;
+    }
+    return name || tool.canonical_type || 'Tool identified';
+  }, [tool.canonical_brand, tool.canonical_model, tool.plane_type_number, tool.canonical_type]);
+
   const [reviewFields, setReviewFields] = useState({
-    tool_name: tool.tool_name || '',
-    maker: tool.maker || '',
-    model: tool.model || '',
+    canonical_brand: tool.canonical_brand || '',
+    canonical_model: tool.canonical_model || '',
+    canonical_type: tool.canonical_type || '',
+    plane_type_number: Number.isInteger(tool.plane_type_number) ? String(tool.plane_type_number) : '',
     condition: tool.condition || 'Good',
-    suggested_price_low: tool.suggested_price_low || '',
-    suggested_price_high: tool.suggested_price_high || '',
-    suggested_description: tool.suggested_description || '',
   });
 
   const handleReviewFieldChange = (field, value) => {
@@ -185,14 +321,46 @@ const ToolScanCard = ({
 
   const getEdits = () => {
     const edits = {};
-    if (reviewFields.tool_name !== (tool.tool_name || '')) edits.tool_name = { from: tool.tool_name, to: reviewFields.tool_name };
-    if (reviewFields.maker !== (tool.maker || '')) edits.maker = { from: tool.maker, to: reviewFields.maker };
-    if (reviewFields.model !== (tool.model || '')) edits.model = { from: tool.model, to: reviewFields.model };
-    if (reviewFields.condition !== (tool.condition || 'Good')) edits.condition = { from: tool.condition, to: reviewFields.condition };
-    if (String(reviewFields.suggested_price_low) !== String(tool.suggested_price_low || '')) edits.price_low = { from: tool.suggested_price_low, to: reviewFields.suggested_price_low };
-    if (String(reviewFields.suggested_price_high) !== String(tool.suggested_price_high || '')) edits.price_high = { from: tool.suggested_price_high, to: reviewFields.suggested_price_high };
+    if (reviewFields.canonical_brand !== (tool.canonical_brand || '')) {
+      edits.canonical_brand = { from: tool.canonical_brand, to: reviewFields.canonical_brand };
+    }
+    if (reviewFields.canonical_model !== (tool.canonical_model || '')) {
+      edits.canonical_model = { from: tool.canonical_model, to: reviewFields.canonical_model };
+    }
+    if (reviewFields.canonical_type !== (tool.canonical_type || '')) {
+      edits.canonical_type = { from: tool.canonical_type, to: reviewFields.canonical_type };
+    }
+    const newType = reviewFields.plane_type_number.trim() === ''
+      ? null
+      : parseInt(reviewFields.plane_type_number, 10);
+    const oldType = Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null;
+    if (newType !== oldType) {
+      edits.plane_type_number = { from: oldType, to: newType };
+    }
+    if (reviewFields.condition !== (tool.condition || 'Good')) {
+      edits.condition = { from: tool.condition, to: reviewFields.condition };
+    }
     return Object.keys(edits).length > 0 ? edits : null;
   };
+
+  const originalSnapshot = () => ({
+    canonical_brand: tool.canonical_brand,
+    canonical_model: tool.canonical_model,
+    canonical_type: tool.canonical_type,
+    plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
+    condition: tool.condition,
+    confidence: tool.confidence,
+  });
+
+  const correctedSnapshot = () => ({
+    canonical_brand: reviewFields.canonical_brand,
+    canonical_model: reviewFields.canonical_model,
+    canonical_type: reviewFields.canonical_type,
+    plane_type_number: reviewFields.plane_type_number.trim() === ''
+      ? null
+      : parseInt(reviewFields.plane_type_number, 10),
+    condition: reviewFields.condition,
+  });
 
   const handleLooksRight = () => {
     setFeedbackState('saved_correct');
@@ -200,15 +368,7 @@ const ToolScanCard = ({
       onFeedback({
         vote: 'correct',
         scanId,
-        originalResult: {
-          tool_name: tool.tool_name,
-          maker: tool.maker,
-          model: tool.model,
-          condition: tool.condition,
-          confidence: tool.confidence,
-          suggested_price_low: tool.suggested_price_low,
-          suggested_price_high: tool.suggested_price_high,
-        },
+        originalResult: originalSnapshot(),
         correctedResult: null,
         userEdits: null,
       });
@@ -225,62 +385,21 @@ const ToolScanCard = ({
       onFeedback({
         vote: 'corrected',
         scanId,
-        originalResult: {
-          tool_name: tool.tool_name,
-          maker: tool.maker,
-          model: tool.model,
-          condition: tool.condition,
-          confidence: tool.confidence,
-          suggested_price_low: tool.suggested_price_low,
-          suggested_price_high: tool.suggested_price_high,
-        },
-        correctedResult: {
-          tool_name: reviewFields.tool_name,
-          maker: reviewFields.maker,
-          model: reviewFields.model,
-          condition: reviewFields.condition,
-          suggested_price_low: reviewFields.suggested_price_low,
-          suggested_price_high: reviewFields.suggested_price_high,
-        },
+        originalResult: originalSnapshot(),
+        correctedResult: correctedSnapshot(),
         userEdits: getEdits(),
       });
+    }
+    if (onUpdate) {
+      onUpdate({ ...tool, ...correctedSnapshot() });
     }
   };
 
   const isConfirmed = feedbackState === 'saved_correct' || feedbackState === 'saved_corrected';
 
-  // Title inline edit helpers
-  const startEdit = (field, value) => {
-    setEditing(field);
-    setEditValue(value || '');
-  };
-
-  const saveEdit = () => {
-    if (editing) {
-      onUpdate({ ...tool, [editing]: editValue });
-      setEditing(null);
-      setEditValue('');
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditing(null);
-    setEditValue('');
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      saveEdit();
-    }
-    if (e.key === 'Escape') {
-      cancelEdit();
-    }
-  };
-
   return (
     <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc]">
-      {/* Card Header — photo + title + info */}
+      {/* Card Header — photo + name + identification */}
       <div className="p-5">
         <div className="flex items-start gap-4">
           {previewImage && (
@@ -290,58 +409,39 @@ const ToolScanCard = ({
           )}
 
           <div className="flex-1 min-w-0">
-            {editing === 'suggested_title' ? (
-              <div>
-                <input
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-xl font-display focus:ring-2 focus:ring-spruce/30 focus:border-spruce"
-                  autoFocus
-                />
-                <div className="flex gap-2 mt-2">
-                  <button onClick={saveEdit} className="text-xs px-3 py-1 bg-spruce text-bone rounded hover:bg-spruce-light">Save</button>
-                  <button onClick={cancelEdit} className="text-xs px-3 py-1 border border-[#e4e2dc] rounded hover:bg-bone">Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <h3
-                className="text-xl font-display font-semibold text-spruce cursor-pointer hover:text-honey transition-colors"
-                onClick={() => startEdit('suggested_title', tool.suggested_title)}
-                title="Click to edit title"
-              >
-                {tool.suggested_title}
-              </h3>
+            <h3 className="text-xl font-display font-semibold text-spruce">
+              {displayName}
+            </h3>
+            {tool.canonical_type && (
+              <p className="text-sm font-body text-secondary mt-0.5">
+                {tool.canonical_type}
+              </p>
             )}
 
             <div className="flex flex-wrap items-center gap-3 mt-2 text-base font-body text-secondary">
-              {tool.maker && tool.maker !== 'Unknown' && (
-                <span><strong className="text-dark-teal">Maker:</strong> {tool.maker}</span>
+              {tool.era_estimate && (
+                <span><strong className="text-dark-teal">Era:</strong> {tool.era_estimate}</span>
               )}
-              {tool.model && (
-                <span><strong className="text-dark-teal">Model:</strong> {tool.model}</span>
+              {planeTypeHref && (
+                <a
+                  href={planeTypeHref}
+                  onClick={() => track('toolscan_plane_type_link_clicked', {
+                    scanId: scanId || null,
+                    canonical_brand: canonicalBrand,
+                    canonical_model: canonicalSize,
+                    plane_type_number: tool.plane_type_number || null,
+                  })}
+                  className="text-sm font-body font-medium text-honey hover:text-honey-dark underline"
+                >
+                  See full reference page →
+                </a>
               )}
-              {tool.era && (
-                <span><strong className="text-dark-teal">Era:</strong> {tool.era}</span>
-              )}
-              <span className="flex items-center gap-1 text-honey font-semibold">
-                <DollarSign className="w-4 h-4" />
-                ${tool.suggested_price_low} – ${tool.suggested_price_high}
-              </span>
-              <span className="inline-flex items-center text-xs font-body text-secondary px-2 py-0.5 rounded-full bg-bone border border-stone-200">
-                AI estimate
-              </span>
             </div>
 
-            {/* Benchlot index context — sits below the LLM band so users
-                see both numbers side by side rather than us silently
-                overriding the AI suggestion with biased data. Only renders
-                when priceStats has enough comps for a meaningful range
-                AND the price-guide feature is exposed publicly. */}
+            {/* Comp band from Benchlot index — sourced from priceStats. */}
             {PRICE_GUIDE_ENABLED && benchlotIndexBand && (
               <div className="mt-2 text-sm font-body text-secondary">
-                Benchlot index: <strong className="text-dark-teal">${benchlotIndexBand.low} – ${benchlotIndexBand.high}</strong> across {benchlotIndexBand.count} {benchlotIndexBand.source === 'sold' ? 'sold comps (Jim Bode Value Guide)' : 'recent listings'}
+                Recent comps: <strong className="text-dark-teal">${benchlotIndexBand.low} – ${benchlotIndexBand.high}</strong> across {benchlotIndexBand.count} {benchlotIndexBand.source === 'sold' ? 'sold' : 'asking'} listings
                 {guideHref && (
                   <>
                     {' · '}
@@ -361,28 +461,53 @@ const ToolScanCard = ({
             )}
 
             <div className="flex flex-wrap gap-2 mt-2">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${confidenceColors[tool.confidence] || 'bg-gray-100 text-gray-800'}`}>
-                {tool.confidence} confidence
-              </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${conditionColors[tool.condition] || 'bg-gray-100 text-gray-800'}`}>
-                {tool.condition}
-              </span>
-              {tool.collectibility && tool.collectibility !== 'None' && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  {tool.collectibility} collectibility
+              {tool.confidence && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${confidenceColors[tool.confidence] || 'bg-gray-100 text-gray-800'}`}>
+                  {tool.confidence} confidence
+                </span>
+              )}
+              {tool.condition && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${conditionColors[tool.condition] || 'bg-gray-100 text-gray-800'}`}>
+                  {tool.condition}
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* "Want a better ID?" hint */}
-        {tool.next_photo_hint && !isConfirmed && (
+        {/* "Want a better ID?" hint — surfaces next_photo_hint plus a
+            multi-turn upload affordance. Tapping the button opens the file
+            picker / camera; the new photo POSTs to /toolscan with
+            previous_scan_id, refining the identification in place. */}
+        {tool.next_photo_hint && !isConfirmed && tool.confidence !== 'High' && (
           <div className="flex items-start gap-3 p-3 mt-4 bg-blue-50 border border-blue-100 rounded-lg">
             <Camera className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold font-body text-blue-800">Want a better ID?</p>
               <p className="text-sm font-body text-blue-700">{tool.next_photo_hint}</p>
+              {onFollowupPhoto && (
+                <label
+                  className={`inline-flex items-center gap-2 mt-3 px-4 py-2 bg-honey text-dark-teal rounded-lg text-sm font-medium font-body hover:bg-honey-light transition-colors ${followupInProgress ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                >
+                  <Camera className="w-4 h-4" />
+                  {followupInProgress ? 'Refining…' : 'Upload this view'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    disabled={followupInProgress}
+                    onChange={(e) => {
+                      const f = e.target.files && e.target.files[0];
+                      if (f) {
+                        onFollowupPhoto(f);
+                        // Reset so re-uploading the same file fires onChange again.
+                        e.target.value = '';
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </div>
         )}
@@ -394,7 +519,7 @@ const ToolScanCard = ({
             <div>
               <p className="text-sm font-semibold font-body text-amber-800">Low confidence identification</p>
               <p className="text-sm font-body text-amber-700">
-                {tool.confidence_reasoning || 'We\'re not very confident about this one. Review carefully.'}
+                {tool.confidence_reasoning || "We're not very confident about this one. Review carefully."}
               </p>
             </div>
           </div>
@@ -426,7 +551,7 @@ const ToolScanCard = ({
         {feedbackState === 'saved_correct' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
             <Check className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-body text-green-800">Confirmed. We've sent a copy of these results to your inbox.</span>
+            <span className="text-sm font-body text-green-800">Confirmed. Thanks for the signal — we use these to make the model better.</span>
           </div>
         )}
 
@@ -441,7 +566,7 @@ const ToolScanCard = ({
         {feedbackState === 'saved_corrected' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
             <Check className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-body text-green-800">Corrections saved and sent to your inbox. Thanks for helping us get better at this.</span>
+            <span className="text-sm font-body text-green-800">Corrections saved. Thanks for helping us get better at this.</span>
           </div>
         )}
 
@@ -467,30 +592,24 @@ const ToolScanCard = ({
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
-                <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Tool Type</label>
-                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.tool_name}</p>
-              </div>
-              <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
                 <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Maker</label>
-                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.maker || '—'}</p>
+                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.canonical_brand || '—'}</p>
               </div>
               <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
                 <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Model</label>
-                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.model || '—'}</p>
+                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.canonical_model || '—'}</p>
               </div>
               <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
+                <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Type</label>
+                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.canonical_type || '—'}</p>
+              </div>
+              <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc]">
+                <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Plane Type Number</label>
+                <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.plane_type_number || '—'}</p>
+              </div>
+              <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc] sm:col-span-2">
                 <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Condition</label>
                 <p className="text-base font-body text-dark-teal mt-0.5">{reviewFields.condition}</p>
-              </div>
-              <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc] sm:col-span-2">
-                <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Price Range</label>
-                <p className="text-base font-body text-honey mt-0.5 font-semibold">
-                  ${reviewFields.suggested_price_low} – ${reviewFields.suggested_price_high}
-                </p>
-              </div>
-              <div className="bg-bone rounded-lg px-3 py-2 border border-[#e4e2dc] sm:col-span-2">
-                <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Description</label>
-                <p className="text-base font-body text-dark-teal mt-0.5 whitespace-pre-line">{reviewFields.suggested_description}</p>
               </div>
             </div>
 
@@ -509,20 +628,11 @@ const ToolScanCard = ({
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Tool Type</label>
-                <input
-                  type="text"
-                  value={reviewFields.tool_name}
-                  onChange={(e) => handleReviewFieldChange('tool_name', e.target.value)}
-                  className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Maker</label>
                 <input
                   type="text"
-                  value={reviewFields.maker}
-                  onChange={(e) => handleReviewFieldChange('maker', e.target.value)}
+                  value={reviewFields.canonical_brand}
+                  onChange={(e) => handleReviewFieldChange('canonical_brand', e.target.value)}
                   className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
                 />
               </div>
@@ -530,12 +640,38 @@ const ToolScanCard = ({
                 <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Model</label>
                 <input
                   type="text"
-                  value={reviewFields.model}
-                  onChange={(e) => handleReviewFieldChange('model', e.target.value)}
+                  value={reviewFields.canonical_model}
+                  onChange={(e) => handleReviewFieldChange('canonical_model', e.target.value)}
+                  placeholder="e.g. No. 5"
                   className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Type</label>
+                <select
+                  value={reviewFields.canonical_type}
+                  onChange={(e) => handleReviewFieldChange('canonical_type', e.target.value)}
+                  className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
+                >
+                  <option value="">—</option>
+                  {canonicalTypeOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Plane Type Number</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={reviewFields.plane_type_number}
+                  onChange={(e) => handleReviewFieldChange('plane_type_number', e.target.value)}
+                  placeholder="1–20 (Stanley bench planes only)"
+                  className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
+                />
+              </div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Condition</label>
                 <select
                   value={reviewFields.condition}
@@ -546,39 +682,6 @@ const ToolScanCard = ({
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Price Low</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-secondary">$</span>
-                  <input
-                    type="number"
-                    value={reviewFields.suggested_price_low}
-                    onChange={(e) => handleReviewFieldChange('suggested_price_low', e.target.value)}
-                    className="w-full pl-7 pr-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Price High</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-secondary">$</span>
-                  <input
-                    type="number"
-                    value={reviewFields.suggested_price_high}
-                    onChange={(e) => handleReviewFieldChange('suggested_price_high', e.target.value)}
-                    className="w-full pl-7 pr-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
-                  />
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium font-body text-secondary uppercase tracking-wide mb-1">Description</label>
-                <textarea
-                  value={reviewFields.suggested_description}
-                  onChange={(e) => handleReviewFieldChange('suggested_description', e.target.value)}
-                  className="w-full px-3 py-2 bg-bone-light border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors resize-none"
-                  rows={5}
-                />
               </div>
             </div>
 
@@ -597,14 +700,12 @@ const ToolScanCard = ({
         )}
       </div>
 
-      {/* Active listings on Benchlot — connects ToolScan back to the
-          aggregator. Shown whenever we could resolve a canonical_type;
-          empty-state with a save-alert nudge otherwise. */}
-      {canonicalType && (
+      {/* Active listings panel — connects identification back to the index. */}
+      {canonicalType && canonicalType !== 'Other' && (
         <div className="border-t border-[#e4e2dc] px-5 py-5">
           <div className="flex items-baseline justify-between mb-3">
             <h4 className="text-base font-display font-semibold text-spruce uppercase tracking-wide">
-              Active listings on Benchlot
+              Active listings
             </h4>
             {PRICE_GUIDE_ENABLED && guideHref && (
               <a
@@ -629,7 +730,7 @@ const ToolScanCard = ({
               <Bell className="w-5 h-5 text-honey flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-body text-dark-teal mb-2">
-                  No matching listings on Benchlot right now.
+                  No matching listings right now.
                 </p>
                 <a
                   href={searchHref}
@@ -699,8 +800,8 @@ const ToolScanCard = ({
         </div>
       )}
 
-      {/* AI Analysis — era reasoning, condition notes, collectibility */}
-      {(tool.era_reasoning || tool.condition_notes || tool.collectibility_notes) && (
+      {/* AI Analysis — condition notes + confidence reasoning. */}
+      {(tool.condition_notes || tool.confidence_reasoning) && (
         <div className="border-t border-[#e4e2dc]">
           <button
             onClick={() => setAnalysisExpanded(!analysisExpanded)}
@@ -718,22 +819,16 @@ const ToolScanCard = ({
 
           {analysisExpanded && (
             <div className="px-5 pb-5 space-y-3">
-              {tool.era_reasoning && (
-                <div>
-                  <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Era Reasoning</label>
-                  <p className="text-base font-body text-secondary mt-0.5">{tool.era_reasoning}</p>
-                </div>
-              )}
               {tool.condition_notes && (
                 <div>
                   <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Condition Notes</label>
                   <p className="text-base font-body text-secondary mt-0.5">{tool.condition_notes}</p>
                 </div>
               )}
-              {tool.collectibility_notes && (
+              {tool.confidence_reasoning && (
                 <div>
-                  <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">Collectibility</label>
-                  <p className="text-base font-body text-secondary mt-0.5">{tool.collectibility_notes}</p>
+                  <label className="text-sm font-medium font-body text-secondary uppercase tracking-wide">How we got there</label>
+                  <p className="text-base font-body text-secondary mt-0.5">{tool.confidence_reasoning}</p>
                 </div>
               )}
             </div>

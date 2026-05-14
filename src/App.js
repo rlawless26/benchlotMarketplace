@@ -60,6 +60,7 @@ import ScrollToTop from './components/ScrollToTop';
 
 // Feature flags
 import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED, PLANE_PAGES_ENABLED, TOOL_CHECK_ENABLED } from './utils/featureFlags';
+import { getHostBrand } from './utils/environment';
 
 // Styles
 import './styles/design-system.css';
@@ -132,17 +133,22 @@ function MarketplaceRoute({ element }) {
 function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
+  const hostBrand = getHostBrand();
+  const isBenchfindHost = hostBrand === 'benchfind';
   const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA && !AGGREGATOR_MODE;
-  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE;
+  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE && !isBenchfindHost;
   const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
   // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
   // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
   // Editorial content pages (About/FAQ/Contact) also ship their own chrome
   // per the post-pivot design handoff — see src/components/siteChrome/.
+  // BenchFind host: suppress Benchlot chrome entirely on root so the brand
+  // surface reads clean. Phase 2 builds a BenchFind-specific header/footer.
   const contentPagePaths = ['/faq', '/privacy', '/terms'];
   const isContentPage = contentPagePaths.includes(location.pathname);
+  const isBenchfindRoot = isBenchfindHost && location.pathname === '/';
   const isChromelessPage =
-    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage;
+    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage || isBenchfindRoot;
 
   // Public mode: aggregator is on OR marketplace not yet launched, AND user not signed in.
   // Header/Footer adapt their CTAs when publicMode is true.
@@ -157,14 +163,18 @@ function AppLayout() {
 
       <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
         <Routes>
-          {/* Home: design-spec aggregator homepage in aggregator mode,
-              legacy marketplace landing otherwise. */}
+          {/* Home: on benchfind.com the root lands directly on the photo-id
+              scan experience (BenchFind is a photo-ID product, not an
+              aggregator destination). On benchlot.com the aggregator home
+              is unchanged. */}
           <Route
             path="/"
             element={
-              AGGREGATOR_MODE
-                ? <AggregatorHomePage />
-                : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />)
+              isBenchfindHost
+                ? <ToolScanPage />
+                : (AGGREGATOR_MODE
+                    ? <AggregatorHomePage />
+                    : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />))
             }
           />
 

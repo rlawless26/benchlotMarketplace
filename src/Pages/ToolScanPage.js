@@ -6,7 +6,7 @@ import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles
 import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
-import { getConfig } from '../utils/environment';
+import { getConfig, getHostBrand, brandName } from '../utils/environment';
 import { track } from '../utils/analytics';
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
@@ -21,6 +21,9 @@ const MAX_IMAGES = 5;
 const ToolScanPage = () => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
+  const hostBrand = getHostBrand();
+  const isBenchfind = hostBrand === 'benchfind';
+  const brand = brandName();
 
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -34,6 +37,7 @@ const ToolScanPage = () => {
   const [scanError, setScanError] = useState(null);
   const [scanResults, setScanResults] = useState(null);
   const [scanId, setScanId] = useState(null);
+  const [imagePaths, setImagePaths] = useState([]);
 
   // Auth state
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -46,8 +50,8 @@ const ToolScanPage = () => {
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
-    document.title = 'Scan a Tool | Benchlot';
-  }, []);
+    document.title = isBenchfind ? 'BenchFind — Identify any tool' : 'Scan a Tool | Benchlot';
+  }, [isBenchfind]);
 
   const handleFileSelect = useCallback((e) => {
     const files = Array.from(e.target.files);
@@ -172,14 +176,15 @@ const ToolScanPage = () => {
 
       setScanResults(data.results);
       setScanId(data.scanId);
-      const tools = (data.results && data.results.tools) || [];
-      const primary = tools[0] || {};
+      setImagePaths(Array.isArray(data.imagePaths) ? data.imagePaths : []);
+      const tool = data.results && data.results.tool;
       track('toolscan_completed', {
-        status: tools.length === 0 ? 'no_tools' : 'success',
-        tool_count: tools.length,
-        primary_brand: primary.maker || null,
-        primary_type: primary.suggested_subcategory || primary.suggested_category || null,
-        primary_confidence: primary.confidence || null,
+        status: tool ? 'success' : 'no_tools',
+        canonical_brand: (tool && tool.canonical_brand) || null,
+        canonical_type: (tool && tool.canonical_type) || null,
+        canonical_model: (tool && tool.canonical_model) || null,
+        plane_type_number: (tool && Number.isInteger(tool.plane_type_number)) ? tool.plane_type_number : null,
+        confidence: (tool && tool.confidence) || null,
         duration_ms: Date.now() - scanStartedAt,
         is_authed: Boolean(user),
       });
@@ -198,12 +203,79 @@ const ToolScanPage = () => {
     }
   };
 
-  const handleUpdateTool = (index, updatedTool) => {
+  const handleUpdateTool = (updatedTool) => {
     setScanResults(prev => ({
       ...prev,
-      tools: prev.tools.map((t, i) => i === index ? updatedTool : t),
+      tool: updatedTool,
     }));
   };
+
+  // Follow-up photo: a user-prompted second image to refine an uncertain
+  // identification. Backend prepends the previous result as context and
+  // links the new scan to the original via previousScanId.
+  const handleFollowupPhoto = useCallback(async (file) => {
+    if (!file || !scanId) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setScanError(`Photo is too large. Maximum file size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+      return;
+    }
+    const previousConfidence = scanResults?.tool?.confidence || null;
+    const followupStartedAt = Date.now();
+    track('next_photo_hint_followed', {
+      previous_scan_id: scanId,
+      previous_confidence: previousConfidence,
+      hint: scanResults?.tool?.next_photo_hint || null,
+    });
+    setScanning(true);
+    setScanError(null);
+    try {
+      const data = await fileToBase64(file);
+      let media_type = file.type || 'image/jpeg';
+      if (data.startsWith('UklGR')) media_type = 'image/webp';
+      else if (data.startsWith('/9j/')) media_type = 'image/jpeg';
+      else if (data.startsWith('iVBOR')) media_type = 'image/png';
+      if (file.type === 'image/heic') media_type = 'image/heic';
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (user) {
+        try {
+          const auth = getAuth();
+          const token = await auth.currentUser.getIdToken();
+          headers['Authorization'] = `Bearer ${token}`;
+        } catch (e) { /* proceed without auth */ }
+      }
+
+      const response = await fetch(`${API_URL}/toolscan`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          images: [{ data, media_type }],
+          previous_scan_id: scanId,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.error || 'Refinement scan failed');
+      }
+
+      // Replace scan state with the refined result. The previous scanId is
+      // preserved server-side via previousScanId on the new doc.
+      setScanResults(json.results);
+      setScanId(json.scanId);
+      setImagePaths(Array.isArray(json.imagePaths) ? json.imagePaths : []);
+      const newTool = json.results && json.results.tool;
+      track('confidence_escalation', {
+        from: previousConfidence,
+        to: (newTool && newTool.confidence) || null,
+        duration_ms: Date.now() - followupStartedAt,
+      });
+    } catch (err) {
+      console.error('Follow-up scan error:', err);
+      setScanError(err.message || 'Refinement failed. Try again.');
+    } finally {
+      setScanning(false);
+    }
+  }, [scanId, scanResults, user]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -220,25 +292,21 @@ const ToolScanPage = () => {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('../firebase/config');
 
-      // Save full scan data to toolscan_leads
-      const tools = scanResults?.tools || [];
+      // Save scan data to toolscan_leads using v5 canonical schema.
+      const tool = scanResults?.tool || null;
       await addDoc(collection(db, 'toolscan_leads'), {
         email,
         scanId: scanId || null,
-        toolsIdentified: tools.length,
-        tools: tools.map(t => ({
-          tool_name: t.tool_name,
-          maker: t.maker,
-          model: t.model,
-          era: t.era,
-          condition: t.condition,
-          confidence: t.confidence,
-          suggested_price_low: t.suggested_price_low,
-          suggested_price_high: t.suggested_price_high,
-          suggested_title: t.suggested_title,
-          suggested_description: t.suggested_description,
-          suggested_category: t.suggested_category,
-        })),
+        toolsIdentified: tool ? 1 : 0,
+        tool: tool ? {
+          canonical_brand: tool.canonical_brand || null,
+          canonical_type: tool.canonical_type || null,
+          canonical_model: tool.canonical_model || null,
+          plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
+          era_estimate: tool.era_estimate || null,
+          condition: tool.condition || null,
+          confidence: tool.confidence || null,
+        } : null,
         source: 'scan_email_gate',
         created_at: serverTimestamp(),
       });
@@ -259,21 +327,12 @@ const ToolScanPage = () => {
       setEmailSubmitting(false);
 
       // Send scan results email (always fires, non-blocking).
-      // Enrich with canonical_* hints so the server can join priceStats
-      // and use the data-driven band when it exists.
-      const tools = scanResults?.tools || [];
-      const firstTool = tools[0];
-      if (firstTool && email) {
-        // Lazy-import the bridge so this isn't loaded on the upload path.
-        const { bridgeToCanonicalType } = await import('../utils/toolscanCategoryBridge');
-        const canonical_type = bridgeToCanonicalType({
-          suggested_category: firstTool.suggested_category,
-          suggested_subcategory: firstTool.suggested_subcategory,
-          tool_name: firstTool.tool_name,
-        });
+      // v5 already emits canonical_* fields — no bridge call needed.
+      const tool = scanResults?.tool || null;
+      if (tool && email) {
         const canonical_brand =
-          firstTool.maker && firstTool.maker !== 'Unknown' && firstTool.confidence !== 'Low'
-            ? firstTool.maker
+          tool.canonical_brand && tool.canonical_brand !== 'Unknown' && tool.confidence !== 'Low'
+            ? tool.canonical_brand
             : null;
         fetch(`${API_URL}/send-scan-results`, {
           method: 'POST',
@@ -281,10 +340,14 @@ const ToolScanPage = () => {
           body: JSON.stringify({
             email,
             scanResult: {
-              ...firstTool,
-              canonical_type,
               canonical_brand,
-              canonical_size: firstTool.model || null,
+              canonical_type: tool.canonical_type || null,
+              canonical_model: tool.canonical_model || null,
+              plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
+              era_estimate: tool.era_estimate || null,
+              condition: tool.condition || null,
+              confidence: tool.confidence || null,
+              condition_notes: tool.condition_notes || null,
             },
           }),
         }).catch(err => console.error('Scan results email error:', err));
@@ -293,8 +356,10 @@ const ToolScanPage = () => {
   };
 
   // Skip email gate if user is already signed in
-  const showEmailGate = scanResults && !emailCollected && !user;
-  const showFullResults = scanResults && (emailCollected || user);
+  // BenchFind v1 drops the pre-result email wall — reflex usage beats list
+  // building for an identification product. benchlot.com keeps the gate.
+  const showEmailGate = scanResults && !emailCollected && !user && !isBenchfind;
+  const showFullResults = scanResults && (emailCollected || user || isBenchfind);
 
   const handleFeedback = async (feedback) => {
     try {
@@ -304,6 +369,9 @@ const ToolScanPage = () => {
       await addDoc(collection(db, 'scan_feedback'), {
         vote: feedback.vote,              // 'correct' | 'corrected'
         scanId: feedback.scanId || scanId || null,
+        // Denormalized image paths so (image, correction) pairs are queryable
+        // as a single row — easier ML access than joining via scanId.
+        imagePaths: imagePaths || [],
         email: captureEmail || null,
         originalResult: feedback.originalResult,
         correctedResult: feedback.correctedResult || null,
@@ -323,6 +391,7 @@ const ToolScanPage = () => {
     setContext('');
     setScanResults(null);
     setScanId(null);
+    setImagePaths([]);
     setScanError(null);
     setShowAuthPrompt(false);
     setEmailCollected(false);
@@ -339,7 +408,7 @@ const ToolScanPage = () => {
             <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
             <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your tools</h3>
             <p className="text-secondary font-body mb-6">
-              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Benchlot.
+              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on {brand}.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -367,10 +436,14 @@ const ToolScanPage = () => {
             <div className="text-center pt-8 mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Sparkles className="w-10 h-10 text-honey" />
-                <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">Scan a Tool</h1>
+                <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">
+                  {isBenchfind ? 'BenchFind' : 'Scan a Tool'}
+                </h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                Photograph a tool and we'll identify it — maker, model, era, condition — then show you what it's worth and any active listings on Benchlot right now.
+                {isBenchfind
+                  ? "Snap a photo of a hand plane and we'll tell you what it is, what it's worth, and how confident we are."
+                  : "Photograph a tool and we'll identify it — maker, model, era, condition — then show you what it's worth and any active listings on Benchlot right now."}
               </p>
 
               {/* Upload area */}
@@ -419,18 +492,21 @@ const ToolScanPage = () => {
               </div>
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
 
-              {/* Browse-current-index nudge */}
-              <div className="mt-16 max-w-md mx-auto text-center">
-                <p className="text-base text-secondary font-body mb-3">
-                  Nothing to scan right now? Browse what's currently on the bench.
-                </p>
-                <a
-                  href="/"
-                  className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
-                >
-                  See all listings →
-                </a>
-              </div>
+              {/* Browse-current-index nudge — Benchlot only. BenchFind is
+                  a scan-only product; no aggregator surface to link to. */}
+              {!isBenchfind && (
+                <div className="mt-16 max-w-md mx-auto text-center">
+                  <p className="text-base text-secondary font-body mb-3">
+                    Nothing to scan right now? Browse what's currently on the bench.
+                  </p>
+                  <a
+                    href="/"
+                    className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
+                  >
+                    See all listings →
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Section 2: Example Result — spruce band with mock ToolScanCard */}
@@ -459,12 +535,18 @@ const ToolScanPage = () => {
                 <div className="text-center">
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
                   <h3 className="font-display font-semibold text-dark-teal mb-1">Compare</h3>
-                  <p className="text-sm text-secondary font-body">See what it sells for and any matching listings indexed across Benchlot's sources.</p>
+                  <p className="text-sm text-secondary font-body">
+                    {isBenchfind
+                      ? "See what it sells for, based on recent comparable sales."
+                      : "See what it sells for and any matching listings indexed across Benchlot's sources."}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Section 4: Audience Hooks */}
+            {/* Section 4: Audience Hooks — Benchlot only. BenchFind v1 keeps
+                the surface focused on the scan flow itself. */}
+            {!isBenchfind && (
             <div className="mb-16 max-w-4xl mx-auto">
               <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">Build your shop</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -506,20 +588,23 @@ const ToolScanPage = () => {
                 </div>
               </div>
             </div>
+            )}
 
-            {/* Section 5: Browse + Save Alert CTA */}
-            <div className="mb-12 text-center max-w-md mx-auto">
-              <h2 className="text-2xl font-display font-bold text-spruce mb-3">Or skip the scan</h2>
-              <p className="text-base text-secondary font-body mb-6">
-                Browse listings indexed from dealers, forums, and auctions across the web. Save an alert and we'll email you when matching listings appear.
-              </p>
-              <a
-                href="/"
-                className="inline-block px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors font-body"
-              >
-                Browse the index →
-              </a>
-            </div>
+            {/* Section 5: Browse + Save Alert CTA — Benchlot only. */}
+            {!isBenchfind && (
+              <div className="mb-12 text-center max-w-md mx-auto">
+                <h2 className="text-2xl font-display font-bold text-spruce mb-3">Or skip the scan</h2>
+                <p className="text-base text-secondary font-body mb-6">
+                  Browse listings indexed from dealers, forums, and auctions across the web. Save an alert and we'll email you when matching listings appear.
+                </p>
+                <a
+                  href="/"
+                  className="inline-block px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors font-body"
+                >
+                  Browse the index →
+                </a>
+              </div>
+            )}
           </div>
         )}
 
@@ -528,7 +613,9 @@ const ToolScanPage = () => {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-8 h-8 text-honey" />
-              <h1 className="text-3xl font-display font-semibold text-spruce">Scan a Tool</h1>
+              <h1 className="text-3xl font-display font-semibold text-spruce">
+                {isBenchfind ? 'BenchFind' : 'Scan a Tool'}
+              </h1>
             </div>
           </div>
         )}
@@ -536,9 +623,9 @@ const ToolScanPage = () => {
         {scanResults && (
           <div className="flex items-center gap-2 mb-6 text-secondary font-body">
             <Sparkles className="w-5 h-5 text-honey" />
-            <span className="font-semibold text-spruce">Benchlot</span>
+            <span className="font-semibold text-spruce">{brand}</span>
             <span className="text-bone-dark">·</span>
-            <span>{scanResults.tools.length} {scanResults.tools.length === 1 ? 'tool' : 'tools'} identified</span>
+            <span>{scanResults.tool ? 'Tool identified' : 'No tool identified'}</span>
           </div>
         )}
 
@@ -665,43 +752,48 @@ const ToolScanPage = () => {
         )}
 
         {/* Teaser + Email Gate — shown when results exist but email not collected (and not signed in) */}
-        {showEmailGate && scanResults.tools.length > 0 && (
+        {showEmailGate && scanResults.tool && (() => {
+          const t = scanResults.tool;
+          const teaserName = [t.canonical_brand, t.canonical_model].filter(Boolean).join(' ')
+            || t.canonical_type
+            || 'Tool identified';
+          return (
           <div>
-            {/* Teaser cards */}
-            <div className="space-y-4 mb-8">
-              {scanResults.tools.map((tool, index) => (
-                <div key={index} className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-5">
-                  <div className="flex items-start gap-4">
-                    {previews[0] && (
-                      <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-[#e4e2dc]">
-                        <img src={previews[0]} alt="Scanned tool" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="text-xl font-display font-semibold text-spruce">{tool.tool_name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 mt-1 text-base font-body text-secondary">
-                        {tool.maker && tool.maker !== 'Unknown' && <span>{tool.maker}</span>}
-                        {tool.model && <span>· {tool.model}</span>}
-                        {tool.era && <span>· {tool.era}</span>}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
+            {/* Teaser card */}
+            <div className="mb-8">
+              <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-5">
+                <div className="flex items-start gap-4">
+                  {previews[0] && (
+                    <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-[#e4e2dc]">
+                      <img src={previews[0]} alt="Scanned tool" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-display font-semibold text-spruce">{teaserName}</h3>
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-base font-body text-secondary">
+                      {t.canonical_type && <span>{t.canonical_type}</span>}
+                      {Number.isInteger(t.plane_type_number) && <span>· Type {t.plane_type_number}</span>}
+                      {t.era_estimate && <span>· {t.era_estimate}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {t.confidence && (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
-                          tool.confidence === 'High' ? 'bg-green-100 text-green-800' :
-                          tool.confidence === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          t.confidence === 'High' ? 'bg-green-100 text-green-800' :
+                          t.confidence === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                          {tool.confidence} confidence
+                          {t.confidence} confidence
                         </span>
-                      </div>
-                      {/* Blurred teaser for price/details */}
-                      <div className="mt-3 flex items-center gap-4 select-none">
-                        <span className="text-honey font-semibold text-lg blur-sm">$XX – $XXX</span>
-                        <span className="text-secondary text-sm blur-sm">Full description and listing details...</span>
-                      </div>
+                      )}
+                    </div>
+                    {/* Blurred teaser for comp band + active listings */}
+                    <div className="mt-3 flex items-center gap-4 select-none">
+                      <span className="text-honey font-semibold text-lg blur-sm">$XX – $XXX</span>
+                      <span className="text-secondary text-sm blur-sm">Recent comps + active listings...</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
 
             {/* Email capture form */}
@@ -711,7 +803,7 @@ const ToolScanPage = () => {
                 Your tool has been identified
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Benchlot launches.
+                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when {brand} launches.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
@@ -734,34 +826,34 @@ const ToolScanPage = () => {
                 {emailError && (
                   <p className="text-sm text-error mt-2">{emailError}</p>
                 )}
-                <p className="text-xs text-secondary mt-3">We'll keep you posted as Benchlot's search and alerts come online. Unsubscribe anytime.</p>
+                <p className="text-xs text-secondary mt-3">We'll keep you posted as {brand}'s search and alerts come online. Unsubscribe anytime.</p>
               </form>
             </div>
           </div>
-        )}
+          );
+        })()}
 
-        {/* No tools found */}
-        {scanResults && scanResults.tools.length === 0 && (
+        {/* No tool identified */}
+        {scanResults && !scanResults.tool && (
           <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
-            <p className="text-secondary">No tools were identified. Try a clearer photo with better lighting.</p>
+            <p className="text-secondary">No tool was identified. Try a clearer photo with better lighting.</p>
           </div>
         )}
 
         {/* Full Results — shown after email collected or if user is signed in */}
-        {showFullResults && scanResults.tools.length > 0 && (
+        {showFullResults && scanResults.tool && (
           <div>
             <div className="space-y-6">
-              {scanResults.tools.map((tool, index) => (
-                <ToolScanCard
-                  key={index}
-                  tool={tool}
-                  index={index}
-                  scanId={scanId}
-                  previewImage={previews[0]}
-                  onUpdate={(updated) => handleUpdateTool(index, updated)}
-                  onFeedback={handleFeedback}
-                />
-              ))}
+              <ToolScanCard
+                tool={scanResults.tool}
+                scanId={scanId}
+                imagePaths={imagePaths}
+                previewImage={previews[0]}
+                onUpdate={handleUpdateTool}
+                onFeedback={handleFeedback}
+                onFollowupPhoto={handleFollowupPhoto}
+                followupInProgress={scanning}
+              />
             </div>
 
             {/* Next actions */}
@@ -772,14 +864,16 @@ const ToolScanPage = () => {
               >
                 Scan another tool →
               </button>
-              <p className="text-sm text-secondary font-body mt-3">
-                Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
-              </p>
+              {!isBenchfind && (
+                <p className="text-sm text-secondary font-body mt-3">
+                  Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
+                </p>
+              )}
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
-                Benchlot uses AI to identify tools and surface matching listings. Identifications and price estimates are suggestions, not appraisals — always verify before buying or selling.
+                {brand} uses AI to identify tools and surface matching listings. Identifications and price estimates are suggestions, not appraisals — always verify before buying or selling.
               </p>
             </div>
           </div>
