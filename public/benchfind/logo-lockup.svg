@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 96" width="640" height="96" role="img" aria-label="Benchfind">
+  <defs>
+    
+  </defs>
+  <g>
+    <rect x="4" y="12" width="72" height="72" rx="11" fill="#1B1714"></rect>
+    <g stroke="#94B3A2" stroke-width="1.5" fill="none" stroke-linecap="square">
+      <path d="M 12 30 L 12 20 L 22 20"></path>
+      <path d="M 58 20 L 68 20 L 68 30"></path>
+      <path d="M 12 66 L 12 76 L 22 76"></path>
+      <path d="M 58 76 L 68 76 L 68 66"></path>
+    </g>
+    <text x="40" y="64" text-anchor="middle" class="mark-letter">B</text>
+  </g>
+  <text x="100" y="66" class="wm-base"><tspan class="wm-light">BENCH</tspan><tspan class="wm-bold">FIND</tspan></text>
+</svg>

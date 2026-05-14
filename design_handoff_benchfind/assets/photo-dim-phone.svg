@@ -1,0 +1,37 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <radialGradient id="dim-bg" cx="40%" cy="50%" r="90%">
+      <stop offset="0%" stop-color="#3A2F25"></stop>
+      <stop offset="60%" stop-color="#1F1812"></stop>
+      <stop offset="100%" stop-color="#0D0A07"></stop>
+    </radialGradient>
+    <linearGradient id="dim-iron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3D3631"></stop>
+      <stop offset="60%" stop-color="#22201C"></stop>
+      <stop offset="100%" stop-color="#0D0B09"></stop>
+    </linearGradient>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="7"></feTurbulence>
+      <feColorMatrix values="0 0 0 0 0.7&#xA;                             0 0 0 0 0.55&#xA;                             0 0 0 0 0.35&#xA;                             0 0 0 0.12 0"></feColorMatrix>
+    </filter>
+    <radialGradient id="dim-spot" cx="50%" cy="35%" r="50%">
+      <stop offset="0%" stop-color="#C8A36A" stop-opacity="0.32"></stop>
+      <stop offset="100%" stop-color="#C8A36A" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#dim-bg)"></rect>
+  <rect width="400" height="300" fill="url(#dim-spot)"></rect>
+  
+  <g transform="translate(60, 130)" opacity="0.92">
+    <rect x="0" y="80" width="280" height="10" rx="1.5" fill="url(#dim-iron)"></rect>
+    <path d="M 12 80 L 30 38 Q 36 30 48 30 L 116 30 L 124 22 Q 130 16 138 16 L 152 16 Q 160 16 166 22 L 174 30 L 240 30 Q 252 30 258 38 L 268 80 Z" fill="url(#dim-iron)"></path>
+    <path d="M 138 16 L 170 80 L 152 80 L 132 30 Z" fill="#0D0B09"></path>
+    <path d="M 136 16 Q 130 8 134 4 Q 140 0 152 2 Q 162 4 166 10 Q 168 16 162 18 Z" fill="#3D3631"></path>
+    <ellipse cx="56" cy="20" rx="9" ry="11" fill="#4A2D14"></ellipse>
+    <path d="M 218 80 Q 240 78 244 60 Q 248 36 232 28 Q 220 22 212 32 Q 208 52 212 80 Z" fill="#4A2D14"></path>
+    
+    <path d="M 134 18 Q 144 14 162 16" stroke="#C8A36A" stroke-width="1" fill="none" opacity="0.5"></path>
+  </g>
+  <rect width="400" height="300" filter="url(#noise)" opacity="0.45"></rect>
+</svg>

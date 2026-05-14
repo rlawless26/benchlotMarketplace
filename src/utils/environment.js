@@ -62,7 +62,7 @@ export const isBenchfind = () => getHostBrand() === 'benchfind';
 export const isBenchlot = () => getHostBrand() === 'benchlot';
 
 // Display strings for the active brand.
-export const brandName = () => getHostBrand() === 'benchfind' ? 'BenchFind' : 'Benchlot';
+export const brandName = () => getHostBrand() === 'benchfind' ? 'Benchfind' : 'Benchlot';
 
 // Get environment-specific configuration
 export const getConfig = (development, staging, production) => {

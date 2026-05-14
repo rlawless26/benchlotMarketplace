@@ -50,7 +50,7 @@ const ToolScanPage = () => {
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
-    document.title = isBenchfind ? 'BenchFind — Identify any tool' : 'Scan a Tool | Benchlot';
+    document.title = isBenchfind ? 'Benchfind — Identify any tool' : 'Scan a Tool | Benchlot';
   }, [isBenchfind]);
 
   const handleFileSelect = useCallback((e) => {
@@ -356,7 +356,7 @@ const ToolScanPage = () => {
   };
 
   // Skip email gate if user is already signed in
-  // BenchFind v1 drops the pre-result email wall — reflex usage beats list
+  // Benchfind v1 drops the pre-result email wall — reflex usage beats list
   // building for an identification product. benchlot.com keeps the gate.
   const showEmailGate = scanResults && !emailCollected && !user && !isBenchfind;
   const showFullResults = scanResults && (emailCollected || user || isBenchfind);
@@ -437,7 +437,7 @@ const ToolScanPage = () => {
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Sparkles className="w-10 h-10 text-honey" />
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">
-                  {isBenchfind ? 'BenchFind' : 'Scan a Tool'}
+                  {isBenchfind ? 'Benchfind' : 'Scan a Tool'}
                 </h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
@@ -492,7 +492,7 @@ const ToolScanPage = () => {
               </div>
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
 
-              {/* Browse-current-index nudge — Benchlot only. BenchFind is
+              {/* Browse-current-index nudge — Benchlot only. Benchfind is
                   a scan-only product; no aggregator surface to link to. */}
               {!isBenchfind && (
                 <div className="mt-16 max-w-md mx-auto text-center">
@@ -544,7 +544,7 @@ const ToolScanPage = () => {
               </div>
             </div>
 
-            {/* Section 4: Audience Hooks — Benchlot only. BenchFind v1 keeps
+            {/* Section 4: Audience Hooks — Benchlot only. Benchfind v1 keeps
                 the surface focused on the scan flow itself. */}
             {!isBenchfind && (
             <div className="mb-16 max-w-4xl mx-auto">
@@ -614,7 +614,7 @@ const ToolScanPage = () => {
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-8 h-8 text-honey" />
               <h1 className="text-3xl font-display font-semibold text-spruce">
-                {isBenchfind ? 'BenchFind' : 'Scan a Tool'}
+                {isBenchfind ? 'Benchfind' : 'Scan a Tool'}
               </h1>
             </div>
           </div>

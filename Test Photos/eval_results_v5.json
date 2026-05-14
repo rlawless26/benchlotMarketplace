@@ -1,0 +1,2869 @@
+{
+  "timestamp": "2026-05-14T15:17:10.356Z",
+  "prompt_version": "v5",
+  "model": "claude-sonnet-4-20250514",
+  "total_evaluated": 114,
+  "planes_only_filter": true,
+  "results": [
+    {
+      "filename": "stanley_no4_type11_sweetheart.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1910-1918 (Type 11, Sweetheart)",
+        "plane_type_number": 11
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern production, post-1990s",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Stanley branding and No. 4 designation visible on packaging, modern yellow Stanley box design",
+        "next_photo_hint": "Unboxed plane to assess actual tool condition and type study details"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 212
+      }
+    },
+    {
+      "filename": "stanley_no4_type12_corrugated.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4C",
+        "era": "1919-1924 (Type 12)",
+        "plane_type_number": 12
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "1960s-1970s",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear Stanley branding on lever cap, compact proportions consistent with No. 4 smoother, but cannot see frog area or other type study markers clearly",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5838,
+        "output_tokens": 218
+      }
+    },
+    {
+      "filename": "stanley_no4_type11_1910.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1910-1918 (Type 11)",
+        "plane_type_number": 11
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not visible in this angle",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "stanley_no4_england.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1960s-1970s (Made in England)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": 13,
+        "era_estimate": "Type 13, c. 1925-1932",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with rosewood tote and knob indicating pre-1932 manufacture, compact proportions suggest No. 4, red trademark visible on cutter suggests Sweetheart era",
+        "next_photo_hint": "Frog area to read patent dates and confirm type study, clearer view of cutter trademark"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 236
+      }
+    },
+    {
+      "filename": "stanley_no4half_type12.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4-1/2",
+        "era": "1919-1924 (Type 12, first Sweetheart era)",
+        "plane_type_number": 12
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and maker markings not clearly visible for precise dating",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley markings"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 226
+      }
+    },
+    {
+      "filename": "stanley_no5_jack_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "1930s-1950s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Post-WWII, c. 1950s-1960s",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions consistent with No. 4 smoother, but frog area and patent dates not visible for precise type study identification",
+        "next_photo_hint": "Frog area to read patent dates and confirm type study number"
+      },
+      "usage": {
+        "input_tokens": 5831,
+        "output_tokens": 242
+      }
+    },
+    {
+      "filename": "stanley_no5_corrugated.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5C",
+        "era": "1930s-1940s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest jack plane length (~14\"), but frog area and type study markers not clearly visible due to patina",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 216
+      }
+    },
+    {
+      "filename": "stanley_no3_smoothing.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5C",
+        "era": "1930s-1950s (Sweetheart)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and maker's marks not visible for precise type identification",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley branding"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 219
+      }
+    },
+    {
+      "filename": "stanley_60half_block_vintage.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "plane_type_number": null,
+        "era_estimate": "1940s-1950s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic Stanley low-angle block plane profile with single grip design, brass adjustment knobs, and characteristic body proportions of the No. 9 1/2",
+        "next_photo_hint": "Sole view to confirm adjustable mouth and any maker's marks"
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 225
+      }
+    },
+    {
+      "filename": "stanley_60half_block_vgc.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "plane_type_number": null,
+        "era_estimate": "1940s-1950s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic Stanley block plane proportions, single-hand grip design, bevel-up blade configuration, brass depth adjustment wheel and lever cap thumb screw typical of No. 9 1/2",
+        "next_photo_hint": "Side view showing any model markings or sole length measurement"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 238
+      }
+    },
+    {
+      "filename": "stanley_60half_modern.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2 (12-139)",
+        "era": "Modern production (post-2000)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "plane_type_number": null,
+        "era_estimate": "Modern production",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'No. 60 1/2' marking visible on sole, original Stanley box confirms model, single-hand grip design with no rear tote confirms block plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 213
+      }
+    },
+    {
+      "filename": "lie_nielsen_no4_bronze.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 4",
+        "era": "Modern (2000s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'LIE-NIELSEN' marking visible on lever cap, distinctive cherry handles with brass hardware combination unique to LN, compact smoother proportions consistent with No. 4",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 225
+      }
+    },
+    {
+      "filename": "lie_nielsen_no4_early.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 4",
+        "era": "Early production (1990s-2000s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles with brass hardware, bronze body casting, compact smoother proportions (~9-10 inches), premium fit and finish",
+        "next_photo_hint": "Side view of lever cap to confirm Lie-Nielsen branding"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 230
+      }
+    },
+    {
+      "filename": "stanley_78_rabbet.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Router Plane",
+        "canonical_type": "Router Plane",
+        "maker": "Stanley",
+        "model": "No. 71",
+        "era": "1920s-1940s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Other",
+        "canonical_model": "No. 71",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Label clearly identifies as 'Stanley #1 Cutter Collar' - this is a replacement part for Stanley No. 71 router plane, not a complete plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 210
+      }
+    },
+    {
+      "filename": "stanley_71_router.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Router Plane",
+        "canonical_type": "Router Plane",
+        "maker": "Stanley",
+        "model": "No. 71",
+        "era": "1930s-1950s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Router Plane",
+        "canonical_model": "No. 71",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'No. 71' marking visible on the router plane body, distinctive wide flat base with two round knobs, complete with original wooden storage case and full complement of cutters",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 228
+      }
+    },
+    {
+      "filename": "stanley_71_router_type6.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Router Plane",
+        "canonical_type": "Router Plane",
+        "maker": "Stanley",
+        "model": "No. 71",
+        "era": "1902-1905 (Type 6)",
+        "plane_type_number": 6
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive spokeshave form with two wing handles, curved sole, adjustable blade mechanism, and 'STANLEY' casting visible on body",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 197
+      }
+    },
+    {
+      "filename": "stanley_151_spokeshave.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5-1/2",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest jack plane length (~14\"), but heavy rust obscures maker's marks and type study details",
+        "next_photo_hint": "Frog area and lateral lever to check for Stanley markings and type study features"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 220
+      }
+    },
+    {
+      "filename": "stanley_sweetheart_no4_modern.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4 (12-136 Sweetheart reissue)",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (contemporary production)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles, brass hardware, ductile iron body, compact smoother proportions (~9-10 inches)",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 4764,
+        "output_tokens": 209
+      }
+    },
+    {
+      "filename": "stanley_5quarter_jack.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Junior Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5-1/4",
+        "era": "1910-1920s (Sweetheart)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible in this angle",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5838,
+        "output_tokens": 222
+      }
+    },
+    {
+      "filename": "stanley_60half_in_box.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2",
+        "era": "1950s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "plane_type_number": null,
+        "era_estimate": "mid-20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Stanley No. 60 1/2 block plane characteristics: single-hand grip design, adjustable mouth plate, knurled depth adjustment, compact size. Original box visible with Stanley branding confirms identification",
+        "next_photo_hint": "Bottom of sole to check for size markings and Stanley logo"
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 255
+      }
+    },
+    {
+      "filename": "lie_nielsen_no4_new.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 4",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles, brass hardware, ductile iron body, Norris-style adjuster, compact smoother proportions",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 219
+      }
+    },
+    {
+      "filename": "stanley_60half_60p.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2P",
+        "era": "1960s-1980s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Single-hand grip design with knurled brass adjustment nut confirms block plane, size and proportions suggest No. 9 1/2, but maker's marks not clearly visible",
+        "next_photo_hint": "Side view showing any maker's marks on the body or lever cap"
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 230
+      }
+    },
+    {
+      "filename": "veritas_laj_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Jack Plane",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (contemporary)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Veritas branding and 'LOW-ANGLE JACK PLANE' text visible on packaging label, model number 05P34.50 visible",
+        "next_photo_hint": "Unboxed plane to confirm exact model designation"
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 224
+      }
+    },
+    {
+      "filename": "veritas_laj_plane_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Jack Plane",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (Lee Valley)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'veritas' marking visible on sole, distinctive green-painted body, cherry handles with brass hardware characteristic of Lee Valley Tools",
+        "next_photo_hint": "Side view showing full length would help determine if this is a smoother or jack plane"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 211
+      }
+    },
+    {
+      "filename": "veritas_laj_plane_3.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Jack Plane",
+        "era": "Modern (2000s-2010s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (Lee Valley)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'Veritas' branding visible on lever cap, distinctive green-painted body, cherry handles with brass hardware, compact smoother proportions",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5838,
+        "output_tokens": 206
+      }
+    },
+    {
+      "filename": "veritas_smoothing_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Smoothing Plane",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4 1/2",
+        "plane_type_number": null,
+        "era_estimate": "Modern (Lee Valley)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Veritas branding visible, distinctive green-painted body, Norris-style adjuster, PM-V11 blade packaging confirms model, proportions consistent with No. 4 1/2 smoother",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5828,
+        "output_tokens": 248
+      }
+    },
+    {
+      "filename": "veritas_block_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Block Plane",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (2000s+)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Veritas branding and 'LOW-ANGLE BLOCK PLANE' text on packaging, specifications visible on box",
+        "next_photo_hint": "Actual plane removed from box to confirm model number and features"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 201
+      }
+    },
+    {
+      "filename": "veritas_block_plane_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Veritas",
+        "model": "Low-Angle Block Plane",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (Lee Valley)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Veritas branding on box, distinctive black body with brass hardware, single-hand grip design confirms block plane, new condition evident",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 183
+      }
+    },
+    {
+      "filename": "lie_nielsen_no62_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 62",
+        "era": "Modern (2010s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles, brass hardware, ductile iron body, compact smoother proportions (~9-10 inches)",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5680,
+        "output_tokens": 217
+      }
+    },
+    {
+      "filename": "lie_nielsen_no62_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 62",
+        "era": "Modern (2000s-2020s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles, brass hardware, ductile iron body, compact smoother proportions (~9-10 inches), and overall premium construction quality",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 220
+      }
+    },
+    {
+      "filename": "lie_nielsen_no62_3.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 62",
+        "era": "Modern (2000s-2010s)",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of cherry handles with brass hardware on bronze/ductile iron body - distinctive Lie-Nielsen combination. Size approximately 10 inches based on ruler, consistent with No. 4 smoother",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5522,
+        "output_tokens": 231
+      }
+    },
+    {
+      "filename": "record_no4_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 04",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": null,
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view shows this is a flat steel blade with handle cutout - definitely not a hand plane",
+        "next_photo_hint": "Side view or maker's marks to help identify specific tool type"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 196
+      }
+    },
+    {
+      "filename": "record_no4_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 04",
+        "era": "1960s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": 19,
+        "era_estimate": "Type 19, c. 1948-1961",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear blue paint on bed and frog indicates Type 19, compact proportions consistent with No. 4 smoother, Stanley branding visible on lever cap",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5372,
+        "output_tokens": 212
+      }
+    },
+    {
+      "filename": "record_no4_3.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 04",
+        "era": "1960s-1980s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 04",
+        "plane_type_number": null,
+        "era_estimate": "Post-WWII, c. 1950s-1970s",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' branding on lever cap and body, distinctive blue paint finish, two handles confirm bench plane, proportions consistent with No. 04 smoothing plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "record_no5_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 05",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 04",
+        "plane_type_number": null,
+        "era_estimate": "Post-WWII, c. 1950s-1970s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' branding on lever cap and body, distinctive blue paint, bench plane proportions consistent with Record No. 04 smoothing plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 205
+      }
+    },
+    {
+      "filename": "record_no5_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 05",
+        "era": "1960s-1980s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' branding on lever cap, distinctive blue paint, single knob design confirms block plane, '60 1/2' visible cast on body",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 210
+      }
+    },
+    {
+      "filename": "stanley_151_spokeshave_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 151",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic Stanley No. 151 spokeshave design with two wing handles, curved sole, central adjustment mechanism, and characteristic orange-painted body",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 196
+      }
+    },
+    {
+      "filename": "stanley_151_spokeshave_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 151",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of two wing handles extending horizontally, short sole, blade flush between handles, two knurled adjustment screws - all classic Stanley No. 151 spokeshave features",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 214
+      }
+    },
+    {
+      "filename": "stanley_151_spokeshave_3.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 151",
+        "era": "1930s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Classic Stanley No. 151 spokeshave form with two wing handles, central blade housing, and knurled adjustment screws - distinctive design unmistakable",
+        "next_photo_hint": "Bottom view to see blade condition and any maker's marks on the sole"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 238
+      }
+    },
+    {
+      "filename": "wooden_molding_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Wooden Molding Plane",
+        "canonical_type": "Moulding Plane",
+        "maker": "Unknown",
+        "model": "Hollows and rounds",
+        "era": "19th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "19th or early 20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of wooden marking gauge with distinctive fence, beam, and pin mechanism",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5820,
+        "output_tokens": 201
+      }
+    },
+    {
+      "filename": "wooden_molding_plane_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Wooden Molding Plane",
+        "canonical_type": "Moulding Plane",
+        "maker": "Unknown",
+        "model": "Molding plane",
+        "era": "19th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Moulding Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "19th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear wooden moulding plane construction with distinctive profile, wedge-secured iron, and traditional beech body typical of 18th-19th century wooden planes",
+        "next_photo_hint": "Maker's mark or stamp on the body would help identify the manufacturer"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 234
+      }
+    },
+    {
+      "filename": "wooden_molding_plane_3.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Wooden Molding Plane",
+        "canonical_type": "Moulding Plane",
+        "maker": "Unknown",
+        "model": "Side bead or ogee plane",
+        "era": "19th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Moulding Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "18th-19th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic wooden moulding plane construction - solid wood body, wedge-secured iron, shaped profile visible in sole, traditional form unmistakable",
+        "next_photo_hint": "Profile view of sole to show moulding shape, or maker's stamp if present"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 238
+      }
+    },
+    {
+      "filename": "stanley_no78_rabbet_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Rabbet Plane",
+        "canonical_type": "Rabbet Plane",
+        "maker": "Stanley",
+        "model": "No. 78",
+        "era": "1930s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": "No. 78",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Stanley No. 78 clearly visible on documentation, distinctive fence and depth stop configuration matches No. 78 design exactly, original packaging confirms identification",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "stanley_no78_rabbet_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Rabbet Plane",
+        "canonical_type": "Rabbet Plane",
+        "maker": "Stanley",
+        "model": "No. 78",
+        "era": "1940s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'STANLEY' branding visible on body, distinctive handsaw design with modern styling",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 176
+      }
+    },
+    {
+      "filename": "stanley_no7_jointer_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jointer Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 7",
+        "era": "1930s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 7",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'No. 7' marking visible on sole, distinctive jointer plane proportions with long body relative to handles, typical Stanley bench plane configuration with tote and knob",
+        "next_photo_hint": "Frog area to read patent dates for precise type study identification"
+      },
+      "usage": {
+        "input_tokens": 5720,
+        "output_tokens": 230
+      }
+    },
+    {
+      "filename": "stanley_no7_jointer_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jointer Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 7",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob visible, proportions suggest No. 4 size, but heavy patina obscures maker's marks and type study details",
+        "next_photo_hint": "Frog area and lateral lever to identify maker and type study details"
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 242
+      }
+    },
+    {
+      "filename": "stanley_no220_block_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 220",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": null,
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of component - this is a depth adjustment mechanism or similar plane hardware, not a complete hand plane",
+        "next_photo_hint": "Photo of the complete plane this component belongs to would enable proper identification"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 208
+      }
+    },
+    {
+      "filename": "stanley_no220_block_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 220",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": null,
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view shows threaded metal components, not woodworking hand planes",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 172
+      }
+    },
+    {
+      "filename": "stanley_no3_smoothing_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 3",
+        "era": "1930s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob visible, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible due to angle and patina",
+        "next_photo_hint": "Frog area behind blade to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 224
+      }
+    },
+    {
+      "filename": "stanley_no3_smoothing_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 3",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 206
+      }
+    },
+    {
+      "filename": "shoulder_plane_ln_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Shoulder Plane",
+        "canonical_type": "Shoulder Plane",
+        "maker": "Lie-Nielsen",
+        "model": "Shoulder plane",
+        "era": "2000s-present",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Spokeshave",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (contemporary)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Lie-Nielsen branding visible, distinctive spokeshave form with two wing handles and short curved sole, bronze body construction typical of LN",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 218
+      }
+    },
+    {
+      "filename": "shoulder_plane_record_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Shoulder/Bullnose Plane",
+        "canonical_type": "Shoulder Plane",
+        "maker": "Record",
+        "model": "No. 073 or similar",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Modern (1980s-present)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive Lie-Nielsen features clearly visible: cherry handles, brass hardware, ductile iron body with machined finish, compact smoother proportions (~9-10 inches)",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "stanley_45_plow_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Combination Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Stanley",
+        "model": "No. 45",
+        "era": "1900s-1950s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Combination Plane",
+        "canonical_model": "No. 45",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive multi-arm fence system, nickel plating, interchangeable cutters, and original box all characteristic of Stanley No. 45 combination plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 221
+      }
+    },
+    {
+      "filename": "stanley_45_plow_2.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Combination Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Stanley",
+        "model": "No. 45",
+        "era": "1900s-1950s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Combination Plane",
+        "canonical_model": "No. 45",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Multi-arm fence system with depth stop, nickel-plated body, interchangeable cutters, and original wooden storage box are all characteristic of Stanley No. 45 combination plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 245
+      }
+    },
+    {
+      "filename": "scrub_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Scrub Plane",
+        "canonical_type": "Scrub Plane",
+        "maker": "ECE/Stanley",
+        "model": "Scrub plane (ECE or Stanley No. 40)",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible in this angle",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers like 'S' casting or lateral lever details"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 235
+      }
+    },
+    {
+      "filename": "tongue_groove_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Tongue and Groove Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Various",
+        "model": "Matched pair tongue and groove planes",
+        "era": "19th-early 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear Stanley marking on sole, two-handle bench plane configuration visible, proportions suggest No. 4 size, but rust obscures type study details and frog area not clearly visible",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 229
+      }
+    },
+    {
+      "filename": "stanley_no220_block.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 220",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob visible, proportions suggest No. 4 smoother, but cannot see frog area, patent dates, or maker's marks to confirm brand or type study",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley branding"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 232
+      }
+    },
+    {
+      "filename": "block_plane_9half_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 9-1/2",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "plane_type_number": null,
+        "era_estimate": "1950s-1960s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear block plane design with single grip, bevel-up blade configuration, adjustable mouth, and characteristic Stanley No. 9 1/2 proportions and features",
+        "next_photo_hint": "Side view showing 'STANLEY' marking and model number would confirm identification"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 232
+      }
+    },
+    {
+      "filename": "spokeshave_round_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Various",
+        "model": "Round-sole spokeshave",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' marking visible on metal body, distinctive spokeshave form with two wing handles and central blade adjustment, matches Record No. 151 pattern",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 197
+      }
+    },
+    {
+      "filename": "stanley_no4_rusty_project.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Router Plane",
+        "canonical_model": "No. 71",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Distinctive wide flat base, single round knob handle, L-shaped blade projecting downward through sole - all classic No. 71 router plane characteristics",
+        "next_photo_hint": "Close-up of any maker's marks or patent dates on the body"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 226
+      }
+    },
+    {
+      "filename": "stanley_no5_fair_condition.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but cannot see frog area or sole markings clearly enough for precise type identification",
+        "next_photo_hint": "Frog area to read patent dates and casting marks for type study identification"
+      },
+      "usage": {
+        "input_tokens": 5830,
+        "output_tokens": 221
+      }
+    },
+    {
+      "filename": "plane_unusual_angle_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4 or similar",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Bench Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century or earlier",
+        "condition": "Project",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob mounting holes visible, but heavy corrosion obscures maker marks and specific identifying features",
+        "next_photo_hint": "Frog area and any visible maker's marks on lever cap or blade to identify brand and model"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 227
+      }
+    },
+    {
+      "filename": "plane_cluttered_background.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4 or similar",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, size appears consistent with No. 4 based on ruler comparison (~9-10 inches), but heavy patina obscures type study markers",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 214
+      }
+    },
+    {
+      "filename": "tool_dirty_spokeshave.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Various",
+        "model": "Spokeshave",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Spokeshave",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of characteristic spokeshave features: two wing handles extending horizontally, short curved sole, two brass adjustment screws visible",
+        "next_photo_hint": "Bottom view to see sole condition and any maker's marks"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 196
+      }
+    },
+    {
+      "filename": "handplane_unknown_maker.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Unknown/Unbranded",
+        "model": "No-name bench plane",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Moulding Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "18th-19th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic wooden moulding plane construction clearly visible - wooden body, wedge-secured iron, traditional tote handle, and distinctive profile shape",
+        "next_photo_hint": "Sole view to see the moulding profile shape, and any maker's marks on the body"
+      },
+      "usage": {
+        "input_tokens": 5817,
+        "output_tokens": 243
+      }
+    },
+    {
+      "filename": "sargent_bench_plane_1.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Sargent",
+        "model": "Sargent bench plane",
+        "era": "Early-mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 9 1/2",
+        "plane_type_number": null,
+        "era_estimate": "mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear block plane configuration with single grip, bevel-up blade, adjustable mouth, and proportions consistent with Stanley No. 9 1/2",
+        "next_photo_hint": "Sole view to confirm length and check for maker's marks"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 211
+      }
+    },
+    {
+      "filename": "stanley_no6_fore_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Fore Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 6",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 7",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Long sole proportions clearly indicate jointer plane size, likely No. 7 based on length. Stanley markings visible but type study markers not clear due to missing handles and angle",
+        "next_photo_hint": "Frog area to read patent dates and lateral lever markings for type identification"
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 230
+      }
+    },
+    {
+      "filename": "r4_stanley_no4_type15.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1931-1932 (Type 15)",
+        "plane_type_number": 15
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "1930s-1940s",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest No. 4 smoother, stained hardwood handles indicate 1930s+ era, but frog area not visible for precise type study dating",
+        "next_photo_hint": "Frog area to read patent dates and confirm type study number"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 233
+      }
+    },
+    {
+      "filename": "r4_stanley_no4_type19.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1948-1961 (Type 19)",
+        "plane_type_number": 19
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible in this angle",
+        "next_photo_hint": "Frog area behind blade to read patent dates and casting marks for type study identification"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 229
+      }
+    },
+    {
+      "filename": "r4_stanley_no5_good.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "plane_type_number": 19,
+        "era_estimate": "Type 19, c. 1948-1961",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear blue paint on bed/frog indicates Type 19, proportions consistent with No. 5 jack plane (14-inch length), Stanley branding visible on lateral lever",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 231
+      }
+    },
+    {
+      "filename": "r4_stanley_no5_fair.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of bench plane with tote and knob, 'BAILEY' visible on sole, proportions consistent with jack plane - significant sole extension past knob indicates 14-inch length typical of No. 5",
+        "next_photo_hint": "Frog area to read patent dates and check for lateral lever markings for precise type identification"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 235
+      }
+    },
+    {
+      "filename": "r4_stanley_no7_jointer.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jointer Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 7",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 5",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest jack plane length (~14\"), but heavy patina obscures maker's marks and type study details",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley branding"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 221
+      }
+    },
+    {
+      "filename": "r4_record_no4_blue.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 04",
+        "era": "Mid-late 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 04",
+        "plane_type_number": null,
+        "era_estimate": "mid-20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' casting visible on lever cap, classic Record blue paint remnants, two-handle bench plane configuration with tote and knob, proportions consistent with No. 04 smoothing plane",
+        "next_photo_hint": "Sole view to confirm length and check for additional markings"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 221
+      }
+    },
+    {
+      "filename": "r4_lie_nielsen_no4.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 4",
+        "era": "2000s-present",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob visible, proportions suggest No. 4 smoother, but frog area and maker markings not clearly visible to confirm brand or type study",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley markings"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 238
+      }
+    },
+    {
+      "filename": "r4_union_bench_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Union",
+        "model": "Union bench plane",
+        "era": "Early 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early-mid 20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoothing plane, but frog area and maker markings not clearly visible for precise type identification",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley markings"
+      },
+      "usage": {
+        "input_tokens": 4694,
+        "output_tokens": 211
+      }
+    },
+    {
+      "filename": "r4_stanley_60half_block.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "plane_type_number": null,
+        "era_estimate": "1960s-1970s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Stanley SW logo visible, blue paint indicates post-1948 production, compact size and single-hand grip design confirms block plane, proportions consistent with No. 60 1/2",
+        "next_photo_hint": "Side view showing adjustable mouth opening would confirm No. 60 1/2 vs other Stanley block planes"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 231
+      }
+    },
+    {
+      "filename": "r4_veritas_block_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Veritas",
+        "model": "Low Angle Block Plane",
+        "era": "2000s-present",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Veritas",
+        "canonical_type": "Block Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern (contemporary)",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Veritas branding and 'Low-Angle Block Plane' text visible on packaging. Box appears unopened and in excellent condition.",
+        "next_photo_hint": "Unboxed plane to confirm specific model number and features"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 207
+      }
+    },
+    {
+      "filename": "r4_shoulder_plane_ln.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Shoulder Plane",
+        "canonical_type": "Shoulder Plane",
+        "maker": "Lie-Nielsen",
+        "model": "Shoulder plane",
+        "era": "2000s-present",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Lie-Nielsen",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern",
+        "condition": "Excellent",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'LIE-NIELSEN USA' casting visible on body, distinctive brass hardware and machined finish typical of Lie-Nielsen tools",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 196
+      }
+    },
+    {
+      "filename": "r4_stanley_71_router.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Router Plane",
+        "canonical_type": "Router Plane",
+        "maker": "Stanley",
+        "model": "No. 71",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Router Plane",
+        "canonical_model": "No. 71",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of wide flat base with two round knobs, 'STANLEY' visible on body, original instruction sheet clearly labeled 'STANLEY ROUTER PLANE No. 71', complete set with box",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 247
+      }
+    },
+    {
+      "filename": "r4_stanley_78_rabbet.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Rabbet Plane",
+        "canonical_type": "Rabbet Plane",
+        "maker": "Stanley",
+        "model": "No. 78",
+        "era": "Mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Rabbet Plane",
+        "canonical_model": "No. 78",
+        "plane_type_number": null,
+        "era_estimate": "Early-mid 20th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'No. 78' casting visible on body, distinctive fence arms and depth stop configuration, narrow body with full-width blade characteristic of Stanley No. 78 rabbet plane",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "r4_wooden_plow_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Plow Plane",
+        "canonical_type": "Plow Plane",
+        "maker": "Various",
+        "model": "Wooden screw-arm plow plane",
+        "era": "19th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 040",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' and '040' casting visible, distinctive spokeshave form with wing handles and curved sole, blue paint typical of Record tools",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 209
+      }
+    },
+    {
+      "filename": "r4_spokeshave_151.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 151 or similar",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of two wing handles extending horizontally, short curved sole, dual knurled adjustment screws, and overall form matches Stanley No. 151 spokeshave",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 200
+      }
+    },
+    {
+      "filename": "r4_wooden_molding_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Wooden Molding Plane",
+        "canonical_type": "Moulding Plane",
+        "maker": "Various",
+        "model": "Wooden molding/profile plane",
+        "era": "19th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Moulding Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "18th or 19th century",
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Classic wooden moulding plane construction with closed tote handle, wedge-held iron, and traditional beech body design clearly visible",
+        "next_photo_hint": "Sole view to see the profile shape and any maker's marks"
+      },
+      "usage": {
+        "input_tokens": 5801,
+        "output_tokens": 249
+      }
+    },
+    {
+      "filename": "r4_stanley_48_tongue_groove.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Tongue and Groove Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Stanley",
+        "model": "No. 48 or No. 49",
+        "era": "Early-mid 20th century",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear Stanley marking visible on side, rosewood handles indicate pre-1932 manufacture, compact proportions consistent with No. 4 smoother, but cannot see frog area or other type study markers clearly",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 233
+      }
+    },
+    {
+      "filename": "r4_rusty_plane_project.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4 or No. 5 (heavily rusted)",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Moulding Plane",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "18th-19th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Classic wooden moulding plane construction clearly visible - wooden body, wedge-held iron, shaped sole for profile work, traditional tote handle",
+        "next_photo_hint": "Sole profile view to identify specific moulding shape"
+      },
+      "usage": {
+        "input_tokens": 5840,
+        "output_tokens": 223
+      }
+    },
+    {
+      "filename": "r4_tool_unusual_angle.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "Bench plane (unusual photo angle)",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": null,
+        "condition": "Fair",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view shows these are plane blade and chipbreaker components, not a complete hand plane",
+        "next_photo_hint": "Complete assembled plane to identify make and model"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 220
+      }
+    },
+    {
+      "filename": "r4_tool_cluttered_bench.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Bench Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "Bench plane on cluttered workbench",
+        "era": "Various",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Unknown",
+        "canonical_type": "Other",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": null,
+        "condition": "Project",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of both components - these are plane irons/blades and chipbreaker, not complete planes",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5831,
+        "output_tokens": 185
+      }
+    },
+    {
+      "filename": "r5_stanley_no4_type17.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "1942-1945 (Type 17, WWII)",
+        "plane_type_number": 17
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Block Plane",
+        "canonical_model": "No. 60 1/2",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'STANLEY' marking on lever cap, single-hand grip design with no rear tote, bevel-up blade configuration, adjustable mouth plate at front, size and proportions consistent with No. 60 1/2",
+        "next_photo_hint": "Side view to confirm overall length and any model markings on the body"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 236
+      }
+    },
+    {
+      "filename": "r5_stanley_no7_type11.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jointer Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 7",
+        "era": "1910-1918 (Type 11)",
+        "plane_type_number": 11
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob, proportions suggest No. 4 smoother, but frog area and type study markers not clearly visible",
+        "next_photo_hint": "Frog area to read patent dates and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5820,
+        "output_tokens": 209
+      }
+    },
+    {
+      "filename": "r5_record_no4_england.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 4",
+        "era": "1950s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 04",
+        "plane_type_number": null,
+        "era_estimate": "Post-WWII, c. 1950s-1970s",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' branding on orange lever cap label, distinctive blue-painted body characteristic of Record planes, two-handle bench plane configuration with proportions consistent with No. 04 smoothing plane",
+        "next_photo_hint": "Sole view to confirm length measurement and any additional markings"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 247
+      }
+    },
+    {
+      "filename": "r5_sargent_414_jack.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Sargent",
+        "model": "No. 414",
+        "era": "1920s-1940s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early-to-mid 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest No. 4 smoother, but cannot see frog area, patent dates, or maker's marks clearly enough for precise type identification",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley branding"
+      },
+      "usage": {
+        "input_tokens": 5684,
+        "output_tokens": 234
+      }
+    },
+    {
+      "filename": "r5_stanley_no3_project.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 3",
+        "era": "1900s-1940s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Project",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob, proportions suggest No. 4 smoother, but heavy wear obscures type study markers and maker identification",
+        "next_photo_hint": "Frog area and lateral lever to confirm Stanley brand and check for type study markers"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 232
+      }
+    },
+    {
+      "filename": "r5_stanley_9half_block.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 9-1/2",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob visible, proportions suggest No. 4 smoother, but heavy rust obscures maker's marks and type study details",
+        "next_photo_hint": "Frog area and lever cap to identify maker and check for patent dates or type study markers"
+      },
+      "usage": {
+        "input_tokens": 5816,
+        "output_tokens": 226
+      }
+    },
+    {
+      "filename": "r5_record_311_shoulder.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Shoulder Plane",
+        "canonical_type": "Shoulder Plane",
+        "maker": "Record",
+        "model": "No. 311",
+        "era": "1950s-1970s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Record",
+        "canonical_type": "Shoulder Plane",
+        "canonical_model": "No. 073",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'RECORD' casting visible on side, distinctive narrow tall body profile of shoulder plane, bronze construction, knuckle-joint lever cap typical of Record No. 073",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5309,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "r5_stanley_no71_router.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Router Plane",
+        "canonical_type": "Router Plane",
+        "maker": "Stanley",
+        "model": "No. 71",
+        "era": "1930s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of Stanley No. 151 spokeshave with distinctive wing handles, adjustable throat, and 'MADE IN ENG' marking visible on body",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 206
+      }
+    },
+    {
+      "filename": "r5_stanley_no78_rabbet.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Rabbet Plane",
+        "canonical_type": "Rabbet Plane",
+        "maker": "Stanley",
+        "model": "No. 78",
+        "era": "1940s-1960s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane with tote and knob visible, proportions suggest No. 4 smoother, but frog area and maker's marks not clearly visible for precise dating",
+        "next_photo_hint": "Frog area to read patent dates and confirm Stanley branding"
+      },
+      "usage": {
+        "input_tokens": 4856,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "r5_stanley_no45_combo.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Combination Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Stanley",
+        "model": "No. 45",
+        "era": "1923-1935 (Type 15, Sweetheart)",
+        "plane_type_number": 15
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Combination Plane",
+        "canonical_model": "No. 45",
+        "plane_type_number": null,
+        "era_estimate": "1884-1962",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear 'STANLEY' marking visible on main body, distinctive multi-arm fence system with depth stop, nickel-plated finish, and overall configuration matches Stanley No. 45 combination plane",
+        "next_photo_hint": "Close-up of any model markings on the main body or skate to confirm exact model number"
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 261
+      }
+    },
+    {
+      "filename": "r5_stanley_no48_tongue_groove.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Tongue & Groove Plane",
+        "canonical_type": "Combination Plane",
+        "maker": "Stanley",
+        "model": "No. 48",
+        "era": "1900s-1940s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": null,
+        "era_estimate": "Early 20th century",
+        "condition": "Fair",
+        "confidence": "Medium",
+        "confidence_reasoning": "Clear bench plane configuration with tote and knob visible, proportions suggest No. 4 smoother, but heavy corrosion obscures maker's marks and type study details",
+        "next_photo_hint": "Frog area and lever cap to check for maker's marks and type study features"
+      },
+      "usage": {
+        "input_tokens": 5504,
+        "output_tokens": 225
+      }
+    },
+    {
+      "filename": "r5_stanley_sb3_scrub.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Scrub Plane",
+        "canonical_type": "Scrub Plane",
+        "maker": "Stanley",
+        "model": "SB3",
+        "era": "1960s-1980s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Bench Plane",
+        "canonical_model": "No. 4",
+        "plane_type_number": 19,
+        "era_estimate": "Type 19, c. 1948-1961",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Stanley branding on red lateral lever, black painted finish characteristic of Type 19, ribbed depth adjustment nut, compact proportions consistent with No. 4 smoother",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5844,
+        "output_tokens": 215
+      }
+    },
+    {
+      "filename": "r5_stanley_no151_spokeshave.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 151",
+        "era": "1960s-1980s",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Stanley",
+        "canonical_type": "Spokeshave",
+        "canonical_model": "No. 151",
+        "plane_type_number": null,
+        "era_estimate": "Mid-20th century",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear Stanley logo visible on handle, distinctive spokeshave form with two wing handles extending horizontally, central blade adjustment mechanism with two knurled screws, matches Stanley No. 151 pattern",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5848,
+        "output_tokens": 222
+      }
+    },
+    {
+      "filename": "r5_kunz_round_spokeshave.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Kunz",
+        "model": "No. 55A Half Round",
+        "era": "Modern",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "canonical_brand": "Kunz",
+        "canonical_type": "Spokeshave",
+        "canonical_model": null,
+        "plane_type_number": null,
+        "era_estimate": "Modern",
+        "condition": "Good",
+        "confidence": "High",
+        "confidence_reasoning": "Clear view of characteristic spokeshave features: two wing handles extending horizontally, curved sole, central blade area with adjustment mechanism, 'KUNZ' marking visible on blade/cap",
+        "next_photo_hint": null
+      },
+      "usage": {
+        "input_tokens": 5480,
+        "output_tokens": 205
+      }
+    },
+    {
+      "filename": "r6_stanley_no4_smoothing.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4",
+        "era": "post-war",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gZmw9B24KU53sdW3eU\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_stanley_no5_jack.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "late model",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gZppH6W8Ex6dcntrd5\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_stanley_no7_jointer.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jointer Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 7",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gZt1GKf8gx2vKxKX8y\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_record_no4_plane.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Record",
+        "model": "No. 4 Bailey Pattern",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gZwBGcjboSN4DkQkBh\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_lie_nielsen_no1_bench.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Lie-Nielsen",
+        "model": "No. 1 Bronze",
+        "era": "modern",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gZzH3bKpaaEGWfGdK1\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_stanley_no5_fair_asis.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Jack Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 5",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2ga3PaGQ9D4C4vkjguC\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_stanley_60half_block.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 60-1/2",
+        "era": "sweetheart",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2ga6Hwksn6ZvWKxwzJL\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_lie_nielsen_60half_block.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Low Angle Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Lie-Nielsen",
+        "model": "60-1/2",
+        "era": "modern",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2ga9KGRYu6nDo1QJPrK\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_stanley_64_spokeshave.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Spokeshave",
+        "canonical_type": "Spokeshave",
+        "maker": "Stanley",
+        "model": "No. 64",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gaCJ6sCyXqFgfua7kL\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_challenge_messy_bench.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 4-1/2 Bailey",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gaFR8YSf8PBhzKuKaY\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_challenge_rusty_project.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Stanley",
+        "model": "No. 3 Bailey",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gaKAMcMEXswAo9WYLS\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_challenge_worn_brand.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Smoothing Plane",
+        "canonical_type": "Bench Plane",
+        "maker": "Unknown",
+        "model": "Bailey-style",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gaNBRJyjysehBD8X9Z\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    },
+    {
+      "filename": "r6_challenge_phone_quality.jpg",
+      "ground_truth": {
+        "tool_type_raw": "Block Plane",
+        "canonical_type": "Block Plane",
+        "maker": "Stanley",
+        "model": "No. 103",
+        "era": "vintage",
+        "plane_type_number": null
+      },
+      "ai_result": {
+        "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages.0.content.0.image.source.base64: The image was specified using the image/jpeg media type, but the image appears to be a image/webp image\"},\"request_id\":\"req_011Cb2gaQzLpXjLDYmSucd4R\"}"
+      },
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      }
+    }
+  ]
+}

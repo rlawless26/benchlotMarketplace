@@ -1,0 +1,43 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <radialGradient id="studio-bg" cx="50%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#F4EEE2"></stop>
+      <stop offset="60%" stop-color="#E8DEC6"></stop>
+      <stop offset="100%" stop-color="#C9B895"></stop>
+    </radialGradient>
+    <linearGradient id="studio-iron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5A514A"></stop>
+      <stop offset="40%" stop-color="#3D3631"></stop>
+      <stop offset="100%" stop-color="#1B1714"></stop>
+    </linearGradient>
+    <radialGradient id="studio-highlight" cx="30%" cy="20%" r="40%">
+      <stop offset="0%" stop-color="#E2D4B8" stop-opacity="0.7"></stop>
+      <stop offset="100%" stop-color="#E2D4B8" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="studio-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"></feGaussianBlur>
+      <feOffset dy="6"></feOffset>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"></feFuncA></feComponentTransfer>
+      <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+  </defs>
+  <rect width="400" height="300" fill="url(#studio-bg)"></rect>
+  <ellipse cx="200" cy="245" rx="160" ry="14" fill="#000" opacity="0.18"></ellipse>
+  <g transform="translate(60, 130)" filter="url(#studio-shadow)">
+    
+    <rect x="0" y="80" width="280" height="10" rx="1.5" fill="url(#studio-iron)"></rect>
+    
+    <path d="M 12 80 L 30 38 Q 36 30 48 30 L 116 30 L 124 22 Q 130 16 138 16 L 152 16 Q 160 16 166 22 L 174 30 L 240 30 Q 252 30 258 38 L 268 80 Z" fill="url(#studio-iron)"></path>
+    
+    <path d="M 138 16 L 170 80 L 152 80 L 132 30 Z" fill="#0D0B09"></path>
+    
+    <path d="M 136 16 Q 130 8 134 4 Q 140 0 152 2 Q 162 4 166 10 Q 168 16 162 18 Z" fill="#7A6F66"></path>
+    
+    <ellipse cx="56" cy="20" rx="9" ry="11" fill="#8A4419"></ellipse>
+    <ellipse cx="56" cy="12" rx="4" ry="2" fill="#A85427"></ellipse>
+    
+    <path d="M 218 80 Q 240 78 244 60 Q 248 36 232 28 Q 220 22 212 32 Q 208 52 212 80 Z" fill="#8A4419"></path>
+  </g>
+  <rect width="400" height="300" fill="url(#studio-highlight)"></rect>
+</svg>

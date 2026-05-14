@@ -1,0 +1,121 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" font-family="&#39;Inter&#39;, system-ui, -apple-system, sans-serif">
+
+  
+  <g transform="translate(40, 90)" stroke="#1B1714" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" fill="none">
+
+    
+    <rect x="0" y="160" width="500" height="14" rx="2" fill="#FBF8F2"></rect>
+
+    
+    <path d="M 24 160 L 50 100 Q 56 90 70 90 L 200 90 L 215 78 Q 222 72 232 72 L 268 72 Q 278 72 285 78 L 300 90 L 430 90 Q 444 90 450 100 L 476 160 Z" fill="#FBF8F2"></path>
+
+    
+    <path d="M 222 96 L 290 158 L 256 158 L 218 100 Z" fill="#3D3631" stroke="none"></path>
+
+    
+    <path d="M 232 72 L 292 158 L 270 158 L 222 84 Z" fill="#1B1714" stroke="none"></path>
+
+    
+    <path d="M 230 70 Q 218 58 224 48 Q 230 40 250 42 Q 270 42 278 50 Q 284 60 276 68 Z" fill="#5A514A"></path>
+    <circle cx="254" cy="54" r="3.5" fill="#FBF8F2"></circle>
+    <line x1="250" y1="54" x2="258" y2="54" stroke-width="1"></line>
+
+    
+    <circle cx="298" cy="130" r="11" fill="#FBF8F2"></circle>
+    <g stroke-width="0.8">
+      <line x1="291" y1="125" x2="305" y2="125"></line>
+      <line x1="291" y1="130" x2="305" y2="130"></line>
+      <line x1="291" y1="135" x2="305" y2="135"></line>
+    </g>
+
+    
+    <path d="M 248 42 L 232 18 L 226 18 L 242 42 Z" fill="#5A514A"></path>
+    <circle cx="229" cy="18" r="3" fill="#FBF8F2"></circle>
+
+    
+    <g transform="translate(100, 50)" stroke="#1B1714" stroke-width="1.2">
+      <path d="M -16 40 Q -19 14 0 10 Q 19 14 16 40 Z" fill="#8A4419"></path>
+      <path d="M -14 40 L 14 40 L 16 44 L -16 44 Z" fill="#5A3712"></path>
+      <ellipse cx="0" cy="10" rx="6" ry="2" fill="#A85427" stroke="none"></ellipse>
+    </g>
+
+    
+    <g transform="translate(390, 0)" stroke="#1B1714" stroke-width="1.2">
+      
+      <path d="M -10 160&#xA;               L -2 130&#xA;               Q 4 110 16 96&#xA;               Q 30 84 32 70&#xA;               Q 32 56 24 50&#xA;               Q 14 46 6 56&#xA;               L 0 76&#xA;               Q -8 100 -14 130&#xA;               Q -16 145 -10 160 Z" fill="#8A4419"></path>
+      
+      <path d="M 8 70 Q 18 76 18 94 Q 16 110 6 124" fill="none" stroke="#5A3712" stroke-width="1.1"></path>
+      
+      <path d="M -10 160 L 34 160 L 34 164 L -10 164 Z" fill="#5A3712"></path>
+    </g>
+
+    
+    <rect x="265" y="159" width="12" height="2" fill="#1B1714" stroke="none"></rect>
+  </g>
+
+  
+  <g stroke="#A85427" stroke-width="1" fill="none">
+    
+    <line x1="282" y1="116" x2="282" y2="50"></line>
+    <line x1="282" y1="50" x2="620" y2="50"></line>
+    
+    <line x1="320" y1="148" x2="320" y2="98"></line>
+    <line x1="320" y1="98" x2="620" y2="98"></line>
+    
+    <line x1="350" y1="190" x2="620" y2="190"></line>
+    
+    <line x1="338" y1="220" x2="620" y2="220"></line>
+    
+    <line x1="140" y1="155" x2="140" y2="280"></line>
+    <line x1="140" y1="280" x2="620" y2="280"></line>
+    
+    <line x1="440" y1="200" x2="440" y2="318"></line>
+    <line x1="440" y1="318" x2="620" y2="318"></line>
+    
+    <line x1="313" y1="252" x2="313" y2="346"></line>
+    <line x1="313" y1="346" x2="620" y2="346"></line>
+  </g>
+
+  
+  <g fill="#A85427">
+    <circle cx="282" cy="116" r="2.5"></circle>
+    <circle cx="320" cy="148" r="2.5"></circle>
+    <circle cx="350" cy="190" r="2.5"></circle>
+    <circle cx="338" cy="220" r="2.5"></circle>
+    <circle cx="140" cy="155" r="2.5"></circle>
+    <circle cx="440" cy="200" r="2.5"></circle>
+    <circle cx="313" cy="252" r="2.5"></circle>
+  </g>
+
+  
+  <g>
+    <text x="630" y="48" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">01</text>
+    <text x="660" y="48" font-size="13" font-weight="600" fill="#1B1714">Lateral adjustment lever</text>
+    <text x="660" y="62" font-size="11" fill="#7A6F66">Single-piece, twisted shaft. Type 11 tell.</text>
+
+    <text x="630" y="96" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">02</text>
+    <text x="660" y="96" font-size="13" font-weight="600" fill="#1B1714">Lever cap</text>
+    <text x="660" y="110" font-size="11" fill="#7A6F66">Kidney-shaped hole = late types.</text>
+
+    <text x="630" y="188" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">03</text>
+    <text x="660" y="188" font-size="13" font-weight="600" fill="#1B1714">Frog + iron</text>
+    <text x="660" y="202" font-size="11" fill="#7A6F66">Forward-arc receiver confirms Type 11.</text>
+
+    <text x="630" y="218" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">04</text>
+    <text x="660" y="218" font-size="13" font-weight="600" fill="#1B1714">Depth-adjustment wheel</text>
+    <text x="660" y="232" font-size="11" fill="#7A6F66">Brass on early; nickel on later.</text>
+
+    <text x="630" y="278" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">05</text>
+    <text x="660" y="278" font-size="13" font-weight="600" fill="#1B1714">Low knob, rosewood</text>
+    <text x="660" y="292" font-size="11" fill="#7A6F66">High knob arrives Type 14.</text>
+
+    <text x="630" y="316" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">06</text>
+    <text x="660" y="316" font-size="13" font-weight="600" fill="#1B1714">Tote</text>
+    <text x="660" y="330" font-size="11" fill="#7A6F66">Rosewood, often refinished.</text>
+
+    <text x="630" y="344" font-size="11" font-weight="600" fill="#A85427" font-family="&#39;JetBrains Mono&#39;, monospace">07</text>
+    <text x="660" y="344" font-size="13" font-weight="600" fill="#1B1714">Mouth</text>
+    <text x="660" y="358" font-size="11" fill="#7A6F66">Iron exits here. Check for chatter.</text>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 80" width="560" height="80" role="img" aria-label="Benchfind">
+  <defs>
+    
+  </defs>
+  <g stroke="#94B3A2" stroke-width="2.5" fill="none" stroke-linecap="square">
+    <path d="M 6 22 L 6 6 L 22 6"></path>
+    <path d="M 538 58 L 554 58 L 554 74"></path>
+  </g>
+  <text x="28" y="60" class="wm-base"><tspan class="wm-light">BENCH</tspan><tspan class="wm-bold">FIND</tspan></text>
+</svg>

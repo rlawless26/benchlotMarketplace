@@ -32,6 +32,7 @@ import CheckoutPage from './Pages/CheckoutPage';
 import OrderConfirmationPage from './Pages/OrderConfirmationPage';
 import ToolListingFormPage from './Pages/ToolListingFormPage';
 import ToolScanPage from './Pages/ToolScanPage';
+import BenchfindHomePage from './Pages/BenchfindHomePage';
 import FAQPage from './Pages/FAQPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
@@ -55,6 +56,8 @@ import CreatePendingListingPage from './components/CreatePendingListingPage';
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BenchfindHeader from './components/benchfind/Header';
+import BenchfindFooter from './components/benchfind/Footer';
 import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
@@ -142,13 +145,12 @@ function AppLayout() {
   // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
   // Editorial content pages (About/FAQ/Contact) also ship their own chrome
   // per the post-pivot design handoff — see src/components/siteChrome/.
-  // BenchFind host: suppress Benchlot chrome entirely on root so the brand
-  // surface reads clean. Phase 2 builds a BenchFind-specific header/footer.
+  // Benchfind host: render the Benchfind-branded Header/Footer (not Benchlot's)
+  // across every page so the brand stays coherent on share permalinks etc.
   const contentPagePaths = ['/faq', '/privacy', '/terms'];
   const isContentPage = contentPagePaths.includes(location.pathname);
-  const isBenchfindRoot = isBenchfindHost && location.pathname === '/';
   const isChromelessPage =
-    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage || isBenchfindRoot;
+    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage;
 
   // Public mode: aggregator is on OR marketplace not yet launched, AND user not signed in.
   // Header/Footer adapt their CTAs when publicMode is true.
@@ -159,19 +161,21 @@ function AppLayout() {
       <ScrollToTop />
       <SellerStatusFix />
       <EmailLinkCompletion />
-      {!isWaitlistPage && !isChromelessPage && <Header publicMode={isPublicMode} />}
+      {!isWaitlistPage && !isChromelessPage && (
+        isBenchfindHost ? <BenchfindHeader /> : <Header publicMode={isPublicMode} />
+      )}
 
       <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
         <Routes>
           {/* Home: on benchfind.com the root lands directly on the photo-id
-              scan experience (BenchFind is a photo-ID product, not an
+              scan experience (Benchfind is a photo-ID product, not an
               aggregator destination). On benchlot.com the aggregator home
               is unchanged. */}
           <Route
             path="/"
             element={
               isBenchfindHost
-                ? <ToolScanPage />
+                ? <BenchfindHomePage />
                 : (AGGREGATOR_MODE
                     ? <AggregatorHomePage />
                     : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />))
@@ -291,7 +295,9 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {!isWaitlistPage && !isChromelessPage && <Footer publicMode={isPublicMode} />}
+      {!isWaitlistPage && !isChromelessPage && (
+        isBenchfindHost ? <BenchfindFooter /> : <Footer publicMode={isPublicMode} />
+      )}
       <AuthModal />
       <EnvironmentDisplay />
       <Analytics />

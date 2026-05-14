@@ -1,0 +1,299 @@
+/* ============================================================
+   Benchfind — Foundations
+   Colors and Type tokens. Import this anywhere foundations are needed.
+   ============================================================ */
+
+/* ---------- Fonts (Google Fonts substitutions; flagged in README) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ============================================================
+     COLOR — RAW VALUES
+     Two warm neutrals (paper/ink), spruce primary, brass highlight,
+     plus semantic confidence/condition ramps.
+     ============================================================ */
+
+  /* Paper — warm off-whites. Like aged shop paper, not chrome white. */
+  --paper-50:  #FBF8F2;   /* page base */
+  --paper-100: #F6F1E7;   /* card-on-page hairline tint */
+  --paper-200: #ECE4D2;   /* inset wells, table-stripe */
+  --paper-300: #DDD2B9;   /* rule, hairline */
+  --paper-400: #C2B393;   /* disabled text on paper */
+
+  /* Ink — warm near-blacks. Old cast iron, not pure black. */
+  --ink-900: #1B1714;     /* primary text */
+  --ink-800: #2A2420;     /* headings on paper */
+  --ink-700: #3D3631;     /* body strong */
+  --ink-600: #5A514A;     /* body */
+  --ink-500: #7A6F66;     /* meta, captions */
+  --ink-400: #9B9189;     /* placeholder */
+
+  /* Iron — cool slate. Quiet metadata, used sparingly. */
+  --iron-700: #3C4348;
+  --iron-500: #6B7178;
+  --iron-300: #B4B8BB;
+
+  /* Spruce — primary accent (B v2). Deep forest, "shop world" green. */
+  --spruce-50:  #EEF4F0;
+  --spruce-100: #E0EBE4;
+  --spruce-300: #94B3A2;
+  --spruce-500: #2F6B52;
+  --spruce-700: #1F4D3A;   /* primary action */
+  --spruce-900: #143527;
+
+  /* Brass — warm highlight (B v2). Reserved for earned moments (fair-price match, verified type). */
+  --brass-100: #F0E3C3;
+  --brass-500: #B08938;
+  --brass-700: #8C6B22;
+
+  /* Rust — kept for semantic use only (low confidence, project condition). Not the primary anymore. */
+  --rust-700: #8A4419;
+  --rust-600: #A85427;
+  --rust-500: #B86631;
+  --rust-300: #E2B895;
+  --rust-100: #F5E3D2;
+  --rust-50:  #FBF0E4;
+
+  /* Patina — kept as a soft secondary green. Mostly absorbed by spruce now. */
+  --patina-700: #2F5D52;
+  --patina-500: #4F8A7A;
+  --patina-100: #DDEAE5;
+
+  /* Semantic — confidence ramps. High=forest, Medium=amber, Low=rust. */
+  --conf-high:        #2F6B3D;
+  --conf-high-bg:     #E4EFE2;
+  --conf-medium:      #9A6B12;
+  --conf-medium-bg:   #F5E9C8;
+  --conf-low:         #8A4419;
+  --conf-low-bg:      #F5E3D2;
+
+  /* Condition badges */
+  --cond-excellent:   #2F6B3D;
+  --cond-good:        #4F8A7A;
+  --cond-fair:        #9A6B12;
+  --cond-project:     #8A4419;
+
+  /* Status */
+  --danger:           #B0321F;
+  --danger-bg:        #F7DDD6;
+  --info:             #3C4348;
+
+  /* ============================================================
+     COLOR — SEMANTIC ROLES (use these in components)
+     ============================================================ */
+  --bg:           var(--paper-50);
+  --bg-elev:      #FFFFFF;          /* cards lift slightly off paper */
+  --bg-inset:     var(--paper-100);
+  --bg-well:      var(--paper-200);
+
+  --fg:           var(--ink-900);
+  --fg-strong:    var(--ink-800);
+  --fg-body:      var(--ink-600);
+  --fg-meta:      var(--ink-500);
+  --fg-disabled:  var(--paper-400);
+  --fg-on-accent: var(--paper-50);
+
+  --rule:         var(--paper-300);
+  --rule-strong:  #C9BC9E;
+
+  --accent:       var(--spruce-700);
+  --accent-hover: var(--spruce-900);
+  --accent-soft:  var(--spruce-100);
+  --highlight:    var(--brass-500);
+  --highlight-soft: var(--brass-100);
+
+  --focus-ring:   #1F4D3A;
+
+  /* ============================================================
+     TYPE — RAW
+     Display: Newsreader (editorial serif, optical sizing)
+     Body:    Inter (broadly available, neutral, technical)
+     Mono:    JetBrains Mono (type-study numerals, comp prices)
+     ============================================================ */
+  --font-display: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Type scale — modular, with named display vs body sizes */
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  30px;
+  --text-3xl:  38px;
+  --text-4xl:  48px;
+  --text-5xl:  60px;
+  --text-6xl:  76px;
+
+  --leading-tight: 1.1;
+  --leading-snug:  1.25;
+  --leading-body:  1.55;
+  --leading-loose: 1.7;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug:  -0.01em;
+  --tracking-wide:   0.04em;
+  --tracking-mono:   0.01em;
+
+  /* ============================================================
+     SPACING / RADIUS / SHADOW / MOTION
+     ============================================================ */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radii — quiet. Documents and tools, not pill app UI. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  /* Shadows — soft, warm, low. No drop-shadow drama. */
+  --shadow-hairline: inset 0 0 0 1px var(--rule);
+  --shadow-sm:  0 1px 2px rgba(40, 30, 20, 0.06), 0 1px 1px rgba(40, 30, 20, 0.04);
+  --shadow-md:  0 2px 6px rgba(40, 30, 20, 0.08), 0 1px 2px rgba(40, 30, 20, 0.04);
+  --shadow-lg:  0 8px 24px rgba(40, 30, 20, 0.10), 0 2px 6px rgba(40, 30, 20, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(184, 102, 49, 0.30);
+
+  /* Motion — quick, no bounce. Tool feel, not toy feel. */
+  --duration-fast:   120ms;
+  --duration-base:   180ms;
+  --duration-slow:   320ms;
+  --ease-standard:   cubic-bezier(0.2, 0.0, 0.2, 1);
+  --ease-emphasis:   cubic-bezier(0.2, 0.0, 0.0, 1);
+}
+
+/* ============================================================
+   SEMANTIC TYPE STYLES — use as utility classes
+   ============================================================ */
+
+.t-display-xl {
+  font-family: var(--font-display);
+  font-size: var(--text-6xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+.t-display-lg {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+.t-display-md {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-snug);
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-snug);
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  font-weight: 500;
+  color: var(--fg-strong);
+}
+.t-h3 {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+  font-weight: 600;
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-strong);
+}
+.t-h4 {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+.t-body-lg {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+  color: var(--fg-body);
+}
+.t-body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--fg-body);
+}
+.t-body-sm {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--fg-body);
+}
+.t-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--fg-meta);
+}
+.t-eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-meta);
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-mono);
+  color: var(--fg-strong);
+}
+.t-mono-lg {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-mono);
+  color: var(--fg-strong);
+}
+
+/* Body defaults (apply when CSS is loaded standalone, e.g. in cards) */
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--rust-100);
+  color: var(--ink-900);
+}
