@@ -272,14 +272,77 @@ async function recordScrapeRun(source, { ok, note } = {}) {
   );
 }
 
+/**
+ * Per-source lookup for two-phase forum scrapes: which threads we already
+ * know, whether they were bumped, and their current status. Same shape as the
+ * Firestore implementation — Map<source_id, {lastPostAtMs, status}>.
+ */
+async function getListingMeta(source) {
+  const { rows } = await getPool().query(
+    `SELECT source_id, last_post_at, status::text AS status
+       FROM listings WHERE source = $1`,
+    [source]
+  );
+  const meta = new Map();
+  for (const r of rows) {
+    meta.set(r.source_id, {
+      lastPostAtMs: r.last_post_at ? new Date(r.last_post_at).getTime() : null,
+      status: r.status || null,
+    });
+  }
+  return meta;
+}
+
+/**
+ * Narrow partial update for already-ingested rows. COALESCE gives the same
+ * "only write the keys supplied" semantics as the Firestore version, so a
+ * touch-only pass can't blank a column it wasn't asked to change.
+ *
+ * Deliberately does NOT touch description_raw, images, price_cents or the raw
+ * payload: those came from the first detail fetch, which this pass skipped.
+ *
+ * @param {Array<{source,source_id,status?,title_raw?,last_post_at?,sold_at?}>} updates
+ */
+async function applyListingUpdates(updates, runStartedAt) {
+  if (!Array.isArray(updates) || updates.length === 0) return { updated: 0 };
+  const at = toIso(runStartedAt) || new Date().toISOString();
+
+  const payload = updates.map((u) => ({
+    source: u.source,
+    source_id: u.source_id,
+    status: u.status ?? null,
+    title_raw: u.title_raw ?? null,
+    last_post_at: toIso(u.last_post_at),
+    sold_at: toIso(u.sold_at),
+  }));
+
+  const { rowCount } = await getPool().query(
+    `UPDATE listings l SET
+        status       = COALESCE((u->>'status')::listing_status, l.status),
+        title_raw    = COALESCE(u->>'title_raw', l.title_raw),
+        last_post_at = COALESCE((u->>'last_post_at')::timestamptz, l.last_post_at),
+        sold_at      = COALESCE((u->>'sold_at')::timestamptz, l.sold_at),
+        scraped_at   = $2::timestamptz,
+        last_seen_at = $2::timestamptz
+      FROM jsonb_array_elements($1::jsonb) AS u
+      WHERE l.source = u->>'source' AND l.source_id = u->>'source_id'`,
+    [JSON.stringify(payload), at]
+  );
+  return { updated: rowCount };
+}
+
 async function close() {
   if (pool) { await pool.end(); pool = null; }
 }
 
 module.exports = {
+  COLLECTION: 'listings',
+  RAW_COLLECTION: 'listings_raw',
   buildDocId,
   upsertListings,
   markExpired,
+  getListingMeta,
+  applyListingUpdates,
   recordScrapeRun,
   close,
   SCRAPED_COLUMNS,

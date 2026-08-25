@@ -109,6 +109,36 @@ const snaps = async () =>
   await store.upsertListings([rec()], new Date('2026-08-26T01:00:00Z'));
   check('sold_at preserved', (await row()).sold_at.toISOString(), later.toISOString());
 
+  console.log('\n8. getListingMeta returns bump/status metadata');
+  await pool.query(
+    `UPDATE listings SET last_post_at = $3 WHERE source=$1 AND source_id=$2`,
+    [SOURCE, SID, new Date('2026-08-20T00:00:00Z')]);
+  const meta = await store.getListingMeta(SOURCE);
+  check('knows this source_id', meta.has(SID), true);
+  check('lastPostAtMs parsed', meta.get(SID).lastPostAtMs, Date.parse('2026-08-20T00:00:00Z'));
+  // 'active', not 'sold': step 7 re-scraped the listing, and a listing seen
+  // again is by definition not gone. This matches the Firestore layer exactly.
+  //
+  // NOTE a pre-existing wart preserved here rather than silently fixed: the
+  // row is now status='active' while still carrying the sold_at that
+  // markExpired stamped. Firestore behaves the same way (a merge-set never
+  // cleared sold_at). Worth deciding whether a re-seen listing should clear
+  // sold_at — but that is a data-model change, not part of this port.
+  check('status reported', meta.get(SID).status, 'active');
+
+  console.log('\n9. applyListingUpdates only writes the keys supplied');
+  const before = await row();
+  const upd = await store.applyListingUpdates(
+    [{ source: SOURCE, source_id: SID, status: 'active', title_raw: 'Renamed Thread' }],
+    new Date('2026-08-27T00:00:00Z'));
+  check('one row updated', upd.updated, 1);
+  const post = await row();
+  check('status changed', post.status, 'active');
+  // price_cents was never supplied, so a touch-only pass must not blank it.
+  check('price_cents untouched', post.price_cents, before.price_cents);
+  check('sold_at untouched', post.sold_at.toISOString(), before.sold_at.toISOString());
+  check('last_seen_at advanced', post.last_seen_at.toISOString(), '2026-08-27T00:00:00.000Z');
+
   // Cleanup.
   await pool.query(`DELETE FROM price_snapshots WHERE source=$1`, [SOURCE]);
   await pool.query(`DELETE FROM listings WHERE source=$1`, [SOURCE]);
