@@ -10,9 +10,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Pages with more sold evidence are the ones worth crawling first.
   const maxSold = Math.max(1, ...clusters.map((c) => c.sold_count));
 
+  // Only /guide/* is served on the canonical domain (via a rewrite from the
+  // benchlot-marketplace project). benchlot.com/ belongs to the CRA app and is
+  // deliberately absent — advertising it here would claim a page we don't own.
   return [
-    { url: `${BASE}/`, changeFrequency: 'daily', priority: 1 },
-    { url: `${BASE}/guide`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${BASE}/guide`, changeFrequency: 'daily', priority: 1 },
     ...clusters.map((c) => ({
       url: `${BASE}${clusterPath(c)}`,
       changeFrequency: 'daily' as const,

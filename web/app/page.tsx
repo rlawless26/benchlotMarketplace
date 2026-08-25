@@ -5,8 +5,11 @@ import { sql } from '@/lib/db';
 
 export const revalidate = 3600;
 
+// Not part of the /guide/* rewrite, so this page is only ever reachable on the
+// project's own origin. It must not claim benchlot.com/ as its canonical —
+// that URL belongs to the CRA app — and it should not be indexed on its own.
 export const metadata: Metadata = {
-  alternates: { canonical: '/' },
+  robots: { index: false, follow: true },
 };
 
 export default async function Home() {

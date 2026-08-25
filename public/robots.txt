@@ -26,3 +26,6 @@ Disallow: /settings
 Disallow: /founding-sellers
 Disallow: /app
 Disallow: /old-home
+
+# Price guide (served at /guide/* via rewrite from the benchlot-web project)
+Sitemap: https://benchlot.com/guide/sitemap.xml

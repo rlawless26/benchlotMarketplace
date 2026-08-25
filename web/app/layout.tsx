@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Petrona, Outfit } from 'next/font/google';
 import Link from 'next/link';
-import { SITE_URL, IS_CANONICAL_HOST } from '@/lib/site';
+import { SITE_URL, IS_INDEXABLE } from '@/lib/site';
 import './globals.css';
 
 const petrona = Petrona({
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   description:
     'Real sold prices and current listings for used hand and power woodworking tools, gathered from dealers, forums and marketplaces.',
-  robots: IS_CANONICAL_HOST
+  robots: IS_INDEXABLE
     ? { index: true, follow: true }
     : { index: false, follow: false },
 };
