@@ -1,0 +1,21 @@
+# This project builds the CRA app only. Everything below is either a separate
+# deployment target or working data that must never reach a build.
+#
+# Without this, `vercel deploy` uploaded 742 MB — migration/data/ alone is
+# 633 MB of exported listing JSONL. .gitignore is not consulted by the CLI.
+
+# Firestore -> Postgres migration tooling and its exported data
+migration/
+
+# The Next.js price-guide app: its own Vercel project (benchlot-web)
+web/
+
+# Firebase Cloud Functions: deployed via the Firebase CLI, not Vercel
+functions/
+
+# Local build output
+build/
+
+# Design handoffs and reference documents
+design_handoff*/
+*.pdf
