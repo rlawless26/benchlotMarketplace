@@ -207,7 +207,9 @@ function eq(a, b) { return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); 
     FROM listings GROUP BY 1 ORDER BY 4`);
   console.log('  source                 rows   last seen             days stale');
   for (const r of fresh) {
-    const flag = r.days_stale > 7 ? '  <-- STALE' : '';
+    // Most sources moved to WEEKLY crons on 2026-05-15, so a 5-7 day gap is
+    // the schedule working, not decay. Only flag beyond a full missed cycle.
+    const flag = r.days_stale > 10 ? '  <-- STALE' : '';
     console.log(`  ${r.source.padEnd(22)}${String(r.rows).padStart(6)}   ${new Date(r.last_seen).toISOString().slice(0,16).replace('T',' ')}   ${String(r.days_stale).padStart(5)}${flag}`);
   }
 
