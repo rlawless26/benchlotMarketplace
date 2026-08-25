@@ -9,6 +9,8 @@ const rateLimit = require('express-rate-limit');
 const allowedOrigins = [
   'https://benchlot.com',
   'https://www.benchlot.com',
+  'https://benchfind.com',
+  'https://www.benchfind.com',
   'https://benchlot-6d64e.web.app',
   'https://benchlot-6d64e.firebaseapp.com',
   'http://localhost:3000',
@@ -3198,7 +3200,10 @@ const rouillard = require('./ingest/rouillard');
 
 exports.scheduledIngestRouillard = onSchedule(
   {
-    schedule: '55 3 * * *',
+    // Weekly — Wednesday 03:55 UTC. Cost-tightening 2026-05-15:
+    // aggregator no longer needs daily freshness now that Benchfind is the
+    // product. Comp data refreshed weekly is plenty for plane lookups.
+    schedule: '55 3 * * 3',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540,
     memory: '512MiB',
@@ -3228,7 +3233,10 @@ const jimbode = require('./ingest/jimbode');
 
 exports.scheduledIngestJimbode = onSchedule(
   {
-    schedule: '0 4 * * *',
+    // Weekly — Monday 04:00 UTC. Cost-tightening 2026-05-15. Pair with
+    // scheduledIngestJimbodeValueGuide (same-day) so priceStats has fresh
+    // active + sold inventory together once a week.
+    schedule: '0 4 * * 1',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540, // scrape + upsert is usually minutes, not seconds
     memory: '512MiB',
@@ -3262,7 +3270,8 @@ const jimbodeValueGuide = require('./ingest/jimbode-valueguide');
 
 exports.scheduledIngestJimbodeValueGuide = onSchedule(
   {
-    schedule: '20 4 * * *',
+    // Weekly — Monday 04:20 UTC. Pairs with scheduledIngestJimbode.
+    schedule: '20 4 * * 1',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540,
     memory: '512MiB',
@@ -3403,7 +3412,8 @@ const oldtools = require('./ingest/oldtools');
 
 exports.scheduledIngestOldtools = onSchedule(
   {
-    schedule: '45 2 * * *',
+    // Weekly — Thursday 02:45 UTC.
+    schedule: '45 2 * * 4',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540,
     memory: '512MiB',
@@ -3429,25 +3439,12 @@ exports.scheduledIngestOldtools = onSchedule(
  * between runs. Catalog ~1,468 active items, mostly antique rules / levels /
  * planes.
  */
-const vintagevials = require('./ingest/vintagevials');
-
-exports.scheduledIngestVintagevials = onSchedule(
-  {
-    schedule: '5 4 * * *',
-    timeZone: 'Etc/UTC',
-    timeoutSeconds: 540,
-    memory: '512MiB',
-  },
-  async () => {
-    try {
-      const summary = await vintagevials.runIngestion();
-      console.log('[scheduledIngestVintagevials] done', summary);
-    } catch (err) {
-      console.error('[scheduledIngestVintagevials] failed:', err.message, err.stack);
-      throw err;
-    }
-  }
-);
+// PAUSED 2026-05-15 — low signal for Benchfind comp data (handful of plane
+// listings, never produced training pairs of note). Source code retained in
+// functions/ingest/vintagevials.js for future re-enablement.
+// const vintagevials = require('./ingest/vintagevials');
+//
+// exports.scheduledIngestVintagevials = onSchedule(...);
 
 /**
  * Scheduled ingestion — Hyperkitten Tool Company.
@@ -3463,7 +3460,8 @@ const hyperkitten = require('./ingest/hyperkitten');
 
 exports.scheduledIngestHyperkitten = onSchedule(
   {
-    schedule: '45 3 * * *',
+    // Weekly — Tuesday 03:45 UTC.
+    schedule: '45 3 * * 2',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 300,
     memory: '512MiB',
@@ -3493,25 +3491,11 @@ exports.scheduledIngestHyperkitten = onSchedule(
  *
  * Can also be invoked locally via `node functions/ingest/run-sawmillcreek.js`.
  */
-const sawmillcreek = require('./ingest/sawmillcreek');
-
-exports.scheduledIngestSawmillcreek = onSchedule(
-  {
-    schedule: '15 3 * * *',
-    timeZone: 'Etc/UTC',
-    timeoutSeconds: 540, // first-time full catalog can take several minutes
-    memory: '512MiB',
-  },
-  async () => {
-    try {
-      const summary = await sawmillcreek.runIngestion();
-      console.log('[scheduledIngestSawmillcreek] done', summary);
-    } catch (err) {
-      console.error('[scheduledIngestSawmillcreek] failed:', err.message, err.stack);
-      throw err;
-    }
-  }
-);
+// PAUSED 2026-05-15 — low signal (2 plane training pairs ever). Source code
+// retained in functions/ingest/sawmillcreek.js for future re-enablement.
+// const sawmillcreek = require('./ingest/sawmillcreek');
+//
+// exports.scheduledIngestSawmillcreek = onSchedule(...);
 
 /**
  * Nightly Woodnet ingestion.
@@ -3528,7 +3512,8 @@ const woodnet = require('./ingest/woodnet');
 
 exports.scheduledIngestWoodnet = onSchedule(
   {
-    schedule: '30 3 * * *',
+    // Weekly — Thursday 03:30 UTC.
+    schedule: '30 3 * * 4',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540,
     memory: '512MiB',
@@ -3569,25 +3554,11 @@ exports.scheduledIngestWoodnet = onSchedule(
  *
  * Can also be invoked locally via `node functions/ingest/run-reddit.js`.
  */
-const reddit = require('./ingest/reddit');
-
-exports.scheduledIngestReddit = onSchedule(
-  {
-    schedule: '35 3 * * *',
-    timeZone: 'Etc/UTC',
-    timeoutSeconds: 540,
-    memory: '512MiB',
-  },
-  async () => {
-    try {
-      const summary = await reddit.runIngestion();
-      console.log('[scheduledIngestReddit] done', summary);
-    } catch (err) {
-      console.error('[scheduledIngestReddit] failed:', err.message, err.stack);
-      throw err;
-    }
-  }
-);
+// PAUSED 2026-05-15 — 0 plane training pairs ever; very low signal. Source
+// code retained in functions/ingest/reddit.js for future re-enablement.
+// const reddit = require('./ingest/reddit');
+//
+// exports.scheduledIngestReddit = onSchedule(...);
 
 /**
  * Scheduled ingestion — The Best Things (Bob Kaune).
@@ -3603,7 +3574,8 @@ const thebestthings = require('./ingest/thebestthings');
 
 exports.scheduledIngestThebestthings = onSchedule(
   {
-    schedule: '50 3 * * *',
+    // Weekly — Tuesday 03:50 UTC.
+    schedule: '50 3 * * 2',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 300,
     memory: '512MiB',
@@ -3642,7 +3614,10 @@ const ebay = require('./ingest/ebay');
 
 exports.scheduledIngestEbay = onSchedule(
   {
-    schedule: '0 3 * * *',
+    // 3x/week — Mon/Wed/Fri 03:00 UTC. eBay is the only source with real
+    // demand-side churn; others moved to weekly for cost-tightening
+    // (2026-05-15).
+    schedule: '0 3 * * 1,3,5',
     timeZone: 'Etc/UTC',
     timeoutSeconds: 540,
     memory: '512MiB',
@@ -3724,25 +3699,11 @@ const { normalizeListingDoc } = require('./normalize/apply');
  * it since the alert's last run, sends a digest email per user, and updates
  * lastMatchedAt. See functions/alerts/matcher.js for the full logic.
  */
-const { runAlertMatcher } = require('./alerts/matcher');
-
-exports.scheduledAlertMatcher = onSchedule(
-  {
-    schedule: '15 4 * * *',
-    timeZone: 'Etc/UTC',
-    timeoutSeconds: 540,
-    memory: '512MiB',
-  },
-  async () => {
-    try {
-      const summary = await runAlertMatcher();
-      console.log('[scheduledAlertMatcher] done', summary);
-    } catch (err) {
-      console.error('[scheduledAlertMatcher] failed:', err.message, err.stack);
-      throw err;
-    }
-  }
-);
+// PAUSED 2026-05-15 — marketplace-era saved-search alerts not relevant to
+// Benchfind. Source code retained in functions/alerts/matcher.js.
+// const { runAlertMatcher } = require('./alerts/matcher');
+//
+// exports.scheduledAlertMatcher = onSchedule(...);
 
 exports.normalizeExternalListing = onDocumentWritten(
   {
