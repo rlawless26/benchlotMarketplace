@@ -33,6 +33,10 @@ const COLLECTIONS = {
   email_sends:       'email_log',
   tool_scans:        'toolscans',
   training_examples: 'training_examples',
+  // Subcollection data: priceSnapshots/{docId}/snapshots/{id}. Reachable only
+  // via a collectionGroup query -- a count on the top-level `priceSnapshots`
+  // collection returns 0 because the parent docs are implicit.
+  price_snapshots: { collectionGroup: 'snapshots' },
   // Legacy marketplace collections are NOT exported here. Per the plan they get
   // archived to cold storage separately and must not enter the new schema.
 };
@@ -94,9 +98,18 @@ async function exportCollection(key, collName) {
   const out = fs.createWriteStream(outPath, { flags: 'a' });
   const started = Date.now();
 
+  const isGroup = collName && typeof collName === 'object' && collName.collectionGroup;
+  const base = () =>
+    isGroup ? db.collectionGroup(collName.collectionGroup) : db.collection(collName);
+
   for (;;) {
-    let q = db.collection(collName).orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE);
-    if (cursor) q = q.startAfter(cursor);
+    let q = base().orderBy(admin.firestore.FieldPath.documentId()).limit(PAGE);
+    if (cursor) {
+      // A collectionGroup query ordered by __name__ sorts by FULL PATH, so the
+      // cursor must be a DocumentReference, not a bare leaf id. Plain
+      // collections are happy with the id.
+      q = q.startAfter(isGroup ? db.doc(cursor) : cursor);
+    }
     const snap = await q.get();
     if (snap.empty) break;
 
@@ -104,6 +117,11 @@ async function exportCollection(key, collName) {
     const lines = [];
     for (const doc of snap.docs) {
       const row = { _id: doc.id, ...plain(doc.data()) };
+      if (isGroup) {
+        // priceSnapshots/{source__source_id}/snapshots/{id} -> recover the parent.
+        const parts = doc.ref.path.split('/');
+        row._parent_id = parts.length >= 2 ? parts[parts.length - 3] : null;
+      }
       if (enrich) Object.assign(row, await enrich(row));
       lines.push(JSON.stringify(row));
     }
@@ -113,7 +131,8 @@ async function exportCollection(key, collName) {
       out.write(lines.join('\n') + '\n', (e) => (e ? rej(e) : res()))
     );
 
-    cursor = snap.docs[snap.docs.length - 1].id;
+    const lastDoc = snap.docs[snap.docs.length - 1];
+    cursor = isGroup ? lastDoc.ref.path : lastDoc.id;
     written += snap.size;
     fs.writeFileSync(curPath, cursor);
 
@@ -139,9 +158,14 @@ async function exportCollection(key, collName) {
   const totals = {};
   for (const k of keys) totals[k] = await exportCollection(k, COLLECTIONS[k]);
 
+  // Merge rather than overwrite: a single-collection run must not erase the
+  // counts recorded by earlier runs.
+  const manifestPath = path.join(OUT_DIR, 'export-manifest.json');
+  let prior = {};
+  try { prior = JSON.parse(fs.readFileSync(manifestPath, 'utf8')).counts || {}; } catch { /* first run */ }
   fs.writeFileSync(
-    path.join(OUT_DIR, 'export-manifest.json'),
-    JSON.stringify({ exportedAt: new Date().toISOString(), counts: totals }, null, 2)
+    manifestPath,
+    JSON.stringify({ exportedAt: new Date().toISOString(), counts: { ...prior, ...totals } }, null, 2)
   );
   console.log('\nmanifest:', JSON.stringify(totals));
   process.exit(0);

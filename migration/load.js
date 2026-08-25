@@ -159,6 +159,29 @@ const TABLES = [
       ON CONFLICT (id) DO NOTHING`,
   },
   {
+    key: 'price_snapshots',
+    target: 'price_snapshots',
+    // `_parent_id` is the Firestore doc id `${source}__${source_id}`. Split on
+    // the FIRST '__' only: the convention allows single underscores inside
+    // either component, so split_part alone would truncate ids like
+    // `jimbode__1-1-2-inch-schnaff_bit`.
+    sql: `
+      INSERT INTO price_snapshots (listing_id, source, source_id, price_cents, status, scraped_at)
+      SELECT l.id,
+             split_part(s.doc->>'_parent_id', '__', 1),
+             substring(s.doc->>'_parent_id' from position('__' in s.doc->>'_parent_id') + 2),
+             (s.doc->>'price_cents')::numeric::integer,
+             s.doc->>'status',
+             (s.doc->>'scraped_at')::timestamptz
+      FROM stg s
+      LEFT JOIN listings l
+        ON l.source = split_part(s.doc->>'_parent_id', '__', 1)
+       AND l.source_id = substring(s.doc->>'_parent_id' from position('__' in s.doc->>'_parent_id') + 2)
+      WHERE s.doc->>'_parent_id' IS NOT NULL
+        AND s.doc->>'scraped_at' IS NOT NULL
+      ON CONFLICT (source, source_id, scraped_at) DO NOTHING`,
+  },
+  {
     key: 'training_examples',
     target: 'training_examples',
     sql: `

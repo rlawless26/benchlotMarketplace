@@ -33,6 +33,12 @@ const CENSUS = {
   tables: {
     listings: 167850, listings_raw: 167850, price_stats: 60957,
     alerts: 2, email_sends: 38, tool_scans: 63, training_examples: 10823,
+    // Firestore subcollection data (priceSnapshots/{docId}/snapshots) -- only a
+    // collectionGroup query sees it; a top-level count returns 0.
+    // 145,583 exported, 145,582 loaded: Firestore held two documents with an
+    // identical (parent, price_cents, status, scraped_at) under different doc
+    // ids. The UNIQUE constraint collapses them. Verified byte-identical.
+    price_snapshots: 145582,
   },
   status: { active: 130850, sold: 34017, expired: 18, excluded_non_tool: 2965 },
   perSource: {
@@ -120,15 +126,27 @@ function eq(a, b) { return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); 
   }
 
   console.log('\n=== 2. PARITY — Postgres vs exported JSONL ===');
+  // Rows the load intentionally collapses, with the reason. Anything beyond
+  // these counts is real loss and must fail.
+  const EXPECTED_DEDUPE = {
+    // Two Firestore snapshot docs shared (parent, price_cents, status,
+    // scraped_at) under different ids; UNIQUE collapses them. Verified
+    // byte-identical, so this is deduplication, not data loss.
+    price_snapshots: 1,
+  };
   const files = { listings: 'listings.jsonl', listings_raw: 'listings_raw.jsonl',
     price_stats: 'price_stats.jsonl', alerts: 'alerts.jsonl', email_sends: 'email_sends.jsonl',
-    tool_scans: 'tool_scans.jsonl', training_examples: 'training_examples.jsonl' };
+    tool_scans: 'tool_scans.jsonl', training_examples: 'training_examples.jsonl',
+    price_snapshots: 'price_snapshots.jsonl' };
   for (const [table, f] of Object.entries(files)) {
     if (table === 'listings_raw' && rawDeferred) continue;
     const lines = await countLines(path.join(DATA, f));
     if (lines === null) { warn(`${table}: no export file on disk`); continue; }
     const r = await one(`SELECT count(*)::int AS n FROM ${table}`);
+    const dedupe = EXPECTED_DEDUPE[table] || 0;
     if (r.n === lines) ok(`${table}: ${r.n} rows == ${lines} exported`);
+    else if (r.n + dedupe === lines)
+      ok(`${table}: ${r.n} rows == ${lines} exported - ${dedupe} known duplicate`);
     else bad(`${table}: ${r.n} rows in Postgres vs ${lines} exported (delta ${r.n - lines})`);
   }
 
@@ -200,7 +218,12 @@ function eq(a, b) { return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); 
     console.log(`  "${term}": tsvector=${r.n}  ilike=${t.n}`);
   }
 
-  console.log('\n=== 6. PER-SOURCE FRESHNESS (needed a composite index Firestore never had) ===');
+  console.log('\n=== 6. PER-SOURCE FRESHNESS ===');
+  // Sources whose ingest cron is deliberately commented out in
+  // functions/index.js (see the 2026-05-15 Benchfind-era pauses). From the data
+  // alone, "paused on purpose" and "silently broken" look identical -- which is
+  // exactly the trap this report exists to avoid. Keep this list in sync.
+  const PAUSED = new Set(['sawmillcreek', 'vintagevials', 'reddit', 'fbmarketplace']);
   const fresh = await q(`
     SELECT source, count(*)::int AS rows, max(last_seen_at) AS last_seen,
            (now()::date - max(last_seen_at)::date) AS days_stale
@@ -209,7 +232,14 @@ function eq(a, b) { return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); 
   for (const r of fresh) {
     // Most sources moved to WEEKLY crons on 2026-05-15, so a 5-7 day gap is
     // the schedule working, not decay. Only flag beyond a full missed cycle.
-    const flag = r.days_stale > 10 ? '  <-- STALE' : '';
+    // Most sources moved to WEEKLY crons on 2026-05-15, so a 5-7 day gap is
+    // the schedule working, not decay. Only flag beyond a full missed cycle --
+    // and never flag a source we deliberately turned off.
+    const flag = PAUSED.has(r.source)
+      ? '  (paused on purpose)'
+      : r.days_stale > 10
+        ? '  <-- UNEXPECTEDLY STALE'
+        : '';
     console.log(`  ${r.source.padEnd(22)}${String(r.rows).padStart(6)}   ${new Date(r.last_seen).toISOString().slice(0,16).replace('T',' ')}   ${String(r.days_stale).padStart(5)}${flag}`);
   }
 
