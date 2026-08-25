@@ -123,3 +123,8 @@ Screenshot*.png
 functions/.env
 # Firebase config output file
 firebase functions:config:set
+
+# Firestore -> Postgres migration working data (large; contains real data)
+migration/data/
+migration/node_modules/
+.env*
