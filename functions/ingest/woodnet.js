@@ -34,7 +34,10 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const admin = require('firebase-admin');
 
-const { upsertListings, markExpired } = require('./externalListings');
+// The whole store, so the two-phase paths can reach getListingMeta /
+// applyListingUpdates without caring which backend is active.
+const store = require('./externalListings');
+const { upsertListings, markExpired } = store;
 const { extractBrand, extractType } = require('./heuristics');
 const { parseLocationTag } = require('./location');
 
@@ -409,21 +412,9 @@ function toFullRecord({ thread, opData }) {
  * Returns Map<source_id, {lastPostAtMs:number|null, status:string|null}>.
  */
 async function getKnownThreadsMeta() {
-  const db = admin.firestore();
-  const snap = await db
-    .collection('externalListings')
-    .where('source', '==', SOURCE)
-    .select('source_id', 'last_post_at', 'status')
-    .get();
-  const meta = new Map();
-  snap.docs.forEach((d) => {
-    const data = d.data();
-    if (!data.source_id) return;
-    const lp = data.last_post_at;
-    const lastPostAtMs = lp && typeof lp.toMillis === 'function' ? lp.toMillis() : null;
-    meta.set(data.source_id, { lastPostAtMs, status: data.status || null });
-  });
-  return meta;
+  // Backend-agnostic: the store returns the same Map shape from Firestore or
+  // Postgres. See ingest/store/index.js.
+  return store.getListingMeta(SOURCE);
 }
 
 /**
@@ -437,29 +428,22 @@ async function getKnownThreadsMeta() {
  */
 async function touchKnownListings(threads, runStartedAt) {
   if (!Array.isArray(threads) || threads.length === 0) return { touched: 0 };
-  const db = admin.firestore();
-  const col = db.collection('externalListings');
-  const CHUNK = 200;
-  let touched = 0;
-  for (let i = 0; i < threads.length; i += CHUNK) {
-    const chunk = threads.slice(i, i + CHUNK);
-    const batch = db.batch();
-    for (const t of chunk) {
-      const docId = `${SOURCE}__${t.threadId}`;
-      const update = {
-        status: 'active',
-        scraped_at: runStartedAt,
-        last_seen_at: runStartedAt,
-        title_raw: t.title,
-      };
-      const lp = parsePostedAt(t.lastPostAt);
-      if (lp) update.last_post_at = lp;
-      batch.update(col.doc(docId), update);
-    }
-    await batch.commit();
-    touched += chunk.length;
-  }
-  return { touched };
+  const updates = threads.map((t) => {
+    const u = {
+      source: SOURCE,
+      source_id: String(t.threadId),
+      status: 'active',
+      title_raw: t.title,
+    };
+    const lp = parsePostedAt(t.lastPostAt);
+    if (lp) u.last_post_at = lp;
+    return u;
+  });
+  // The store writes only the keys supplied, plus scraped_at / last_seen_at --
+  // so description_raw, images, price_cents and the raw payload survive, which
+  // is the whole point of the touch path skipping the detail fetch.
+  const { updated } = await store.applyListingUpdates(updates, runStartedAt);
+  return { touched: updated };
 }
 
 /**
@@ -481,8 +465,6 @@ async function processBumpedThreads(threads, runStartedAt) {
   if (!Array.isArray(threads) || threads.length === 0) {
     return { rechecked: 0, flipped_sold: 0 };
   }
-  const db = admin.firestore();
-  const col = db.collection('externalListings');
   let rechecked = 0;
   let flipped_sold = 0;
 
@@ -497,10 +479,9 @@ async function processBumpedThreads(threads, runStartedAt) {
       console.error(`[woodnet] bump re-fetch failed ${t.threadId}: ${err.message}`);
       continue;
     }
-    const docId = `${SOURCE}__${t.threadId}`;
     const update = {
-      scraped_at: runStartedAt,
-      last_seen_at: runStartedAt,
+      source: SOURCE,
+      source_id: String(t.threadId),
       title_raw: t.title,
     };
     const lp = parsePostedAt(t.lastPostAt);
@@ -513,7 +494,9 @@ async function processBumpedThreads(threads, runStartedAt) {
       update.status = 'active';
     }
     try {
-      await col.doc(docId).update(update);
+      // One call per thread, matching the previous per-document write: a single
+      // failure skips that thread rather than losing the whole batch.
+      await store.applyListingUpdates([update], runStartedAt);
       rechecked += 1;
     } catch (err) {
       console.error(`[woodnet] bump update failed ${t.threadId}: ${err.message}`);

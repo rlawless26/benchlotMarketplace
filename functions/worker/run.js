@@ -26,11 +26,7 @@ if (!process.env.BENCHLOT_STORE) process.env.BENCHLOT_STORE = 'postgres';
 const path = require('path');
 const admin = require('firebase-admin');
 
-/**
- * Sources this worker can run. The three forum sources are absent on purpose:
- * they read Firestore directly for two-phase bump detection and still need
- * porting onto the store's getListingMeta / applyListingUpdates.
- */
+/** Every ingest source. All read and write through the store layer. */
 const SOURCES = {
   jimbode: '../ingest/jimbode',
   jimbode_valueguide: '../ingest/jimbode-valueguide',
@@ -41,9 +37,12 @@ const SOURCES = {
   vintagevials: '../ingest/vintagevials',
   ebay: '../ingest/ebay',
   fbmarketplace: '../ingest/fbmarketplace',
+  // Two-phase forum sources: list sweep, then detail fetch for new or bumped
+  // threads. They use store.getListingMeta / applyListingUpdates.
+  woodnet: '../ingest/woodnet',
+  sawmillcreek: '../ingest/sawmillcreek',
+  reddit: '../ingest/reddit',
 };
-
-const NOT_YET_PORTED = ['woodnet', 'sawmillcreek', 'reddit'];
 
 function parseArgs(argv) {
   const args = { sources: [], dryRun: false, maxPages: undefined, all: false };
@@ -56,8 +55,7 @@ function parseArgs(argv) {
     else if (a === '--help' || a === '-h') {
       console.log(`Usage: node functions/worker/run.js <source...> [--max N] [--dry-run]
 
-Sources: ${Object.keys(SOURCES).join(', ')}
-Not yet ported (read Firestore directly): ${NOT_YET_PORTED.join(', ')}`);
+Sources: ${Object.keys(SOURCES).join(', ')}`);
       process.exit(0);
     } else if (a.startsWith('--')) {
       console.error(`unknown flag: ${a}`);
@@ -93,10 +91,6 @@ async function main() {
     process.exit(2);
   }
   for (const s of args.sources) {
-    if (NOT_YET_PORTED.includes(s)) {
-      console.error(`"${s}" reads Firestore directly and is not yet ported to the store layer.`);
-      process.exit(2);
-    }
     if (!SOURCES[s]) {
       console.error(`Unknown source "${s}". Known: ${Object.keys(SOURCES).join(', ')}`);
       process.exit(2);
@@ -117,9 +111,20 @@ async function main() {
           console.log(`[worker] ${name}: no scrapeAll(), cannot dry-run`);
           continue;
         }
-        const records = await mod.scrapeAll({ maxPages: args.maxPages });
-        console.log(`[worker] ${name}: dry run scraped ${records.length} listings, wrote nothing`);
-        results.push({ name, scraped: records.length, dryRun: true });
+        const out = await mod.scrapeAll({ maxPages: args.maxPages });
+        // Single-phase sources return an array of records; the two-phase forum
+        // sources return {scraped, newRecords, knownThreads, bumpedThreads, ...}
+        // because a list sweep and a detail fetch are separate counts.
+        const summary = Array.isArray(out)
+          ? { scraped: out.length }
+          : {
+              scraped: out.scraped,
+              new: Array.isArray(out.newRecords) ? out.newRecords.length : undefined,
+              known: Array.isArray(out.knownThreads) ? out.knownThreads.length : undefined,
+              bumped: Array.isArray(out.bumpedThreads) ? out.bumpedThreads.length : undefined,
+            };
+        console.log(`[worker] ${name}: dry run ${JSON.stringify(summary)}, wrote nothing`);
+        results.push({ name, ...summary, dryRun: true });
       } else {
         const summary = await mod.runIngestion({ maxPages: args.maxPages });
         const secs = ((Date.now() - t0) / 1000).toFixed(1);
