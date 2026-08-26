@@ -254,3 +254,39 @@ export async function activeAggregate(c: Cluster): Promise<ActiveAggregate> {
     high_cents: r?.high_cents ?? null,
   };
 }
+
+export type SoldPoint = {
+  id: string;
+  price_cents: number;
+  source_kind: string;
+  source_name: string;
+  title_raw: string;
+};
+
+/**
+ * EVERY sold price in the cluster, for the distribution chart.
+ *
+ * Deliberately not soldComps(): that one is LIMIT 24 for the table, and drawing
+ * a distribution from the 24 most recent sales silently truncates it — the
+ * chart would claim to describe the cluster while showing a recency-biased
+ * slice. Capped at 2000 only as a runaway guard; the largest cluster is far
+ * below it.
+ */
+export async function soldPricePoints(c: Cluster): Promise<SoldPoint[]> {
+  const params: unknown[] = [c.canonical_type, c.canonical_brand];
+  let sizeClause = '';
+  if (c.canonical_size) {
+    params.push(c.canonical_size);
+    sizeClause = ` AND l.canonical_size = $${params.length}`;
+  }
+  return sql<SoldPoint>(
+    `SELECT l.id::text, l.price_cents, s.kind::text AS source_kind, s.name AS source_name,
+            l.title_raw
+     FROM listings l JOIN sources s ON s.id = l.source
+     WHERE l.canonical_type = $1 AND l.canonical_brand = $2
+       AND l.status = 'sold' AND l.price_cents IS NOT NULL AND l.price_cents > 0${sizeClause}
+     ORDER BY l.price_cents
+     LIMIT 2000`,
+    params
+  );
+}

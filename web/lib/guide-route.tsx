@@ -4,7 +4,7 @@ import GuideView from '@/components/GuideView';
 import { JsonLd, clusterJsonLd } from './jsonld';
 import { SITE_URL } from './site';
 import {
-  getCluster, soldComps, activeListings, relatedClusters, activeAggregate,
+  getCluster, soldComps, activeListings, relatedClusters, activeAggregate, soldPricePoints,
   clusterTitle, clusterPath, money, SOLD_MIN_FOR_REFERENCE,
 } from './price-guide';
 
@@ -41,11 +41,12 @@ export async function GuideRoute({
   const cluster = await getCluster(typeSlug, brandSlug, sizeSlug);
   if (!cluster) notFound();
 
-  const [sold, active, related, agg] = await Promise.all([
+  const [sold, active, related, agg, points] = await Promise.all([
     soldComps(cluster),
     activeListings(cluster),
     relatedClusters(cluster),
     activeAggregate(cluster),
+    soldPricePoints(cluster),
   ]);
 
   const url = `${SITE_URL}${clusterPath({
@@ -55,7 +56,7 @@ export async function GuideRoute({
   return (
     <>
       <JsonLd data={clusterJsonLd(cluster, agg, url)} />
-      <GuideView cluster={cluster} sold={sold} active={active} related={related} />
+      <GuideView cluster={cluster} sold={sold} active={active} related={related} points={points} />
     </>
   );
 }

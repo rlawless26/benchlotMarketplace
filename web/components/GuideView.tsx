@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import PriceDistribution from './PriceDistribution';
 import {
-  Cluster, ClusterRef, Listing, clusterPath, clusterTitle, money, centsToMoney,
+  Cluster, ClusterRef, Listing, SoldPoint, clusterPath, clusterTitle, money, centsToMoney,
   SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
 } from '@/lib/price-guide';
 
@@ -16,6 +17,75 @@ function Stat({ label, value, big = false }: { label: string; value: string | nu
       <div className={`tnum font-display font-semibold text-honey-dark ${big ? 'text-3xl' : 'text-xl'}`}>
         {value ?? '—'}
       </div>
+    </div>
+  );
+}
+
+type KindStats = { count?: number; p50?: number | null } | null;
+
+/**
+ * Sold and asking side by side, split by where the listing lives.
+ *
+ * Without this split the page reads as a contradiction: a $169 sold median next
+ * to a $50 asking median. Both are correct — dealers sell restored stock and
+ * marketplaces sell everything — but blending them into one "sold vs asking"
+ * comparison implies a single market and makes the guide look wrong.
+ */
+function ByKind({
+  asking, sold,
+}: { asking: Record<string, KindStats> | null; sold: Record<string, KindStats> | null }) {
+  const KINDS = [
+    ['Dealer', 'Dealers'],
+    ['Marketplace', 'Marketplaces'],
+    ['Forum', 'Forum classifieds'],
+    ['Reddit', 'Reddit'],
+  ] as const;
+
+  const rows = KINDS.map(([key, label]) => ({
+    label,
+    asking: asking?.[key] ?? null,
+    sold: sold?.[key] ?? null,
+  })).filter((r) => r.asking?.count || r.sold?.count);
+
+  if (rows.length < 2) return null;
+
+  const cell = (s: KindStats) =>
+    s?.count && s.p50 != null ? (
+      <>
+        <span className="tnum font-medium text-honey-dark">{money(s.p50)}</span>
+        <span className="tnum ml-1.5 text-xs text-spruce-light">
+          {s.count.toLocaleString()}
+        </span>
+      </>
+    ) : (
+      <span className="text-spruce-light">—</span>
+    );
+
+  return (
+    <div className="mt-6 overflow-x-auto">
+      <table className="w-full min-w-[26rem] text-left text-sm">
+        <thead>
+          <tr className="text-xs uppercase tracking-wide text-spruce-light">
+            <th className="pb-2 font-medium">Where</th>
+            <th className="pb-2 font-medium">Median sold</th>
+            <th className="pb-2 font-medium">Median asking</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label} className="border-t border-bone-dark">
+              <td className="py-2 pr-4 text-spruce">{r.label}</td>
+              <td className="py-2 pr-4">{cell(r.sold)}</td>
+              <td className="py-2">{cell(r.asking)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-sm text-spruce-light">
+        These are different markets, not a contradiction. Dealers list restored,
+        checked tools and price accordingly; marketplaces carry everything from
+        collector-grade down to parts. Compare within a row, not across the table.
+      </p>
     </div>
   );
 }
@@ -68,8 +138,8 @@ function Table({ rows, dateLabel }: { rows: Listing[]; dateLabel: string }) {
 }
 
 export default function GuideView({
-  cluster, sold, active, related,
-}: { cluster: Cluster; sold: Listing[]; active: Listing[]; related: ClusterRef[] }) {
+  cluster, sold, active, related, points,
+}: { cluster: Cluster; sold: Listing[]; active: Listing[]; related: ClusterRef[]; points: SoldPoint[] }) {
   const title = clusterTitle(cluster);
   const soldCount = cluster.sold_count ?? 0;
   const askingCount = cluster.asking_count ?? 0;
@@ -117,6 +187,15 @@ export default function GuideView({
           </p>
         )}
       </section>
+
+      {points.length >= 6 && (
+        <PriceDistribution points={points} median={cluster.sold_p50 ? Number(cluster.sold_p50) : null} />
+      )}
+
+      <ByKind
+        asking={cluster.asking_by_kind as Record<string, KindStats> | null}
+        sold={cluster.sold_by_kind as Record<string, KindStats> | null}
+      />
 
       {/* Asking block — clearly separated, because asking prices are wishful. */}
       <section className="mt-6 rounded-lg border border-bone-dark p-6">
