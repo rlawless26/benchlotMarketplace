@@ -54,6 +54,9 @@ natural keys), so a re-run tops up rather than duplicating. To start clean:
 | `schema/001_tables.sql` | Tables, enums, the generated `search_vector` |
 | `schema/002_indexes.sql` | Every index — applied **after** the bulk load |
 | `schema/003_seed_sources.sql` | Source registry, generated from `src/firebase/adapters/sources.js` |
+| `schema/004_price_snapshots.sql` | Price/status history. Missed on the first pass — the data lives in Firestore SUBcollections, invisible to a top-level count |
+| `schema/005_normalization_provenance.sql` | `canonical_type_source` / `canonical_brand_source` (`llm` \| `heuristic`) |
+| `schema/006_price_stats_sql.sql` | `rebuild_price_stats()` — the SQL port of `functions/pricestats/build.js` |
 
 Indexes are deliberately deferred: building a GIN index incrementally across a
 167k-row import is far slower than building it once at the end.
@@ -85,6 +88,57 @@ If the Postgres plan is storage-constrained, run `load.js --skip-raw`: search,
 price stats and alert matching — the three workloads that motivated the move —
 do not read it. The JSONL export on disk remains the durable copy, and
 `load.js --only=listings_raw` can add it later.
+
+## Price stats
+
+`rebuild_price_stats()` replaces the Firestore build job. Runs in ~3s:
+
+```sql
+SELECT * FROM rebuild_price_stats();
+```
+
+It reproduces `build.js` exactly — percentiles not means, tails suppressed
+below n=20, sold and asking never blended, unwindowed sold block against a
+365-day asking window, per-source-kind breakdown — and fixes three bugs in it:
+
+1. **The junk filter was dead on eBay.** `build.js` tested the parts regex
+   against `condition_raw` only, never the title. eBay's `condition_raw` is
+   "Used", so "Stanley No 4 — FOR PARTS ONLY" counted as a comparable.
+2. **Multi-item lots were never excluded.**
+3. **Stale clusters were never pruned.** There is no delete path anywhere in
+   `build.js`; a cluster whose listings have all vanished serves its last
+   prices forever. That was ~28,000 orphaned clusters.
+
+Run it after any normalization pass — the numbers move.
+
+## Normalization
+
+`functions/normalize/run-postgres.js` fills the backlog. Measure before
+spending:
+
+```bash
+node functions/normalize/run-postgres.js --sample 60      # prints a cost extrapolation
+node functions/normalize/run-postgres.js --durable-only --max-cost 45
+```
+
+`--durable-only` restricts to sold comps plus dealer/forum active inventory,
+which is ~31% of the cost and nearly all of the lasting value; eBay/FBM active
+listings churn off within weeks. Measured at **~$0.002/title** — about 10x what
+the old code comment claims, because the system prompt is ~8,800 cached tokens
+and cache reads still bill at scale.
+
+Resumable: it selects `WHERE canonical_type IS NULL`, so re-running picks up
+whatever remains.
+
+### Do NOT backfill canonical_* from the heuristics
+
+`backfill-normalization.js` exists and works, and was **tried and reverted**.
+It recovers 77,370 types and 55,776 brands for free and looks like a 26%→52%
+coverage win, but the heuristics are keyword matching and precision measured at
+**20–40%**: `Stanley` + `plane` swept in combination planes, chip breakers and
+Surform rasps, and `heuristic_brand` labelled Lie-Nielsen and Atkinson tools
+"Stanley". Audit precision on real rows before believing any coverage number.
+`--revert` undoes it.
 
 ## Validation
 
