@@ -3720,7 +3720,11 @@ exports.normalizeExternalListing = onDocumentWritten(
 
     // Idempotency: skip writes that already carry canonical fields. This is
     // the guard that keeps our own trigger-write from re-firing the trigger.
-    if (data.canonical_brand) return null;
+    // Keyed on normalized_at, not canonical_brand: an unbranded tool
+    // legitimately normalizes to a null brand, so a brand-keyed guard never
+    // fires for it and the LLM re-runs on every write. Mirrors the guard in
+    // normalize/apply.js — keep the two in sync.
+    if (data.normalized_at) return null;
 
     try {
       const result = await normalizeListingDoc(after.ref, data);

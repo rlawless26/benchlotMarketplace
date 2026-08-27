@@ -17,6 +17,17 @@ const SNAPSHOTS_COLLECTION = 'priceSnapshots';
 // (listing + raw + price-snapshot when price or status changed), so cap
 // records at 160 per batch.
 const UPSERT_CHUNK = 160;
+
+/**
+ * Columns the normalizer owns. Scrapers supply them as null on every run, so
+ * they must be stripped from a merge-set or the re-scrape blanks the
+ * normalizer's output. Only ever written on a first insert, where null is
+ * simply "not normalized yet".
+ */
+const NORMALIZER_OWNED_FIELDS = [
+  'canonical_brand', 'canonical_type', 'canonical_model', 'canonical_size',
+  'era_estimate', 'plane_type_number',
+];
 const READ_CHUNK = 300;   // getAll() tolerates larger batches; stay conservative
 
 function buildDocId(source, sourceId) {
@@ -141,9 +152,28 @@ async function upsertListings(records, runStartedAt) {
         batch.set(listingRef, { ...common, first_seen_at: runStartedAt });
         inserted += 1;
       } else {
+        // Do NOT let a re-scrape blank the normalizer's output.
+        //
+        // Scrapers emit canonical_* and era_estimate as null on every run. A
+        // merge-set with those nulls strips the normalizer's work, and the
+        // write then re-fires the onDocumentWritten trigger — whose guard is
+        // `if (data.canonical_brand) return null`, now false — so the LLM runs
+        // again and rewrites the same values. Every listing was re-billed on
+        // every scrape, forever. That is the whole reason 31,087 rows sat with
+        // normalized_at set and a NULL canonical_type, and a large part of what
+        // drained the Anthropic account.
+        //
+        // Fingerprint that identified it: on every affected row all five text
+        // fields were null while plane_type_number survived — the one canonical
+        // field no scraper writes.
+        //
+        // The Postgres store fixes this structurally by omitting these columns
+        // from its ON CONFLICT SET. This keeps the Firestore path honest while
+        // it is still deployed.
         const mergePayload = nonTool.nonTool
-          ? common
+          ? { ...common }
           : { ...common, excluded_reason: admin.firestore.FieldValue.delete() };
+        for (const owned of NORMALIZER_OWNED_FIELDS) delete mergePayload[owned];
         batch.set(listingRef, mergePayload, { merge: true });
         updated += 1;
       }

@@ -24,7 +24,12 @@ const { canonicalizeBrand } = require('./vocabulary');
 async function normalizeListingDoc(ref, data, opts = {}) {
   if (!data) return { skipped: true, reason: 'no_data' };
   if (!data.title_raw) return { skipped: true, reason: 'no_title' };
-  if (!opts.force && data.canonical_brand) {
+  // Key on normalized_at, not canonical_brand. A genuinely unbranded tool
+  // legitimately normalizes to canonical_brand null (the prompt reserves
+  // "Unknown" for identifiable-but-absent makers), so a brand-keyed guard never
+  // fires for it and the LLM re-runs on every single write. normalized_at is
+  // set on every successful pass and is never null-able by a scraper.
+  if (!opts.force && data.normalized_at) {
     return { skipped: true, reason: 'already_normalized' };
   }
 
