@@ -61,6 +61,30 @@ function costOf(u) {
   );
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Retry transient failures: a dropped Neon connection, a rate limit, a 5xx.
+ * Deliberately does NOT retry a 4xx like an exhausted credit balance — that is
+ * not going to fix itself and should surface immediately.
+ */
+async function withRetry(fn, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      const transient =
+        e.code === '57P01' || e.code === 'ECONNRESET' || e.code === 'ETIMEDOUT' ||
+        e.status === 429 || (e.status >= 500 && e.status < 600);
+      if (!transient) throw e;
+      await sleep(500 * 2 ** i);
+    }
+  }
+  throw lastErr;
+}
+
 async function mapWithConcurrency(items, n, worker) {
   let next = 0;
   const runners = Array.from({ length: Math.min(n, items.length) }, async () => {
@@ -75,6 +99,17 @@ async function mapWithConcurrency(items, n, worker) {
 
 (async () => {
   const pool = new Pool({ connectionString: DB, max: 4 });
+
+  // A pool that lives for hours WILL have idle clients terminated by the
+  // server — Neon restarts the compute on plan changes, maintenance and
+  // scale-to-zero, which surfaces as 57P01 "terminating connection due to
+  // administrator command". Without this handler pg-pool emits an unhandled
+  // 'error' event and takes the whole process down mid-run, which is exactly
+  // what happened 10,314 rows in. The pool discards the dead client and opens
+  // a fresh one on the next acquire, so logging is the right response.
+  pool.on('error', (err) => {
+    console.error(`\n  [pool] ${err.code || ''} ${err.message} — connection dropped, continuing`);
+  });
 
   // One row per distinct title; `ids` carries every listing sharing it.
   const cap = SAMPLE || LIMIT || 0;
@@ -117,13 +152,13 @@ async function mapWithConcurrency(items, n, worker) {
       return;
     }
     try {
-      const r = await normalizeListing({
+      const r = await withRetry(() => normalizeListing({
         title_raw: w.title_raw,
         description_raw: w.description_raw,
         tags: w.tags,
         heuristic_brand: w.heuristic_brand,
         heuristic_type: w.heuristic_type,
-      });
+      }));
       cost += costOf(r.usage || {});
       for (const k of Object.keys(usageTotals)) usageTotals[k] += (r.usage || {})[k] || 0;
 
@@ -131,7 +166,7 @@ async function mapWithConcurrency(items, n, worker) {
       // indistinguishable from the treadmill damage this pass exists to repair.
       if (!r.canonical_type) { failed++; return; }
 
-      const res = await pool.query(
+      const res = await withRetry(() => pool.query(
         `UPDATE listings SET
            canonical_brand = $2, canonical_type = $3, canonical_model = $4,
            canonical_size = $5, era_estimate = $6, plane_type_number = $7,
@@ -141,7 +176,7 @@ async function mapWithConcurrency(items, n, worker) {
         [w.ids, canonicalizeBrand(r.canonical_brand), r.canonical_type,
          r.canonical_model ?? null, r.canonical_size ?? null, r.era_estimate ?? null,
          r.plane_type_number ?? null, r.model]
-      );
+      ));
       rowsWritten += res.rowCount;
     } catch (e) {
       failed++;
