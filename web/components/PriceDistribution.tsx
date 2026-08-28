@@ -3,6 +3,14 @@ import { SoldPoint } from '@/lib/price-guide';
 /**
  * Sold-price distribution: one dot per real sale, faceted by source kind.
  *
+ * FORM SWITCHES ON DENSITY. A strip plot shows every individual sale, which is
+ * ideal while a cluster has tens of comps. Past roughly a hundred it stops
+ * being a chart: after normalization, Stanley Bench Plane went from 65 comps to
+ * 1,302, which packed 1,302 marks into 96 pixel columns — 13.6 stacked per
+ * column and 237 inside the busiest 20px window. That is a solid blob, not a
+ * distribution. Above the threshold this renders a histogram instead, where
+ * density is the encoding rather than an artefact of overplotting.
+ *
  * Why a strip plot and not the Reverb-style monthly line: sold dates are too
  * sparse to trend. 26,103 of 34,017 sold rows carry no date at all (Jim Bode's
  * Value Guide deliberately publishes none), and 5,394 more share a single
@@ -22,6 +30,10 @@ import { SoldPoint } from '@/lib/price-guide';
  * axis.
  */
 
+/** Above this many comps, overplotting destroys the strip plot. */
+const HISTOGRAM_THRESHOLD = 120;
+const BIN_COUNT = 28;
+
 const KIND_ORDER = ['Dealer', 'Marketplace', 'Forum', 'Reddit', 'Auction'];
 
 const KIND_LABEL: Record<string, string> = {
@@ -39,6 +51,71 @@ function niceTicks(minC: number, maxC: number): number[] {
   return candidates
     .map((d) => d * 100)
     .filter((c) => c >= minC * 0.9 && c <= maxC * 1.1);
+}
+
+function Histogram({
+  values, medianC, p25, p75, count,
+}: { values: number[]; medianC: number; p25: number; p75: number; count: number }) {
+  const W = 720, H = 190, PAD_L = 44, PAD_R = 16, PAD_B = 30, PAD_T = 10;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  const minC = values[0];
+  const maxC = values[values.length - 1];
+  // Log-spaced bins: prices span three orders of magnitude and are perceived
+  // multiplicatively, so linear bins would put almost everything in bin 1.
+  const lo = Math.log10(Math.max(1, minC));
+  const hi = Math.log10(Math.max(minC + 1, maxC));
+  const step = (hi - lo) / BIN_COUNT;
+
+  const bins = new Array(BIN_COUNT).fill(0);
+  for (const v of values) {
+    const i = Math.min(BIN_COUNT - 1, Math.max(0, Math.floor((Math.log10(Math.max(1, v)) - lo) / step)));
+    bins[i]++;
+  }
+  const peak = Math.max(...bins, 1);
+  const x = (c: number) => PAD_L + ((Math.log10(Math.max(1, c)) - lo) / (hi - lo)) * plotW;
+  const barW = plotW / BIN_COUNT;
+
+  const ticks = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
+    .map((d) => d * 100)
+    .filter((c) => c >= minC * 0.9 && c <= maxC * 1.1);
+  const usd = (c: number) => (c >= 100000 ? `$${Math.round(c / 100 / 1000)}k` : `$${Math.round(c / 100)}`);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[34rem]" role="img"
+         aria-label={`Distribution of ${count} sold prices. Median ${usd(medianC)}, middle half between ${usd(p25)} and ${usd(p75)}.`}>
+      {/* Interquartile band behind the bars. */}
+      <rect x={x(p25)} y={PAD_T} width={Math.max(1, x(p75) - x(p25))} height={plotH} fill="#e8e6e0" />
+
+      {bins.map((n, i) => {
+        if (n === 0) return null;
+        const h = Math.max(2, (n / peak) * plotH);
+        // 2px gap between fills, per the mark spec.
+        return (
+          <rect key={i} x={PAD_L + i * barW + 1} y={PAD_T + plotH - h}
+                width={Math.max(1, barW - 2)} height={h}
+                fill="#1a3030" fillOpacity={0.78} rx={2}>
+            <title>{`${n} ${n === 1 ? 'sale' : 'sales'}`}</title>
+          </rect>
+        );
+      })}
+
+      <line x1={x(medianC)} x2={x(medianC)} y1={PAD_T - 4} y2={PAD_T + plotH}
+            stroke="#d4aa60" strokeWidth={2} />
+      <text x={x(medianC)} y={PAD_T + plotH + 26} textAnchor="middle"
+            fontSize={11} fontWeight={600} fill="#b08a40">median {usd(medianC)}</text>
+
+      <line x1={PAD_L} x2={W - PAD_R} y1={PAD_T + plotH} y2={PAD_T + plotH} stroke="#dcd8cf" strokeWidth={1} />
+      {ticks.map((c) => (
+        <text key={c} x={x(c)} y={PAD_T + plotH + 14} textAnchor="middle" fontSize={11} fill="#2a4a48">
+          {usd(c)}
+        </text>
+      ))}
+      <text x={PAD_L - 8} y={PAD_T + 10} textAnchor="end" fontSize={10} fill="#2a4a48">{peak}</text>
+      <text x={PAD_L - 8} y={PAD_T + plotH} textAnchor="end" fontSize={10} fill="#2a4a48">0</text>
+    </svg>
+  );
 }
 
 export default function PriceDistribution({ points, median }: Props) {
@@ -75,6 +152,20 @@ export default function PriceDistribution({ points, median }: Props) {
     kind: k,
     items: byKind.get(k) as SoldPoint[],
   }));
+
+  if (priced.length >= HISTOGRAM_THRESHOLD) {
+    return (
+      <figure className="mt-6">
+        <figcaption className="text-sm text-spruce-light">
+          Where {priced.length.toLocaleString()} recorded sales landed. The band spans the
+          middle half; the line is the median.
+        </figcaption>
+        <div className="mt-3 overflow-x-auto">
+          <Histogram values={values} medianC={medianC} p25={p25} p75={p75} count={priced.length} />
+        </div>
+      </figure>
+    );
+  }
 
   const H = rows.length * ROW_H + AXIS_H + 14;
   const ticks = niceTicks(minC, maxC);
