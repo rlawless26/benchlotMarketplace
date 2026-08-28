@@ -324,11 +324,9 @@ const PriceGuidePage = () => {
             </p>
           )}
         </div>
-        <SaveAlertButton
-          query={alertState.query}
-          filters={alertState.filters}
-          sort={alertState.sort}
-        />
+        {/* This route is shadowed by the /guide/* rewrite to the Next app, which
+            has its own cluster-scoped alert form. Link variant only. */}
+        <SaveAlertButton />
       </div>
 
       {/* Stat cards */}

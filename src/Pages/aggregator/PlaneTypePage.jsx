@@ -378,7 +378,7 @@ const PlaneTypePage = () => {
             </p>
           )}
         </div>
-        <SaveAlertButton query={alertState.query} filters={alertState.filters} sort={alertState.sort} />
+        <SaveAlertButton canonicalType={CANONICAL_TYPE} canonicalBrand={brand.canonical} />
       </div>
 
       {/* Confidence answer / stat cards */}

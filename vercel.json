@@ -42,6 +42,18 @@
   ],
   "rewrites": [
     {
+      "source": "/api/alerts",
+      "destination": "https://benchlot-web.vercel.app/api/alerts"
+    },
+    {
+      "source": "/alerts/confirm/:path*",
+      "destination": "https://benchlot-web.vercel.app/alerts/confirm/:path*"
+    },
+    {
+      "source": "/alerts/unsubscribe/:path*",
+      "destination": "https://benchlot-web.vercel.app/alerts/unsubscribe/:path*"
+    },
+    {
       "source": "/guide/sitemap.xml",
       "destination": "https://benchlot-web.vercel.app/sitemap.xml"
     },
