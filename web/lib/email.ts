@@ -26,14 +26,16 @@ export async function sendEmail(opts: {
   subject: string;
   html: string;
   vars?: Record<string, unknown>;
-}): Promise<{ sent: boolean; id?: string; error?: string }> {
+}): Promise<{ sent: boolean; dryRun?: boolean; id?: string; error?: string }> {
   const base = [opts.templateId, opts.to, opts.subject, JSON.stringify(opts.vars ?? {})];
 
   if (dryRun()) {
     await sql(
       `INSERT INTO email_sends (template_id, to_address, subject, vars, status, attempts, created_at)
        VALUES ($1,$2,$3,$4::jsonb,'dry-run',0,now())`, base);
-    return { sent: false };
+    // Distinct from a failure: nothing was sent, but nothing is broken either.
+    // Collapsing the two makes a dry run look like an outage to every caller.
+    return { sent: false, dryRun: true };
   }
 
   const key = process.env.RESEND_API_KEY;
