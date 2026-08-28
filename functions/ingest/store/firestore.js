@@ -174,6 +174,11 @@ async function upsertListings(records, runStartedAt) {
           ? { ...common }
           : { ...common, excluded_reason: admin.firestore.FieldValue.delete() };
         for (const owned of NORMALIZER_OWNED_FIELDS) delete mergePayload[owned];
+        // A listing seen again is not gone: drop the sold_at markExpired
+        // stamped, so a row can't be 'active' and carry a sale date at once.
+        if (status === 'active' && !rec.listing.sold_at) {
+          mergePayload.sold_at = admin.firestore.FieldValue.delete();
+        }
         batch.set(listingRef, mergePayload, { merge: true });
         updated += 1;
       }

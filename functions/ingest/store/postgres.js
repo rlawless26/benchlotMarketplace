@@ -143,8 +143,14 @@ ups AS (
     excluded_reason  = EXCLUDED.excluded_reason,
     scraped_at       = EXCLUDED.scraped_at,
     last_seen_at     = EXCLUDED.last_seen_at,
-    -- Owned by the scrape only when it actually supplies a value.
-    sold_at          = COALESCE(EXCLUDED.sold_at, listings.sold_at),
+    -- A listing seen again is, by definition, not gone. Clear the sold_at that
+    -- markExpired stamped, or the row ends up simultaneously 'active' and
+    -- carrying a sale date. Firestore behaved that way too; it is preserved
+    -- nowhere on purpose.
+    sold_at          = CASE
+                         WHEN EXCLUDED.status = 'active' AND EXCLUDED.sold_at IS NULL THEN NULL
+                         ELSE COALESCE(EXCLUDED.sold_at, listings.sold_at)
+                       END,
     last_post_at     = COALESCE(EXCLUDED.last_post_at, listings.last_post_at)
     -- first_seen_at is deliberately absent: set once, never updated.
     -- canonical_*, era_estimate, plane_type_number, normalizer_model and

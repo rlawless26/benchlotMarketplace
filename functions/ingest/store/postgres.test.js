@@ -105,9 +105,15 @@ const snaps = async () =>
   check('sold_at set', sold.sold_at.toISOString(), later.toISOString());
   console.log(`  (markExpired touched ${m.expired} rows for source=${SOURCE})`);
 
-  console.log('\n7. sold_at survives a later re-scrape that omits it');
+  console.log('\n7. a re-seen listing is NOT sold: sold_at is cleared');
+  // Previously sold_at was preserved here, leaving rows that were both
+  // status='active' and carrying a sale date. 821 such rows existed in
+  // production. A scrape seeing the listing again is positive evidence it
+  // didn't sell, so the stamp markExpired left has to go.
   await store.upsertListings([rec()], new Date('2026-08-26T01:00:00Z'));
-  check('sold_at preserved', (await row()).sold_at.toISOString(), later.toISOString());
+  const reseen = await row();
+  check('status back to active', reseen.status, 'active');
+  check('sold_at cleared', reseen.sold_at, null);
 
   console.log('\n8. getListingMeta returns bump/status metadata');
   await pool.query(
