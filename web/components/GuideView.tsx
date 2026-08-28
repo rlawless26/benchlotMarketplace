@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import PriceDistribution from './PriceDistribution';
+import AlertSignup from './AlertSignup';
 import {
   Cluster, ClusterRef, Listing, SoldPoint, clusterPath, clusterTitle, money, centsToMoney,
   SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
@@ -239,6 +240,15 @@ export default function GuideView({
           </p>
           <Table rows={active} dateLabel="Listed" />
         </section>
+      )}
+
+      {cluster.canonical_type && cluster.canonical_brand && (
+        <AlertSignup
+          canonicalType={cluster.canonical_type}
+          canonicalBrand={cluster.canonical_brand}
+          canonicalSize={cluster.canonical_size}
+          summary={title}
+        />
       )}
 
       {related.length > 0 && (
