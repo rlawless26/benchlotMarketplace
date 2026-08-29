@@ -24,7 +24,13 @@ Benchlot — An aggregator / search engine for used woodworking tools (hand tool
 - **Styling**: Use Tailwind CSS with Benchlot design system (see tailwind.config.js)
 - **Context**: Use React Context for app-wide state management
 
-## Brand / Design System
+## Brand
+**One brand: Benchlot.** The Benchfind split was unwound on 2026-08-29 — its
+components, pages, assets, design handoff and host-branching are deleted, and
+benchfind.com 301s to benchlot.com via `vercel.json`. There is no
+`getHostBrand()` any more; do not reintroduce host-conditional branding.
+
+## Design System
 - **Fonts**: Petrona (display/headings), Outfit (body/UI)
 - **Colors**: Spruce (#1a3030), Bone (#f2f0eb), Honey (#d4aa60), Dark Teal (#0c1c1e)
 - **Rules**: Never pure white backgrounds (use Bone). Never pure black text (use Dark Teal). Prices always in Honey. Button text on Honey is always Dark Teal.

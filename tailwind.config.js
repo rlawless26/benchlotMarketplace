@@ -47,89 +47,15 @@ module.exports = {
           auction: '#6a4a2a',
         },
 
-        // ─── Benchfind (photo-ID brand on benchfind.com) ───────────────────
-        // From design_handoff_benchfind/foundations/tailwind.config.js.
-        // Note: the design system's "spruce" is renamed to "forest" here to
-        // avoid colliding with Benchlot's own "spruce" (which is dark teal).
-        // Benchfind components: use `bg-forest-700`, `text-forest-50`, etc.
-        paper: {
-          50:  '#FBF8F2',  // page base — never pure white
-          100: '#F6F1E7',  // card-on-page hairline tint
-          200: '#ECE4D2',  // inset wells, table-stripe
-          300: '#DDD2B9',  // rule, hairline
-          400: '#C2B393',  // disabled text
-          DEFAULT: '#FBF8F2',
-        },
-        ink: {
-          400: '#9B9189',
-          500: '#7A6F66',
-          600: '#5A514A',
-          700: '#3D3631',
-          800: '#2A2420',
-          900: '#1B1714',  // primary text — never pure black
-          DEFAULT: '#1B1714',
-        },
-        iron: {
-          300: '#B4B8BB',
-          500: '#6B7178',
-          700: '#3C4348',
-        },
-        // FOREST = Benchfind primary accent (named "spruce" in design files)
-        forest: {
-          50:  '#EEF4F0',
-          100: '#E0EBE4',
-          300: '#94B3A2',
-          500: '#2F6B52',
-          700: '#1F4D3A',  // primary action
-          900: '#143527',
-          DEFAULT: '#1F4D3A',
-        },
-        brass: {
-          100: '#F0E3C3',
-          500: '#B08938',
-          700: '#8C6B22',
-          DEFAULT: '#B08938',
-        },
-        rust: {
-          50:  '#FBF0E4',
-          100: '#F5E3D2',
-          300: '#E2B895',
-          500: '#B86631',
-          600: '#A85427',
-          700: '#8A4419',
-          DEFAULT: '#8A4419',
-        },
-        patina: {
-          100: '#DDEAE5',
-          500: '#4F8A7A',
-          700: '#2F5D52',
-        },
-        // Confidence & condition semantic ramps (Benchfind)
-        conf: {
-          'high':       '#2F6B3D',
-          'high-bg':    '#E4EFE2',
-          'medium':     '#9A6B12',
-          'medium-bg':  '#F5E9C8',
-          'low':        '#8A4419',
-          'low-bg':     '#F5E3D2',
-        },
-        cond: {
-          excellent: '#2F6B3D',
-          good:      '#4F8A7A',
-          fair:      '#9A6B12',
-          project:   '#8A4419',
-        },
       },
       fontFamily: {
-        // Existing Benchlot stack
         display: ["'Petrona'", 'Georgia', "'Times New Roman'", 'serif'],
         body: ["'Outfit'", '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'sans-serif'],
-        // Benchfind additions
         sans: ["'Inter'", 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ["'JetBrains Mono'", 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       fontSize: {
-        // Existing Benchlot semantic scale
+        // Semantic scale
         'hero': '72px',
         'h1': '48px',
         'h2': '32px',
@@ -144,8 +70,8 @@ module.exports = {
         'btn-sm': '11px',
         'price': '16px',
         'wordmark': '20px',
-        // Benchfind scale — overrides Tailwind defaults. Minor 1-2px shifts
-        // versus Tailwind defaults; acceptable risk on existing Benchlot pages.
+        // Sitewide scale — deliberately overrides Tailwind's defaults, so
+        // `text-sm`/`text-base`/... resolve to these across the whole app.
         'xs':   ['12px', { lineHeight: '1.4' }],
         'sm':   ['13px', { lineHeight: '1.5' }],
         'base': ['15px', { lineHeight: '1.55' }],
@@ -183,13 +109,12 @@ module.exports = {
         'on-honey': '#0c1c1e',
       },
       borderRadius: {
-        // Benchlot
         'card': '10px',
         'btn': '8px',
         'btn-sm': '6px',
         'section': '12px',
         'badge': '16px',
-        // Benchfind (overrides Tailwind defaults)
+        // Overrides Tailwind's defaults sitewide.
         'xs':   '2px',
         'sm':   '4px',
         DEFAULT:'6px',
@@ -199,24 +124,22 @@ module.exports = {
         'pill': '999px',
       },
       boxShadow: {
-        // Benchfind warm-RGB shadows override Tailwind defaults.
-        // Existing Benchlot pages using `shadow-sm` etc. shift to warm tones.
+        // Warm-RGB shadows, overriding Tailwind's defaults sitewide.
         'sm':  '0 1px 2px rgba(40,30,20,0.06), 0 1px 1px rgba(40,30,20,0.04)',
         DEFAULT: '0 2px 6px rgba(40,30,20,0.08), 0 1px 2px rgba(40,30,20,0.04)',
         'md':  '0 2px 6px rgba(40,30,20,0.08), 0 1px 2px rgba(40,30,20,0.04)',
         'lg':  '0 8px 24px rgba(40,30,20,0.10), 0 2px 6px rgba(40,30,20,0.06)',
         'hairline': 'inset 0 0 0 1px #DDD2B9',
         'focus':    '0 0 0 3px rgba(31,77,58,0.20)',  // forest-700 alpha
-        // Benchlot legacy named shadows
+        // Named shadows
         'card': '0 2px 8px rgba(12, 28, 30, 0.08)',
         'card-hover': '0 4px 16px rgba(12, 28, 30, 0.10)',
       },
       spacing: {
-        // Benchlot
         '72': '18rem',
         '84': '21rem',
         '96': '24rem',
-        // Benchfind named tokens
+        // Layout tokens
         'gutter': '24px',
         'gutter-lg': '48px',
         'page-x': '24px',

@@ -220,7 +220,7 @@ function eq(a, b) { return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); 
 
   console.log('\n=== 6. PER-SOURCE FRESHNESS ===');
   // Sources whose ingest cron is deliberately commented out in
-  // functions/index.js (see the 2026-05-15 Benchfind-era pauses). From the data
+  // functions/index.js (see the 2026-05-15 pauses, since unwound). From the data
   // alone, "paused on purpose" and "silently broken" look identical -- which is
   // exactly the trap this report exists to avoid. Keep this list in sync.
   const PAUSED = new Set(['sawmillcreek', 'vintagevials', 'reddit', 'fbmarketplace']);

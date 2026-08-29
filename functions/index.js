@@ -9,8 +9,6 @@ const rateLimit = require('express-rate-limit');
 const allowedOrigins = [
   'https://benchlot.com',
   'https://www.benchlot.com',
-  'https://benchfind.com',
-  'https://www.benchfind.com',
   'https://benchlot-6d64e.web.app',
   'https://benchlot-6d64e.firebaseapp.com',
   'http://localhost:3000',
@@ -2723,14 +2721,13 @@ app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
         benchlotIndexCount,
         benchlotIndexSource,
         confidence: scanResult.confidence || '',
-        // Derive scanPageUrl from the request Origin so a scan submitted from
-        // benchfind.com gets a benchfind.com link in the email.
+        // Derive scanPageUrl from the request Origin so a scan submitted on a
+        // preview deployment links back to that deployment, not production.
         scanPageUrl: (() => {
           const origin = req.headers.origin || req.headers.referer;
           if (origin && typeof origin === 'string') {
             try {
               const u = new URL(origin);
-              if (u.hostname.includes('benchfind')) return `${u.protocol}//${u.host}/`;
               if (u.hostname.includes('benchlot')) return `${u.protocol}//${u.host}/scan`;
             } catch (e) { /* fall through */ }
           }

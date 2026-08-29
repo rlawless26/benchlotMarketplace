@@ -15,14 +15,11 @@
  */
 
 import posthog from 'posthog-js';
-import { getHostBrand } from './environment';
 
 export function track(eventName, properties = {}) {
   if (!posthog.__loaded) return;
   try {
-    // Thread the active brand surface onto every event so benchfind.com vs
-    // benchlot.com traffic is segmentable in PostHog.
-    posthog.capture(eventName, { host: getHostBrand(), ...properties });
+    posthog.capture(eventName, properties);
   } catch (err) {
     // Never let analytics break the app
     if (process.env.NODE_ENV !== 'production') {

@@ -42,28 +42,6 @@ export const isProduction = () => getEnvironment() === 'production';
 export const isStaging = () => getEnvironment() === 'staging';
 export const isDevelopment = () => getEnvironment() === 'development';
 
-// Identifies which brand surface is being served. The same Vercel build
-// serves both benchlot.com (aggregator brand) and benchfind.com (photo-id
-// brand); React picks copy + wordmark based on which domain the user
-// landed on. `?host=benchfind|benchlot` is a staging override.
-export const getHostBrand = () => {
-  if (typeof window === 'undefined') return 'benchlot';
-  try {
-    const override = new URLSearchParams(window.location.search).get('host');
-    if (override === 'benchfind' || override === 'benchlot') return override;
-  } catch (e) {
-    // ignore
-  }
-  return window.location.hostname.includes('benchfind') ? 'benchfind' : 'benchlot';
-};
-
-// Convenience predicates
-export const isBenchfind = () => getHostBrand() === 'benchfind';
-export const isBenchlot = () => getHostBrand() === 'benchlot';
-
-// Display strings for the active brand.
-export const brandName = () => getHostBrand() === 'benchfind' ? 'Benchfind' : 'Benchlot';
-
 // Get environment-specific configuration
 export const getConfig = (development, staging, production) => {
   const env = getEnvironment();
@@ -86,10 +64,6 @@ const environment = {
   isStaging,
   isDevelopment,
   getConfig,
-  getHostBrand,
-  isBenchfind,
-  isBenchlot,
-  brandName,
 };
 
 export default environment;

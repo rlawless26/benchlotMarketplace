@@ -32,8 +32,6 @@ import CheckoutPage from './Pages/CheckoutPage';
 import OrderConfirmationPage from './Pages/OrderConfirmationPage';
 import ToolListingFormPage from './Pages/ToolListingFormPage';
 import ToolScanPage from './Pages/ToolScanPage';
-import BenchfindHomePage from './Pages/BenchfindHomePage';
-import BenchfindReferencePage from './Pages/BenchfindReferencePage';
 import FAQPage from './Pages/FAQPage';
 import HelpPage from './Pages/HelpPage';
 import CategoriesPage from './Pages/CategoriesPage';
@@ -57,14 +55,11 @@ import CreatePendingListingPage from './components/CreatePendingListingPage';
 // Component imports
 import Header from './components/Header';
 import Footer from './components/Footer';
-import BenchfindHeader from './components/benchfind/Header';
-import BenchfindFooter from './components/benchfind/Footer';
 import ScrollToTop from './components/ScrollToTop';
 // Note: TestNotificationButton, UserIdDisplay, TestOrderButton, AuthModalExample removed
 
 // Feature flags
 import { MARKETPLACE_BETA, AGGREGATOR_MODE, PRICE_GUIDE_ENABLED, PLANE_PAGES_ENABLED, TOOL_CHECK_ENABLED } from './utils/featureFlags';
-import { getHostBrand } from './utils/environment';
 
 // Styles
 import './styles/design-system.css';
@@ -84,44 +79,6 @@ function SellerStatusFix() {
     }
   }, [user?.uid]);
 
-  return null;
-}
-
-// Host-aware OG/meta tag updates. The static <meta> in public/index.html
-// reference benchlot.com — runtime overrides flip them when serving the
-// Benchfind host. SSR for OG is out of scope; social-share previewers
-// re-render via the destination URL, which works with this runtime swap.
-//
-// Open work: og-preview.svg should be flattened to PNG for production —
-// most social platforms refuse SVG OG images.
-function HostAwareMeta() {
-  useEffect(() => {
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-    const isBenchfind = hostname.includes('benchfind');
-    if (!isBenchfind) return undefined;
-
-    const origin = window.location.origin;
-    const overrides = {
-      'meta[property="og:url"]':     `${origin}/`,
-      'meta[property="og:title"]':   'Benchfind — Check it before you buy',
-      'meta[property="og:description"]': "Snap a photo or paste a URL. Identification, condition, comp prices, and a fair-price verdict for used hand planes.",
-      'meta[property="og:image"]':   `${origin}/benchfind/og-preview.svg`,
-      'meta[property="og:site_name"]': 'Benchfind',
-      'meta[name="twitter:url"]':    `${origin}/`,
-      'meta[name="twitter:title"]':  'Benchfind — Check it before you buy',
-      'meta[name="twitter:description"]': "Snap a photo or paste a URL. Identification, condition, comp prices, and a fair-price verdict for used hand planes.",
-      'meta[name="twitter:image"]':  `${origin}/benchfind/og-preview.svg`,
-      'link[rel="canonical"]':       `${origin}/`,
-    };
-    const attrFor = (key) => key.startsWith('meta[property=') ? 'content' : (key.startsWith('meta[name=') ? 'content' : 'href');
-    for (const [sel, val] of Object.entries(overrides)) {
-      const el = document.querySelector(sel);
-      if (el) el.setAttribute(attrFor(sel), val);
-    }
-    // Description meta (uses name, not property)
-    const desc = document.querySelector('meta[name="description"]');
-    if (desc) desc.setAttribute('content', 'Benchfind — confidence check for used woodworking hand planes. Identification, condition, comp prices, and a fair-price verdict.');
-  }, []);
   return null;
 }
 
@@ -175,17 +132,13 @@ function MarketplaceRoute({ element }) {
 function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
-  const hostBrand = getHostBrand();
-  const isBenchfindHost = hostBrand === 'benchfind';
   const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA && !AGGREGATOR_MODE;
-  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE && !isBenchfindHost;
+  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE;
   const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
   // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
   // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
   // Editorial content pages (About/FAQ/Contact) also ship their own chrome
   // per the post-pivot design handoff — see src/components/siteChrome/.
-  // Benchfind host: render the Benchfind-branded Header/Footer (not Benchlot's)
-  // across every page so the brand stays coherent on share permalinks etc.
   const contentPagePaths = ['/faq', '/privacy', '/terms'];
   const isContentPage = contentPagePaths.includes(location.pathname);
   const isChromelessPage =
@@ -200,25 +153,17 @@ function AppLayout() {
       <ScrollToTop />
       <SellerStatusFix />
       <EmailLinkCompletion />
-      <HostAwareMeta />
-      {!isWaitlistPage && !isChromelessPage && (
-        isBenchfindHost ? <BenchfindHeader /> : <Header publicMode={isPublicMode} />
-      )}
+      {!isWaitlistPage && !isChromelessPage && <Header publicMode={isPublicMode} />}
 
       <main className={!isWaitlistPage && !isChromelessPage ? 'flex-grow' : undefined}>
         <Routes>
-          {/* Home: on benchfind.com the root lands directly on the photo-id
-              scan experience (Benchfind is a photo-ID product, not an
-              aggregator destination). On benchlot.com the aggregator home
-              is unchanged. */}
+          {/* Home */}
           <Route
             path="/"
             element={
-              isBenchfindHost
-                ? <BenchfindHomePage />
-                : (AGGREGATOR_MODE
-                    ? <AggregatorHomePage />
-                    : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />))
+              AGGREGATOR_MODE
+                ? <AggregatorHomePage />
+                : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />)
             }
           />
 
@@ -256,19 +201,13 @@ function AppLayout() {
               planes (#1-#8) and Bedrocks (#602-#608) in v1.
               Model-level: /planes/:brand/:model
               Type-level:  /planes/:brand/:model/:type
-              Benchfind host: always-on, new editorial layout.
-              Benchlot host: still gated by PLANE_PAGES_ENABLED. */}
-          {isBenchfindHost ? (
-            <>
-              <Route path="/planes/:brandSlug/:modelSlug" element={<BenchfindReferencePage />} />
-              <Route path="/planes/:brandSlug/:modelSlug/:typeSlug" element={<BenchfindReferencePage />} />
-            </>
-          ) : (PLANE_PAGES_ENABLED && (
+              Gated by PLANE_PAGES_ENABLED. */}
+          {PLANE_PAGES_ENABLED && (
             <>
               <Route path="/planes/:brandSlug/:modelSlug" element={<PlaneTypePage />} />
               <Route path="/planes/:brandSlug/:modelSlug/:typeSlug" element={<PlaneTypePage />} />
             </>
-          ))}
+          )}
 
           {/* Aggregator: unified tool-check page (URL paste + photo upload).
               Internal name "check" — externally just Benchlot. Powers the
@@ -341,9 +280,7 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {!isWaitlistPage && !isChromelessPage && (
-        isBenchfindHost ? <BenchfindFooter /> : <Footer publicMode={isPublicMode} />
-      )}
+      {!isWaitlistPage && !isChromelessPage && <Footer publicMode={isPublicMode} />}
       <AuthModal />
       <EnvironmentDisplay />
       <Analytics />
