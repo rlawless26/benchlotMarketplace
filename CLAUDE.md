@@ -36,16 +36,17 @@ benchfind.com 301s to benchlot.com via `vercel.json`. There is no
 - **Rules**: Never pure white backgrounds (use Bone). Never pure black text (use Dark Teal). Prices always in Honey. Button text on Honey is always Dark Teal.
 - **Firebase project ID**: `benchlot-6d64e` (do not rename — this is the Google Cloud project identifier)
 
-## Architecture — current state (updated 2026-08-27)
+## Architecture — current state (updated 2026-08-29)
 
 The aggregator has moved off Firestore. A session that assumes otherwise will
 be wrong about where the data is, what writes it, and why things cost money.
 
 **Data lives in Neon Postgres.** `migration/` holds the tooling (`export.js` →
 `load.js` → `validate.js`, `schema/00*.sql`) and its README is the runbook.
-Firestore is still written by the deployed Cloud Functions, so the two diverge
-until ingest is fully cut over. Use the **unpooled** connection for loads, DDL
-and long jobs; the app uses the pooled one.
+Ingest is fully cut over as of 2026-08-29 — **nothing writes listings to
+Firestore any more**, so treat the `externalListings` collection as a frozen
+archive, not a second source of truth. Use the **unpooled** connection for
+loads, DDL and long jobs; the app uses the pooled one.
 
 **`functions/ingest/SCHEMA.md` is stale.** Live documents also carry
 `plane_type_number`, `normalizer_model`, `normalized_at` and `excluded_reason`,
@@ -58,10 +59,23 @@ project (see the root `vercel.json`). `/_next/*` MUST stay proxied or the pages
 render unstyled. The CRA app still serves everything else on benchlot.com, and
 still returns "You need to enable JavaScript" to crawlers on every other route.
 
-**Ingest writes through a backend-switchable store** (`functions/ingest/store/`,
-selected by `BENCHLOT_STORE`, default `firestore`). All 12 scrapers import
-`ingest/externalListings.js`, which is now a one-line re-export. The standalone
-worker is `functions/worker/run.js`.
+**Ingest runs on GitHub Actions, not Cloud Functions.**
+`.github/workflows/ingest.yml` runs daily at 03:00 UTC and picks sources from a
+weekday map (Mon ebay+jimbode+valueguide, Tue hyperkitten+thebestthings, Wed
+ebay+rouillard, Thu oldtools+woodnet, Fri ebay, Sat vintagevials+sawmillcreek+
+reddit). It calls `functions/worker/run.js`, then the normalizer, then
+`rebuild_price_stats()`. `fbmarketplace` is the one source still parked — on
+Bright Data cost, not on brand rationale.
+
+Writes go through a backend-switchable store (`functions/ingest/store/`,
+selected by `BENCHLOT_STORE`, **default `postgres`** since the cutover). All 12
+scrapers import `ingest/externalListings.js`, a one-line re-export.
+
+The workflow needs four repo secrets: `DATABASE_URL_UNPOOLED`, `EBAY_APP_ID`,
+`EBAY_CERT_ID`, `ANTHROPIC_API_KEY`. Reddit needs none — `REDDIT_AUTH_MODE` is
+pinned to `public` in the workflow, and public mode reads www.reddit.com
+unauthenticated. Leaving it unset would fall back to `oauth`, which hard-fails
+without credentials.
 
 **The normalizer owns `canonical_*`, `era_estimate` and `plane_type_number`.**
 Scrapers emit them as null on every run; a store must never let that reach an
@@ -71,10 +85,16 @@ listing on every scrape — the actual cause of both the Anthropic spend and
 never on `canonical_brand` (an unbranded tool legitimately has none).
 
 **Price stats are computed in SQL** — `SELECT * FROM rebuild_price_stats()`,
-~3s. Run it after any normalization pass. It replaces
+~5s over ~168k rows. The ingest workflow runs it after each scrape. It replaces
 `functions/pricestats/build.js`, whose statistics were sound but which tested
 the parts filter against `condition_raw` only (dead on eBay), never excluded
 multi-item lots, and never pruned stale clusters.
+
+Note the Firestore `priceStats` collection is now **frozen**: its nightly
+builder was removed with the other Cloud Functions. Nothing user-facing reads
+it (the CRA chip is behind `PRICE_GUIDE_ENABLED`, off), but the scan-results
+email's "Benchlot index" line still does — point that at Postgres before
+turning any of it back on.
 
 **Alerts require no account** — email + double opt-in + signed links. See the
 `project_alerts_no_auth` memory before changing any of it; several properties

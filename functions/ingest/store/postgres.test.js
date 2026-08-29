@@ -125,11 +125,10 @@ const snaps = async () =>
   // 'active', not 'sold': step 7 re-scraped the listing, and a listing seen
   // again is by definition not gone. This matches the Firestore layer exactly.
   //
-  // NOTE a pre-existing wart preserved here rather than silently fixed: the
-  // row is now status='active' while still carrying the sold_at that
-  // markExpired stamped. Firestore behaves the same way (a merge-set never
-  // cleared sold_at). Worth deciding whether a re-seen listing should clear
-  // sold_at — but that is a data-model change, not part of this port.
+  // The row is active with sold_at cleared: re-seeing a listing means it was
+  // not sold after all (commit ad9e3e7e). This used to be a preserved wart —
+  // active while still carrying markExpired's sold_at — and step 7 above now
+  // pins the corrected behaviour.
   check('status reported', meta.get(SID).status, 'active');
 
   console.log('\n9. applyListingUpdates only writes the keys supplied');
@@ -142,7 +141,8 @@ const snaps = async () =>
   check('status changed', post.status, 'active');
   // price_cents was never supplied, so a touch-only pass must not blank it.
   check('price_cents untouched', post.price_cents, before.price_cents);
-  check('sold_at untouched', post.sold_at.toISOString(), before.sold_at.toISOString());
+  // Still null from step 7; applyListingUpdates must not resurrect it.
+  check('sold_at untouched', post.sold_at, before.sold_at);
   check('last_seen_at advanced', post.last_seen_at.toISOString(), '2026-08-27T00:00:00.000Z');
 
   // Cleanup.

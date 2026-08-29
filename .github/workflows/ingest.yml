@@ -1,0 +1,131 @@
+# Ingest worker — the cron worker that replaces the scheduled ingest Cloud
+# Functions (BENCHLOT-HANDOFF.md §4: "one always-on/cron worker replaces
+# scheduled Cloud Functions ... One process, one log, visible costs").
+#
+# Every source writes to Neon Postgres via functions/ingest/store/postgres.js.
+# Nothing here touches Firestore.
+#
+# Cadence is the weekday map below, which preserves the schedule the Cloud
+# Functions ran (jimbode Mon, hyperkitten/thebestthings Tue, rouillard Wed,
+# woodnet/oldtools Thu, ebay Mon/Wed/Fri) and restores the three sources paused
+# on 2026-05-15 — those pauses were justified by plane-training-pair value,
+# which the one-brand decision reversed. fbmarketplace stays out: it is paused
+# on Bright Data cost, not on brand rationale.
+
+name: Ingest
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC daily; the weekday map picks the sources
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: 'Space-separated sources (overrides the weekday map)'
+        required: false
+        type: string
+      skip_downstream:
+        description: 'Skip normalization + price-stats rebuild'
+        required: false
+        type: boolean
+        default: false
+
+# Never let two ingest runs overlap: markExpired compares against the run's
+# start time, so a concurrent run can expire rows the other is still writing.
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    env:
+      BENCHLOT_STORE: postgres
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
+      EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Not a secret, and load-bearing: reddit.js defaults to `oauth` when this
+      # is unset, and oauth mode hard-fails without CLIENT_ID/SECRET/USERNAME.
+      # Public mode needs no credentials at all — it reads www.reddit.com
+      # unauthenticated with a descriptive UA.
+      REDDIT_AUTH_MODE: public
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install worker dependencies
+        working-directory: functions
+        run: npm ci --omit=dev
+
+      - name: Resolve today's sources
+        id: plan
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.sources }}" ]; then
+            SOURCES="${{ inputs.sources }}"
+          else
+            case "$(date -u +%u)" in
+              1) SOURCES="ebay jimbode jimbode_valueguide" ;;
+              2) SOURCES="hyperkitten thebestthings" ;;
+              3) SOURCES="ebay rouillard" ;;
+              4) SOURCES="oldtools woodnet" ;;
+              5) SOURCES="ebay" ;;
+              6) SOURCES="vintagevials sawmillcreek reddit" ;;
+              7) SOURCES="" ;;  # Sunday: fbmarketplace slot, paused on cost
+            esac
+          fi
+          echo "sources=$SOURCES" >> "$GITHUB_OUTPUT"
+          echo "Sources for $(date -u +%A): ${SOURCES:-(none)}"
+
+      - name: Scrape
+        if: steps.plan.outputs.sources != ''
+        run: node functions/worker/run.js ${{ steps.plan.outputs.sources }}
+
+      # The Firestore onDocumentWritten normalizer is gone. It could never
+      # settle (see commit 16fb9ae3) and Postgres has no trigger to replace it,
+      # so normalization is a batch pass that owns the canonical_* columns.
+      #
+      # --durable-only excludes eBay/FBM active listings: they churn off within
+      # weeks and are ~99% of the standing backlog (71,448 of 71,453 rows), so
+      # an unbounded pass here would spend ~$143 a night on data that expires.
+      # --max-cost is a hard ceiling, not an estimate. Draining the eBay
+      # backlog is a deliberate manual decision, not something a cron should do.
+      - name: Normalize new listings
+        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        run: node functions/normalize/run-postgres.js --durable-only --max-cost 5
+
+      # Replaces scheduledPriceStatsBuild. ~3s in SQL against ~168k rows.
+      - name: Rebuild price stats
+        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        working-directory: functions
+        run: |
+          node -e "
+          const { Pool } = require('pg');
+          const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED });
+          pool.query('SELECT * FROM rebuild_price_stats()')
+            .then(r => { console.log('[pricestats]', JSON.stringify(r.rows[0])); return pool.end(); })
+            .catch(e => { console.error('[pricestats]', e.message); process.exit(1); });
+          "
+
+      # A paused source and a broken one look identical from the data alone.
+      # The worker records every run in sources.last_scrape_ok/_note; surface it
+      # in the job log so a failure is visible without opening the database.
+      - name: Source freshness
+        if: always() && steps.plan.outputs.sources != ''
+        working-directory: functions
+        run: |
+          node -e "
+          const { Pool } = require('pg');
+          const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED });
+          pool.query(\"SELECT id, last_scraped_at, last_scrape_ok FROM sources WHERE indexed ORDER BY last_scraped_at NULLS FIRST\")
+            .then(r => { console.table(r.rows); return pool.end(); })
+            .catch(e => { console.error(e.message); return pool.end(); });
+          "

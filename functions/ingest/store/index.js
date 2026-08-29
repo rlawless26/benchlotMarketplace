@@ -4,15 +4,18 @@
  * Scrapers import this (via ../externalListings.js) and never learn which
  * database they are writing to. Switch with:
  *
- *   BENCHLOT_STORE=postgres    # Neon — the target architecture
- *   BENCHLOT_STORE=firestore   # legacy, still the default
+ *   BENCHLOT_STORE=postgres    # Neon — the default
+ *   BENCHLOT_STORE=firestore   # legacy, read-only in practice
  *
- * The default stays `firestore` on purpose: the deployed Cloud Functions must
- * keep behaving exactly as they do today until a run has been verified against
- * Postgres. Flip via env, not by editing code.
+ * The default flipped to `postgres` when ingest left Cloud Functions
+ * (.github/workflows/ingest.yml). No scheduled function calls this layer any
+ * more, so the only remaining callers are the worker and the per-source CLI
+ * runners in ../run-*.js — and for those, defaulting to Firestore would write
+ * a catalogue nothing reads. `firestore` is kept selectable for the regression
+ * test that pins the re-normalization guard.
  */
 
-const BACKEND = (process.env.BENCHLOT_STORE || 'firestore').toLowerCase();
+const BACKEND = (process.env.BENCHLOT_STORE || 'postgres').toLowerCase();
 
 if (!['firestore', 'postgres'].includes(BACKEND)) {
   throw new Error(
