@@ -341,17 +341,6 @@ const PlaneTypePage = () => {
   ];
 
   // SaveAlertButton expects useAggregatorState shape — pre-fill the
-  // search state so the saved alert acts like the user filtered for this
-  // brand/model on `/`.
-  const alertState = {
-    query: `${brand.canonical} ${canonicalModel}`,
-    filters: {
-      cat: { [CANONICAL_TYPE]: true },
-      maker: Object.fromEntries(brand.aliases.map((b) => [b, true])),
-    },
-    sort: 'best',
-  };
-
   return (
     <div
       style={{

@@ -270,7 +270,6 @@ const PriceGuidePage = () => {
   const reference = pickReference(stats);
   const titleSize = stats.canonical_size ? ` ${stats.canonical_size}` : '';
   const heading = `${stats.canonical_brand}${titleSize} ${stats.canonical_type}`;
-  const queryString = `${stats.canonical_brand}${stats.canonical_size ? ' ' + stats.canonical_size : ''}`;
 
   // Build histogram samples from the cluster docs we just fetched. We
   // re-derive prices from the listings pages rather than persisting a
@@ -285,17 +284,6 @@ const PriceGuidePage = () => {
   ];
 
   // SaveAlertButton expects useAggregatorState shape — pre-fill the
-  // search state so the saved alert acts like the user filtered for this
-  // cluster on `/`.
-  const alertState = {
-    query: queryString,
-    filters: {
-      cat: { [stats.canonical_type]: true },
-      maker: { [stats.canonical_brand]: true },
-    },
-    sort: 'best',
-  };
-
   return (
     <div
       style={{
