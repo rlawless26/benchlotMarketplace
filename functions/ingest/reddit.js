@@ -40,7 +40,10 @@
 const axios = require('axios');
 const admin = require('firebase-admin');
 
-const { upsertListings, markExpired } = require('./externalListings');
+// The whole store, so the two-phase paths can reach getListingMeta /
+// applyListingUpdates without caring which backend is active.
+const store = require('./externalListings');
+const { upsertListings, markExpired } = store;
 const { extractBrand, extractType } = require('./heuristics');
 const { parseLocationTag } = require('./location');
 
@@ -520,18 +523,11 @@ function toRecord(post, bucket, detail = null) {
  * vs. just a last_seen_at touch.
  */
 async function getKnownSourceIds() {
-  const db = admin.firestore();
-  const snap = await db
-    .collection('externalListings')
-    .where('source', '==', SOURCE)
-    .select('source_id')
-    .get();
-  const ids = new Set();
-  snap.docs.forEach((d) => {
-    const id = d.data().source_id;
-    if (id) ids.add(id);
-  });
-  return ids;
+  // Backend-agnostic. getListingMeta returns more than this needs (bump
+  // metadata and status), but reusing it keeps one lookup to maintain per
+  // backend rather than two that could drift.
+  const meta = await store.getListingMeta(SOURCE);
+  return new Set(meta.keys());
 }
 
 /**
@@ -541,26 +537,16 @@ async function getKnownSourceIds() {
  */
 async function touchKnownListings(posts, runStartedAt) {
   if (!Array.isArray(posts) || posts.length === 0) return { touched: 0 };
-  const db = admin.firestore();
-  const col = db.collection('externalListings');
-  const CHUNK = 200;
-  let touched = 0;
-  for (let i = 0; i < posts.length; i += CHUNK) {
-    const chunk = posts.slice(i, i + CHUNK);
-    const batch = db.batch();
-    for (const p of chunk) {
-      const docId = `${SOURCE}__${p.id}`;
-      batch.update(col.doc(docId), {
-        status: 'active',
-        scraped_at: runStartedAt,
-        last_seen_at: runStartedAt,
-        title_raw: p.title || '',
-      });
-    }
-    await batch.commit();
-    touched += chunk.length;
-  }
-  return { touched };
+  const updates = posts.map((p) => ({
+    source: SOURCE,
+    source_id: String(p.id),
+    status: 'active',
+    title_raw: p.title || '',
+  }));
+  // Only the supplied keys are written, plus scraped_at / last_seen_at, so the
+  // body and media captured by the original detail fetch are left intact.
+  const { updated } = await store.applyListingUpdates(updates, runStartedAt);
+  return { touched: updated };
 }
 
 // ---------------------------------------------------------------------------

@@ -80,6 +80,7 @@ M2's LLM normalizer reads these as seed hints but is expected to overwrite with 
 | `first_seen_at` | Timestamp | Set once on first upsert, never updated. |
 | `last_seen_at` | Timestamp | Updated on every scrape that sees this `source_id`. Drives expiry for active/expired lifecycle. |
 | `sold_at` | Timestamp \| null | When the listing actually sold. Populated only when the source publishes an authoritative per-item sale date; left null otherwise. Future eBay completed-listings ingestion will populate from eBay's `soldDate`; Jim Bode Value Guide deliberately leaves null because Shopify's `updated_at` reflects bulk admin touches, not sale dates. UI surfaces `sold_at` when known and omits the date when null. The price-guide build does NOT window the sold scan, so null-`sold_at` rows still aggregate. |
+| `last_post_at` | Timestamp \| null | Forum sources only (`woodnet`, `sawmillcreek`). Date of the most recent reply on the source thread. Used to detect "bumped" threads that need a sold-marker re-scan: when the list-view value advances past what we have stored, the next ingestion run re-fetches the thread and walks every post for a SOLD line. Null on non-forum sources. |
 
 ## Expiry rule
 

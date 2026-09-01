@@ -1,0 +1,15 @@
+{
+  "name": "benchlot-migration",
+  "private": true,
+  "version": "1.0.0",
+  "description": "One-time Firestore -> Postgres migration for Benchlot.",
+  "scripts": {
+    "export": "node export.js",
+    "load": "node load.js",
+    "validate": "node validate.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "pg-copy-streams": "^6.0.6"
+  }
+}

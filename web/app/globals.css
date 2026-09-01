@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/**
+ * Benchlot design system.
+ * Rules (CLAUDE.md): never pure-white backgrounds (use Bone), never pure-black
+ * text (use Dark Teal), prices always in Honey, button text on Honey is always
+ * Dark Teal. Fonts: Petrona for display, Outfit for body/UI.
+ */
+@theme {
+  --color-spruce:       #1a3030;
+  --color-spruce-light: #2a4a48;
+  --color-spruce-dark:  #0e2020;
+
+  --color-bone:         #f2f0eb;
+  --color-bone-dark:    #e8e6e0;
+  --color-bone-light:   #f8f6f2;
+
+  --color-honey:        #d4aa60;
+  --color-honey-light:  #e0c080;
+  --color-honey-dark:   #b08a40;
+
+  --color-dark-teal:       #0c1c1e;
+  --color-dark-teal-light: #1a2e30;
+
+  --color-success: #2a6a4a;
+  --color-error:   #a83a2a;
+  --color-warning: #b08a40;
+  --color-info:    #2a5a6a;
+
+  /* Source-kind accents, matching src/firebase/adapters/sources.js KIND_COLORS */
+  --color-kind-dealer:      #d4aa60;
+  --color-kind-forum:       #2a6a4a;
+  --color-kind-reddit:      #a83a2a;
+  --color-kind-marketplace: #2a5a6a;
+  --color-kind-auction:     #6a4a2a;
+
+  --font-display: var(--font-petrona), Georgia, "Times New Roman", serif;
+  --font-sans:    var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-bone);
+  color: var(--color-dark-teal);
+  font-family: var(--font-sans);
+  font-feature-settings: "kern", "liga";
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--color-spruce);
+  letter-spacing: -0.01em;
+}
+
+/* Tabular figures keep price columns from jittering between rows. */
+.tnum { font-variant-numeric: tabular-nums; }

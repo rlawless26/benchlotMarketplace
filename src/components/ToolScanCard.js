@@ -16,7 +16,6 @@ import { pickReference } from '../utils/priceStats';
 import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
 import { track } from '../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
-import { brandName } from '../utils/environment';
 
 // ── Category gate ────────────────────────────────────────────────────────────
 // Rendered when v5 returns canonical_type === 'Other' (or no canonical_type) —
@@ -66,7 +65,6 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
     }
   };
 
-  const brand = brandName();
   return (
     <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6">
       <div className="flex items-start gap-4 mb-4">
@@ -80,7 +78,7 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
             Not a plane — yet
           </h3>
           <p className="text-base font-body text-secondary mt-1">
-            {brand} is plane-first today. Hand planes are the only category we identify and price reliably right now.
+            Benchlot is plane-first today. Hand planes are the only category we identify and price reliably right now.
           </p>
         </div>
       </div>
@@ -102,7 +100,7 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
       ) : (
         <form onSubmit={onSubmit}>
           <label className="block text-sm font-medium font-body text-secondary mb-1">
-            Email me when {brand} covers this category
+            Email me when Benchlot covers this category
           </label>
           <div className="flex gap-2">
             <input

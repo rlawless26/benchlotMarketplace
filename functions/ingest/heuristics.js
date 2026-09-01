@@ -331,4 +331,66 @@ function classifyNonTool(title) {
   return { nonTool: false };
 }
 
-module.exports = { extractBrand, extractType, BRANDS, classifyNonTool };
+/**
+ * Is this listing a fair PRICE COMPARABLE for its cluster?
+ *
+ * Distinct from classifyNonTool, which decides whether something is a tool at
+ * all. This decides whether a real tool's price should count toward a cluster's
+ * price statistics. A "Stanley No. 4 for parts, missing iron" at $9 is a
+ * genuine listing and belongs in search results — it is not a comparable for
+ * what a working No. 4 is worth.
+ *
+ * Excluding these is why an asking median can sit at $50 while the sold median
+ * for the same cluster is $165: the sold block comes from curated dealer
+ * archives, the asking block from open marketplaces where 87 of 841 active
+ * "Stanley Bench Plane" listings are under $20 — parts, bodies and project
+ * pieces.
+ *
+ * DELIBERATELY CONSERVATIVE, and for the same reason as the sold-line regex in
+ * the forum scrapers: a false positive silently removes a real comparable and
+ * biases the number upward, which is the failure mode that erodes trust in a
+ * price guide. A false negative just leaves the current behaviour.
+ *
+ * NOT excluded, on purpose:
+ *   - surface rust / patina / "needs cleaning" — normal for vintage tools and
+ *     priced accordingly
+ *   - budget lines (Handyman, Defiance) — real planes, but the normalizer maps
+ *     them onto canonical_brand 'Stanley', which is a clustering bug to fix in
+ *     the vocabulary rather than to paper over here
+ *
+ * @returns {{comparable: boolean, reason?: string}}
+ */
+function classifyComparable(title) {
+  if (!title || typeof title !== 'string') return { comparable: true };
+  const t = title.toLowerCase();
+
+  // Sold explicitly as parts or non-functional.
+  // `for parts?` covers the singular too: real listings say "Use for Part".
+  if (/\b(use\s+for\s+parts?|for\s+parts\b|parts\s+only|parts\s*\/\s*repair|parts\s+or\s+repair|not\s+working|as[\s-]?is\b)/.test(t)) {
+    return { comparable: false, reason: 'parts' };
+  }
+  // A component, not the tool. "iron only", "body only", "tote and knob".
+  if (/\b(body|blade|iron|frog|tote|knob|handle|lever\s+cap|sole|cutter)\s+only\b/.test(t)) {
+    return { comparable: false, reason: 'component' };
+  }
+  if (/\breplacement\s+(iron|blade|tote|knob|frog|lever\s+cap)\b/.test(t)) {
+    return { comparable: false, reason: 'component' };
+  }
+  // Incomplete: missing the part that makes it usable.
+  if (/\b(missing\s+(the\s+)?(iron|blade|tote|knob|frog|cap|parts?)|no\s+(iron|blade)\b|incomplete\b)/.test(t)) {
+    return { comparable: false, reason: 'incomplete' };
+  }
+  // Explicit project pieces. Narrow on purpose: a bare "project" also appears
+  // in "great for your next project".
+  if (/\b(project\s+(plane|tool|saw|piece)|restoration\s+project|as\s+a\s+project|restore\s+project)\b/.test(t)) {
+    return { comparable: false, reason: 'project' };
+  }
+  // Multi-item lots: the price covers several tools, so it is not this tool's
+  // price in either direction.
+  if (/\b(lot\s+of\s+\d|job\s?lot|mixed\s+lot|bulk\s+lot|\d+\s*(pc|pcs|piece)\s+lot|set\s+of\s+\d+\s+(planes|saws|chisels))\b/.test(t)) {
+    return { comparable: false, reason: 'lot' };
+  }
+  return { comparable: true };
+}
+
+module.exports = { extractBrand, extractType, BRANDS, classifyNonTool, classifyComparable };

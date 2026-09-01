@@ -6,7 +6,7 @@ import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles
 import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
-import { getConfig, getHostBrand, brandName } from '../utils/environment';
+import { getConfig } from '../utils/environment';
 import { track } from '../utils/analytics';
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
@@ -21,9 +21,6 @@ const MAX_IMAGES = 5;
 const ToolScanPage = () => {
   const { user } = useAuth();
   const { open: openAuthModal } = useAuthModal();
-  const hostBrand = getHostBrand();
-  const isBenchfind = hostBrand === 'benchfind';
-  const brand = brandName();
 
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -50,8 +47,8 @@ const ToolScanPage = () => {
   const [emailError, setEmailError] = useState(null);
 
   useEffect(() => {
-    document.title = isBenchfind ? 'Benchfind — Identify any tool' : 'Scan a Tool | Benchlot';
-  }, [isBenchfind]);
+    document.title = 'Scan a Tool | Benchlot';
+  }, []);
 
   const handleFileSelect = useCallback((e) => {
     const files = Array.from(e.target.files);
@@ -356,10 +353,8 @@ const ToolScanPage = () => {
   };
 
   // Skip email gate if user is already signed in
-  // Benchfind v1 drops the pre-result email wall — reflex usage beats list
-  // building for an identification product. benchlot.com keeps the gate.
-  const showEmailGate = scanResults && !emailCollected && !user && !isBenchfind;
-  const showFullResults = scanResults && (emailCollected || user || isBenchfind);
+  const showEmailGate = scanResults && !emailCollected && !user;
+  const showFullResults = scanResults && (emailCollected || user);
 
   const handleFeedback = async (feedback) => {
     try {
@@ -408,7 +403,7 @@ const ToolScanPage = () => {
             <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
             <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your tools</h3>
             <p className="text-secondary font-body mb-6">
-              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on {brand}.
+              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Benchlot.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -437,13 +432,11 @@ const ToolScanPage = () => {
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Sparkles className="w-10 h-10 text-honey" />
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">
-                  {isBenchfind ? 'Benchfind' : 'Scan a Tool'}
+                  Scan a Tool
                 </h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">
-                {isBenchfind
-                  ? "Snap a photo of a hand plane and we'll tell you what it is, what it's worth, and how confident we are."
-                  : "Photograph a tool and we'll identify it — maker, model, era, condition — then show you what it's worth and any active listings on Benchlot right now."}
+                Photograph a tool and we'll identify it — maker, model, era, condition — then show you what it's worth and any active listings on Benchlot right now.
               </p>
 
               {/* Upload area */}
@@ -492,10 +485,8 @@ const ToolScanPage = () => {
               </div>
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
 
-              {/* Browse-current-index nudge — Benchlot only. Benchfind is
-                  a scan-only product; no aggregator surface to link to. */}
-              {!isBenchfind && (
-                <div className="mt-16 max-w-md mx-auto text-center">
+              {/* Browse-current-index nudge */}
+              <div className="mt-16 max-w-md mx-auto text-center">
                   <p className="text-base text-secondary font-body mb-3">
                     Nothing to scan right now? Browse what's currently on the bench.
                   </p>
@@ -506,7 +497,6 @@ const ToolScanPage = () => {
                     See all listings →
                   </a>
                 </div>
-              )}
             </div>
 
             {/* Section 2: Example Result — spruce band with mock ToolScanCard */}
@@ -536,17 +526,13 @@ const ToolScanPage = () => {
                   <div className="w-10 h-10 rounded-full bg-spruce text-bone flex items-center justify-center mx-auto mb-3 font-display font-bold text-lg">3</div>
                   <h3 className="font-display font-semibold text-dark-teal mb-1">Compare</h3>
                   <p className="text-sm text-secondary font-body">
-                    {isBenchfind
-                      ? "See what it sells for, based on recent comparable sales."
-                      : "See what it sells for and any matching listings indexed across Benchlot's sources."}
+                    See what it sells for and any matching listings indexed across Benchlot's sources.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Section 4: Audience Hooks — Benchlot only. Benchfind v1 keeps
-                the surface focused on the scan flow itself. */}
-            {!isBenchfind && (
+            {/* Section 4: Audience Hooks */}
             <div className="mb-16 max-w-4xl mx-auto">
               <h2 className="text-2xl font-display font-bold text-spruce text-center mb-8">Build your shop</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -588,11 +574,9 @@ const ToolScanPage = () => {
                 </div>
               </div>
             </div>
-            )}
 
-            {/* Section 5: Browse + Save Alert CTA — Benchlot only. */}
-            {!isBenchfind && (
-              <div className="mb-12 text-center max-w-md mx-auto">
+            {/* Section 5: Browse + Save Alert CTA */}
+            <div className="mb-12 text-center max-w-md mx-auto">
                 <h2 className="text-2xl font-display font-bold text-spruce mb-3">Or skip the scan</h2>
                 <p className="text-base text-secondary font-body mb-6">
                   Browse listings indexed from dealers, forums, and auctions across the web. Save an alert and we'll email you when matching listings appear.
@@ -604,7 +588,6 @@ const ToolScanPage = () => {
                   Browse the index →
                 </a>
               </div>
-            )}
           </div>
         )}
 
@@ -614,7 +597,7 @@ const ToolScanPage = () => {
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-8 h-8 text-honey" />
               <h1 className="text-3xl font-display font-semibold text-spruce">
-                {isBenchfind ? 'Benchfind' : 'Scan a Tool'}
+                Scan a Tool
               </h1>
             </div>
           </div>
@@ -623,7 +606,7 @@ const ToolScanPage = () => {
         {scanResults && (
           <div className="flex items-center gap-2 mb-6 text-secondary font-body">
             <Sparkles className="w-5 h-5 text-honey" />
-            <span className="font-semibold text-spruce">{brand}</span>
+            <span className="font-semibold text-spruce">Benchlot</span>
             <span className="text-bone-dark">·</span>
             <span>{scanResults.tool ? 'Tool identified' : 'No tool identified'}</span>
           </div>
@@ -803,7 +786,7 @@ const ToolScanPage = () => {
                 Your tool has been identified
               </h3>
               <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when {brand} launches.
+                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Benchlot launches.
               </p>
               <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
                 <div className="flex gap-2">
@@ -826,7 +809,7 @@ const ToolScanPage = () => {
                 {emailError && (
                   <p className="text-sm text-error mt-2">{emailError}</p>
                 )}
-                <p className="text-xs text-secondary mt-3">We'll keep you posted as {brand}'s search and alerts come online. Unsubscribe anytime.</p>
+                <p className="text-xs text-secondary mt-3">We'll keep you posted as Benchlot's search and alerts come online. Unsubscribe anytime.</p>
               </form>
             </div>
           </div>
@@ -864,16 +847,14 @@ const ToolScanPage = () => {
               >
                 Scan another tool →
               </button>
-              {!isBenchfind && (
-                <p className="text-sm text-secondary font-body mt-3">
+              <p className="text-sm text-secondary font-body mt-3">
                   Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
                 </p>
-              )}
             </div>
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">
-                {brand} uses AI to identify tools and surface matching listings. Identifications and price estimates are suggestions, not appraisals — always verify before buying or selling.
+                Benchlot uses AI to identify tools and surface matching listings. Identifications and price estimates are suggestions, not appraisals — always verify before buying or selling.
               </p>
             </div>
           </div>

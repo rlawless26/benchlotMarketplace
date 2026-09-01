@@ -566,7 +566,7 @@ const ResultsState = ({ state, actions }) => {
                     />
                   </div>
                 </div>
-                <SaveAlertButton query={query} filters={filters} sort={sort} />
+                <SaveAlertButton />
               </div>
             </div>
           </div>

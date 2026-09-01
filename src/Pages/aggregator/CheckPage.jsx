@@ -19,7 +19,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 import { db } from '../../firebase/config';
-import { getConfig, brandName } from '../../utils/environment';
+import { getConfig } from '../../utils/environment';
 import { track } from '../../utils/analytics';
 
 const API_URL = process.env.REACT_APP_API_URL
@@ -332,7 +332,7 @@ const CheckPage = () => {
 
   // Document title
   useEffect(() => {
-    document.title = brandName();
+    document.title = 'Benchlot';
   }, [hash, result]);
 
   const submitUrl = useCallback(async (e) => {
@@ -466,7 +466,7 @@ const CheckPage = () => {
         </Link>
 
         <h1 style={{ fontFamily: "'Petrona', serif", fontSize: 28, fontWeight: 600, margin: '8px 0 24px' }}>
-          {brandName()}
+          Benchlot
         </h1>
 
         {listing && listing.canonical && <TypologyHeader canonical={listing.canonical} />}

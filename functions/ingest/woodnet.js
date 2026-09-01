@@ -34,7 +34,10 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const admin = require('firebase-admin');
 
-const { upsertListings, markExpired } = require('./externalListings');
+// The whole store, so the two-phase paths can reach getListingMeta /
+// applyListingUpdates without caring which backend is active.
+const store = require('./externalListings');
+const { upsertListings, markExpired } = store;
 const { extractBrand, extractType } = require('./heuristics');
 const { parseLocationTag } = require('./location');
 
@@ -58,6 +61,19 @@ const MAX_LIST_PAGES_DEFAULT = 20;
 // Cap OP body at 5000 chars before storing in description_raw. Enough
 // context for the normalizer; keeps Firestore doc size reasonable.
 const MAX_DESCRIPTION_CHARS = 5000;
+
+// Per-run cap on bumped-thread re-fetches. Bumped = list-view last_post_at
+// has advanced past what we previously stored (or we never recorded one — the
+// case for every doc on the first run after this code ships). With ~226
+// threads tracked and the backlog draining at this rate, a cold deploy clears
+// in ~5 daily runs; steady-state bumps are well under the cap.
+const MAX_BUMP_RECHECKS_PER_RUN = 50;
+
+// A line is treated as a SOLD marker only if it contains nothing but the
+// word SOLD plus optional decorations (`---SOLD--`, `**SOLD**`, `[SOLD]`,
+// `SOLD!`). Conservative on purpose — false positives lose us live inventory,
+// false negatives are recoverable on the next bump or via markExpired.
+const SOLD_LINE_RE = /^[\s\-*=_~!.<>[\]]*SOLD[\s\-*=_~!.<>[\]]*$/i;
 
 const http = axios.create({
   timeout: REQUEST_TIMEOUT_MS,
@@ -158,11 +174,19 @@ function parseThreadList(html) {
 
     const sold = /\bSOLD\b/i.test(title);
 
+    // Last-post date lives in `span.lastpost`; the `.text()` of that span
+    // also slurps up "Last Post: <username>", so regex-extract the
+    // MM-DD-YYYY, HH:MM AM/PM substring rather than trusting first-text-node.
+    const lastpostText = $row.find('span.lastpost').first().text() || '';
+    const lpMatch = lastpostText.match(/(\d{2}-\d{2}-\d{4},\s+\d{1,2}:\d{2}\s+(?:AM|PM))/i);
+    const lastPostAt = lpMatch ? parseWoodnetDate(lpMatch[1]) : null;
+
     threads.push({
       threadId,
       title,
       href: `/showthread.php?tid=${threadId}`,
       postedAt: postedAt ? postedAt.toISOString() : null,
+      lastPostAt: lastPostAt ? lastPostAt.toISOString() : null,
       sticky,
       sold,
       author,
@@ -173,21 +197,28 @@ function parseThreadList(html) {
 }
 
 /**
- * Parse OP (first post) from a showthread.php page.
- * Returns { bodyHtml, bodyText, images, username, postedAt }.
+ * Parse OP (first post) from a showthread.php page, plus a sold check across
+ * every post in the thread.
+ *
+ * Returns { bodyHtml, bodyText, images, username, postedAt, sold, soldAt }.
  *
  * Regardless of what number the first post's display label says, the FIRST
  * `.post.classic` div on the page IS the OP — verified on tid=7380609
  * (11 posts, dates chronological with OP on top) and tid=7380765 (zero
  * replies, OP visible as "#2" due to Woodnet's counter offset).
+ *
+ * Sold detection walks every post, strips quoted blockquote content (so a
+ * reply that quotes "SOLD" doesn't trigger), and matches each line against
+ * SOLD_LINE_RE — only lines that are nothing-but-SOLD-plus-decorations count.
+ * `soldAt` is the post date of the first matching post.
  */
 function parseThreadOP(html) {
   const $ = cheerio.load(html);
-  const $op = $('div.post.classic').first();
-  if ($op.length === 0) {
-    return { bodyHtml: null, bodyText: null, images: [], username: null, postedAt: null };
-  }
+  const $posts = $('div.post.classic');
+  const empty = { bodyHtml: null, bodyText: null, images: [], username: null, postedAt: null, sold: false, soldAt: null };
+  if ($posts.length === 0) return empty;
 
+  const $op = $posts.first();
   const $body = $op.find('div.post_body').first();
 
   const bodyHtml = $body.html() || null;
@@ -231,7 +262,27 @@ function parseThreadOP(html) {
   const postedAtDate = parseWoodnetDate(dateTitle);
   const postedAt = postedAtDate ? postedAtDate.toISOString() : null;
 
-  return { bodyHtml, bodyText, images, username, postedAt };
+  let sold = false;
+  let soldAt = null;
+  $posts.each((_, el) => {
+    if (sold) return;
+    const $post = $(el);
+    const $postBody = $post.find('div.post_body').first();
+    if ($postBody.length === 0) return;
+    const $clone = $postBody.clone();
+    $clone.find('blockquote').remove();
+    const text = $clone.text() || '';
+    const hit = text.split(/[\r\n]+/).some((line) => SOLD_LINE_RE.test(line.trim()));
+    if (hit) {
+      sold = true;
+      const dt = $post.find('span.post_date span[title]').first().attr('title')
+        || $post.find('span.post_date').first().text().trim();
+      const d = parseWoodnetDate(dt);
+      soldAt = d ? d.toISOString() : null;
+    }
+  });
+
+  return { bodyHtml, bodyText, images, username, postedAt, sold, soldAt };
 }
 
 /**
@@ -297,6 +348,8 @@ function toFullRecord({ thread, opData }) {
   const description = capDescription(bodyText);
   const priceCents = extractPriceCents(title, bodyText);
   const postedAt = parsePostedAt(thread.postedAt || opData.postedAt);
+  const lastPostAt = parsePostedAt(thread.lastPostAt);
+  const soldAt = parsePostedAt(opData.soldAt);
   const locationState = parseLocationTag(title) || parseLocationTag(bodyText);
 
   const listing = {
@@ -310,6 +363,7 @@ function toFullRecord({ thread, opData }) {
     condition_raw: null,
     images: opData.images || [],
     posted_at: postedAt,
+    last_post_at: lastPostAt,
     tags: [`wn_author:${thread.author || 'unknown'}`],
     heuristic_brand: extractBrand(`${title} ${bodyText}`),
     heuristic_type: extractType(`${title} ${bodyText}`),
@@ -321,6 +375,10 @@ function toFullRecord({ thread, opData }) {
     location_state: locationState,
     location_display: locationState,
   };
+  if (opData.sold) {
+    listing.status = 'sold';
+    listing.sold_at = soldAt || admin.firestore.Timestamp.now();
+  }
 
   const raw = {
     thread_id: thread.threadId,
@@ -333,6 +391,9 @@ function toFullRecord({ thread, opData }) {
     images: opData.images,
     posted_at_list: thread.postedAt,
     posted_at_op: opData.postedAt,
+    last_post_at: thread.lastPostAt,
+    sold: opData.sold,
+    sold_at: opData.soldAt,
   };
 
   return { listing, raw, raw_format: RAW_FORMAT };
@@ -343,53 +404,106 @@ function toFullRecord({ thread, opData }) {
 // ---------------------------------------------------------------------------
 
 /**
- * Load source_ids of every currently-ingested Woodnet doc. Used to decide
- * which threads in this scrape run need a detail fetch vs. just a
- * last_seen_at touch.
+ * Load source_id + last_post_at + status for every currently-ingested
+ * Woodnet doc. Used to decide which threads need a detail fetch vs. just a
+ * last_seen_at touch, AND which already-known threads have been bumped
+ * (last_post_at advanced) and need a re-fetch + sold scan.
+ *
+ * Returns Map<source_id, {lastPostAtMs:number|null, status:string|null}>.
  */
-async function getKnownSourceIds() {
-  const db = admin.firestore();
-  const snap = await db
-    .collection('externalListings')
-    .where('source', '==', SOURCE)
-    .select('source_id')
-    .get();
-  const ids = new Set();
-  snap.docs.forEach((d) => {
-    const id = d.data().source_id;
-    if (id) ids.add(id);
-  });
-  return ids;
+async function getKnownThreadsMeta() {
+  // Backend-agnostic: the store returns the same Map shape from Firestore or
+  // Postgres. See ingest/store/index.js.
+  return store.getListingMeta(SOURCE);
 }
 
 /**
- * Refresh `last_seen_at` + `scraped_at` + `title_raw` on already-ingested
- * threads that we re-saw in this run. Same narrow-update pattern as
- * Sawmill Creek — we don't touch description_raw, images, price_cents, or
+ * Refresh `last_seen_at` + `scraped_at` + `title_raw` + `last_post_at` on
+ * already-ingested threads that we re-saw in this run. Narrower than
+ * upsertListings: we don't touch description_raw, images, price_cents, or
  * the raw payload; those came from the first detail fetch.
+ *
+ * Bumped threads (with sold-scan re-fetch) take a separate write path —
+ * see processBumpedThreads.
  */
 async function touchKnownListings(threads, runStartedAt) {
   if (!Array.isArray(threads) || threads.length === 0) return { touched: 0 };
-  const db = admin.firestore();
-  const col = db.collection('externalListings');
-  const CHUNK = 200;
-  let touched = 0;
-  for (let i = 0; i < threads.length; i += CHUNK) {
-    const chunk = threads.slice(i, i + CHUNK);
-    const batch = db.batch();
-    for (const t of chunk) {
-      const docId = `${SOURCE}__${t.threadId}`;
-      batch.update(col.doc(docId), {
-        status: 'active',
-        scraped_at: runStartedAt,
-        last_seen_at: runStartedAt,
-        title_raw: t.title,
-      });
-    }
-    await batch.commit();
-    touched += chunk.length;
+  const updates = threads.map((t) => {
+    const u = {
+      source: SOURCE,
+      source_id: String(t.threadId),
+      status: 'active',
+      title_raw: t.title,
+    };
+    const lp = parsePostedAt(t.lastPostAt);
+    if (lp) u.last_post_at = lp;
+    return u;
+  });
+  // The store writes only the keys supplied, plus scraped_at / last_seen_at --
+  // so description_raw, images, price_cents and the raw payload survive, which
+  // is the whole point of the touch path skipping the detail fetch.
+  const { updated } = await store.applyListingUpdates(updates, runStartedAt);
+  return { touched: updated };
+}
+
+/**
+ * Re-fetch threads whose list-view last_post_at advanced past what we have
+ * stored, run sold detection across every post, and write the result.
+ *
+ * On first run after this code ships, threads have no stored last_post_at;
+ * those are also treated as bumped so we eventually scan every existing
+ * thread for SOLD markers we missed pre-fix. The MAX_BUMP_RECHECKS_PER_RUN
+ * cap prevents the cold-deploy backlog from blowing the function timeout
+ * (cleared in ~5 daily runs at the cap).
+ *
+ * Output writes always update last_post_at; sold-detected threads also flip
+ * status='sold' and stamp sold_at (post date if parseable, else now). All
+ * bumped threads get the standard touch fields here too (last_seen_at,
+ * scraped_at, title_raw) so the caller's touch path can skip them.
+ */
+async function processBumpedThreads(threads, runStartedAt) {
+  if (!Array.isArray(threads) || threads.length === 0) {
+    return { rechecked: 0, flipped_sold: 0 };
   }
-  return { touched };
+  let rechecked = 0;
+  let flipped_sold = 0;
+
+  for (let i = 0; i < threads.length; i += 1) {
+    const t = threads[i];
+    if (i > 0) await sleep(THREAD_FETCH_DELAY_MS);
+    let opData = null;
+    try {
+      const html = await fetchThreadPage(t.href);
+      opData = parseThreadOP(html);
+    } catch (err) {
+      console.error(`[woodnet] bump re-fetch failed ${t.threadId}: ${err.message}`);
+      continue;
+    }
+    const update = {
+      source: SOURCE,
+      source_id: String(t.threadId),
+      title_raw: t.title,
+    };
+    const lp = parsePostedAt(t.lastPostAt);
+    if (lp) update.last_post_at = lp;
+    if (opData.sold) {
+      update.status = 'sold';
+      update.sold_at = parsePostedAt(opData.soldAt) || runStartedAt;
+      flipped_sold += 1;
+    } else {
+      update.status = 'active';
+    }
+    try {
+      // One call per thread, matching the previous per-document write: a single
+      // failure skips that thread rather than losing the whole batch.
+      await store.applyListingUpdates([update], runStartedAt);
+      rechecked += 1;
+    } catch (err) {
+      console.error(`[woodnet] bump update failed ${t.threadId}: ${err.message}`);
+    }
+  }
+
+  return { rechecked, flipped_sold };
 }
 
 // ---------------------------------------------------------------------------
@@ -440,13 +554,40 @@ async function listSweep({ maxPages = MAX_LIST_PAGES_DEFAULT } = {}) {
  * @param {boolean} [opts.skipFirestoreLookup] — dry-run: treat all threads as new
  */
 async function scrapeAll(opts = {}) {
-  const { maxPages, maxNewThreads, skipFirestoreLookup = false } = opts;
+  const { maxPages, maxNewThreads, skipFirestoreLookup = false, maxBumpRechecks = MAX_BUMP_RECHECKS_PER_RUN } = opts;
 
   const allThreads = await listSweep({ maxPages });
 
-  const knownIds = skipFirestoreLookup ? new Set() : await getKnownSourceIds();
-  const newThreads = allThreads.filter((t) => !knownIds.has(t.threadId));
-  const knownThreads = allThreads.filter((t) => knownIds.has(t.threadId));
+  const knownMeta = skipFirestoreLookup ? new Map() : await getKnownThreadsMeta();
+  const newThreads = allThreads.filter((t) => !knownMeta.has(t.threadId));
+  const knownThreads = allThreads.filter((t) => knownMeta.has(t.threadId));
+
+  // Partition known threads into "bumped" (last_post_at advanced past stored,
+  // OR no stored value yet) and "unbumped" (we can just touch). Skip docs
+  // already terminal — re-checking sold/excluded threads burns budget for no
+  // win, and we don't want to flip a non-tool back to active.
+  const bumpedAll = [];
+  const unbumped = [];
+  for (const t of knownThreads) {
+    const meta = knownMeta.get(t.threadId);
+    if (meta && (meta.status === 'sold' || meta.status === 'excluded_non_tool')) {
+      // Still touch it so it stays "seen" (markExpired ignores non-active rows
+      // anyway, but the touch keeps last_seen_at honest for audit).
+      unbumped.push(t);
+      continue;
+    }
+    const listMs = t.lastPostAt ? Date.parse(t.lastPostAt) : null;
+    const storedMs = meta ? meta.lastPostAtMs : null;
+    const bumped = listMs != null && (storedMs == null || listMs > storedMs);
+    if (bumped) bumpedAll.push(t);
+    else unbumped.push(t);
+  }
+  // Prioritize most-recently-bumped first so a backlog drains usefully.
+  bumpedAll.sort((a, b) => Date.parse(b.lastPostAt || 0) - Date.parse(a.lastPostAt || 0));
+  const toRecheck = bumpedAll.slice(0, maxBumpRechecks);
+  const deferredFromBumpCap = bumpedAll.length - toRecheck.length;
+  // Threads we won't re-fetch this run still need their last_seen_at refreshed.
+  const unbumpedWithDeferred = unbumped.concat(bumpedAll.slice(maxBumpRechecks));
 
   const toFetch = maxNewThreads != null ? newThreads.slice(0, maxNewThreads) : newThreads;
 
@@ -467,8 +608,10 @@ async function scrapeAll(opts = {}) {
   return {
     scraped: allThreads.length,
     newRecords,
-    knownThreads,
+    knownThreads: unbumpedWithDeferred,
+    bumpedThreads: toRecheck,
     skippedDueToCap: newThreads.length - toFetch.length,
+    deferredFromBumpCap,
   };
 }
 
@@ -480,9 +623,10 @@ async function runIngestion(opts = {}) {
   const runStartedAt = admin.firestore.Timestamp.now();
   const t0 = Date.now();
 
-  const { scraped, newRecords, knownThreads, skippedDueToCap } = await scrapeAll(opts);
+  const { scraped, newRecords, knownThreads, bumpedThreads, skippedDueToCap, deferredFromBumpCap } = await scrapeAll(opts);
 
   const upsertSummary = await upsertListings(newRecords, runStartedAt);
+  const bumpSummary = await processBumpedThreads(bumpedThreads, runStartedAt);
   const touchSummary = await touchKnownListings(knownThreads, runStartedAt);
 
   const shouldSweep = !opts.maxPages && opts.maxNewThreads == null;
@@ -496,8 +640,11 @@ async function runIngestion(opts = {}) {
     inserted: upsertSummary.inserted,
     updated: upsertSummary.updated,
     touched: touchSummary.touched,
+    rechecked: bumpSummary.rechecked,
+    flipped_sold: bumpSummary.flipped_sold,
     expired: expireSummary.expired,
     skipped_due_to_cap: skippedDueToCap,
+    deferred_from_bump_cap: deferredFromBumpCap,
     sweep_skipped: !shouldSweep,
     durationMs: Date.now() - t0,
     runStartedAt: runStartedAt.toDate(),
@@ -507,6 +654,7 @@ async function runIngestion(opts = {}) {
 module.exports = {
   SOURCE,
   RAW_FORMAT,
+  SOLD_LINE_RE,
   runIngestion,
   scrapeAll,
   listSweep,
@@ -518,4 +666,5 @@ module.exports = {
   isSkippable,
   fetchForumPage,
   fetchThreadPage,
+  processBumpedThreads,
 };

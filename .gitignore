@@ -105,7 +105,12 @@ test-*.js
 create-*.js
 admin-create-*.js
 populate-*.js
-run-*.js
+# Anchored to the repo root. Unanchored, `run-*.js` also swallowed every ingest
+# CLI runner (functions/ingest/run-ebay.js, run-jimbode.js,
+# functions/alerts/run-matcher.js and the rest) — the documented way to invoke
+# a scrape by hand, per functions/ingest/SCHEMA.md. They existed only on one
+# laptop and a fresh clone would not have had them.
+/run-*.js
 update-*.js
 deploy-indexes.js
 **/public/cors-test.html
@@ -123,3 +128,8 @@ Screenshot*.png
 functions/.env
 # Firebase config output file
 firebase functions:config:set
+
+# Firestore -> Postgres migration working data (large; contains real data)
+migration/data/
+migration/node_modules/
+.env*
