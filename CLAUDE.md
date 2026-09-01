@@ -62,10 +62,14 @@ still returns "You need to enable JavaScript" to crawlers on every other route.
 **Ingest runs on GitHub Actions, not Cloud Functions.**
 `.github/workflows/ingest.yml` runs daily at 03:00 UTC and picks sources from a
 weekday map (Mon ebay+jimbode+valueguide, Tue hyperkitten+thebestthings, Wed
-ebay+rouillard, Thu oldtools+woodnet, Fri ebay, Sat vintagevials+sawmillcreek+
-reddit). It calls `functions/worker/run.js`, then the normalizer, then
-`rebuild_price_stats()`. `fbmarketplace` is the one source still parked — on
-Bright Data cost, not on brand rationale.
+ebay+rouillard, Thu oldtools+woodnet, Fri ebay, Sat vintagevials+sawmillcreek).
+It calls `functions/worker/run.js`, then the normalizer, then
+`rebuild_price_stats()`.
+
+Two sources are out of the map: `fbmarketplace` (Bright Data cost) and `reddit`
+(Reddit 403s unauthenticated JSON for any user-agent as of 2026-09-01, so the
+scraper's `public` mode is dead; OAuth needs three credentials the project does
+not have). Neither is a brand-rationale pause.
 
 Writes go through a backend-switchable store (`functions/ingest/store/`,
 selected by `BENCHLOT_STORE`, **default `postgres`** since the cutover). All 12

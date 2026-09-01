@@ -9,8 +9,19 @@
 # Functions ran (jimbode Mon, hyperkitten/thebestthings Tue, rouillard Wed,
 # woodnet/oldtools Thu, ebay Mon/Wed/Fri) and restores the three sources paused
 # on 2026-05-15 — those pauses were justified by plane-training-pair value,
-# which the one-brand decision reversed. fbmarketplace stays out: it is paused
-# on Bright Data cost, not on brand rationale.
+# which the one-brand decision reversed.
+#
+# TWO SOURCES ARE DELIBERATELY NOT IN THE MAP:
+#   fbmarketplace — paused on Bright Data cost, not on brand rationale.
+#   reddit — Reddit now returns 403 to unauthenticated JSON requests for ANY
+#     user-agent (verified 2026-09-01), so the `public` auth mode the scraper
+#     supports is dead. OAuth still works but needs REDDIT_CLIENT_ID,
+#     REDDIT_CLIENT_SECRET and REDDIT_USERNAME, which do not exist anywhere in
+#     the project. Including it would fail the whole job every Saturday — the
+#     worker exits non-zero if any source fails — and a weekly red run that is
+#     always the same known failure just teaches you to ignore red. To restore:
+#     create a Reddit script app, add those three repo secrets, and put reddit
+#     back in day 6. It holds 6 listings total, so this is not urgent.
 
 name: Ingest
 
@@ -46,11 +57,10 @@ jobs:
       EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
       EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      # Not a secret, and load-bearing: reddit.js defaults to `oauth` when this
-      # is unset, and oauth mode hard-fails without CLIENT_ID/SECRET/USERNAME.
-      # Public mode needs no credentials at all — it reads www.reddit.com
-      # unauthenticated with a descriptive UA.
-      REDDIT_AUTH_MODE: public
+      # reddit.js defaults to `oauth`, which hard-fails without
+      # CLIENT_ID/SECRET/USERNAME. Left explicit so the intent is visible if
+      # reddit is ever re-enabled below.
+      REDDIT_AUTH_MODE: oauth
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +88,7 @@ jobs:
               3) SOURCES="ebay rouillard" ;;
               4) SOURCES="oldtools woodnet" ;;
               5) SOURCES="ebay" ;;
-              6) SOURCES="vintagevials sawmillcreek reddit" ;;
+              6) SOURCES="vintagevials sawmillcreek" ;;   # reddit: see note below
               7) SOURCES="" ;;  # Sunday: fbmarketplace slot, paused on cost
             esac
           fi
