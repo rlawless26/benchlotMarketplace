@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { Petrona, Outfit } from 'next/font/google';
 import Link from 'next/link';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SITE_URL, IS_INDEXABLE } from '@/lib/site';
+import { Analytics } from './analytics';
 import './globals.css';
 
 const petrona = Petrona({
@@ -58,6 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
         </footer>
+
+        <Analytics />
+        <VercelAnalytics />
       </body>
     </html>
   );
