@@ -53,6 +53,14 @@ loads, DDL and long jobs; the app uses the pooled one.
 and two of the four composite indexes it documents were never deployed. Trust
 the database over that file.
 
+**Deploy topology — two Vercel projects, one repo.** `benchlot-marketplace`
+builds the CRA app from the repo root (root `.vercelignore` excludes `web/`,
+`migration/`, `functions/`). `benchlot-web` builds `web/` via Root Directory
+`web`. Both deploy from `main` on push as of 2026-09-01 — before that
+`benchlot-web` had NO git connection and shipped only via a manual
+`cd web && vercel --prod`, so committed `web/` changes could sit undeployed
+indefinitely. Firebase Functions deploy separately via the Firebase CLI.
+
 **`web/` is a Next.js app serving https://benchlot.com/guide** — ~465
 prerendered price-guide pages — via a rewrite from the `benchlot-marketplace`
 project (see the root `vercel.json`). `/_next/*` MUST stay proxied or the pages
