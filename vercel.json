@@ -59,6 +59,14 @@
       "destination": "https://benchlot-web.vercel.app/api/alerts"
     },
     {
+      "source": "/api/search",
+      "destination": "https://benchlot-web.vercel.app/api/search"
+    },
+    {
+      "source": "/api/search/:path*",
+      "destination": "https://benchlot-web.vercel.app/api/search/:path*"
+    },
+    {
       "source": "/alerts/confirm/:path*",
       "destination": "https://benchlot-web.vercel.app/alerts/confirm/:path*"
     },

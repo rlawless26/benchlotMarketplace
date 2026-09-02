@@ -1,10 +1,12 @@
 /**
  * Aggregator statistics + client-side facet counting.
  *
- * `getAggregatorStats()` hits the live-index chip data: total active listing
- * count (via Firestore's count aggregation — doesn't read docs) and the most
- * recent `scraped_at` timestamp (driven from the first page of newest-first
- * results so we don't need another round trip).
+ * `getAggregatorStats()` and `getSourceCounts()` read /api/search/stats — a
+ * single Postgres GROUP BY served by the benchlot-web project (rewrite in the
+ * root vercel.json). They used Firestore count() aggregations until ingest
+ * moved to Postgres on 2026-09-01 and the Firestore index froze. One fetch
+ * feeds both; a short module-level cache keeps the chip, banner, footer and
+ * filter rail from issuing four identical requests per page.
  *
  * `computeFacets(listings)` is a pure client-side reducer that produces
  * per-option counts for the filter rail. WatchRecon pattern: counts reflect
@@ -12,81 +14,62 @@
  * narrow. Cheap and sufficient at our current scale.
  */
 
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getCountFromServer,
-  getDocs,
-} from 'firebase/firestore';
+const API_BASE = process.env.REACT_APP_SEARCH_API_BASE || '';
+const STATS_TTL_MS = 60_000;
 
-import { db } from '../config';
+let statsCache = null; // { at: number, data: {activeCount,lastScrapedAt,sourceCounts} }
+let statsInFlight = null;
 
-const COLLECTION = 'externalListings';
+async function fetchStats() {
+  const now = Date.now();
+  if (statsCache && now - statsCache.at < STATS_TTL_MS) return statsCache.data;
+  if (statsInFlight) return statsInFlight;
+
+  statsInFlight = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/search/stats`);
+      if (!res.ok) throw new Error(`stats API ${res.status}`);
+      const body = await res.json();
+      const data = {
+        activeCount: typeof body.activeCount === 'number' ? body.activeCount : 0,
+        lastScrapedAt: body.lastScrapedAt ? new Date(body.lastScrapedAt) : null,
+        sourceCounts: body.sourceCounts || {},
+      };
+      statsCache = { at: Date.now(), data };
+      return data;
+    } finally {
+      statsInFlight = null;
+    }
+  })();
+  return statsInFlight;
+}
 
 /**
  * Live-index stats — total active count + freshness.
  * @returns {Promise<{activeCount:number, lastScrapedAt:Date|null}>}
  */
 export async function getAggregatorStats() {
-  const col = collection(db, COLLECTION);
-  const activeQuery = query(col, where('status', '==', 'active'));
-  const countSnap = await getCountFromServer(activeQuery);
-  const activeCount = countSnap.data().count || 0;
-
-  // Grab the most recent scraped_at. Covered by our existing
-  // (status, scraped_at DESC) index.
-  let lastScrapedAt = null;
-  try {
-    const freshQuery = query(
-      col,
-      where('status', '==', 'active'),
-      orderBy('scraped_at', 'desc'),
-      limit(1)
-    );
-    const snap = await getDocs(freshQuery);
-    if (!snap.empty) {
-      const doc = snap.docs[0].data();
-      const ts = doc.scraped_at;
-      if (ts && typeof ts.toDate === 'function') lastScrapedAt = ts.toDate();
-      else if (ts && typeof ts.seconds === 'number') lastScrapedAt = new Date(ts.seconds * 1000);
-    }
-  } catch (e) {
-    // Non-fatal — chip just omits the "updated X ago" suffix.
-    console.warn('[aggregatorFacets] failed to fetch lastScrapedAt:', e.message);
-  }
-
+  const { activeCount, lastScrapedAt } = await fetchStats();
   return { activeCount, lastScrapedAt };
 }
 
 /**
- * True per-source active counts via Firestore count() aggregates — no doc
- * reads, just one roundtrip per source. Used to populate the Source filter
- * with the real catalog size rather than the per-source fetch cap (2,500).
- * eBay alone has 5,000+ active listings, so the in-memory facet count
- * understates by a lot otherwise.
+ * True per-source active counts. Used to populate the Source filter with the
+ * real catalog size rather than the per-source fetch cap — eBay alone has
+ * 100k+ active listings, so the in-memory facet count understates by a lot.
  *
  * @param {string[]} sourceIds
  * @returns {Promise<Object<string, number>>} sourceId → active count
  */
 export async function getSourceCounts(sourceIds) {
   if (!Array.isArray(sourceIds) || sourceIds.length === 0) return {};
-  const col = collection(db, COLLECTION);
-  const entries = await Promise.all(
-    sourceIds.map(async (id) => {
-      try {
-        const q = query(col, where('status', '==', 'active'), where('source', '==', id));
-        const snap = await getCountFromServer(q);
-        return [id, snap.data().count || 0];
-      } catch (e) {
-        console.warn(`[aggregatorFacets] getSourceCounts(${id}) failed:`, e.message);
-        return [id, null];
-      }
-    })
-  );
-  return Object.fromEntries(entries);
+  try {
+    const { sourceCounts } = await fetchStats();
+    return Object.fromEntries(sourceIds.map((id) => [id, sourceCounts[id] ?? null]));
+  } catch (e) {
+    console.warn('[aggregatorFacets] getSourceCounts failed:', e.message);
+    return Object.fromEntries(sourceIds.map((id) => [id, null]));
+  }
 }
 
 /**

@@ -17,6 +17,16 @@ jest.mock('../firebase/models/toolModel', () => ({
   toolConditions: ['New', 'Like New', 'Good', 'Fair', 'Poor'],
 }));
 
+// The page's data path is getAggregatedListings (the aggregator adapter),
+// not toolModel — route the same mock through it so every existing test's
+// loading/error/empty/cards assertions keep driving the page. The adapter
+// used to be satisfied by the global Firestore mocks; it now uses fetch(),
+// which jsdom doesn't provide.
+jest.mock('../firebase/adapters/externalListingAdapter', () => ({
+  ...jest.requireActual('../firebase/adapters/externalListingAdapter'),
+  getAggregatedListings: (...args) => mockGetActiveTools(...args),
+}));
+
 // Mock ToolListingCard to simplify
 jest.mock('../components/ToolListingCard', () => {
   return function MockToolListingCard({ tool }) {
@@ -34,8 +44,8 @@ describe('MarketplacePage', () => {
     mockGetActiveTools.mockImplementation(() => new Promise(() => {}));
 
     renderWithProviders(<MarketplacePage />);
-    // "Loading tools..." appears in both the results count and the spinner
-    const loadingElements = screen.getAllByText(/loading tools/i);
+    // "Loading listings..." appears in both the results count and the spinner
+    const loadingElements = screen.getAllByText(/loading listings/i);
     expect(loadingElements.length).toBeGreaterThan(0);
   });
 
@@ -45,7 +55,7 @@ describe('MarketplacePage', () => {
     renderWithProviders(<MarketplacePage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load tools/i)).toBeInTheDocument();
+      expect(screen.getByText(/could not load listings/i)).toBeInTheDocument();
     });
   });
 
@@ -55,7 +65,7 @@ describe('MarketplacePage', () => {
     renderWithProviders(<MarketplacePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('No tools found')).toBeInTheDocument();
+      expect(screen.getByText('No listings match')).toBeInTheDocument();
     });
   });
 
@@ -80,7 +90,7 @@ describe('MarketplacePage', () => {
     renderWithProviders(<MarketplacePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Browse Tools')).toBeInTheDocument();
+      expect(screen.getByText('Search quality hand tools')).toBeInTheDocument();
     });
   });
 

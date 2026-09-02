@@ -29,21 +29,8 @@ jobs:
         run: npm run lint || echo "Linting issues found, but continuing"
         continue-on-error: true
         
-  deploy:
-    needs: test
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-args: '--prod'
-          working-directory: ./
+  # The deploy job that lived here (amondnet/vercel-action --prod) is gone on
+  # purpose. It had never actually run — it needed the test job, which was red
+  # from 2026-05-04 until 2026-09-01 — and both Vercel projects now deploy via
+  # git integration on push to main (benchlot-marketplace from the repo root,
+  # benchlot-web from web/). Re-adding it would deploy every commit twice.

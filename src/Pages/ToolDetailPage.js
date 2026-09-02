@@ -315,7 +315,12 @@ const ToolDetailPage = () => {
         setTool(toolData);
         setError(null);
 
-        posthog.capture('listing_viewed', { toolId: toolData.id, toolName: toolData.name, category: toolData.category, price: toolData.current_price || toolData.price });
+        // toolData is null for an unknown id — the render below shows the
+        // Not Found state. Reading .id off null here threw, which flipped the
+        // page to the error banner instead and broke the null-tool path.
+        if (toolData) {
+          posthog.capture('listing_viewed', { toolId: toolData.id, toolName: toolData.name, category: toolData.category, price: toolData.current_price || toolData.price });
+        }
 
         // After loading tool data successfully, fetch related data
         if (toolData) {

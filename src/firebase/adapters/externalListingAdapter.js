@@ -1,30 +1,30 @@
 /**
  * externalListingAdapter
  *
- * Queries the `externalListings` Firestore collection and reshapes each doc
- * to match what <ToolListingCard> expects, without renaming canonical fields
- * in the underlying schema. The adapter is the only coupling point between
- * the aggregator data model and the legacy marketplace UI.
+ * Fetches the aggregator search pool from the Postgres-backed /api/search
+ * endpoint (served by the benchlot-web project via a rewrite — see the root
+ * vercel.json) and reshapes each row to match what <ToolListingCard> expects.
+ * The adapter is the only coupling point between the aggregator data model
+ * and the legacy marketplace UI.
  *
- * During M2 rollout, `canonical_*` fields may be null on some rows (the
- * normalizer trigger hasn't touched them yet). We fall back to
- * `heuristic_*` so the UI is populated even before backfill completes.
+ * HISTORY: this used to query the `externalListings` Firestore collection
+ * directly. Ingest moved to Postgres on 2026-09-01 and Firestore froze, so
+ * reading it meant serving a permanently stale index. The function
+ * signatures, return shapes, interleave behaviour and sort semantics are
+ * unchanged — only the transport moved.
+ *
+ * `canonical_*` fields may be null on rows the normalizer hasn't reached;
+ * we fall back to `heuristic_*` so the UI is populated regardless.
  */
 
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit as limitQ,
-  getDocs,
-} from 'firebase/firestore';
+import { sourceDisplayName } from './sources';
 
-import { db } from '../config';
-import { SOURCES, sourceDisplayName } from './sources';
-
-const COLLECTION = 'externalListings';
 const DEFAULT_LIMIT = 60;
+
+// Same-origin in production (benchlot.com rewrites /api/search to the
+// benchlot-web project). Local CRA dev has no rewrite, so point directly at
+// the deployed API — or a local `next dev` — via env.
+const API_BASE = process.env.REACT_APP_SEARCH_API_BASE || '';
 
 // Full US state list (50 states + DC), used to seed the Ships-from filter
 // so chips for low-volume states still appear (gated by CheckboxList's
@@ -39,8 +39,10 @@ export const US_STATES = [
 ];
 
 /**
- * Reshape one raw Firestore doc into a tool-card-compatible object.
- * Exported for tests and callers who already have the raw doc.
+ * Reshape one API row (same field names the Firestore docs carried) into a
+ * tool-card-compatible object. Exported for tests and callers who already
+ * have the raw row. Timestamps arrive as ISO strings; relativeTime() and
+ * Date.parse both accept them.
  */
 export function adaptExternalListing(docId, data) {
   // Treat the sentinel 'Unknown' as no-brand — don't render "Brand: Unknown"
@@ -95,32 +97,6 @@ export function adaptExternalListing(docId, data) {
 }
 
 /**
- * Fetch `limit` most-recent active listings for a single source, ordered by
- * `first_seen_at desc` — i.e. when Benchlot first ingested the listing.
- *
- * We deliberately use `first_seen_at` rather than `scraped_at`. `scraped_at`
- * gets bumped on every nightly run and clusters all listings from a single
- * source into the same timestamp band, which makes "newest first" surface
- * whichever source ran latest in the cron chain rather than actually-fresh
- * listings. `first_seen_at` is set once on first upsert and never updated,
- * so it cleanly captures "this listing wasn't in our index yesterday."
- *
- * Shared helper behind both the single-source and multi-source paths.
- */
-async function fetchOneSource(sourceId, { limit, canonicalType, canonicalBrand }) {
-  const constraints = [
-    where('status', '==', 'active'),
-    where('source', '==', sourceId),
-  ];
-  if (canonicalType) constraints.push(where('canonical_type', '==', canonicalType));
-  if (canonicalBrand) constraints.push(where('canonical_brand', '==', canonicalBrand));
-  constraints.push(orderBy('first_seen_at', 'desc'));
-  constraints.push(limitQ(limit));
-  const snap = await getDocs(query(collection(db, COLLECTION), ...constraints));
-  return snap.docs.map((d) => adaptExternalListing(d.id, d.data()));
-}
-
-/**
  * Round-robin interleave arrays of per-source results. Page 1 takes the
  * freshest from each source, then the second-freshest, and so on. Within
  * a source the inner array is already first_seen_at desc — we preserve
@@ -151,19 +127,35 @@ function interleaveBySource(arrays) {
 }
 
 /**
+ * Fetch the per-source pools in one request. The API returns rows ordered by
+ * (source, first_seen_at desc); regrouping by source therefore yields arrays
+ * with the same per-source ordering the old per-source Firestore queries
+ * produced, which is what the interleave and sorts below depend on.
+ */
+async function fetchPool({ limit, source, canonicalType, canonicalBrand }) {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (source) params.set('source', source);
+  if (canonicalType) params.set('type', canonicalType);
+  if (canonicalBrand) params.set('brand', canonicalBrand);
+
+  const res = await fetch(`${API_BASE}/api/search?${params.toString()}`);
+  if (!res.ok) throw new Error(`search API ${res.status}`);
+  const body = await res.json();
+  const rows = Array.isArray(body.listings) ? body.listings : [];
+  return rows.map((r) => adaptExternalListing(`${r.source}__${r.source_id}`, r));
+}
+
+/**
  * Fetch a page of active external listings with optional filters.
  *
- * When no `source` is provided, we fetch a fair share from EACH indexed
- * source in parallel and merge. The merge strategy depends on `sort`:
+ * When no `source` is provided, the pool spans EACH indexed source. The
+ * merge strategy depends on `sort`:
  *
  *   - `best` (default) — round-robin interleave across sources. Page 1
- *     takes the freshest from each source, surfacing all five sources
- *     equally regardless of catalog size. Prevents eBay's volume from
- *     drowning out the other four. User-facing label: "Best match"
- *     (matches the convention familiar from eBay/Reverb).
+ *     takes the freshest from each source, surfacing every source equally
+ *     regardless of catalog size. Prevents eBay's volume from drowning out
+ *     the others. User-facing label: "Best match".
  *   - `newest` — flat `first_seen_at desc` across the merged pool.
- *     Surfaces whichever source has the absolute-newest listings, which
- *     in practice tends to be eBay (highest listing velocity).
  *   - `price_low` / `price_high` — global sort by price after the merge.
  *
  * @param {object} [opts]
@@ -188,32 +180,26 @@ export async function getAggregatedListings(opts = {}) {
   // tops out at 3000 per source — above current catalog size with headroom.
   const poolSize = sort === 'best' || sort === 'newest' ? limit : Math.min(limit * 4, 3000);
 
-  let tools;
-  if (source) {
-    // Single-source: server-side where('source') handles the restriction.
-    tools = await fetchOneSource(source, { limit: poolSize, canonicalType, canonicalBrand });
-  } else {
-    // Multi-source: fetch `poolSize` from EACH indexed source in parallel.
-    // Each per-source array is already first_seen_at desc — how we merge
-    // depends on the sort mode below.
-    const indexedSources = SOURCES.filter((s) => s.indexed).map((s) => s.id);
-    const resultsPerSource = await Promise.all(
-      indexedSources.map((s) => fetchOneSource(s, { limit: poolSize, canonicalType, canonicalBrand }))
-    );
+  const pool = await fetchPool({ limit: poolSize, source, canonicalType, canonicalBrand });
 
-    if (sort === 'best') {
-      // Round-robin interleave so page 1 shows all sources equally —
-      // user-facing label is "Best match".
-      tools = interleaveBySource(resultsPerSource);
-    } else {
-      // Flat newest-first across the merged pool.
-      tools = resultsPerSource.flat();
-      tools.sort((a, b) => {
-        const at = a.first_seen_at?.toMillis?.() ?? a.first_seen_at?.seconds * 1000 ?? 0;
-        const bt = b.first_seen_at?.toMillis?.() ?? b.first_seen_at?.seconds * 1000 ?? 0;
-        return bt - at;
-      });
+  let tools;
+  if (source || sort !== 'best') {
+    tools = pool;
+  } else {
+    // Regroup the flat (source-ordered) pool into per-source arrays, then
+    // round-robin interleave so page 1 shows all sources equally.
+    const bySource = new Map();
+    for (const t of pool) {
+      if (!bySource.has(t.source)) bySource.set(t.source, []);
+      bySource.get(t.source).push(t);
     }
+    tools = interleaveBySource([...bySource.values()]);
+  }
+
+  if (!source && sort === 'newest') {
+    tools = [...tools].sort(
+      (a, b) => (Date.parse(b.first_seen_at) || 0) - (Date.parse(a.first_seen_at) || 0)
+    );
   }
 
   if (sort === 'price_low') {

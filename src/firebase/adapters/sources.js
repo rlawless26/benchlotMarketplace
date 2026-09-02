@@ -59,6 +59,15 @@ const SOURCES = [
     indexed: true,
   },
   {
+    id: 'teddawson',
+    name: 'Ted Dawson Antique Tools',
+    shortName: 'Ted Dawson',
+    kind: 'Dealer',
+    descriptor: 'Dealer · Toronto ON',
+    homeUrl: 'https://teddawsonantiquetools.com',
+    indexed: true,
+  },
+  {
     id: 'sawmillcreek',
     name: 'Sawmill Creek',
     shortName: 'Sawmill Creek',
