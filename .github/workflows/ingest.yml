@@ -27,7 +27,12 @@ name: Ingest
 
 on:
   schedule:
-    - cron: '0 3 * * *' # 03:00 UTC daily; the weekday map picks the sources
+    # 02:47 UTC daily; the weekday map picks the sources. The odd, off-peak
+    # minute is deliberate: GitHub schedules are best-effort and on-the-hour
+    # slots queue worst — the first 03:00 run fired 4h39m late (2026-09-02).
+    # The map reads `date -u +%u` at RUN time, so a delay past 00:00 UTC would
+    # run the wrong day's sources; starting earlier adds headroom too.
+    - cron: '47 2 * * *'
   workflow_dispatch:
     inputs:
       sources:
