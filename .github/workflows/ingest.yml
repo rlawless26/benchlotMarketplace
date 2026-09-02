@@ -117,6 +117,14 @@ jobs:
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
         run: node functions/normalize/run-postgres.js --durable-only --max-cost 5
 
+      # Verify paged-off forum threads actually sold before their asks count
+      # as comps. Only rows without a verdict are touched, so most nights this
+      # is a no-op; forum scrape days (Thu, Sat) produce a handful. Bounded by
+      # --max-cost the same way the normalizer is.
+      - name: Verify forum solds
+        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        run: node functions/ingest/forum-sold-check.js --limit 200 --max-cost 2
+
       # Replaces scheduledPriceStatsBuild. ~3s in SQL against ~168k rows.
       - name: Rebuild price stats
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream

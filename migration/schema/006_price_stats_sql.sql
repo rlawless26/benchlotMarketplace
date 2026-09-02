@@ -57,7 +57,12 @@ BEGIN
   CREATE TEMP TABLE _qualifying ON COMMIT DROP AS
   SELECT
     l.canonical_type, l.canonical_brand, l.canonical_size, l.canonical_model,
-    l.plane_type_number, l.price_cents, s.kind::text AS kind,
+    l.plane_type_number,
+    -- Realized sale price when the forum sold-check extracted one (008);
+    -- otherwise the scraper's ask. For sold rows this makes comps reflect
+    -- what was PAID where that is knowable.
+    COALESCE(l.sold_price_cents, l.price_cents) AS price_cents,
+    s.kind::text AS kind,
     CASE WHEN l.status = 'sold' THEN 'sold' ELSE 'asking' END AS block,
     l.status
   FROM listings l
