@@ -547,8 +547,8 @@ const ResultsState = ({ state, actions }) => {
                         outline: 'none',
                       }}
                     >
-                      <option value="best">Best match</option>
                       <option value="newest">Newest</option>
+                      <option value="best">Mixed sources</option>
                       <option value="price_low">Price: low to high</option>
                       <option value="price_high">Price: high to low</option>
                     </select>

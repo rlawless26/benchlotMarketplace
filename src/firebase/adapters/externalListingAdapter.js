@@ -154,7 +154,9 @@ async function fetchPool({ limit, source, canonicalType, canonicalBrand }) {
  *   - `best` (default) — round-robin interleave across sources. Page 1
  *     takes the freshest from each source, surfacing every source equally
  *     regardless of catalog size. Prevents eBay's volume from drowning out
- *     the others. User-facing label: "Best match".
+ *     the others. User-facing label: "Mixed sources" (was "Best match", a
+ *     relevance claim nothing backed). No longer the browse default — see
+ *     DEFAULT_SORT in useAggregatorState.js.
  *   - `newest` — flat `first_seen_at desc` across the merged pool.
  *   - `price_low` / `price_high` — global sort by price after the merge.
  *

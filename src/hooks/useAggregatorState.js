@@ -18,7 +18,13 @@ const CHIP_LABEL_OVERRIDES = {
   pics: { yes: 'With photos' },
 };
 const VALID_SORTS = ['best', 'newest', 'price_low', 'price_high', 'relevance'];
-const DEFAULT_SORT = 'best';
+// 'newest' — the neutral default. The old default, 'best', round-robins one
+// slot per source, which is an editorial claim (every source deserves equal
+// page-1 space) and in practice pinned a dead source's months-old listings to
+// the top forever: reddit's 6 stale posts each took a first-dozen slot. Newest
+// answers "what's in the index?" with the newest things in the index. 'best'
+// survives as the "Mixed sources" option, and ?sort=best links still work.
+const DEFAULT_SORT = 'newest';
 
 function parseFromParams(params) {
   const query = params.get('q') || '';
