@@ -30,6 +30,7 @@ const admin = require('firebase-admin');
 const SOURCES = {
   jimbode: '../ingest/jimbode',
   jimbode_valueguide: '../ingest/jimbode-valueguide',
+  teddawson: '../ingest/teddawson',
   hyperkitten: '../ingest/hyperkitten',
   oldtools: '../ingest/oldtools',
   thebestthings: '../ingest/thebestthings',

@@ -84,7 +84,7 @@ jobs:
           else
             case "$(date -u +%u)" in
               1) SOURCES="ebay jimbode jimbode_valueguide" ;;
-              2) SOURCES="hyperkitten thebestthings" ;;
+              2) SOURCES="hyperkitten thebestthings teddawson" ;;
               3) SOURCES="ebay rouillard" ;;
               4) SOURCES="oldtools woodnet" ;;
               5) SOURCES="ebay" ;;
