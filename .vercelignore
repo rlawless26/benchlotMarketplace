@@ -7,8 +7,16 @@
 # Firestore -> Postgres migration tooling and its exported data
 migration/
 
-# The Next.js price-guide app: its own Vercel project (benchlot-web)
-web/
+# The Next.js price-guide app builds in its OWN Vercel project (benchlot-web),
+# but this file cannot exclude `web/` — Vercel reads .vercelignore from the
+# REPOSITORY ROOT regardless of a project's Root Directory setting, so a `web/`
+# line strips the app out of its own build ("No Next.js version detected").
+# Learned by doing exactly that on 2026-09-01.
+#
+# Excluding the build artifacts gets the size win anyway: node_modules and
+# .next are 781 MB between them, while web/'s tracked source is 476 KB.
+web/node_modules/
+web/.next/
 
 # Firebase Cloud Functions: deployed via the Firebase CLI, not Vercel
 functions/
