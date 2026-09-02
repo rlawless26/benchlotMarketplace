@@ -2,15 +2,14 @@
  * SiteHeader — slim chrome for post-pivot content pages (About, FAQ, Contact).
  *
  * Distinct from the marketplace/aggregator Header components. This is the
- * editorial header per the design handoff: wordmark left, About · FAQ ·
- * Sign-in right.
+ * editorial header per the design handoff: wordmark left, RAQ right.
+ *
+ * No auth entry point: alerts are email-only (no accounts), so Sign in / My
+ * alerts advertised an account system the product does not use.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-
-import { useAuth } from '../../firebase/hooks/useAuth';
-import AuthModal from '../AuthModal';
 
 function NavLink({ to, label, active }) {
   return (
@@ -36,12 +35,8 @@ function NavLink({ to, label, active }) {
 }
 
 export default function SiteHeader({ current }) {
-  const { isAuthenticated } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
-
   return (
-    <>
-      <header
+    <header
         style={{
           padding: '22px 0',
           borderBottom: '1px solid var(--border-light)',
@@ -80,37 +75,8 @@ export default function SiteHeader({ current }) {
             }}
           >
             <NavLink to="/faq" label="RAQ" active={current === 'raq'} />
-            <span style={{ width: 1, height: 16, background: 'var(--border)' }} />
-            {isAuthenticated() ? (
-              <NavLink to="/alerts" label="My alerts" active={current === 'alerts'} />
-            ) : (
-              <button
-                onClick={() => setAuthOpen(true)}
-                style={{
-                  background: 'transparent',
-                  border: 0,
-                  padding: 0,
-                  cursor: 'pointer',
-                  color: 'var(--spruce)',
-                  fontWeight: 600,
-                  fontSize: 13,
-                  letterSpacing: '0.02em',
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
-                Sign in
-              </button>
-            )}
           </nav>
         </div>
-      </header>
-
-      <AuthModal
-        isOpen={authOpen}
-        onClose={() => setAuthOpen(false)}
-        initialMode="signin"
-        title="Sign In to Your Account"
-      />
-    </>
+    </header>
   );
 }

@@ -3,7 +3,11 @@
  * Pinned to top of viewport while scrolling results.
  *
  * Layout matches the homepage hero nav for smooth page-to-page transitions:
- *   Wordmark · [search input] · [mobile filter chip] · RAQ | (My Alerts | Sign in)
+ *   Wordmark · [search input] · [mobile filter chip] · RAQ
+ *
+ * No auth entry point: alerts need only an email address (SaveAlertButton posts
+ * to /api/alerts), so a Sign in link advertised an account system the product
+ * does not use. /login still resolves for the gated marketplace routes.
  *
  * Sort control used to live here but was moved to the breadcrumb row so the
  * top bar is just search + global nav (parallel to the homepage hero header).
@@ -13,12 +17,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 
-import { useAuth } from '../../firebase/hooks/useAuth';
-import { useAuthModal } from '../../context/AuthModalContext';
 
 const StickyTopBar = ({ query, onQueryChange }) => {
-  const { user } = useAuth();
-  const { open: openAuthModal } = useAuthModal();
   const location = useLocation();
   const navigate = useNavigate();
   const inputRef = useRef(null);
@@ -174,29 +174,6 @@ const StickyTopBar = ({ query, onQueryChange }) => {
           <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
             RAQ
           </Link>
-          <span aria-hidden className="hidden sm:block" style={{ width: 1, height: 14, background: '#e4e2dc' }} />
-          {user ? (
-            <Link to="/alerts" style={{ color: '#1a3030', textDecoration: 'none' }}>
-              My Alerts
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => openAuthModal()}
-              className="cursor-pointer"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                fontFamily: "'Outfit', sans-serif",
-                fontWeight: 500,
-                fontSize: 13,
-                color: '#1a3030',
-              }}
-            >
-              Sign in
-            </button>
-          )}
         </nav>
       </div>
     </div>
