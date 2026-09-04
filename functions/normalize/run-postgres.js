@@ -46,6 +46,14 @@ const CONCURRENCY = num('--concurrency', 6);
 // inventory. Excludes eBay/FBM active listings, which churn off within weeks
 // and account for 69% of the backlog cost.
 const DURABLE_ONLY = argv.includes('--durable-only');
+// --match <posix-regex>: restrict the pass to titles matching a pattern
+// (case-insensitive, applied server-side with ~*). Exists for demand-targeted
+// passes: Search Console showed which clusters draw impressions, so spend
+// normalization money on titles that feed THOSE pages instead of the whole
+// backlog. First use 2026-09-04: the power-tool slice of eBay actives
+// (~10.6k of 68k titles, ~$28 of ~$168).
+const mi = argv.indexOf('--match');
+const MATCH = mi >= 0 ? argv[mi + 1] : null;
 // Hard ceiling. Stops mid-run rather than overrunning an approved budget.
 const MAX_COST = num('--max-cost', 0);
 
@@ -126,6 +134,7 @@ async function mapWithConcurrency(items, n, worker) {
           AND status <> 'excluded_non_tool'
           AND title_raw IS NOT NULL
           ${DURABLE_ONLY ? `AND (status = 'sold' OR source NOT IN ('ebay','fbmarketplace'))` : ''}
+          ${MATCH ? `AND title_raw ~* $1` : ''}
         GROUP BY 1
         ORDER BY count(*) DESC
         ${cap ? `LIMIT ${cap}` : ''}
@@ -133,8 +142,10 @@ async function mapWithConcurrency(items, n, worker) {
      SELECT g.ids, l.title_raw, l.description_raw, l.tags,
             l.heuristic_brand, l.heuristic_type
        FROM grouped g
-       JOIN listings l ON l.id = g.rep_id`
+       JOIN listings l ON l.id = g.rep_id`,
+    MATCH ? [MATCH] : []
   );
+  if (MATCH) console.log(`match filter: ${MATCH}`);
 
   const totalRows = work.reduce((n, w) => n + w.ids.length, 0);
   console.log(`${work.length} distinct titles covering ${totalRows} listings` +
