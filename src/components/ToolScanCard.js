@@ -75,20 +75,20 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
         )}
         <div className="flex-1">
           <h3 className="text-xl font-display font-semibold text-spruce">
-            Not a plane — yet
+            We couldn&rsquo;t pin this one down
           </h3>
           <p className="text-base font-body text-secondary mt-1">
-            Benchlot is plane-first today. Hand planes are the only category we identify and price reliably right now.
+            We identify and price hand tools and woodworking machinery — planes, saws, chisels, lathes, drill presses and more — but this one didn&rsquo;t match a category we can price with confidence.
           </p>
         </div>
       </div>
 
       <div className="bg-bone rounded-lg p-4 mb-4">
-        <p className="text-sm font-semibold font-body text-dark-teal mb-2">Coming next</p>
+        <p className="text-sm font-semibold font-body text-dark-teal mb-2">What you can do</p>
         <ul className="text-sm font-body text-secondary space-y-1">
-          <li>· Hand saws — medallion, etch, and tooth-count identification</li>
-          <li>· Chisels — maker, style, and era</li>
-          <li>· Router planes, shoulder planes, and other specialty bench tools</li>
+          <li>· Try another photo — maker&rsquo;s marks, medallions, and castings help most</li>
+          <li>· <a href="/" className="text-honey hover:text-honey-dark">Search the index</a> for it by name</li>
+          <li>· <a href="/guide" className="text-honey hover:text-honey-dark">Browse the price guide</a> by category and brand</li>
         </ul>
       </div>
 

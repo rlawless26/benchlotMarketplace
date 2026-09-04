@@ -24,16 +24,19 @@
  */
 
 import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
 
-import { db } from '../config';
 import {
   clusterKey,
   hasDisplayableStats,
   pickReference,
 } from '../../utils/priceStats';
 
-const STATS_COLLECTION = 'priceStats';
+// Postgres-backed lookup via the benchlot-web project (rewrite in the root
+// vercel.json, same mechanism as /api/search). This read the Firestore
+// `priceStats` collection until the 2026-09-01 cutover froze it — after which
+// every band served from it grew staler by the day and none of the clusters
+// built since (the entire machine catalogue) existed at all.
+const API_BASE = process.env.REACT_APP_SEARCH_API_BASE || '';
 
 // Per-tab cache. Map<cluster_key, { stats, grain } | null>.
 // Null means "we already looked and there was nothing displayable."
@@ -41,12 +44,14 @@ const cache = new Map();
 
 async function readDoc(key) {
   if (cache.has(key)) return cache.get(key);
-  const snap = await getDoc(doc(db, STATS_COLLECTION, key));
-  if (!snap.exists()) {
+  const res = await fetch(`${API_BASE}/api/pricestats?key=${encodeURIComponent(key)}`);
+  if (!res.ok) throw new Error(`pricestats API ${res.status}`);
+  const body = await res.json();
+  if (!body.stats) {
     cache.set(key, null);
     return null;
   }
-  return snap.data();
+  return body.stats;
 }
 
 /**

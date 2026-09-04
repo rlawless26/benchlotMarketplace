@@ -251,6 +251,19 @@ export default function GuideView({
         />
       )}
 
+      <section className="mt-8 rounded-lg border border-bone-dark bg-bone-light p-5">
+        <h2 className="font-display text-base font-semibold text-spruce">
+          Have one of these?
+        </h2>
+        <p className="mt-1 text-sm text-spruce-light">
+          Photograph it and we&rsquo;ll identify the exact model and era, then show
+          you what it&rsquo;s worth against these prices.{' '}
+          <a href="/scan" className="font-medium text-honey-dark hover:underline">
+            Scan your tool &rarr;
+          </a>
+        </p>
+      </section>
+
       {related.length > 0 && (
         <section className="mt-12 border-t border-bone-dark pt-6">
           <h2 className="font-display text-lg font-semibold text-spruce">

@@ -352,9 +352,12 @@ const ToolScanPage = () => {
     }
   };
 
-  // Skip email gate if user is already signed in
-  const showEmailGate = scanResults && !emailCollected && !user;
-  const showFullResults = scanResults && (emailCollected || user);
+  // No pre-result wall: results render immediately. The gate made sense for a
+  // list-building tool; for a feeder into the price guide it cut the funnel
+  // off before the guide link could render. Email capture survives below the
+  // results as an opt-in "send me a copy" (showEmailOffer).
+  const showFullResults = Boolean(scanResults);
+  const showEmailOffer = scanResults && !emailCollected && !user;
 
   const handleFeedback = async (feedback) => {
     try {
@@ -734,88 +737,6 @@ const ToolScanPage = () => {
           </div>
         )}
 
-        {/* Teaser + Email Gate — shown when results exist but email not collected (and not signed in) */}
-        {showEmailGate && scanResults.tool && (() => {
-          const t = scanResults.tool;
-          const teaserName = [t.canonical_brand, t.canonical_model].filter(Boolean).join(' ')
-            || t.canonical_type
-            || 'Tool identified';
-          return (
-          <div>
-            {/* Teaser card */}
-            <div className="mb-8">
-              <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-5">
-                <div className="flex items-start gap-4">
-                  {previews[0] && (
-                    <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-[#e4e2dc]">
-                      <img src={previews[0]} alt="Scanned tool" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="text-xl font-display font-semibold text-spruce">{teaserName}</h3>
-                    <div className="flex flex-wrap items-center gap-3 mt-1 text-base font-body text-secondary">
-                      {t.canonical_type && <span>{t.canonical_type}</span>}
-                      {Number.isInteger(t.plane_type_number) && <span>· Type {t.plane_type_number}</span>}
-                      {t.era_estimate && <span>· {t.era_estimate}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {t.confidence && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
-                          t.confidence === 'High' ? 'bg-green-100 text-green-800' :
-                          t.confidence === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {t.confidence} confidence
-                        </span>
-                      )}
-                    </div>
-                    {/* Blurred teaser for comp band + active listings */}
-                    <div className="mt-3 flex items-center gap-4 select-none">
-                      <span className="text-honey font-semibold text-lg blur-sm">$XX – $XXX</span>
-                      <span className="text-secondary text-sm blur-sm">Recent comps + active listings...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Email capture form */}
-            <div className="bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6 text-center">
-              <Sparkles className="w-8 h-8 text-honey mx-auto mb-3" />
-              <h3 className="text-xl font-display font-semibold text-spruce mb-2">
-                Your tool has been identified
-              </h3>
-              <p className="text-secondary font-body mb-5 max-w-md mx-auto">
-                Enter your email to see your results here and get a copy in your inbox. We'll also let you know when Benchlot launches.
-              </p>
-              <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={captureEmail}
-                    onChange={(e) => { setCaptureEmail(e.target.value); setEmailError(null); }}
-                    placeholder="you@example.com"
-                    className="flex-1 px-4 py-3 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={emailSubmitting}
-                    className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors whitespace-nowrap"
-                  >
-                    {emailSubmitting ? 'Sending...' : 'See Results'}
-                  </button>
-                </div>
-                {emailError && (
-                  <p className="text-sm text-error mt-2">{emailError}</p>
-                )}
-                <p className="text-xs text-secondary mt-3">We'll keep you posted as Benchlot's search and alerts come online. Unsubscribe anytime.</p>
-              </form>
-            </div>
-          </div>
-          );
-        })()}
-
         {/* No tool identified */}
         {scanResults && !scanResults.tool && (
           <div className="bg-bone-light rounded-xl shadow-sm border border-stone-200 p-8 text-center">
@@ -851,6 +772,36 @@ const ToolScanPage = () => {
                   Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
                 </p>
             </div>
+
+            {/* Optional: email a copy of the results. Was a pre-result wall. */}
+            {showEmailOffer && (
+              <div className="mt-6 bg-bone-light rounded-xl shadow-sm border border-[#e4e2dc] p-6 text-center">
+                <h3 className="text-lg font-display font-semibold text-spruce mb-2">
+                  Want a copy of this in your inbox?
+                </h3>
+                <form onSubmit={handleEmailSubmit} className="max-w-sm mx-auto">
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={captureEmail}
+                      onChange={(e) => { setCaptureEmail(e.target.value); setEmailError(null); }}
+                      placeholder="you@example.com"
+                      className="flex-1 px-4 py-3 bg-bone border border-[#e4e2dc] rounded-lg text-base font-body text-dark-teal focus:ring-2 focus:ring-spruce/30 focus:border-spruce transition-colors"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={emailSubmitting}
+                      className="px-6 py-3 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {emailSubmitting ? 'Sending...' : 'Email it to me'}
+                    </button>
+                  </div>
+                  {emailError && <p className="text-sm text-error mt-2">{emailError}</p>}
+                  <p className="text-xs text-secondary mt-3">One email with these results. Unsubscribe anytime.</p>
+                </form>
+              </div>
+            )}
 
             <div className="mt-6 p-4 bg-bone rounded-lg">
               <p className="text-sm text-secondary">

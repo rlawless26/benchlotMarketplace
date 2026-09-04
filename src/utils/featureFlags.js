@@ -41,9 +41,11 @@ export const AGGREGATOR_MODE = getFeatureFlag('AGGREGATOR_MODE', true);
 // writes, jimbode_valueguide ingestion, nightly pricestats build) run
 // regardless of this flag — the flag only gates user-facing rendering.
 //
-// Local dev override: `localStorage.setItem('PRICE_GUIDE_ENABLED', 'true')`.
-// Public launch: change the default below from `false` to `true`, ship.
-export const PRICE_GUIDE_ENABLED = getFeatureFlag('PRICE_GUIDE_ENABLED', false);
+// Public since 2026-09-04. The flag existed to accrue sold-comp data before
+// exposing the surface; with the guide live at /guide (900+ pages, 62k sold
+// samples) that rationale is over — leaving it off only hid the scan→guide
+// funnel. localStorage override still works for dev.
+export const PRICE_GUIDE_ENABLED = getFeatureFlag('PRICE_GUIDE_ENABLED', true);
 
 // Plane-pages — when true, render canonical plane type pages at
 // /planes/:brand/:model and /planes/:brand/:model/:type. These consume the
