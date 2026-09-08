@@ -13,6 +13,12 @@
 #
 # TWO SOURCES ARE DELIBERATELY NOT IN THE MAP:
 #   fbmarketplace — paused on Bright Data cost, not on brand rationale.
+#   sawmillcreek — 403s requests from GitHub-hosted runners (datacenter IPs)
+#     while serving the same scraper UA fine from residential IPs (verified
+#     2026-09-08 after its first-ever Actions run failed). Leaving it in would
+#     paint every Saturday red with a known, unfixable-from-here failure.
+#     Its catalogue is small and slow (119 threads); refresh it occasionally
+#     from a residential connection: node functions/worker/run.js sawmillcreek
 #   reddit — Reddit now returns 403 to unauthenticated JSON requests for ANY
 #     user-agent (verified 2026-09-01), so the `public` auth mode the scraper
 #     supports is dead. OAuth still works but needs REDDIT_CLIENT_ID,
@@ -93,15 +99,20 @@ jobs:
               3) SOURCES="ebay rouillard" ;;
               4) SOURCES="oldtools woodnet" ;;
               5) SOURCES="ebay" ;;
-              6) SOURCES="vintagevials sawmillcreek" ;;   # reddit: see note below
+              6) SOURCES="vintagevials" ;;   # sawmillcreek+reddit: see notes below
               7) SOURCES="" ;;  # Sunday: fbmarketplace slot, paused on cost
             esac
           fi
           echo "sources=$SOURCES" >> "$GITHUB_OUTPUT"
           echo "Sources for $(date -u +%A): ${SOURCES:-(none)}"
 
+      # continue-on-error so a single failing source doesn't skip the
+      # normalize/sold-check/stats steps for the sources that DID succeed.
+      # The final step re-raises the failure so the run still shows red.
       - name: Scrape
+        id: scrape
         if: steps.plan.outputs.sources != ''
+        continue-on-error: true
         run: node functions/worker/run.js ${{ steps.plan.outputs.sources }}
 
       # The Firestore onDocumentWritten normalizer is gone. It could never
@@ -152,3 +163,10 @@ jobs:
             .then(r => { console.table(r.rows); return pool.end(); })
             .catch(e => { console.error(e.message); return pool.end(); });
           "
+
+      # Downstream steps ran on whatever succeeded; now surface the failure.
+      - name: Fail if any scrape failed
+        if: steps.scrape.outcome == 'failure'
+        run: |
+          echo "One or more sources failed — see the Scrape step and the freshness table above."
+          exit 1
