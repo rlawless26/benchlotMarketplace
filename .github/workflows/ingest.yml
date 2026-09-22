@@ -136,6 +136,21 @@ jobs:
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
         run: node functions/ingest/forum-sold-check.js --limit 200 --max-cost 2
 
+      # One maker, one spelling: brand_aliases (schema/010) folds the
+      # normalizer's spelling variants together and normalises sizes before
+      # the stats are cut. Idempotent; a no-op when nothing drifted.
+      - name: Apply brand aliases
+        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        working-directory: functions
+        run: |
+          node -e "
+          const { Pool } = require('pg');
+          const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED });
+          pool.query('SELECT * FROM apply_brand_aliases()')
+            .then(r => { console.log('[aliases]', JSON.stringify(r.rows[0])); return pool.end(); })
+            .catch(e => { console.error('[aliases]', e.message); process.exit(1); });
+          "
+
       # Replaces scheduledPriceStatsBuild. ~3s in SQL against ~168k rows.
       - name: Rebuild price stats
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream

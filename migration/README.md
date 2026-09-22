@@ -58,6 +58,7 @@ natural keys), so a re-run tops up rather than duplicating. To start clean:
 | `schema/005_normalization_provenance.sql` | `canonical_type_source` / `canonical_brand_source` (`llm` \| `heuristic`) |
 | `schema/006_price_stats_sql.sql` | `rebuild_price_stats()` — the SQL port of `functions/pricestats/build.js` |
 | `schema/009_lots_dedupe_brand_notes.sql` | `bl_is_lot()` / `bl_is_junk()` — comp eligibility shared by `rebuild_price_stats()` and the guide pages — plus the `brand_notes` table. **Re-apply 006 after 009**: the rebuild function calls both. |
+| `schema/010_brand_aliases.sql` | `brand_aliases` table (one maker, one spelling), `bl_normalize_size()`, and `apply_brand_aliases()` which rewrites listings + merges brand_notes. The ingest workflow runs it nightly before the stats rebuild. Regenerate the review list with `functions/normalize/brand-alias-candidates.js`. |
 
 Indexes are deliberately deferred: building a GIN index incrementally across a
 167k-row import is far slower than building it once at the end.

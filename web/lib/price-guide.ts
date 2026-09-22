@@ -543,3 +543,52 @@ export async function searchClusters(q: string, limit = 60): Promise<ClusterRef[
   );
   return rows.map(toRef);
 }
+
+// ---------------------------------------------------------------------------
+// Retired URLs
+// ---------------------------------------------------------------------------
+
+/**
+ * The canonical brand for a slug that no longer has a cluster, or null.
+ * Brand spellings merged through brand_aliases (schema/010) keep answering at
+ * their old URL with a 301, so nothing Google already indexed goes dark.
+ */
+export async function resolveBrandAlias(brandSlug: string): Promise<string | null> {
+  const rows = await sql<{ slug: string }>(
+    `SELECT bl_slug(canonical_brand) AS slug FROM brand_aliases WHERE bl_slug(alias) = $1 LIMIT 1`,
+    [brandSlug]
+  );
+  return rows[0]?.slug ?? null;
+}
+
+/**
+ * Where a retired guide URL should go, or null when it was never anything.
+ * Tries, in order: the brand alias (same type and size), the normalised size
+ * ("16oz" -> "16-oz"), and both together.
+ */
+export async function redirectTarget(
+  typeSlug: string, brandSlug: string, sizeSlug?: string
+): Promise<string | null> {
+  const brand = await resolveBrandAlias(brandSlug);
+  const candidates: { b: string; s: string | null }[] = [];
+  if (brand) candidates.push({ b: brand, s: sizeSlug ?? null });
+  if (sizeSlug) {
+    const rows = await sql<{ slug: string }>(
+      `SELECT bl_slug(bl_normalize_size(canonical_size)) AS slug
+       FROM listings
+       WHERE canonical_type IS NOT NULL AND bl_slug(canonical_size) = $1
+       LIMIT 1`,
+      [sizeSlug]
+    );
+    const norm = rows[0]?.slug;
+    if (norm && norm !== sizeSlug) {
+      candidates.push({ b: brandSlug, s: norm });
+      if (brand) candidates.push({ b: brand, s: norm });
+    }
+  }
+  for (const c of candidates) {
+    const hit = await getCluster(typeSlug, c.b, c.s ?? undefined);
+    if (hit) return clusterPath({ typeSlug, brandSlug: c.b, sizeSlug: c.s });
+  }
+  return null;
+}

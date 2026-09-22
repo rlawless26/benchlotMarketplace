@@ -299,6 +299,26 @@ const BRAND_ALIASES = Object.freeze({
   'sears craftsman': 'Craftsman',
   'sears dunlap': 'Dunlap',
   'sears roebuck': 'Sears',
+
+  // 2026-09-22: the pairs that had split into two guide pages each. The full
+  // list (~230 rows) lives in the brand_aliases table (migration/schema/010)
+  // and is applied nightly by apply_brand_aliases(); these few are repeated
+  // here so freshly normalized rows never carry the retired spelling even
+  // for a day.
+  'witherby': 'T.H. Witherby',
+  't. h. witherby': 'T.H. Witherby',
+  'council': 'Council Tool',
+  'kelly': 'Kelly Works',
+  'kelly axe & tool co.': 'Kelly Works',
+  'davis': 'L.L. Davis',
+  'l. l. davis': 'L.L. Davis',
+  'e. a. berg': 'E.A. Berg',
+  'e.a. berg eskilstuna': 'E.A. Berg',
+  'cincinnati tool': 'Cincinnati Tool Co.',
+  'cincinnati tool co': 'Cincinnati Tool Co.',
+  'atkins': 'E.C. Atkins',
+  'vaughan': 'Vaughan & Bushnell',
+  'griffiths': 'Griffiths Norwich',
 });
 
 /**

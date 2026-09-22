@@ -1,11 +1,11 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import GuideView from '@/components/GuideView';
 import { JsonLd, clusterJsonLd } from './jsonld';
 import { SITE_URL } from './site';
 import {
   getCluster, soldComps, activeListings, relatedClusters, sizeClusters, activeAggregate,
-  soldPricePoints, clusterFacts, brandNote,
+  soldPricePoints, clusterFacts, brandNote, redirectTarget,
   clusterPhrase, clusterPhraseSingular, clusterPath, money, SOLD_MIN_FOR_REFERENCE,
 } from './price-guide';
 
@@ -50,7 +50,12 @@ export async function GuideRoute({
   typeSlug, brandSlug, sizeSlug,
 }: { typeSlug: string; brandSlug: string; sizeSlug?: string }) {
   const cluster = await getCluster(typeSlug, brandSlug, sizeSlug);
-  if (!cluster) notFound();
+  if (!cluster) {
+    // A merged brand spelling or a normalised size keeps its old URL alive.
+    const to = await redirectTarget(typeSlug, brandSlug, sizeSlug);
+    if (to) permanentRedirect(to);
+    notFound();
+  }
 
   const [sold, active, related, sizes, agg, points, facts, note] = await Promise.all([
     soldComps(cluster),
