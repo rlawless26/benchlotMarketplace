@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { confirmAlert, alertSummary } from '@/lib/alerts';
+import { captureServer } from '@/lib/posthog-server';
 
 export const dynamic = 'force-dynamic';
 // A confirmation page must never be indexed: the URL contains a bearer token.
@@ -26,6 +27,23 @@ export default async function ConfirmPage({ params }: { params: Promise<{ token:
   }
 
   const summary = alertSummary(alert);
+
+  // The real conversion. confirmAlert is single-use (it clears the token), so
+  // this fires once per alert. Attributed to the browser that submitted the
+  // form via the distinct_id stored on the row — this click usually arrives
+  // from a mail client, in a session PostHog has never seen.
+  const distinctId = alert.filters?.posthog_distinct_id;
+  if (distinctId) {
+    await captureServer(distinctId, 'alert_confirmed', {
+      surface: alert.filters?.surface ?? null,
+      placement: alert.filters?.placement ?? null,
+      variant: alert.filters?.variant ?? null,
+      canonical_type: alert.canonical_type,
+      canonical_brand: alert.canonical_brand,
+      canonical_size: alert.canonical_size,
+    });
+  }
+
   return (
     <div className="max-w-xl">
       <h1 className="font-display text-3xl font-semibold text-spruce">You&apos;re set</h1>

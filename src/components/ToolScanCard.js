@@ -14,7 +14,7 @@ import {
 import usePriceStats from '../firebase/hooks/usePriceStats';
 import { pickReference } from '../utils/priceStats';
 import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
-import { track } from '../utils/analytics';
+import { track, trackListingClickOut } from '../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
 
 // ── Category gate ────────────────────────────────────────────────────────────
@@ -754,12 +754,23 @@ const ToolScanCardFull = ({
                       href={listing.source_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => track('toolscan_active_listing_clicked', {
-                        scanId: scanId || null,
-                        source: listing.source,
-                        position: i,
-                        cluster_key: priceStats.cluster_key || null,
-                      })}
+                      onClick={() => {
+                        track('toolscan_active_listing_clicked', {
+                          scanId: scanId || null,
+                          source: listing.source,
+                          position: i,
+                          cluster_key: priceStats.cluster_key || null,
+                        });
+                        trackListingClickOut({
+                          surface: 'scan_results',
+                          listingId: listing.id || null,
+                          source: listing.source,
+                          priceUsd: typeof listing.price === 'number' ? listing.price : null,
+                          listingStatus: 'active',
+                          position: i,
+                          clusterKey: priceStats.cluster_key || null,
+                        });
+                      }}
                       className="block p-3 rounded-lg border border-[#e4e2dc] bg-bone-light hover:border-honey hover:shadow-sm transition-all"
                     >
                       <div className="flex items-start gap-3">

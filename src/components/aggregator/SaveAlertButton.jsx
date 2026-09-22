@@ -19,7 +19,9 @@
 import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
-export default function SaveAlertButton({ canonicalType, canonicalBrand, canonicalSize, label }) {
+import { track, getDistinctId, GOAL_EVENTS } from '../../utils/analytics';
+
+export default function SaveAlertButton({ canonicalType, canonicalBrand, canonicalSize, label, surface = 'cra' }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState('idle'); // idle | open | sending | done | error
   const [message, setMessage] = useState('');
@@ -32,6 +34,9 @@ export default function SaveAlertButton({ canonicalType, canonicalBrand, canonic
       e.preventDefault();
       if (state === 'sending') return;
       setState('sending');
+      // Analytics only: lets the server attribute the later `alert_confirmed`
+      // to this browser. See web/lib/alerts.ts (AlertAttribution).
+      const attribution = { posthog_distinct_id: getDistinctId(), surface, placement: 'inline' };
       try {
         const res = await fetch('/api/alerts', {
           method: 'POST',
@@ -41,6 +46,7 @@ export default function SaveAlertButton({ canonicalType, canonicalBrand, canonic
             canonical_type: canonicalType,
             canonical_brand: canonicalBrand,
             canonical_size: canonicalSize || null,
+            attribution,
           }),
         });
         const data = await res.json();
@@ -51,12 +57,19 @@ export default function SaveAlertButton({ canonicalType, canonicalBrand, canonic
         }
         setState('done');
         setMessage(data.message);
+        track(GOAL_EVENTS.ALERT_SUBMITTED, {
+          surface,
+          placement: 'inline',
+          canonical_type: canonicalType,
+          canonical_brand: canonicalBrand,
+          canonical_size: canonicalSize || null,
+        });
       } catch {
         setState('error');
         setMessage('Network problem — try again.');
       }
     },
-    [email, canonicalType, canonicalBrand, canonicalSize, state]
+    [email, canonicalType, canonicalBrand, canonicalSize, state, surface]
   );
 
   // No cluster to watch (free-text search): send people where alerts work.
@@ -120,4 +133,6 @@ SaveAlertButton.propTypes = {
   canonicalBrand: PropTypes.string,
   canonicalSize: PropTypes.string,
   label: PropTypes.string,
+  /** Which UI rendered the form — telemetry only. */
+  surface: PropTypes.string,
 };

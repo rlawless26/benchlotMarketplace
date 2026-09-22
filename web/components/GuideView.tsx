@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import PriceDistribution from './PriceDistribution';
-import AlertSignup from './AlertSignup';
+import GuideAlert from './GuideAlert';
+import OutboundListingLink from './OutboundListingLink';
 import {
   Cluster, ClusterRef, Listing, SoldPoint, clusterPath, clusterTitle, money, centsToMoney,
   SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
@@ -91,15 +92,29 @@ function ByKind({
   );
 }
 
-function Row({ l }: { l: Listing }) {
+type RowStatus = 'sold' | 'active';
+
+function Row({ l, status, position, clusterKey }: {
+  l: Listing; status: RowStatus; position: number; clusterKey: string;
+}) {
   const when = l.sold_at ?? l.posted_at ?? l.last_seen_at;
   return (
     <tr className="border-t border-bone-dark align-top">
       <td className="py-2 pr-3">
-        <a href={l.source_url} target="_blank" rel="nofollow noopener"
-           className="text-spruce underline decoration-bone-dark underline-offset-2 hover:text-honey-dark">
+        <OutboundListingLink
+          href={l.source_url}
+          className="text-spruce underline decoration-bone-dark underline-offset-2 hover:text-honey-dark"
+          listingId={l.id}
+          source={l.source}
+          sourceKind={l.source_kind}
+          priceCents={l.price_cents}
+          status={status}
+          position={position}
+          clusterKey={clusterKey}
+          surface="guide_page"
+        >
           {l.title_raw}
-        </a>
+        </OutboundListingLink>
         {l.condition_raw ? (
           <div className="text-xs text-spruce-light">{l.condition_raw}</div>
         ) : null}
@@ -120,7 +135,9 @@ function Row({ l }: { l: Listing }) {
   );
 }
 
-function Table({ rows, dateLabel }: { rows: Listing[]; dateLabel: string }) {
+function Table({ rows, dateLabel, status, clusterKey }: {
+  rows: Listing[]; dateLabel: string; status: RowStatus; clusterKey: string;
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[34rem] text-left text-sm">
@@ -132,7 +149,11 @@ function Table({ rows, dateLabel }: { rows: Listing[]; dateLabel: string }) {
             <th className="pb-2 text-right font-medium">Price</th>
           </tr>
         </thead>
-        <tbody>{rows.map((l) => <Row key={l.id} l={l} />)}</tbody>
+        <tbody>
+          {rows.map((l, i) => (
+            <Row key={l.id} l={l} status={status} position={i} clusterKey={clusterKey} />
+          ))}
+        </tbody>
       </table>
     </div>
   );
@@ -189,6 +210,17 @@ export default function GuideView({
         )}
       </section>
 
+      {/* Experiment slot: `guide-alert-placement` = top puts the form here. */}
+      {cluster.canonical_type && cluster.canonical_brand && (
+        <GuideAlert
+          slot="top"
+          canonicalType={cluster.canonical_type}
+          canonicalBrand={cluster.canonical_brand}
+          canonicalSize={cluster.canonical_size}
+          summary={title}
+        />
+      )}
+
       {points.length >= 6 && (
         <PriceDistribution points={points} median={cluster.sold_p50 ? Number(cluster.sold_p50) : null} />
       )}
@@ -226,7 +258,7 @@ export default function GuideView({
           <p className="mb-3 text-sm text-spruce-light">
             Every sold comp behind the numbers above. Click through to the source.
           </p>
-          <Table rows={sold} dateLabel="Sold" />
+          <Table rows={sold} dateLabel="Sold" status="sold" clusterKey={cluster.cluster_key} />
         </section>
       )}
 
@@ -238,12 +270,14 @@ export default function GuideView({
           <p className="mb-3 text-sm text-spruce-light">
             Currently listed. Benchlot links straight to the seller — no fees, no middleman.
           </p>
-          <Table rows={active} dateLabel="Listed" />
+          <Table rows={active} dateLabel="Listed" status="active" clusterKey={cluster.cluster_key} />
         </section>
       )}
 
+      {/* Control position for `guide-alert-placement`: after the listings. */}
       {cluster.canonical_type && cluster.canonical_brand && (
-        <AlertSignup
+        <GuideAlert
+          slot="bottom"
           canonicalType={cluster.canonical_type}
           canonicalBrand={cluster.canonical_brand}
           canonicalSize={cluster.canonical_size}

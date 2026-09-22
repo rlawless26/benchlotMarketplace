@@ -23,7 +23,7 @@ import {
 
 import { getSource, KIND_COLORS } from '../../firebase/adapters/sources';
 import { relativeTime } from './relativeTime';
-import { track } from '../../utils/analytics';
+import { track, trackListingClickOut } from '../../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../../utils/featureFlags';
 import usePriceStats from '../../firebase/hooks/usePriceStats';
 import usePriceHistory from '../../firebase/hooks/usePriceHistory';
@@ -151,6 +151,17 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
       cluster_grain: priceStats.grain || null,
       reference_source: priceStats.reference?.source || null,
       listing_kind: listingKind,
+    });
+    // Canonical goal event shared with every other click-out surface.
+    trackListingClickOut({
+      surface: 'search_results',
+      listingId: listing.id,
+      source: listing.source,
+      sourceKind: source?.kind || null,
+      priceUsd: typeof listing.price === 'number' ? listing.price : null,
+      listingStatus: 'active',
+      position: ctx.position ?? null,
+      clusterKey: priceStats.cluster_key || null,
     });
   };
 

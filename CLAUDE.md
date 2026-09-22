@@ -108,6 +108,23 @@ it (the CRA chip is behind `PRICE_GUIDE_ENABLED`, off), but the scan-results
 email's "Benchlot index" line still does — point that at Postgres before
 turning any of it back on.
 
+**Goal events and experiments (2026-09-22).** Two product goals, one event
+name each, fired identically from both apps so PostHog experiments can share a
+goal: `listing_clicked_out` (every outbound link to a source listing; property
+`listing_status` is `active` or `sold`, `surface` names the UI) and
+`alert_confirmed` (fired SERVER-SIDE from the confirm page against the
+browser's PostHog `distinct_id`, which the alert POST sends as `attribution`
+and `createAlert` stores in the legacy `alerts.filters` jsonb — no DDL needed).
+`alert_submitted` (client) and `alert_requested` (server, carries the true
+created/resent status) are leading indicators. PostHog Actions "Listing
+click-out", "Alert confirmed", "Alert submitted" wrap these. Helpers:
+`src/utils/analytics.js` and `web/lib/analytics.ts`; server capture is
+`web/lib/posthog-server.ts` (same public key, short-lived client per call).
+Flags are read client-side (`getVariant`) so guide pages stay prerendered; the
+first one is `guide-alert-placement` (`web/components/GuideAlert.tsx`). At
+~150 visitors/month nothing reaches significance — judge variants by replays
+and the Bayesian readout, and keep swings structural, not copy tweaks.
+
 **Alerts require no account** — email + double opt-in + signed links. See the
 `project_alerts_no_auth` memory before changing any of it; several properties
 that look like over-engineering are load-bearing.
