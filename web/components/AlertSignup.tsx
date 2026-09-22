@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { track, getDistinctId, GOAL_EVENTS } from '@/lib/analytics';
 
 /**
  * Alert signup. An email address and nothing else.
@@ -15,9 +16,16 @@ import { useState } from 'react';
  * planes"). `heading` overrides the default title: the guide page uses it to
  * lead with "Nothing for sale right now" when the form is standing in for the
  * for-sale list.
+ *
+ * Telemetry: fires `alert_submitted` when the API accepts the request, and
+ * sends the browser's PostHog id with the POST so the server can attribute the
+ * later `alert_confirmed` (the real conversion, usually clicked from a mail
+ * client in a fresh session) to the same person. `surface` / `placement` /
+ * `variant` describe where the form was and which experiment arm showed it.
  */
 export default function AlertSignup({
   canonicalType, canonicalBrand, canonicalSize, phrase, heading, className = 'mt-10',
+  surface = 'guide_page', placement = 'bottom', variant = null,
 }: {
   canonicalType: string;
   canonicalBrand: string;
@@ -25,6 +33,9 @@ export default function AlertSignup({
   phrase: string;
   heading?: string;
   className?: string;
+  surface?: string;
+  placement?: string;
+  variant?: string | null;
 }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
@@ -34,6 +45,12 @@ export default function AlertSignup({
     e.preventDefault();
     if (state === 'sending') return;
     setState('sending');
+    const attribution = {
+      posthog_distinct_id: getDistinctId(),
+      surface,
+      placement,
+      variant,
+    };
     try {
       const res = await fetch('/api/alerts', {
         method: 'POST',
@@ -43,6 +60,7 @@ export default function AlertSignup({
           canonical_type: canonicalType,
           canonical_brand: canonicalBrand,
           canonical_size: canonicalSize ?? null,
+          attribution,
         }),
       });
       const data = await res.json();
@@ -53,6 +71,14 @@ export default function AlertSignup({
       }
       setState('done');
       setMessage(data.message);
+      track(GOAL_EVENTS.ALERT_SUBMITTED, {
+        surface,
+        placement,
+        variant,
+        canonical_type: canonicalType,
+        canonical_brand: canonicalBrand,
+        canonical_size: canonicalSize ?? null,
+      });
     } catch {
       setState('error');
       setMessage('Network problem — try again.');
@@ -69,7 +95,7 @@ export default function AlertSignup({
   }
 
   return (
-    <section className={`${className} rounded-lg border border-bone-dark bg-bone-light p-6`}>
+    <section className={`${className} rounded-lg border border-bone-dark bg-bone-light p-6`} data-placement={placement}>
       <h2 className="font-display text-lg font-semibold text-spruce">
         {heading ?? `Tell me when ${phrase} are listed`}
       </h2>
@@ -80,9 +106,9 @@ export default function AlertSignup({
       </p>
 
       <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="alert-email" className="sr-only">Email address</label>
+        <label htmlFor={`alert-email-${placement}`} className="sr-only">Email address</label>
         <input
-          id="alert-email"
+          id={`alert-email-${placement}`}
           type="email"
           required
           value={email}

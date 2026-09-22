@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import PriceDistribution from './PriceDistribution';
 import AlertSignup from './AlertSignup';
+import GuideAlert from './GuideAlert';
+import OutboundListingLink from './OutboundListingLink';
 import {
   Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint,
   clusterPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
@@ -108,12 +110,26 @@ function Thumb({ src }: { src: string | undefined }) {
   );
 }
 
-function Row({ l }: { l: Listing }) {
+type RowStatus = 'sold' | 'active';
+
+function Row({ l, status, position, clusterKey }: {
+  l: Listing; status: RowStatus; position: number; clusterKey: string;
+}) {
   return (
     <tr className="border-t border-bone-dark align-top">
       <td className="py-2 pr-3">
-        <a href={l.source_url} target="_blank" rel="nofollow noopener"
-           className="group flex items-start gap-3">
+        <OutboundListingLink
+          href={l.source_url}
+          className="group flex items-start gap-3"
+          listingId={l.id}
+          source={l.source}
+          sourceKind={l.source_kind}
+          priceCents={l.price_cents}
+          status={status}
+          position={position}
+          clusterKey={clusterKey}
+          surface="guide_page"
+        >
           <Thumb src={l.images?.[0]} />
           <span>
             <span className="text-spruce underline decoration-bone-dark underline-offset-2 group-hover:text-honey-dark">
@@ -123,7 +139,7 @@ function Row({ l }: { l: Listing }) {
               <span className="block text-xs text-spruce-light">{l.condition_raw}</span>
             ) : null}
           </span>
-        </a>
+        </OutboundListingLink>
       </td>
       <td className="whitespace-nowrap py-2 pr-3 text-sm text-spruce-light">
         <span className="inline-flex items-center gap-1.5">
@@ -141,7 +157,9 @@ function Row({ l }: { l: Listing }) {
   );
 }
 
-function Table({ rows, dateLabel }: { rows: Listing[]; dateLabel: string }) {
+function Table({ rows, dateLabel, status, clusterKey }: {
+  rows: Listing[]; dateLabel: string; status: RowStatus; clusterKey: string;
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[34rem] text-left text-sm">
@@ -153,7 +171,11 @@ function Table({ rows, dateLabel }: { rows: Listing[]; dateLabel: string }) {
             <th className="pb-2 text-right font-medium">Price</th>
           </tr>
         </thead>
-        <tbody>{rows.map((l) => <Row key={l.id} l={l} />)}</tbody>
+        <tbody>
+          {rows.map((l, i) => (
+            <Row key={l.id} l={l} status={status} position={i} clusterKey={clusterKey} />
+          ))}
+        </tbody>
       </table>
     </div>
   );
@@ -226,15 +248,21 @@ export default function GuideView({
   const brandPage = cluster.canonical_size ? sizes.find((s) => s.sizeSlug === null) : null;
   const sizePages = sizes.filter((s) => s.sizeSlug !== null);
 
-  const alert = (heading?: string, className?: string) =>
-    cluster.canonical_type && cluster.canonical_brand ? (
-      <AlertSignup
-        canonicalType={cluster.canonical_type}
-        canonicalBrand={cluster.canonical_brand}
+  const hasCluster = Boolean(cluster.canonical_type && cluster.canonical_brand);
+
+  // Experiment `guide-alert-placement` (see GuideAlert.tsx). Only pages with
+  // something for sale take part: when nothing is listed the form already
+  // stands in for the for-sale list right under the number, so both arms
+  // would render the same page.
+  const alertSlot = (slot: 'top' | 'bottom') =>
+    hasCluster ? (
+      <GuideAlert
+        slot={slot}
+        canonicalType={cluster.canonical_type!}
+        canonicalBrand={cluster.canonical_brand!}
         canonicalSize={cluster.canonical_size}
         phrase={phrase}
-        heading={heading}
-        className={className}
+        className="mt-8"
       />
     ) : null;
 
@@ -295,17 +323,31 @@ export default function GuideView({
           can actually be bought today. When nothing is listed, the alert form
           takes the same slot — that is exactly when someone wants it. */}
       {active.length > 0 ? (
-        <section className="mt-8">
-          <h2 className="font-display text-xl font-semibold text-spruce">
-            For sale now ({activeCount.toLocaleString()})
-          </h2>
-          <p className="mb-3 text-sm text-spruce-light">
-            Currently listed. Benchlot links straight to the seller — no fees, no middleman.
-          </p>
-          <Table rows={active} dateLabel="Listed" />
-        </section>
+        <>
+          {alertSlot('top')}
+          <section className="mt-8">
+            <h2 className="font-display text-xl font-semibold text-spruce">
+              For sale now ({activeCount.toLocaleString()})
+            </h2>
+            <p className="mb-3 text-sm text-spruce-light">
+              Currently listed. Benchlot links straight to the seller — no fees, no middleman.
+            </p>
+            <Table rows={active} dateLabel="Listed" status="active" clusterKey={cluster.cluster_key} />
+          </section>
+        </>
       ) : (
-        alert('Nothing for sale right now', 'mt-8')
+        hasCluster && (
+          <AlertSignup
+            canonicalType={cluster.canonical_type!}
+            canonicalBrand={cluster.canonical_brand!}
+            canonicalSize={cluster.canonical_size}
+            phrase={phrase}
+            heading="Nothing for sale right now"
+            className="mt-8"
+            surface="guide_page"
+            placement="for_sale_slot"
+          />
+        )
       )}
 
       {points.length >= 6 && (
@@ -350,11 +392,11 @@ export default function GuideView({
               ? `The ${sold.length} most recent of ${soldCount.toLocaleString()} sales behind the numbers above. Click through to the source.`
               : 'Every sale behind the numbers above, most recent first. Click through to the source.'}
           </p>
-          <Table rows={sold} dateLabel="Sold" />
+          <Table rows={sold} dateLabel="Sold" status="sold" clusterKey={cluster.cluster_key} />
         </section>
       )}
 
-      {active.length > 0 && alert()}
+      {active.length > 0 && alertSlot('bottom')}
 
       {sizePages.length > 0 && (
         <section className="mt-12 border-t border-bone-dark pt-6">

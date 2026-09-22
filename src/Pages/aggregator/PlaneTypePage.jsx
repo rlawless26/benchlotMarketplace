@@ -42,7 +42,7 @@ import {
   getStanleyTypeStudy,
   getStanleyModel,
 } from '../../data/stanleyBenchPlanes';
-import { track } from '../../utils/analytics';
+import { track, trackListingClickOut } from '../../utils/analytics';
 import PriceHistogram from '../../components/aggregator/PriceHistogram';
 import SaveAlertButton from '../../components/aggregator/SaveAlertButton';
 import ResultCard from '../../components/aggregator/ResultCard';
@@ -367,7 +367,7 @@ const PlaneTypePage = () => {
             </p>
           )}
         </div>
-        <SaveAlertButton canonicalType={CANONICAL_TYPE} canonicalBrand={brand.canonical} />
+        <SaveAlertButton canonicalType={CANONICAL_TYPE} canonicalBrand={brand.canonical} surface="plane_type_page" />
       </div>
 
       {/* Confidence answer / stat cards */}
@@ -537,11 +537,22 @@ const PlaneTypePage = () => {
                 href={row.source_url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => track('plane_type_sold_listing_clicked', {
-                  cluster_key: clusterKeyValue,
-                  position: i,
-                  sold_price: row.price,
-                })}
+                onClick={() => {
+                  track('plane_type_sold_listing_clicked', {
+                    cluster_key: clusterKeyValue,
+                    position: i,
+                    sold_price: row.price,
+                  });
+                  trackListingClickOut({
+                    surface: 'plane_type_page',
+                    listingId: row.id || null,
+                    source: row.source || null,
+                    priceUsd: typeof row.price === 'number' ? row.price : null,
+                    listingStatus: 'sold',
+                    position: i,
+                    clusterKey: clusterKeyValue,
+                  });
+                }}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 100px 100px',

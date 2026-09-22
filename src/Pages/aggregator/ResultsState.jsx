@@ -566,7 +566,7 @@ const ResultsState = ({ state, actions }) => {
                     />
                   </div>
                 </div>
-                <SaveAlertButton />
+                <SaveAlertButton surface="search_results" />
               </div>
             </div>
           </div>

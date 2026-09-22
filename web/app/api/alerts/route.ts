@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAlert, isPlausibleEmail } from '@/lib/alerts';
+import { createAlert, isPlausibleEmail, type AlertAttribution } from '@/lib/alerts';
 import { sendEmail, confirmEmail } from '@/lib/email';
 import { SITE_URL } from '@/lib/site';
+import { captureServer } from '@/lib/posthog-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,10 @@ export async function POST(req: NextRequest) {
   const canonical_type = String(body.canonical_type ?? '').trim();
   const canonical_brand = String(body.canonical_brand ?? '').trim();
   const canonical_size = body.canonical_size ? String(body.canonical_size).trim() : null;
+  // Analytics only. Validated and trimmed to known keys in createAlert.
+  const attribution = (body.attribution && typeof body.attribution === 'object'
+    ? body.attribution
+    : {}) as AlertAttribution;
 
   if (!isPlausibleEmail(email)) {
     return NextResponse.json({ error: "That doesn't look like an email address." }, { status: 400 });
@@ -37,7 +42,20 @@ export async function POST(req: NextRequest) {
   const ok = { ok: true, message: 'Check your email to confirm the alert.' };
 
   try {
-    const result = await createAlert({ email, canonical_type, canonical_brand, canonical_size });
+    const result = await createAlert({ email, canonical_type, canonical_brand, canonical_size, attribution });
+
+    // The browser only ever learns "check your email" (see above), so the
+    // truthful outcome is recorded here instead: it lets an experiment count
+    // real new alerts rather than re-submits of an existing one.
+    if (attribution.posthog_distinct_id) {
+      await captureServer(attribution.posthog_distinct_id, 'alert_requested', {
+        status: result.status,
+        surface: attribution.surface ?? null,
+        placement: attribution.placement ?? null,
+        variant: attribution.variant ?? null,
+        canonical_type, canonical_brand, canonical_size,
+      });
+    }
 
     if (result.status === 'created' || result.status === 'resent') {
       const summary = [canonical_brand, canonical_type, canonical_size].filter(Boolean).join(' ');

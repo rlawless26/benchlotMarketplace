@@ -34,7 +34,7 @@ import {
   perKindBlocks,
   pickReference,
 } from '../../utils/priceStats';
-import { track } from '../../utils/analytics';
+import { track, trackListingClickOut } from '../../utils/analytics';
 import PriceHistogram from '../../components/aggregator/PriceHistogram';
 import SaveAlertButton from '../../components/aggregator/SaveAlertButton';
 import ResultCard from '../../components/aggregator/ResultCard';
@@ -314,7 +314,7 @@ const PriceGuidePage = () => {
         </div>
         {/* This route is shadowed by the /guide/* rewrite to the Next app, which
             has its own cluster-scoped alert form. Link variant only. */}
-        <SaveAlertButton />
+        <SaveAlertButton surface="price_guide_cra" />
       </div>
 
       {/* Stat cards */}
@@ -456,11 +456,22 @@ const PriceGuidePage = () => {
                 href={row.source_url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => track('price_guide_sold_listing_clicked', {
-                  cluster_key: clusterKey,
-                  position: i,
-                  sold_price: row.price,
-                })}
+                onClick={() => {
+                  track('price_guide_sold_listing_clicked', {
+                    cluster_key: clusterKey,
+                    position: i,
+                    sold_price: row.price,
+                  });
+                  trackListingClickOut({
+                    surface: 'price_guide_cra',
+                    listingId: row.id || null,
+                    source: row.source || null,
+                    priceUsd: typeof row.price === 'number' ? row.price : null,
+                    listingStatus: 'sold',
+                    position: i,
+                    clusterKey: clusterKey,
+                  });
+                }}
                 style={{
                   display: 'grid',
                   // Three-column when we have a sold_at; two-column when

@@ -22,12 +22,29 @@ export function isPlausibleEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
 }
 
+/**
+ * Where the signup came from, for analytics only. Stored in the legacy
+ * `filters` jsonb column (which the no-auth flow otherwise leaves as `{}` and
+ * nothing reads) so no DDL has to land before this code deploys. Keys:
+ * `posthog_distinct_id` — the browser's PostHog id, so the confirm page can
+ * attribute `alert_confirmed` to the person who submitted the form;
+ * `surface` / `placement` / `variant` — which form, where, and which
+ * experiment arm. Never used for matching or sending.
+ */
+export type AlertAttribution = {
+  posthog_distinct_id?: string | null;
+  surface?: string | null;
+  placement?: string | null;
+  variant?: string | null;
+};
+
 export type AlertInput = {
   email: string;
   canonical_type: string;
   canonical_brand: string;
   canonical_size?: string | null;
   max_price_cents?: number | null;
+  attribution?: AlertAttribution | null;
 };
 
 export type CreateResult =
@@ -79,10 +96,11 @@ export async function createAlert(input: AlertInput): Promise<CreateResult> {
     `INSERT INTO alerts (email, query, filters, sort, hash, email_enabled,
                          unsubscribe_token, confirm_token,
                          canonical_type, canonical_brand, canonical_size, max_price_cents)
-     VALUES ($1, $2, '{}'::jsonb, 'newest', $3, true, $4, $5, $6, $7, $8, $9)`,
+     VALUES ($1, $2, $10::jsonb, 'newest', $3, true, $4, $5, $6, $7, $8, $9)`,
     [email, summary, `cluster:${summary}`.toLowerCase(), token(), confirmToken,
      input.canonical_type, input.canonical_brand, input.canonical_size ?? null,
-     input.max_price_cents ?? null]
+     input.max_price_cents ?? null,
+     JSON.stringify(cleanAttribution(input.attribution))]
   );
 
   return { status: 'created', confirmToken };
@@ -98,7 +116,20 @@ export type Alert = {
   confirmed_at: string | null;
   email_enabled: boolean;
   unsubscribe_token: string;
+  /** See AlertAttribution. Legacy rows carry `{}` or the old search filters. */
+  filters: AlertAttribution & Record<string, unknown>;
 };
+
+/** Keep only the known keys, as short strings. Never trust the client shape. */
+function cleanAttribution(a: AlertAttribution | null | undefined): AlertAttribution {
+  if (!a || typeof a !== 'object') return {};
+  const out: AlertAttribution = {};
+  for (const k of ['posthog_distinct_id', 'surface', 'placement', 'variant'] as const) {
+    const v = a[k];
+    if (typeof v === 'string' && v.length > 0 && v.length <= 200) out[k] = v;
+  }
+  return out;
+}
 
 /** Confirm by token. Single-use: the token is cleared on success. */
 export async function confirmAlert(t: string): Promise<Alert | null> {
@@ -109,7 +140,7 @@ export async function confirmAlert(t: string): Promise<Alert | null> {
             email_enabled = true
       WHERE confirm_token = $1
       RETURNING id, email, canonical_type, canonical_brand, canonical_size,
-                max_price_cents, confirmed_at, email_enabled, unsubscribe_token`,
+                max_price_cents, confirmed_at, email_enabled, unsubscribe_token, filters`,
     [t]
   );
   return rows[0] ?? null;
@@ -125,7 +156,7 @@ export async function unsubscribeAlert(t: string): Promise<Alert | null> {
     `UPDATE alerts SET email_enabled = false
       WHERE unsubscribe_token = $1
       RETURNING id, email, canonical_type, canonical_brand, canonical_size,
-                max_price_cents, confirmed_at, email_enabled, unsubscribe_token`,
+                max_price_cents, confirmed_at, email_enabled, unsubscribe_token, filters`,
     [t]
   );
   return rows[0] ?? null;
