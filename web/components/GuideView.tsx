@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import PriceDistribution from './PriceDistribution';
+import AlertSignup from './AlertSignup';
 import GuideAlert from './GuideAlert';
 import OutboundListingLink from './OutboundListingLink';
 import {
-  Cluster, ClusterRef, Listing, SoldPoint, clusterPath, clusterTitle, money, centsToMoney,
-  SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
+  Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint,
+  clusterPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
+  money, centsToMoney, slug, SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
 } from '@/lib/price-guide';
 
 const KIND_CLASS: Record<string, string> = {
@@ -92,18 +94,33 @@ function ByKind({
   );
 }
 
+/**
+ * Listing photo. A plain <img> on purpose: the images live on fifteen
+ * third-party hosts (Shopify, eBay, dealer sites), so next/image would need a
+ * wildcard remotePatterns entry and would route every one of ~180k photos
+ * through Vercel's optimizer. Empty alt: the title beside it is the label, and
+ * an empty-alt broken image renders as nothing rather than as a broken icon.
+ */
+function Thumb({ src }: { src: string | undefined }) {
+  if (!src) return <div aria-hidden className="h-14 w-14 shrink-0 rounded bg-bone-dark" />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer"
+         className="h-14 w-14 shrink-0 rounded bg-bone-dark object-cover" />
+  );
+}
+
 type RowStatus = 'sold' | 'active';
 
 function Row({ l, status, position, clusterKey }: {
   l: Listing; status: RowStatus; position: number; clusterKey: string;
 }) {
-  const when = l.sold_at ?? l.posted_at ?? l.last_seen_at;
   return (
     <tr className="border-t border-bone-dark align-top">
       <td className="py-2 pr-3">
         <OutboundListingLink
           href={l.source_url}
-          className="text-spruce underline decoration-bone-dark underline-offset-2 hover:text-honey-dark"
+          className="group flex items-start gap-3"
           listingId={l.id}
           source={l.source}
           sourceKind={l.source_kind}
@@ -113,11 +130,16 @@ function Row({ l, status, position, clusterKey }: {
           clusterKey={clusterKey}
           surface="guide_page"
         >
-          {l.title_raw}
+          <Thumb src={l.images?.[0]} />
+          <span>
+            <span className="text-spruce underline decoration-bone-dark underline-offset-2 group-hover:text-honey-dark">
+              {cleanTitle(l.title_raw)}
+            </span>
+            {l.condition_raw ? (
+              <span className="block text-xs text-spruce-light">{l.condition_raw}</span>
+            ) : null}
+          </span>
         </OutboundListingLink>
-        {l.condition_raw ? (
-          <div className="text-xs text-spruce-light">{l.condition_raw}</div>
-        ) : null}
       </td>
       <td className="whitespace-nowrap py-2 pr-3 text-sm text-spruce-light">
         <span className="inline-flex items-center gap-1.5">
@@ -126,7 +148,7 @@ function Row({ l, status, position, clusterKey }: {
         </span>
       </td>
       <td className="whitespace-nowrap py-2 pr-3 text-sm text-spruce-light">
-        {when ? new Date(when).toISOString().slice(0, 10) : '—'}
+        {l.dated_at ? new Date(l.dated_at).toISOString().slice(0, 10) : '—'}
       </td>
       <td className="tnum whitespace-nowrap py-2 text-right font-medium text-honey-dark">
         {centsToMoney(l.price_cents)}
@@ -159,66 +181,173 @@ function Table({ rows, dateLabel, status, clusterKey }: {
   );
 }
 
+const year = (iso: string | null) => (iso ? iso.slice(0, 4) : null);
+
+function joinNames(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * The paragraph that is true of this page and no other: where the evidence
+ * came from, how old it is, and what was left out. Written from the data so
+ * it can never drift from the numbers beside it.
+ */
+function evidenceParagraph(phrase: string, f: ClusterFacts): string {
+  if (f.total === 0) return '';
+  const parts: string[] = [];
+
+  const top = f.sources.slice(0, 3).map((s) => `${s.name} (${s.n})`);
+  const rest = f.sources.length - 3;
+  const from = rest > 0 ? `${top.join(', ')} and ${rest} other ${rest === 1 ? 'source' : 'sources'}` : joinNames(top);
+  parts.push(`The ${f.total} ${f.total === 1 ? 'sale' : 'sales'} behind these figures ${f.total === 1 ? 'comes' : 'come'} from ${from}`);
+
+  const a = year(f.firstAt);
+  const b = year(f.lastAt);
+  if (a && b) {
+    parts[0] += a === b ? `, all in ${a}` : `, and run from ${a} to ${b}`;
+    if (f.recent > 0 && a !== b) parts[0] += `; ${f.recent} closed in the last twelve months`;
+  }
+  parts[0] += '.';
+
+  if (f.lotsExcluded > 0) {
+    parts.push(
+      `${f.lotsExcluded} ${f.lotsExcluded === 1 ? 'listing' : 'listings'} for sets, pairs or lots of ${phrase} ` +
+      `${f.lotsExcluded === 1 ? 'was' : 'were'} left out, because a set's price is not one tool's price.`
+    );
+  }
+  if (f.junkExcluded > 0) {
+    parts.push(
+      `${f.junkExcluded} sold as parts or for restoration ${f.junkExcluded === 1 ? 'was' : 'were'} left out as well.`
+    );
+  }
+  return parts.join(' ');
+}
+
 export default function GuideView({
-  cluster, sold, active, related, points,
-}: { cluster: Cluster; sold: Listing[]; active: Listing[]; related: ClusterRef[]; points: SoldPoint[] }) {
-  const title = clusterTitle(cluster);
+  cluster, sold, active, related, sizes, points, facts, note,
+}: {
+  cluster: Cluster;
+  sold: Listing[];
+  active: Listing[];
+  related: ClusterRef[];
+  sizes: ClusterRef[];
+  points: SoldPoint[];
+  facts: ClusterFacts;
+  note: string | null;
+}) {
+  const phrase = clusterPhrase(cluster);                 // "Preston moulding planes"
+  const singular = clusterPhraseSingular(cluster);       // "Preston moulding plane"
   const soldCount = cluster.sold_count ?? 0;
   const askingCount = cluster.asking_count ?? 0;
+  const activeCount = cluster.asking_count_active ?? active.length;
   const hasSoldReference = soldCount >= SOLD_MIN_FOR_REFERENCE;
   const hasAskingReference = askingCount >= ASKING_MIN_FOR_REFERENCE;
+  const typeSlug = cluster.canonical_type ? slug(cluster.canonical_type) : null;
+  const brandPage = cluster.canonical_size ? sizes.find((s) => s.sizeSlug === null) : null;
+  const sizePages = sizes.filter((s) => s.sizeSlug !== null);
+
+  const hasCluster = Boolean(cluster.canonical_type && cluster.canonical_brand);
+
+  // Experiment `guide-alert-placement` (see GuideAlert.tsx). Only pages with
+  // something for sale take part: when nothing is listed the form already
+  // stands in for the for-sale list right under the number, so both arms
+  // would render the same page.
+  const alertSlot = (slot: 'top' | 'bottom') =>
+    hasCluster ? (
+      <GuideAlert
+        slot={slot}
+        canonicalType={cluster.canonical_type!}
+        canonicalBrand={cluster.canonical_brand!}
+        canonicalSize={cluster.canonical_size}
+        phrase={phrase}
+        className="mt-8"
+      />
+    ) : null;
+
+  const evidence = evidenceParagraph(phrase, facts);
 
   return (
     <article>
       <nav className="mb-3 text-sm text-spruce-light">
         <Link href="/guide" className="hover:text-honey-dark">Price guide</Link>
         <span className="px-1.5">/</span>
-        <span>{cluster.canonical_type}</span>
+        {typeSlug ? (
+          <Link href={`/guide#${typeSlug}`} className="hover:text-honey-dark">{cluster.canonical_type}</Link>
+        ) : (
+          <span>{cluster.canonical_type}</span>
+        )}
+        {brandPage && (
+          <>
+            <span className="px-1.5">/</span>
+            <Link href={clusterPath(brandPage)} className="hover:text-honey-dark">{cluster.canonical_brand}</Link>
+          </>
+        )}
       </nav>
 
       <h1 className="font-display text-4xl font-semibold text-spruce">
-        {title} prices
+        {singular} prices
       </h1>
       <p className="mt-3 max-w-2xl text-spruce-light">
-        What {title} actually sells for, based on {soldCount.toLocaleString()} sold{' '}
-        {soldCount === 1 ? 'listing' : 'listings'} and {askingCount.toLocaleString()} asking{' '}
-        {askingCount === 1 ? 'price' : 'prices'} gathered from dealers, forum classifieds and
-        marketplaces.
+        What {phrase} actually sell for, from {soldCount.toLocaleString()} recorded{' '}
+        {soldCount === 1 ? 'sale' : 'sales'}
+        {activeCount > 0 ? ` and ${activeCount.toLocaleString()} ${activeCount === 1 ? 'listing' : 'listings'} for sale now` : ''}.
       </p>
 
       {/* Sold block — the honest number. Only stated when there is enough of it. */}
       <section className="mt-8 rounded-lg border border-bone-dark bg-bone-light p-6">
         <h2 className="font-display text-lg font-semibold text-spruce">Sold prices</h2>
         {hasSoldReference ? (
-          <>
-            <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
-              <Stat label="Median sold" value={money(cluster.sold_p50)} big />
-              <Stat label="25th pct" value={money(cluster.sold_p25)} />
-              <Stat label="75th pct" value={money(cluster.sold_p75)} />
-              <Stat label="Sold comps" value={soldCount.toLocaleString()} />
-            </div>
-            <p className="mt-4 text-sm text-spruce-light">
-              Typical range {money(cluster.sold_p25)}–{money(cluster.sold_p75)}. Half of sales
-              land inside it.
-            </p>
-          </>
+          <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-3">
+            <Stat label="Median sold" value={money(cluster.sold_p50)} big />
+            <Stat label="Most sell for" value={`${money(cluster.sold_p25)}–${money(cluster.sold_p75)}`} />
+            <Stat label="Sales on record" value={soldCount.toLocaleString()} />
+          </div>
         ) : (
           <p className="mt-3 text-sm text-spruce-light">
-            Only {soldCount} sold {soldCount === 1 ? 'comp' : 'comps'} on record — too few to
+            Only {soldCount} {soldCount === 1 ? 'sale' : 'sales'} on record — too few to
             quote a reliable figure. The individual sales are listed below; judge them yourself.
           </p>
         )}
+        <p className="mt-4 border-t border-bone-dark pt-4 text-sm text-spruce-light">
+          Have one?{' '}
+          <a href="/scan" className="font-medium text-honey-dark hover:underline">
+            Scan a photo of your {singular}
+          </a>{' '}
+          to see what yours is worth against these sales.
+        </p>
       </section>
 
-      {/* Experiment slot: `guide-alert-placement` = top puts the form here. */}
-      {cluster.canonical_type && cluster.canonical_brand && (
-        <GuideAlert
-          slot="top"
-          canonicalType={cluster.canonical_type}
-          canonicalBrand={cluster.canonical_brand}
-          canonicalSize={cluster.canonical_size}
-          summary={title}
-        />
+      {/* The most useful thing on the page goes right under the number: what
+          can actually be bought today. When nothing is listed, the alert form
+          takes the same slot — that is exactly when someone wants it. */}
+      {active.length > 0 ? (
+        <>
+          {alertSlot('top')}
+          <section className="mt-8">
+            <h2 className="font-display text-xl font-semibold text-spruce">
+              For sale now ({activeCount.toLocaleString()})
+            </h2>
+            <p className="mb-3 text-sm text-spruce-light">
+              Currently listed. Benchlot links straight to the seller — no fees, no middleman.
+            </p>
+            <Table rows={active} dateLabel="Listed" status="active" clusterKey={cluster.cluster_key} />
+          </section>
+        </>
+      ) : (
+        hasCluster && (
+          <AlertSignup
+            canonicalType={cluster.canonical_type!}
+            canonicalBrand={cluster.canonical_brand!}
+            canonicalSize={cluster.canonical_size}
+            phrase={phrase}
+            heading="Nothing for sale right now"
+            className="mt-8"
+            surface="guide_page"
+            placement="for_sale_slot"
+          />
+        )
       )}
 
       {points.length >= 6 && (
@@ -230,85 +359,86 @@ export default function GuideView({
         sold={cluster.sold_by_kind as Record<string, KindStats> | null}
       />
 
-      {/* Asking block — clearly separated, because asking prices are wishful. */}
-      <section className="mt-6 rounded-lg border border-bone-dark p-6">
-        <h2 className="font-display text-lg font-semibold text-spruce">Asking prices</h2>
-        {hasAskingReference ? (
+      {/* Asking block — only when there is enough of it to say something. An
+          empty card that announces there is nothing to summarise is noise. */}
+      {hasAskingReference && (
+        <section className="mt-6 rounded-lg border border-bone-dark p-6">
+          <h2 className="font-display text-lg font-semibold text-spruce">Asking prices</h2>
           <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
             <Stat label="Median asking" value={money(cluster.asking_p50)} big />
-            <Stat label="25th pct" value={money(cluster.asking_p25)} />
-            <Stat label="75th pct" value={money(cluster.asking_p75)} />
+            <Stat label="Most ask" value={`${money(cluster.asking_p25)}–${money(cluster.asking_p75)}`} />
             <Stat label="Listings" value={askingCount.toLocaleString()} />
           </div>
-        ) : (
-          <p className="mt-3 text-sm text-spruce-light">
-            {askingCount} asking {askingCount === 1 ? 'price' : 'prices'} on record — not enough
-            to summarise.
+          <p className="mt-4 text-sm text-spruce-light">
+            Asking prices run higher than sold prices. Sellers post hopefully, and unsold listings
+            linger; treat the sold figures above as the real signal.
           </p>
-        )}
-        <p className="mt-4 text-sm text-spruce-light">
-          Asking prices run higher than sold prices. Sellers post hopefully, and unsold listings
-          linger; treat the sold figures above as the real signal.
-        </p>
-      </section>
+        </section>
+      )}
+
+      {(note || evidence) && (
+        <section className="mt-10 max-w-2xl">
+          <h2 className="font-display text-xl font-semibold text-spruce">About {phrase}</h2>
+          {note && <p className="mt-3 text-spruce">{note}</p>}
+          {evidence && <p className="mt-3 text-sm text-spruce-light">{evidence}</p>}
+        </section>
+      )}
 
       {sold.length > 0 && (
         <section className="mt-10">
-          <h2 className="font-display text-xl font-semibold text-spruce">Recent sales</h2>
+          <h2 className="font-display text-xl font-semibold text-spruce">Recorded sales</h2>
           <p className="mb-3 text-sm text-spruce-light">
-            Every sold comp behind the numbers above. Click through to the source.
+            {sold.length < soldCount
+              ? `The ${sold.length} most recent of ${soldCount.toLocaleString()} sales behind the numbers above. Click through to the source.`
+              : 'Every sale behind the numbers above, most recent first. Click through to the source.'}
           </p>
           <Table rows={sold} dateLabel="Sold" status="sold" clusterKey={cluster.cluster_key} />
         </section>
       )}
 
-      {active.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-xl font-semibold text-spruce">
-            For sale now ({(cluster.asking_count_active ?? active.length).toLocaleString()})
+      {active.length > 0 && alertSlot('bottom')}
+
+      {sizePages.length > 0 && (
+        <section className="mt-12 border-t border-bone-dark pt-6">
+          <h2 className="font-display text-lg font-semibold text-spruce">
+            {cluster.canonical_brand} {cluster.canonical_type ? typeLower(typePlural(cluster.canonical_type)) : 'tools'} by size
           </h2>
-          <p className="mb-3 text-sm text-spruce-light">
-            Currently listed. Benchlot links straight to the seller — no fees, no middleman.
-          </p>
-          <Table rows={active} dateLabel="Listed" status="active" clusterKey={cluster.cluster_key} />
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {brandPage && (
+              <li>
+                <Link href={clusterPath(brandPage)}
+                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
+                  All sizes
+                  <span className="tnum ml-2 text-xs text-spruce-light">{brandPage.sold_count} sold</span>
+                </Link>
+              </li>
+            )}
+            {sizePages.map((r) => (
+              <li key={r.cluster_key}>
+                <Link href={clusterPath(r)}
+                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
+                  {r.canonical_size}
+                  <span className="tnum ml-2 text-xs text-spruce-light">
+                    {r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
-
-      {/* Control position for `guide-alert-placement`: after the listings. */}
-      {cluster.canonical_type && cluster.canonical_brand && (
-        <GuideAlert
-          slot="bottom"
-          canonicalType={cluster.canonical_type}
-          canonicalBrand={cluster.canonical_brand}
-          canonicalSize={cluster.canonical_size}
-          summary={title}
-        />
-      )}
-
-      <section className="mt-8 rounded-lg border border-bone-dark bg-bone-light p-5">
-        <h2 className="font-display text-base font-semibold text-spruce">
-          Have one of these?
-        </h2>
-        <p className="mt-1 text-sm text-spruce-light">
-          Photograph it and we&rsquo;ll identify the exact model and era, then show
-          you what it&rsquo;s worth against these prices.{' '}
-          <a href="/scan" className="font-medium text-honey-dark hover:underline">
-            Scan your tool &rarr;
-          </a>
-        </p>
-      </section>
 
       {related.length > 0 && (
         <section className="mt-12 border-t border-bone-dark pt-6">
           <h2 className="font-display text-lg font-semibold text-spruce">
-            Other {cluster.canonical_type?.toLowerCase()} brands
+            Other {cluster.canonical_type ? typeLower(cluster.canonical_type) : 'tool'} brands
           </h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {related.map((r) => (
               <li key={r.cluster_key}>
                 <Link href={clusterPath(r)}
                       className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
-                  {clusterTitle(r)}
+                  {clusterPhrase(r)}
                   <span className="tnum ml-2 text-xs text-spruce-light">{r.sold_count} sold</span>
                 </Link>
               </li>

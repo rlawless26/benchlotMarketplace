@@ -1,4 +1,4 @@
-import { SoldPoint } from '@/lib/price-guide';
+import { SoldPoint, cleanTitle } from '@/lib/price-guide';
 
 /**
  * Sold-price distribution: one dot per real sale, faceted by source kind.
@@ -175,8 +175,9 @@ export default function PriceDistribution({ points, median }: Props) {
   return (
     <figure className="mt-6">
       <figcaption className="text-sm text-spruce-light">
-        Every recorded sale, by where it sold. The band spans the middle half of
-        all sales; the line is the median.
+        {rows.length > 1
+          ? 'Every recorded sale, by where it sold. The band spans the middle half of all sales; the line is the median.'
+          : 'Every recorded sale. The band spans the middle half of all sales; the line is the median.'}
       </figcaption>
 
       <div className="mt-3 overflow-x-auto">
@@ -228,7 +229,7 @@ export default function PriceDistribution({ points, median }: Props) {
                     stroke="#f8f6f2" strokeWidth={1.5}
                   >
                     {/* Native tooltip: no JS, works on a static page. */}
-                    <title>{`${usd(l.price_cents)} — ${l.title_raw} (${l.source_name})`}</title>
+                    <title>{`${usd(l.price_cents)} — ${cleanTitle(l.title_raw)} (${l.source_name})`}</title>
                   </circle>
                 ))}
               </g>

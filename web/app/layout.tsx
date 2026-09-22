@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SITE_URL, IS_INDEXABLE } from '@/lib/site';
 import { Analytics } from './analytics';
+import SearchForm from '@/components/SearchForm';
 import './globals.css';
 
 const petrona = Petrona({
@@ -42,10 +43,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-display text-xl font-semibold text-spruce">
               Benchlot
             </Link>
-            <nav className="flex gap-6 text-sm">
+            <nav className="flex items-center gap-4 text-sm sm:gap-6">
               <Link href="/guide" className="text-spruce hover:text-honey-dark">
                 Price guide
               </Link>
+              <SearchForm compact />
             </nav>
           </div>
         </header>

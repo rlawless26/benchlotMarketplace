@@ -1,4 +1,4 @@
-import { Cluster, ActiveAggregate, clusterTitle } from './price-guide';
+import { Cluster, ActiveAggregate, clusterTitle, clusterPhrase } from './price-guide';
 
 /**
  * Product + AggregateOffer for a price-guide cluster.
@@ -30,7 +30,7 @@ export function clusterJsonLd(
     ...(cluster.canonical_brand
       ? { brand: { '@type': 'Brand', name: cluster.canonical_brand } }
       : {}),
-    description: `Sold prices and current listings for used ${name}.`,
+    description: `Recorded sale prices and current listings for used ${clusterPhrase(cluster)}.`,
     url,
   };
 

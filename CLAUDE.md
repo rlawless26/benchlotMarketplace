@@ -102,6 +102,21 @@ never on `canonical_brand` (an unbranded tool legitimately has none).
 the parts filter against `condition_raw` only (dead on eBay), never excluded
 multi-item lots, and never pruned stale clusters.
 
+**Comp eligibility is one place: `bl_is_lot()` and `bl_is_junk()`** (schema/009,
+2026-09-22). `rebuild_price_stats()` and every guide-page query (`web/lib/price-guide.ts`,
+`ELIGIBLE`) call the same two functions, so the page can never show a row the
+numbers above it excluded. The rebuild also collapses identical (title, price)
+sold rows — jimbode and jimbode_valueguide carry the same sales. When
+eligibility needs to change, change the SQL function and re-apply 009 then 006;
+do not add a regex to either side alone. Roughly 10% of sold titles are sets,
+pairs or lots.
+
+**Guide-page prose comes from two places.** The "About" paragraph's evidence
+sentence is computed per page. The maker paragraph above it is model-written
+(`functions/normalize/brand-notes.js`, Claude Opus 5, self-graded confidence)
+and lives in `brand_notes`; it renders only when `published`. Unpublish a wrong
+one with `UPDATE brand_notes SET published = false WHERE canonical_brand = '…'`.
+
 Note the Firestore `priceStats` collection is now **frozen**: its nightly
 builder was removed with the other Cloud Functions. Nothing user-facing reads
 it (the CRA chip is behind `PRICE_GUIDE_ENABLED`, off), but the scan-results

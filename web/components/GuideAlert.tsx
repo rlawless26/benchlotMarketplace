@@ -8,8 +8,12 @@ import { GUIDE_ALERT_PLACEMENT_FLAG, getVariant, onFlags } from '@/lib/analytics
  * Where the alert form sits on a guide page — the first flag-driven test.
  *
  * Flag `guide-alert-placement` (PostHog, multivariate):
- *   control — form after the listings, where it has always been.
- *   top     — form directly under the sold-price block, before the tables.
+ *   control — form after the recorded sales, where it has always been.
+ *   top     — form directly under the sold-price block, above the for-sale list.
+ *
+ * Pages with nothing for sale don't take part: there the form already sits
+ * under the number in place of the for-sale list (GuideView renders
+ * AlertSignup directly with placement "for_sale_slot").
  *
  * GuideView renders this twice, once per slot. Each instance decides whether
  * the current variant belongs to it, so exactly one form is ever visible.
@@ -22,13 +26,14 @@ import { GUIDE_ALERT_PLACEMENT_FLAG, getVariant, onFlags } from '@/lib/analytics
  * only yields once a `top` assignment is known.
  */
 export default function GuideAlert({
-  slot, canonicalType, canonicalBrand, canonicalSize, summary,
+  slot, canonicalType, canonicalBrand, canonicalSize, phrase, className,
 }: {
   slot: 'top' | 'bottom';
   canonicalType: string;
   canonicalBrand: string;
   canonicalSize?: string | null;
-  summary: string;
+  phrase: string;
+  className?: string;
 }) {
   const [variant, setVariant] = useState<string | null>(null);
 
@@ -47,7 +52,8 @@ export default function GuideAlert({
       canonicalType={canonicalType}
       canonicalBrand={canonicalBrand}
       canonicalSize={canonicalSize}
-      summary={summary}
+      phrase={phrase}
+      className={className}
       surface="guide_page"
       placement={slot}
       variant={variant ?? 'unassigned'}
