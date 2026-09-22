@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { listPublishableClusters, clusterPath, clusterTitle } from '@/lib/price-guide';
+import SearchForm from '@/components/SearchForm';
+import { listPublishableClusters, clusterPath, clusterPhrase, slug } from '@/lib/price-guide';
 
 export const revalidate = 3600;
 
@@ -40,10 +41,14 @@ export default async function GuideIndex() {
         asking prices.
       </p>
 
+      <div className="mt-6 max-w-2xl">
+        <SearchForm />
+      </div>
+
       <div className="mt-10 space-y-10">
         {types.map(([type, list]) => (
-          <section key={type}>
-            <h2 className="font-display text-xl font-semibold text-spruce">{type}</h2>
+          <section key={type} id={slug(type)}>
+            <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">{type}</h2>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((c) => (
                 <li key={c.cluster_key}>
@@ -51,7 +56,7 @@ export default async function GuideIndex() {
                     href={clusterPath(c)}
                     className="flex items-baseline justify-between gap-3 rounded border border-bone-dark bg-bone-light px-3 py-2 text-sm text-spruce hover:border-honey"
                   >
-                    <span>{clusterTitle(c)}</span>
+                    <span>{clusterPhrase(c)}</span>
                     <span className="tnum shrink-0 text-xs text-spruce-light">
                       {c.sold_count > 0 ? `${c.sold_count} sold` : `${c.asking_count} listed`}
                     </span>

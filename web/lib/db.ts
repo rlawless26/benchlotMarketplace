@@ -25,7 +25,12 @@ export function getPool(): Pool {
     connectionString,
     max: 5,
     idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 10_000,
+    // Applies to waiting for a free client as well as to opening one. A guide
+    // page issues eight queries against a pool of five, and `next build`
+    // prerenders hundreds of pages across parallel workers, so a waiter can
+    // legitimately sit for more than ten seconds while Neon is busy. 10s
+    // failed the build with "timeout exceeded when trying to connect".
+    connectionTimeoutMillis: 30_000,
   });
 
   // Lets Fluid compute drain in-flight queries instead of killing the sandbox

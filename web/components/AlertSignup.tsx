@@ -10,14 +10,21 @@ import { useState } from 'react';
  * sign-in. That is the friction the r/handtools thread singled out, where "no
  * signup needed" was the selling point — so this asks for an address, sends one
  * confirmation click, and creates no user record at all.
+ *
+ * `phrase` is the plural noun phrase for the cluster ("Preston moulding
+ * planes"). `heading` overrides the default title: the guide page uses it to
+ * lead with "Nothing for sale right now" when the form is standing in for the
+ * for-sale list.
  */
 export default function AlertSignup({
-  canonicalType, canonicalBrand, canonicalSize, summary,
+  canonicalType, canonicalBrand, canonicalSize, phrase, heading, className = 'mt-10',
 }: {
   canonicalType: string;
   canonicalBrand: string;
   canonicalSize?: string | null;
-  summary: string;
+  phrase: string;
+  heading?: string;
+  className?: string;
 }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
@@ -54,7 +61,7 @@ export default function AlertSignup({
 
   if (state === 'done') {
     return (
-      <section className="mt-10 rounded-lg border border-bone-dark bg-bone-light p-6">
+      <section className={`${className} rounded-lg border border-bone-dark bg-bone-light p-6`}>
         <h2 className="font-display text-lg font-semibold text-spruce">Check your email</h2>
         <p className="mt-2 text-sm text-spruce-light">{message}</p>
       </section>
@@ -62,13 +69,14 @@ export default function AlertSignup({
   }
 
   return (
-    <section className="mt-10 rounded-lg border border-bone-dark bg-bone-light p-6">
+    <section className={`${className} rounded-lg border border-bone-dark bg-bone-light p-6`}>
       <h2 className="font-display text-lg font-semibold text-spruce">
-        Tell me when a {summary} is listed
+        {heading ?? `Tell me when ${phrase} are listed`}
       </h2>
       <p className="mt-2 text-sm text-spruce-light">
-        One email when something matches, across every source we index.
-        No account, no password.
+        {heading
+          ? `One email when ${phrase} turn up anywhere we index. No account, no password.`
+          : 'One email when something matches, across every source we index. No account, no password.'}
       </p>
 
       <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">

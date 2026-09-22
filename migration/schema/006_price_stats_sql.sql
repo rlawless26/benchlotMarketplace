@@ -18,7 +18,9 @@
 --     are tested.
 --
 --  2. Multi-item lots were never excluded. A "lot of 5 planes" at $200 is not
---     one plane's price in either direction.
+--     one plane's price in either direction. (2026-09-22: the original
+--     four-pattern filter missed "Set of 6", "Pair of" and "5 Fine ... Planes";
+--     the detector now lives in bl_is_lot(), schema/009.)
 --
 -- NOT changed, on purpose: rows with canonical_brand 'Unknown' are still
 -- dropped. Plenty of vintage tools genuinely carry no maker's mark and should
@@ -54,8 +56,19 @@ CREATE OR REPLACE FUNCTION rebuild_price_stats() RETURNS TABLE (
   samples_asking bigint
 ) AS $$
 BEGIN
+  -- Eligibility lives in bl_is_junk() / bl_is_lot() (009) so the guide
+  -- pages' comps tables apply exactly the rules the numbers above them used.
+  --
+  -- DISTINCT ON: jimbode and jimbode_valueguide both carry the same sale
+  -- (1,299 identical title+price pairs at the time of writing), so every
+  -- Jim Bode comp was counted twice. One row per (block, cluster, title,
+  -- price); the copy with a real sold_at wins so the page can date it.
   CREATE TEMP TABLE _qualifying ON COMMIT DROP AS
-  SELECT
+  SELECT DISTINCT ON (
+      CASE WHEN l.status = 'sold' THEN 'sold' ELSE 'asking' END,
+      l.canonical_type, l.canonical_brand, l.canonical_size, l.canonical_model,
+      l.plane_type_number, lower(btrim(l.title_raw)),
+      COALESCE(l.sold_price_cents, l.price_cents))
     l.canonical_type, l.canonical_brand, l.canonical_size, l.canonical_model,
     l.plane_type_number,
     -- Realized sale price when the forum sold-check extracted one (008);
@@ -71,15 +84,20 @@ BEGIN
     AND l.canonical_type IS NOT NULL
     AND l.canonical_brand IS NOT NULL
     AND l.canonical_brand NOT IN ('Unknown', '')
-    -- Fix 1: test the title as well as the condition string.
-    AND coalesce(l.condition_raw, '') !~* '(parts only|as[- ]?is|for repair|project)'
-    AND l.title_raw !~* '(for parts|parts only|as[- ]?is|for repair|restoration project)'
+    -- Fix 1: parts / as-is / project rows, tested on title AND condition.
+    AND NOT bl_is_junk(l.title_raw, l.condition_raw)
     -- Fix 2: multi-item lots are not one tool's price.
-    AND l.title_raw !~* '(lot of [0-9]|job ?lot|mixed lot|bulk lot)'
+    AND NOT bl_is_lot(l.title_raw)
     AND (
       l.status = 'sold'
       OR (l.status IN ('active', 'expired') AND l.last_seen_at > now() - interval '365 days')
-    );
+    )
+  ORDER BY
+      CASE WHEN l.status = 'sold' THEN 'sold' ELSE 'asking' END,
+      l.canonical_type, l.canonical_brand, l.canonical_size, l.canonical_model,
+      l.plane_type_number, lower(btrim(l.title_raw)),
+      COALESCE(l.sold_price_cents, l.price_cents),
+      l.sold_at DESC NULLS LAST, l.posted_at DESC NULLS LAST;
 
   -- The four grains, finest last. Mirrors clusterKey / clusterKeyModel /
   -- clusterKeyType in cluster.js, including the m-/t- namespace markers that

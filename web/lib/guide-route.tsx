@@ -4,8 +4,9 @@ import GuideView from '@/components/GuideView';
 import { JsonLd, clusterJsonLd } from './jsonld';
 import { SITE_URL } from './site';
 import {
-  getCluster, soldComps, activeListings, relatedClusters, activeAggregate, soldPricePoints,
-  clusterTitle, clusterPath, money, SOLD_MIN_FOR_REFERENCE,
+  getCluster, soldComps, activeListings, relatedClusters, sizeClusters, activeAggregate,
+  soldPricePoints, clusterFacts, brandNote,
+  clusterPhrase, clusterPhraseSingular, clusterPath, money, SOLD_MIN_FOR_REFERENCE,
 } from './price-guide';
 
 export async function guideMetadata(
@@ -14,24 +15,34 @@ export async function guideMetadata(
   const cluster = await getCluster(typeSlug, brandSlug, sizeSlug);
   if (!cluster) return { title: 'Not found', robots: { index: false, follow: false } };
 
-  const name = clusterTitle(cluster);
+  const phrase = clusterPhrase(cluster);           // "Preston moulding planes"
+  const singular = clusterPhraseSingular(cluster); // "Preston moulding plane"
   const sold = cluster.sold_count ?? 0;
   const median = money(cluster.sold_p50);
+  const p25 = money(cluster.sold_p25);
+  const p75 = money(cluster.sold_p75);
+  const quotable = sold >= SOLD_MIN_FOR_REFERENCE && median;
 
-  const description =
-    sold >= SOLD_MIN_FOR_REFERENCE && median
-      ? `${name} sell for a median of ${median}, based on ${sold} recorded sales. See every comp and what's for sale now.`
-      : `Recorded sales and current listings for used ${name}, gathered from dealers, forums and marketplaces.`;
+  // The title has to do the work the snippet can't: say "used", say it is a
+  // price, and show there is real evidence behind it. A searcher comparing
+  // this against the maker's own site needs to see the difference in the tab.
+  const title = quotable
+    ? `Used ${singular} prices: ${sold} sales, median ${median}`
+    : `Used ${singular} prices and listings`;
+
+  const description = quotable
+    ? `Used ${phrase} sell for a median of ${median}, with half of sales between ${p25} and ${p75}, from ${sold} recorded sales. Every sale, what's for sale now, and a free alert when one is listed.`
+    : `Recorded sales and current listings for used ${phrase}, gathered from dealers, forum classifieds and marketplaces. Free alert when one is listed.`;
 
   const path = clusterPath({
     typeSlug, brandSlug, sizeSlug: sizeSlug ?? null,
   });
 
   return {
-    title: `${name} prices`,
+    title: { absolute: `${title} · Benchlot` },
     description,
     alternates: { canonical: path },
-    openGraph: { title: `${name} prices · Benchlot`, description, url: path, type: 'website' },
+    openGraph: { title: `${title} · Benchlot`, description, url: path, type: 'website' },
   };
 }
 
@@ -41,12 +52,15 @@ export async function GuideRoute({
   const cluster = await getCluster(typeSlug, brandSlug, sizeSlug);
   if (!cluster) notFound();
 
-  const [sold, active, related, agg, points] = await Promise.all([
+  const [sold, active, related, sizes, agg, points, facts, note] = await Promise.all([
     soldComps(cluster),
     activeListings(cluster),
     relatedClusters(cluster),
+    sizeClusters(cluster),
     activeAggregate(cluster),
     soldPricePoints(cluster),
+    clusterFacts(cluster),
+    brandNote(cluster.canonical_brand),
   ]);
 
   const url = `${SITE_URL}${clusterPath({
@@ -56,7 +70,10 @@ export async function GuideRoute({
   return (
     <>
       <JsonLd data={clusterJsonLd(cluster, agg, url)} />
-      <GuideView cluster={cluster} sold={sold} active={active} related={related} points={points} />
+      <GuideView
+        cluster={cluster} sold={sold} active={active} related={related} sizes={sizes}
+        points={points} facts={facts} note={note}
+      />
     </>
   );
 }

@@ -57,6 +57,7 @@ natural keys), so a re-run tops up rather than duplicating. To start clean:
 | `schema/004_price_snapshots.sql` | Price/status history. Missed on the first pass — the data lives in Firestore SUBcollections, invisible to a top-level count |
 | `schema/005_normalization_provenance.sql` | `canonical_type_source` / `canonical_brand_source` (`llm` \| `heuristic`) |
 | `schema/006_price_stats_sql.sql` | `rebuild_price_stats()` — the SQL port of `functions/pricestats/build.js` |
+| `schema/009_lots_dedupe_brand_notes.sql` | `bl_is_lot()` / `bl_is_junk()` — comp eligibility shared by `rebuild_price_stats()` and the guide pages — plus the `brand_notes` table. **Re-apply 006 after 009**: the rebuild function calls both. |
 
 Indexes are deliberately deferred: building a GIN index incrementally across a
 167k-row import is far slower than building it once at the end.
