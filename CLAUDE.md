@@ -111,6 +111,25 @@ eligibility needs to change, change the SQL function and re-apply 009 then 006;
 do not add a regex to either side alone. Roughly 10% of sold titles are sets,
 pairs or lots.
 
+**One maker, one spelling: `brand_aliases`** (schema/010, 2026-09-22). 266
+reviewed alias rows fold the normalizer's spelling variants into 164 canonical
+brands; `apply_brand_aliases()` rewrites listings, merges `brand_notes` and
+normalises sizes ("16oz" → "16 oz"), and the ingest workflow runs it nightly
+before the stats rebuild. The guide app 301s a retired brand or size slug to
+the canonical page. Add a pair by inserting a row and re-running the function;
+`functions/normalize/brand-alias-candidates.js` regenerates the review list.
+Never merge an ambiguous short form (Buck, Bailey, Ward, Davis Bros.).
+
+**Guide URLs and what gets indexed** (2026-09-22):
+`/guide/{type}/{brand}` (coarse), `/{size}` (fine), `/{model}` (model-fine,
+e.g. `/guide/bench-plane/stanley/no-4`), `/{model}/type-N` (type-fine). The
+third segment is shared by sizes and models; `getCluster()` tries the model key
+first, and the stats rebuild drops model-shaped sizes and size-shaped models so
+they cannot collide. `getCluster()` is filtered by `PUBLISHABLE` (8 sales or 10
+asks), so unpublishable keys 404 — before this, every key rendered. Pages with
+fewer than 8 sales are `noindex, follow` and absent from the sitemap
+(`INDEXABLE`); they stay live for the for-sale list and the alert form.
+
 **Guide-page prose comes from two places.** The "About" paragraph's evidence
 sentence is computed per page. The maker paragraph above it is model-written
 (`functions/normalize/brand-notes.js`, Claude Opus 5, self-graded confidence)

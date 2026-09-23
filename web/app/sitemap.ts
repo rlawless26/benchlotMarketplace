@@ -5,7 +5,9 @@ import { SITE_URL as BASE } from '@/lib/site';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const clusters = await listPublishableClusters();
+  // Indexable pages only: thin (ask-only) pages carry noindex and would only
+  // spend crawl attention the pages with real comps need.
+  const clusters = await listPublishableClusters({ indexableOnly: true });
 
   // Pages with more sold evidence are the ones worth crawling first.
   const maxSold = Math.max(1, ...clusters.map((c) => c.sold_count));

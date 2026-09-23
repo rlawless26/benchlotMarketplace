@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function GuideIndex() {
-  const clusters = await listPublishableClusters();
+  // Brand and size pages only; model pages are reached from their brand page.
+  const clusters = await listPublishableClusters({ grains: ['coarse', 'fine'] });
 
   // Group by tool type so the index reads as a table of contents rather than a
   // flat wall of 600 links.

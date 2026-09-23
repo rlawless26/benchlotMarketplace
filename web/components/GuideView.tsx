@@ -4,7 +4,7 @@ import AlertSignup from './AlertSignup';
 import GuideAlert from './GuideAlert';
 import OutboundListingLink from './OutboundListingLink';
 import {
-  Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint,
+  Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint, TypeRow,
   clusterPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
   money, centsToMoney, slug, SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
 } from '@/lib/price-guide';
@@ -225,14 +225,39 @@ function evidenceParagraph(phrase: string, f: ClusterFacts): string {
   return parts.join(' ');
 }
 
+function Chips({ items, label }: { items: { key: string; href: string; text: string; count: string }[]; label: string }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="mt-12 border-t border-bone-dark pt-6">
+      <h2 className="font-display text-lg font-semibold text-spruce">{label}</h2>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {items.map((r) => (
+          <li key={r.key}>
+            <Link href={r.href}
+                  className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
+              {r.text}
+              <span className="tnum ml-2 text-xs text-spruce-light">{r.count}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+const countLabel = (r: { sold_count: number; asking_count: number }) =>
+  r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`;
+
 export default function GuideView({
-  cluster, sold, active, related, sizes, points, facts, note,
+  cluster, sold, active, related, sizes, models, types, points, facts, note,
 }: {
   cluster: Cluster;
   sold: Listing[];
   active: Listing[];
   related: ClusterRef[];
   sizes: ClusterRef[];
+  models: ClusterRef[];
+  types: TypeRow[];
   points: SoldPoint[];
   facts: ClusterFacts;
   note: string | null;
@@ -245,8 +270,16 @@ export default function GuideView({
   const hasSoldReference = soldCount >= SOLD_MIN_FOR_REFERENCE;
   const hasAskingReference = askingCount >= ASKING_MIN_FOR_REFERENCE;
   const typeSlug = cluster.canonical_type ? slug(cluster.canonical_type) : null;
-  const brandPage = cluster.canonical_size ? sizes.find((s) => s.sizeSlug === null) : null;
-  const sizePages = sizes.filter((s) => s.sizeSlug !== null);
+  const isModelPage = cluster.grain === 'model-fine';
+  const isTypePage = cluster.grain === 'type-fine';
+  const brandPage = cluster.grain !== 'coarse' ? sizes.find((s) => s.grain === 'coarse') ?? null : null;
+  const sizePages = sizes.filter((s) => s.grain === 'fine');
+  const modelSlug = cluster.canonical_model ? slug(cluster.canonical_model) : null;
+  const modelPath = typeSlug && modelSlug
+    ? clusterPath({ typeSlug, brandSlug: slug(cluster.canonical_brand), sizeSlug: null, modelSlug })
+    : null;
+  const typeWord = cluster.canonical_type ? typeLower(cluster.canonical_type) : 'tool';
+  const typeWords = cluster.canonical_type ? typeLower(typePlural(cluster.canonical_type)) : 'tools';
 
   const hasCluster = Boolean(cluster.canonical_type && cluster.canonical_brand);
 
@@ -282,6 +315,12 @@ export default function GuideView({
           <>
             <span className="px-1.5">/</span>
             <Link href={clusterPath(brandPage)} className="hover:text-honey-dark">{cluster.canonical_brand}</Link>
+          </>
+        )}
+        {isTypePage && modelPath && (
+          <>
+            <span className="px-1.5">/</span>
+            <Link href={modelPath} className="hover:text-honey-dark">{cluster.canonical_model}</Link>
           </>
         )}
       </nav>
@@ -350,6 +389,78 @@ export default function GuideView({
         )
       )}
 
+      {/* Brand page: the models with their own page. This is the internal
+          link that lets "Stanley No. 4" rank, so it sits above the chart. */}
+      {cluster.grain === 'coarse' && models.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-semibold text-spruce">
+            {cluster.canonical_brand} {typeWords} by model
+          </h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {models.map((r) => (
+              <li key={r.cluster_key}>
+                <Link href={clusterPath(r)}
+                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
+                  {r.canonical_model}
+                  <span className="tnum ml-2 text-xs text-spruce-light">{countLabel(r)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Model and type pages: the type-study breakdown. Every type with a
+          sale is listed; only the ones with enough evidence link out. */}
+      {(isModelPage || isTypePage) && types.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-semibold text-spruce">
+            {cluster.canonical_brand} {cluster.canonical_model} by type
+          </h2>
+          <p className="mb-3 text-sm text-spruce-light">
+            Stanley-pattern bench planes are dated by type study. Sales where the
+            listing gave enough detail to place the type are broken out here.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[22rem] text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-spruce-light">
+                  <th className="pb-2 font-medium">Type</th>
+                  <th className="pb-2 font-medium">Sales</th>
+                  <th className="pb-2 text-right font-medium">Median sold</th>
+                </tr>
+              </thead>
+              <tbody>
+                {types.map((t) => (
+                  <tr key={t.cluster_key} className={`border-t border-bone-dark ${t.planeType === cluster.plane_type_number ? 'bg-bone-light' : ''}`}>
+                    <td className="py-2 pr-4 text-spruce">
+                      {t.publishable && t.planeType !== cluster.plane_type_number ? (
+                        <Link href={clusterPath(t)} className="underline decoration-bone-dark underline-offset-2 hover:text-honey-dark">
+                          Type {t.planeType}
+                        </Link>
+                      ) : (
+                        <>Type {t.planeType}</>
+                      )}
+                    </td>
+                    <td className="tnum py-2 pr-4 text-spruce-light">{t.sold_count}</td>
+                    <td className="tnum py-2 text-right font-medium text-honey-dark">
+                      {t.sold_count >= SOLD_MIN_FOR_REFERENCE ? money(t.sold_p50) ?? '—' : <span className="text-spruce-light">too few</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {isTypePage && modelPath && (
+            <p className="mt-3 text-sm text-spruce-light">
+              <Link href={modelPath} className="text-honey-dark hover:underline">
+                All {cluster.canonical_brand} {cluster.canonical_model} sales, every type &rarr;
+              </Link>
+            </p>
+          )}
+        </section>
+      )}
+
       {points.length >= 6 && (
         <PriceDistribution points={points} median={cluster.sold_p50 ? Number(cluster.sold_p50) : null} />
       )}
@@ -399,52 +510,30 @@ export default function GuideView({
       {active.length > 0 && alertSlot('bottom')}
 
       {sizePages.length > 0 && (
-        <section className="mt-12 border-t border-bone-dark pt-6">
-          <h2 className="font-display text-lg font-semibold text-spruce">
-            {cluster.canonical_brand} {cluster.canonical_type ? typeLower(typePlural(cluster.canonical_type)) : 'tools'} by size
-          </h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {brandPage && (
-              <li>
-                <Link href={clusterPath(brandPage)}
-                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
-                  All sizes
-                  <span className="tnum ml-2 text-xs text-spruce-light">{brandPage.sold_count} sold</span>
-                </Link>
-              </li>
-            )}
-            {sizePages.map((r) => (
-              <li key={r.cluster_key}>
-                <Link href={clusterPath(r)}
-                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
-                  {r.canonical_size}
-                  <span className="tnum ml-2 text-xs text-spruce-light">
-                    {r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Chips
+          label={`${cluster.canonical_brand} ${typeWords} by size`}
+          items={[
+            ...(brandPage ? [{ key: brandPage.cluster_key, href: clusterPath(brandPage), text: 'All sizes', count: countLabel(brandPage) }] : []),
+            ...sizePages.map((r) => ({ key: r.cluster_key, href: clusterPath(r), text: r.canonical_size ?? '', count: countLabel(r) })),
+          ]}
+        />
+      )}
+
+      {(isModelPage || isTypePage) && models.length > 0 && (
+        <Chips
+          label={`Other ${cluster.canonical_brand} ${typeWord} models`}
+          items={[
+            ...(brandPage ? [{ key: brandPage.cluster_key, href: clusterPath(brandPage), text: `All ${cluster.canonical_brand} ${typeWords}`, count: countLabel(brandPage) }] : []),
+            ...models.map((r) => ({ key: r.cluster_key, href: clusterPath(r), text: r.canonical_model ?? '', count: countLabel(r) })),
+          ]}
+        />
       )}
 
       {related.length > 0 && (
-        <section className="mt-12 border-t border-bone-dark pt-6">
-          <h2 className="font-display text-lg font-semibold text-spruce">
-            Other {cluster.canonical_type ? typeLower(cluster.canonical_type) : 'tool'} brands
-          </h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {related.map((r) => (
-              <li key={r.cluster_key}>
-                <Link href={clusterPath(r)}
-                      className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
-                  {clusterPhrase(r)}
-                  <span className="tnum ml-2 text-xs text-spruce-light">{r.sold_count} sold</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Chips
+          label={`Other ${typeWord} brands`}
+          items={related.map((r) => ({ key: r.cluster_key, href: clusterPath(r), text: clusterPhrase(r), count: `${r.sold_count} sold` }))}
+        />
       )}
 
       {cluster.last_built_at && (

@@ -41,6 +41,20 @@ CREATE OR REPLACE FUNCTION bl_slug(s text) RETURNS text AS $$
   END
 $$ LANGUAGE sql IMMUTABLE;
 
+-- A "model" that is really a measurement ("3 inch", "50mm", "1 1/2 inch") is
+-- normalizer noise, and since 2026-09-22 model slugs share the third URL
+-- segment with size slugs, such a model would collide with the size page.
+CREATE OR REPLACE FUNCTION bl_is_size_like(s text) RETURNS boolean AS $$
+  SELECT s ~* '^\s*\d+([ /]\d+)*\s*(inch|inches|in\.?|"|mm|cm|oz\.?|ounces?|lbs?\.?|pounds?)\s*$'
+$$ LANGUAGE sql IMMUTABLE;
+
+-- The mirror image: a "size" that is really a model number ("No. 4 1/2")
+-- would collide with the model page at the same URL. Rare (a few rows per
+-- brand) and always normalizer noise.
+CREATE OR REPLACE FUNCTION bl_is_model_like(s text) RETURNS boolean AS $$
+  SELECT s ~* '^\s*(no\.?|#|number|model)\s*[0-9]'
+$$ LANGUAGE sql IMMUTABLE;
+
 -- Percentile helper that honours build.js's N_FOR_TAIL_PERCENTILES = 20:
 -- p10/p90 are only meaningful with enough samples, and a p90 drawn from 6
 -- points invites false confidence.
@@ -114,20 +128,21 @@ BEGIN
            'pt::' || bl_slug(canonical_type) || '::' || bl_slug(canonical_brand) || '::' || bl_slug(canonical_size),
            canonical_type, canonical_brand, canonical_size, NULL, NULL,
            price_cents, kind, block, status
-    FROM _qualifying WHERE canonical_size IS NOT NULL
+    FROM _qualifying WHERE canonical_size IS NOT NULL AND NOT bl_is_model_like(canonical_size)
   UNION ALL
     SELECT 'model-fine',
            'pt::' || bl_slug(canonical_type) || '::' || bl_slug(canonical_brand) || '::m-' || bl_slug(canonical_model),
            canonical_type, canonical_brand, NULL, canonical_model, NULL,
            price_cents, kind, block, status
-    FROM _qualifying WHERE canonical_model IS NOT NULL
+    FROM _qualifying WHERE canonical_model IS NOT NULL AND NOT bl_is_size_like(canonical_model)
   UNION ALL
     SELECT 'type-fine',
            'pt::' || bl_slug(canonical_type) || '::' || bl_slug(canonical_brand) || '::m-' || bl_slug(canonical_model) || '::t-' || plane_type_number,
            canonical_type, canonical_brand, NULL, canonical_model, plane_type_number,
            price_cents, kind, block, status
     FROM _qualifying
-    WHERE canonical_model IS NOT NULL AND plane_type_number BETWEEN 1 AND 20;
+    WHERE canonical_model IS NOT NULL AND NOT bl_is_size_like(canonical_model)
+      AND plane_type_number BETWEEN 1 AND 20;
 
   CREATE INDEX ON _grained (cluster_key, block);
   ANALYZE _grained;

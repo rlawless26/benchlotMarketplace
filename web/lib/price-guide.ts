@@ -30,10 +30,12 @@ export function slug(s: string | null | undefined): string {
 
 export type Cluster = {
   cluster_key: string;
-  grain: string;
+  grain: Grain;
   canonical_type: string | null;
   canonical_brand: string | null;
   canonical_size: string | null;
+  canonical_model: string | null;
+  plane_type_number: number | null;
   sold_count: number | null;
   sold_mean: string | null;
   sold_p10: string | null;
@@ -59,67 +61,166 @@ export type Cluster = {
  * a page about nothing.
  */
 const PUBLISHABLE = `
-  grain IN ('coarse', 'fine')
+  grain IN ('coarse', 'fine', 'model-fine', 'type-fine')
   AND canonical_type IS NOT NULL AND canonical_type <> 'Other'
   AND canonical_brand IS NOT NULL AND canonical_brand <> 'Unknown'
   AND (sold_count >= ${SOLD_MIN_FOR_REFERENCE} OR asking_count >= ${ASKING_MIN_FOR_REFERENCE})
 `;
 
+/**
+ * Publishable pages that are also worth Google's attention. Ask-only pages
+ * (fewer than 8 sales) stay live for the for-sale list and the alert form,
+ * but carry noindex and are left out of the sitemap: with 248 sitemap URLs
+ * sitting at "Discovered, currently not indexed" a month in, every thin page
+ * in the sitemap was costing the strong ones crawl attention.
+ */
+const INDEXABLE = `coalesce(sold_count, 0) >= ${SOLD_MIN_FOR_REFERENCE}`;
+
+export const isIndexable = (c: { sold_count: number | null }) =>
+  (c.sold_count ?? 0) >= SOLD_MIN_FOR_REFERENCE;
+
+/** Grains that get a URL. type-fine hangs off model-fine as a fourth segment. */
+export type Grain = 'coarse' | 'fine' | 'model-fine' | 'type-fine';
+
 export type ClusterRef = {
   cluster_key: string;
+  grain: Grain;
   typeSlug: string;
   brandSlug: string;
+  /** Third URL segment for a size page, e.g. "10-inch". */
   sizeSlug: string | null;
+  /** Third URL segment for a model page, e.g. "no-4". Never set with sizeSlug. */
+  modelSlug: string | null;
+  /** Fourth URL segment "type-N" on a plane-type page. */
+  planeType: number | null;
   canonical_type: string;
   canonical_brand: string;
   canonical_size: string | null;
+  canonical_model: string | null;
   sold_count: number;
   asking_count: number;
 };
 
-export async function listPublishableClusters(): Promise<ClusterRef[]> {
-  const rows = await sql<{
-    cluster_key: string; canonical_type: string; canonical_brand: string;
-    canonical_size: string | null; sold_count: number | null; asking_count: number | null;
-  }>(
-    `SELECT cluster_key, canonical_type, canonical_brand, canonical_size,
-            sold_count, asking_count
-     FROM price_stats
-     WHERE ${PUBLISHABLE}
-     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC`
-  );
+type RefRow = {
+  cluster_key: string; canonical_type: string; canonical_brand: string;
+  canonical_size: string | null; canonical_model: string | null;
+  sold_count: number | null; asking_count: number | null;
+};
+const REF_COLUMNS = `cluster_key, canonical_type, canonical_brand, canonical_size, canonical_model, sold_count, asking_count`;
 
-  return rows.map((r) => {
-    const parts = r.cluster_key.split('::'); // pt :: type :: brand :: size
-    return {
-      cluster_key: r.cluster_key,
-      typeSlug: parts[1],
-      brandSlug: parts[2],
-      sizeSlug: parts[3] === '_' ? null : parts[3],
-      canonical_type: r.canonical_type,
-      canonical_brand: r.canonical_brand,
-      canonical_size: r.canonical_size,
-      sold_count: r.sold_count ?? 0,
-      asking_count: r.asking_count ?? 0,
-    };
-  });
+/**
+ * Cluster keys, as rebuild_price_stats() writes them:
+ *   pt::type::brand::_                 coarse
+ *   pt::type::brand::<size>            fine
+ *   pt::type::brand::m-<model>         model-fine
+ *   pt::type::brand::m-<model>::t-<n>  type-fine
+ */
+function toRef(r: RefRow): ClusterRef {
+  const p = r.cluster_key.split('::');
+  const third = p[3] ?? '_';
+  const isModel = third.startsWith('m-');
+  const typeMatch = /^t-(\d{1,2})$/.exec(p[4] ?? '');
+  const grain: Grain = typeMatch ? 'type-fine' : isModel ? 'model-fine' : third === '_' ? 'coarse' : 'fine';
+  return {
+    cluster_key: r.cluster_key,
+    grain,
+    typeSlug: p[1],
+    brandSlug: p[2],
+    sizeSlug: !isModel && third !== '_' ? third : null,
+    modelSlug: isModel ? third.slice(2) : null,
+    planeType: typeMatch ? Number(typeMatch[1]) : null,
+    canonical_type: r.canonical_type,
+    canonical_brand: r.canonical_brand,
+    canonical_size: r.canonical_size,
+    canonical_model: r.canonical_model,
+    sold_count: r.sold_count ?? 0,
+    asking_count: r.asking_count ?? 0,
+  };
 }
 
+export async function listPublishableClusters(
+  opts: { indexableOnly?: boolean; grains?: Grain[] } = {}
+): Promise<ClusterRef[]> {
+  const conds = [PUBLISHABLE];
+  const params: unknown[] = [];
+  if (opts.indexableOnly) conds.push(INDEXABLE);
+  if (opts.grains) { params.push(opts.grains); conds.push(`grain = ANY($${params.length})`); }
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
+     FROM price_stats
+     WHERE ${conds.join(' AND ')}
+     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC`,
+    params
+  );
+  return rows.map(toRef);
+}
+
+/**
+ * Resolve a guide URL to a cluster, or null.
+ *
+ * The third segment is shared by size pages ("10-inch") and model pages
+ * ("no-4"). Models are tried first: a real size never looks like a model, and
+ * the stats rebuild drops model-shaped "sizes" ("No. 4 1/2" as a size is
+ * normalizer noise) so the two cannot both be publishable at one URL. The
+ * fourth segment is only ever "type-N" under a model page.
+ *
+ * Filtered by PUBLISHABLE on purpose: before 2026-09-22 any key in
+ * price_stats rendered and was indexable, including one-sale clusters and the
+ * raw "m-no-4" model keys.
+ */
 export async function getCluster(
   typeSlug: string,
   brandSlug: string,
-  sizeSlug?: string
+  third?: string,
+  fourth?: string
 ): Promise<Cluster | null> {
-  const key = `pt::${typeSlug}::${brandSlug}::${sizeSlug || '_'}`;
+  const base = `pt::${typeSlug}::${brandSlug}`;
+  let keys: string[];
+  if (fourth) {
+    const m = /^type-(\d{1,2})$/.exec(fourth);
+    if (!m || !third) return null;
+    keys = [`${base}::m-${third}::t-${Number(m[1])}`];
+  } else if (third) {
+    keys = [`${base}::m-${third}`, `${base}::${third}`];
+  } else {
+    keys = [`${base}::_`];
+  }
   const rows = await sql<Cluster>(
-    `SELECT cluster_key, grain, canonical_type, canonical_brand, canonical_size,
+    `SELECT cluster_key, grain, canonical_type, canonical_brand, canonical_size, canonical_model,
+            plane_type_number,
             sold_count, sold_mean, sold_p10, sold_p25, sold_p50, sold_p75, sold_p90, sold_by_kind,
             asking_count, asking_count_active, asking_mean, asking_p25, asking_p50, asking_p75,
             asking_by_kind, last_built_at
-     FROM price_stats WHERE cluster_key = $1`,
-    [key]
+     FROM price_stats
+     WHERE cluster_key = ANY($1) AND ${PUBLISHABLE}
+     ORDER BY array_position($1::text[], cluster_key)
+     LIMIT 1`,
+    [keys]
   );
   return rows[0] ?? null;
+}
+
+/**
+ * Listing-table predicate for a cluster's scope, appended to the exact
+ * (type, brand) match every query starts from. Mirrors the grain definitions
+ * in rebuild_price_stats(): a size page filters on canonical_size, a model
+ * page on canonical_model, a type page on both model and plane_type_number.
+ */
+function scopeClause(c: Cluster, params: unknown[]): string {
+  let out = '';
+  if (c.grain === 'fine' && c.canonical_size) {
+    params.push(c.canonical_size);
+    out += ` AND l.canonical_size = $${params.length}`;
+  }
+  if ((c.grain === 'model-fine' || c.grain === 'type-fine') && c.canonical_model) {
+    params.push(c.canonical_model);
+    out += ` AND l.canonical_model = $${params.length}`;
+  }
+  if (c.grain === 'type-fine' && c.plane_type_number) {
+    params.push(c.plane_type_number);
+    out += ` AND l.plane_type_number = $${params.length}`;
+  }
+  return out;
 }
 
 export type Listing = {
@@ -160,11 +261,7 @@ async function listingsFor(
   limit: number
 ): Promise<Listing[]> {
   const params: unknown[] = [c.canonical_type, c.canonical_brand, status];
-  let sizeClause = '';
-  if (c.canonical_size) {
-    params.push(c.canonical_size);
-    sizeClause = ` AND l.canonical_size = $${params.length}`;
-  }
+  const sizeClause = scopeClause(c, params);
   params.push(limit);
 
   // Sold rows: the same sale sits in both jimbode and jimbode_valueguide, so
@@ -204,38 +301,36 @@ export const activeListings = (c: Cluster, limit = 24) => listingsFor(c, 'active
 
 /** Other brands making the same tool -- internal links Google can follow. */
 export async function relatedClusters(c: Cluster, limit = 8): Promise<ClusterRef[]> {
-  const rows = await sql<{
-    cluster_key: string; canonical_type: string; canonical_brand: string;
-    canonical_size: string | null; sold_count: number | null; asking_count: number | null;
-  }>(
-    `SELECT cluster_key, canonical_type, canonical_brand, canonical_size, sold_count, asking_count
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
      FROM price_stats
-     WHERE ${PUBLISHABLE} AND canonical_type = $1 AND cluster_key <> $2
+     WHERE ${PUBLISHABLE} AND grain = 'coarse' AND canonical_type = $1 AND canonical_brand <> $2
      ORDER BY coalesce(sold_count,0) DESC LIMIT $3`,
-    [c.canonical_type, c.cluster_key, limit]
+    [c.canonical_type, c.canonical_brand, limit]
   );
-  return rows.map((r) => {
-    const p = r.cluster_key.split('::');
-    return {
-      cluster_key: r.cluster_key, typeSlug: p[1], brandSlug: p[2],
-      sizeSlug: p[3] === '_' ? null : p[3],
-      canonical_type: r.canonical_type, canonical_brand: r.canonical_brand,
-      canonical_size: r.canonical_size,
-      sold_count: r.sold_count ?? 0, asking_count: r.asking_count ?? 0,
-    };
-  });
+  return rows.map(toRef);
 }
 
-export function clusterPath(c: { typeSlug: string; brandSlug: string; sizeSlug: string | null }) {
-  return c.sizeSlug
-    ? `/guide/${c.typeSlug}/${c.brandSlug}/${c.sizeSlug}`
-    : `/guide/${c.typeSlug}/${c.brandSlug}`;
-}
-
-export function clusterTitle(c: {
-  canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
+export function clusterPath(c: {
+  typeSlug: string; brandSlug: string; sizeSlug: string | null;
+  modelSlug?: string | null; planeType?: number | null;
 }) {
-  return [c.canonical_brand, c.canonical_type, c.canonical_size].filter(Boolean).join(' ');
+  const third = c.modelSlug ?? c.sizeSlug;
+  if (!third) return `/guide/${c.typeSlug}/${c.brandSlug}`;
+  const base = `/guide/${c.typeSlug}/${c.brandSlug}/${third}`;
+  return c.modelSlug && c.planeType ? `${base}/type-${c.planeType}` : base;
+}
+
+type Nameable = {
+  canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
+  canonical_model?: string | null; plane_type_number?: number | null; planeType?: number | null;
+};
+const typeNo = (c: Nameable) => c.plane_type_number ?? c.planeType ?? null;
+
+export function clusterTitle(c: Nameable) {
+  const t = typeNo(c);
+  return [c.canonical_brand, c.canonical_model, t ? `Type ${t}` : null, c.canonical_type, c.canonical_size]
+    .filter(Boolean).join(' ');
 }
 
 export const money = (v: string | number | null | undefined) => {
@@ -265,11 +360,7 @@ export type ActiveAggregate = {
  */
 export async function activeAggregate(c: Cluster): Promise<ActiveAggregate> {
   const params: unknown[] = [c.canonical_type, c.canonical_brand];
-  let sizeClause = '';
-  if (c.canonical_size) {
-    params.push(c.canonical_size);
-    sizeClause = ` AND l.canonical_size = $${params.length}`;
-  }
+  const sizeClause = scopeClause(c, params);
   const rows = await sql<{ offer_count: string; low_cents: number | null; high_cents: number | null }>(
     `SELECT count(*)::text AS offer_count, min(price_cents) AS low_cents, max(price_cents) AS high_cents
      FROM listings l
@@ -304,11 +395,7 @@ export type SoldPoint = {
  */
 export async function soldPricePoints(c: Cluster): Promise<SoldPoint[]> {
   const params: unknown[] = [c.canonical_type, c.canonical_brand];
-  let sizeClause = '';
-  if (c.canonical_size) {
-    params.push(c.canonical_size);
-    sizeClause = ` AND l.canonical_size = $${params.length}`;
-  }
+  const sizeClause = scopeClause(c, params);
   return sql<SoldPoint>(
     `SELECT * FROM (
        SELECT DISTINCT ON (lower(btrim(l.title_raw)), COALESCE(l.sold_price_cents, l.price_cents))
@@ -364,19 +451,19 @@ export function typeLower(type: string): string {
  * The cluster as it reads in a sentence: "Preston moulding planes",
  * "Bridge City 24 inch rules". Brand keeps its own casing.
  */
-export function clusterPhrase(c: {
-  canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
-}): string {
+export function clusterPhrase(c: Nameable): string {
   const type = c.canonical_type ? typeLower(typePlural(c.canonical_type)) : 'tools';
-  return [c.canonical_brand, c.canonical_size, type].filter(Boolean).join(' ');
+  const t = typeNo(c);
+  return [c.canonical_brand, c.canonical_model, t ? `Type ${t}` : null, c.canonical_size, type]
+    .filter(Boolean).join(' ');
 }
 
 /** Singular attributive form for headings: "Preston moulding plane prices". */
-export function clusterPhraseSingular(c: {
-  canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
-}): string {
+export function clusterPhraseSingular(c: Nameable): string {
   const type = c.canonical_type ? typeLower(c.canonical_type) : 'tool';
-  return [c.canonical_brand, c.canonical_size, type].filter(Boolean).join(' ');
+  const t = typeNo(c);
+  return [c.canonical_brand, c.canonical_model, t ? `Type ${t}` : null, c.canonical_size, type]
+    .filter(Boolean).join(' ');
 }
 
 /**
@@ -419,11 +506,7 @@ export type ClusterFacts = {
 
 export async function clusterFacts(c: Cluster): Promise<ClusterFacts> {
   const params: unknown[] = [c.canonical_type, c.canonical_brand];
-  let sizeClause = '';
-  if (c.canonical_size) {
-    params.push(c.canonical_size);
-    sizeClause = ` AND l.canonical_size = $${params.length}`;
-  }
+  const sizeClause = scopeClause(c, params);
   // One round trip: the per-source rows, plus a single summary row (name NULL)
   // carrying the exclusion counts. Two queries doubled the pool pressure on a
   // page that already issues seven others.
@@ -476,37 +559,58 @@ export async function clusterFacts(c: Cluster): Promise<ClusterFacts> {
   };
 }
 
-function toRef(r: {
-  cluster_key: string; canonical_type: string; canonical_brand: string;
-  canonical_size: string | null; sold_count: number | null; asking_count: number | null;
-}): ClusterRef {
-  const p = r.cluster_key.split('::');
-  return {
-    cluster_key: r.cluster_key, typeSlug: p[1], brandSlug: p[2],
-    sizeSlug: p[3] === '_' ? null : p[3],
-    canonical_type: r.canonical_type, canonical_brand: r.canonical_brand,
-    canonical_size: r.canonical_size,
-    sold_count: r.sold_count ?? 0, asking_count: r.asking_count ?? 0,
-  };
-}
-
 /**
  * Same brand and type at other sizes, plus the brand page itself when this is
  * a size page. Sibling links are how a visitor who landed on "Stanley brace"
  * gets to "Stanley 10 inch brace" without going back to the index.
  */
 export async function sizeClusters(c: Cluster, limit = 12): Promise<ClusterRef[]> {
-  const rows = await sql<{
-    cluster_key: string; canonical_type: string; canonical_brand: string;
-    canonical_size: string | null; sold_count: number | null; asking_count: number | null;
-  }>(
-    `SELECT cluster_key, canonical_type, canonical_brand, canonical_size, sold_count, asking_count
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
      FROM price_stats
-     WHERE ${PUBLISHABLE} AND canonical_type = $1 AND canonical_brand = $2 AND cluster_key <> $3
+     WHERE ${PUBLISHABLE} AND grain IN ('coarse', 'fine')
+       AND canonical_type = $1 AND canonical_brand = $2 AND cluster_key <> $3
      ORDER BY (canonical_size IS NULL) DESC, coalesce(sold_count,0) DESC LIMIT $4`,
     [c.canonical_type, c.canonical_brand, c.cluster_key, limit]
   );
   return rows.map(toRef);
+}
+
+/**
+ * Model pages under the same brand and type: the "By model" list on a brand
+ * page, and the "other models" list on a model page. Publishable only; the
+ * page itself carries noindex when it is thin.
+ */
+export async function modelClusters(c: Cluster, limit = 16): Promise<ClusterRef[]> {
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
+     FROM price_stats
+     WHERE ${PUBLISHABLE} AND grain = 'model-fine'
+       AND canonical_type = $1 AND canonical_brand = $2 AND cluster_key <> $3
+     ORDER BY coalesce(sold_count,0) DESC LIMIT $4`,
+    [c.canonical_type, c.canonical_brand, c.cluster_key, limit]
+  );
+  return rows.map(toRef);
+}
+
+export type TypeRow = ClusterRef & { sold_p50: string | null; publishable: boolean };
+
+/**
+ * Plane type-study breakdown for a model (Stanley No. 4: Type 11, 13, 16,
+ * 19...). Every type with at least one sale is listed so the table describes
+ * the whole model; only the publishable ones link to a page.
+ */
+export async function typeClusters(c: Cluster): Promise<TypeRow[]> {
+  if (!c.canonical_model) return [];
+  const rows = await sql<RefRow & { sold_p50: string | null; publishable: boolean }>(
+    `SELECT ${REF_COLUMNS}, sold_p50, (${PUBLISHABLE}) AS publishable
+     FROM price_stats
+     WHERE grain = 'type-fine' AND canonical_type = $1 AND canonical_brand = $2
+       AND canonical_model = $3 AND coalesce(sold_count, 0) > 0
+     ORDER BY plane_type_number`,
+    [c.canonical_type, c.canonical_brand, c.canonical_model]
+  );
+  return rows.map((r) => ({ ...toRef(r), sold_p50: r.sold_p50, publishable: r.publishable }));
 }
 
 /** Maker note, if one has been generated and published for this brand. */
@@ -528,16 +632,13 @@ export async function searchClusters(q: string, limit = 60): Promise<ClusterRef[
   if (words.length === 0) return [];
   const params: unknown[] = [...words, limit];
   const conds = words.map(
-    (_, i) => `regexp_replace(lower(canonical_brand || ' ' || canonical_type || ' ' || coalesce(canonical_size, '')), '[^a-z0-9]+', ' ', 'g') LIKE '%' || $${i + 1} || '%'`
+    (_, i) => `regexp_replace(lower(canonical_brand || ' ' || coalesce(canonical_model, '') || ' ' || canonical_type || ' ' || coalesce(canonical_size, '')), '[^a-z0-9]+', ' ', 'g') LIKE '%' || $${i + 1} || '%'`
   );
-  const rows = await sql<{
-    cluster_key: string; canonical_type: string; canonical_brand: string;
-    canonical_size: string | null; sold_count: number | null; asking_count: number | null;
-  }>(
-    `SELECT cluster_key, canonical_type, canonical_brand, canonical_size, sold_count, asking_count
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
      FROM price_stats
-     WHERE ${PUBLISHABLE} AND ${conds.join(' AND ')}
-     ORDER BY (canonical_size IS NULL) DESC, coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC
+     WHERE ${PUBLISHABLE} AND grain IN ('coarse', 'fine', 'model-fine') AND ${conds.join(' AND ')}
+     ORDER BY (grain = 'coarse') DESC, coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC
      LIMIT $${params.length}`,
     params
   );
@@ -567,17 +668,24 @@ export async function resolveBrandAlias(brandSlug: string): Promise<string | nul
  * ("16oz" -> "16-oz"), and both together.
  */
 export async function redirectTarget(
-  typeSlug: string, brandSlug: string, sizeSlug?: string
+  typeSlug: string, brandSlug: string, sizeSlug?: string, fourth?: string
 ): Promise<string | null> {
+  // Raw model keys ("m-no-4") were reachable before model pages had clean
+  // URLs; send them to the clean one.
+  if (sizeSlug?.startsWith('m-')) {
+    const clean = sizeSlug.slice(2);
+    const hit = await getCluster(typeSlug, brandSlug, clean, fourth);
+    if (hit) return clusterPath({ typeSlug, brandSlug, sizeSlug: null, modelSlug: clean, planeType: hit.plane_type_number });
+  }
   const brand = await resolveBrandAlias(brandSlug);
   const candidates: { b: string; s: string | null }[] = [];
   if (brand) candidates.push({ b: brand, s: sizeSlug ?? null });
   if (sizeSlug) {
+    // Re-derive the normalised slug from the retired one ("16oz" -> "16-oz",
+    // "9-1-2-inches" -> "9-1-2-inch"). No listing carries the old spelling
+    // any more, so this cannot be looked up; it has to be recomputed.
     const rows = await sql<{ slug: string }>(
-      `SELECT bl_slug(bl_normalize_size(canonical_size)) AS slug
-       FROM listings
-       WHERE canonical_type IS NOT NULL AND bl_slug(canonical_size) = $1
-       LIMIT 1`,
+      `SELECT bl_slug(bl_normalize_size(replace($1, '-', ' '))) AS slug`,
       [sizeSlug]
     );
     const norm = rows[0]?.slug;
@@ -587,8 +695,15 @@ export async function redirectTarget(
     }
   }
   for (const c of candidates) {
-    const hit = await getCluster(typeSlug, c.b, c.s ?? undefined);
-    if (hit) return clusterPath({ typeSlug, brandSlug: c.b, sizeSlug: c.s });
+    const hit = await getCluster(typeSlug, c.b, c.s ?? undefined, fourth);
+    if (hit) {
+      const isModel = hit.grain === 'model-fine' || hit.grain === 'type-fine';
+      return clusterPath({
+        typeSlug, brandSlug: c.b,
+        sizeSlug: isModel ? null : c.s, modelSlug: isModel ? c.s : null,
+        planeType: hit.plane_type_number,
+      });
+    }
   }
   return null;
 }

@@ -8,16 +8,15 @@ export const dynamicParams = true;
 
 type Params = { params: Promise<{ type: string; brand: string }> };
 
+// Prerender the pages worth indexing; thin (noindex) pages render on demand.
 export async function generateStaticParams() {
-  const clusters = await listPublishableClusters();
-  return clusters
-    .filter((c) => c.sizeSlug === null)
-    .map((c) => ({ type: c.typeSlug, brand: c.brandSlug }));
+  const clusters = await listPublishableClusters({ indexableOnly: true, grains: ['coarse'] });
+  return clusters.map((c) => ({ type: c.typeSlug, brand: c.brandSlug }));
 }
 
 export async function generateMetadata({ params }: Params) {
   const { type, brand } = await params;
-  return guideMetadata(type, brand);
+  return guideMetadata({ typeSlug: type, brandSlug: brand });
 }
 
 export default async function Page({ params }: Params) {
