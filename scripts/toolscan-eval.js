@@ -133,9 +133,8 @@ async function main() {
 
     try {
       const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        temperature: 0,
+        model: 'claude-opus-5',
+        max_tokens: 8192,
         system: TOOLSCAN_SYSTEM_PROMPT,
         messages: [
           {
@@ -233,7 +232,7 @@ async function main() {
   const output = {
     timestamp: new Date().toISOString(),
     prompt_version: 'v3.3', // Bump this when you change the prompt
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-opus-5',
     total_evaluated: allResults.length,
     results: allResults,
   };

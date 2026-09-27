@@ -2096,6 +2096,11 @@ const MEDIA_TYPE_EXT = {
  *
  * Body: { images: [{ data: "base64...", media_type: "image/jpeg" }], context?: string }
  */
+// Vision model for ToolScan. The previous pin, claude-sonnet-4-20250514, was
+// retired upstream and every scan 404'd from 2026-09 until this was changed.
+// Keep it a fixed ID with no date suffix.
+const TOOLSCAN_MODEL = 'claude-opus-5';
+
 app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
   try {
     const { images, context, previous_scan_id } = req.body;
@@ -2200,16 +2205,25 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
     }
     content.push({ type: 'text', text: userText });
 
-    // Call Claude API
+    // Call Claude API. Thinking is on by default on this model and shares
+    // max_tokens with the answer, so the cap is wider than the JSON needs.
+    // Sampling parameters are rejected by the current models — do not add
+    // temperature back.
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      temperature: 0,
+      model: TOOLSCAN_MODEL,
+      max_tokens: 8192,
       system: TOOLSCAN_SYSTEM_PROMPT,
       messages: [{ role: 'user', content }],
     });
 
-    // Extract the text response
+    // The safety classifiers can decline an image with a normal 200; that is
+    // not a parse failure and should not be reported as one.
+    if (message.stop_reason === 'refusal') {
+      console.warn('[toolscan] model declined the request', message.stop_details || null);
+      return res.status(400).json({ error: 'The image could not be analysed. Try a different photo.' });
+    }
+
+    // Extract the text response (thinking blocks, if any, are skipped)
     const responseText = message.content
       .filter((block) => block.type === 'text')
       .map((block) => block.text)
@@ -2245,7 +2259,7 @@ app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
       toolCount: parsed.tool ? 1 : 0,
       context: context || null,
       results: parsed,
-      model: 'claude-sonnet-4-20250514',
+      model: TOOLSCAN_MODEL,
       previousScanId: previous_scan_id || null,
       usage: {
         input_tokens: message.usage?.input_tokens || 0,
