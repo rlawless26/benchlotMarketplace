@@ -8,10 +8,11 @@
  * visitors. State lives in `useAggregatorState` (URL-sync).
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import ResultsState from './ResultsState';
 import { useAggregatorState } from '../../hooks/useAggregatorState';
+import { usePageMeta } from '../../hooks/usePageMeta';
 
 const AggregatorHomePage = () => {
   const state = useAggregatorState();
@@ -27,9 +28,14 @@ const AggregatorHomePage = () => {
     clearAllFilters,
   } = state;
 
-  useEffect(() => {
-    document.title = query ? `${query} — Benchlot` : 'Benchlot';
-  }, [query]);
+  usePageMeta({
+    title: query
+      ? `${query} — used tool listings and prices · Benchlot`
+      : 'Benchlot — search used woodworking tools and see what they sell for',
+    description:
+      'One search across dealers, forum classifieds and auctions for used hand and power tools, with sold prices alongside. Save a search and get an email when a match appears.',
+    canonical: query ? undefined : 'https://benchlot.com/',
+  });
 
   const actions = {
     setQuery,

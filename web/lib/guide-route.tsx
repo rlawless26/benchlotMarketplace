@@ -5,7 +5,7 @@ import { JsonLd, clusterJsonLd } from './jsonld';
 import { SITE_URL } from './site';
 import {
   getCluster, soldComps, activeListings, relatedClusters, sizeClusters, modelClusters, typeClusters,
-  activeAggregate, soldPricePoints, clusterFacts, brandNote, redirectTarget, isIndexable,
+  activeAggregate, soldPricePoints, clusterFacts, brandNote, brandHubExists, redirectTarget, isIndexable,
   clusterPhrase, clusterPhraseSingular, clusterPath, money, SOLD_MIN_FOR_REFERENCE,
 } from './price-guide';
 
@@ -78,7 +78,7 @@ export async function GuideRoute(p: GuideParams) {
     permanentRedirect(pathFor({ ...p, third: p.third.slice(2) }, cluster.grain, cluster.plane_type_number));
   }
 
-  const [sold, active, related, sizes, models, types, agg, points, facts, note] = await Promise.all([
+  const [sold, active, related, sizes, models, types, agg, points, facts, note, hub] = await Promise.all([
     soldComps(cluster),
     activeListings(cluster),
     relatedClusters(cluster),
@@ -89,6 +89,7 @@ export async function GuideRoute(p: GuideParams) {
     soldPricePoints(cluster),
     clusterFacts(cluster),
     brandNote(cluster.canonical_brand),
+    brandHubExists(p.brandSlug),
   ]);
 
   const url = `${SITE_URL}${pathFor(p, cluster.grain, cluster.plane_type_number)}`;
@@ -98,7 +99,7 @@ export async function GuideRoute(p: GuideParams) {
       <JsonLd data={clusterJsonLd(cluster, agg, url)} />
       <GuideView
         cluster={cluster} sold={sold} active={active} related={related} sizes={sizes}
-        models={models} types={types} points={points} facts={facts} note={note}
+        models={models} types={types} points={points} facts={facts} note={note} hub={hub}
       />
     </>
   );

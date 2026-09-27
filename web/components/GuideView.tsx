@@ -5,7 +5,7 @@ import GuideAlert from './GuideAlert';
 import OutboundListingLink from './OutboundListingLink';
 import {
   Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint, TypeRow,
-  clusterPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
+  clusterPath, brandHubPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
   money, centsToMoney, slug, SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
 } from '@/lib/price-guide';
 
@@ -14,7 +14,7 @@ const KIND_CLASS: Record<string, string> = {
   Marketplace: 'bg-kind-marketplace', Auction: 'bg-kind-auction',
 };
 
-function Stat({ label, value, big = false }: { label: string; value: string | null; big?: boolean }) {
+export function Stat({ label, value, big = false }: { label: string; value: string | null; big?: boolean }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-wide text-spruce-light">{label}</div>
@@ -245,11 +245,11 @@ function Chips({ items, label }: { items: { key: string; href: string; text: str
   );
 }
 
-const countLabel = (r: { sold_count: number; asking_count: number }) =>
+export const countLabel = (r: { sold_count: number; asking_count: number }) =>
   r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`;
 
 export default function GuideView({
-  cluster, sold, active, related, sizes, models, types, points, facts, note,
+  cluster, sold, active, related, sizes, models, types, points, facts, note, hub = false,
 }: {
   cluster: Cluster;
   sold: Listing[];
@@ -261,6 +261,8 @@ export default function GuideView({
   points: SoldPoint[];
   facts: ClusterFacts;
   note: string | null;
+  /** True when the brand has a hub page at /guide/brand/{brand}. */
+  hub?: boolean;
 }) {
   const phrase = clusterPhrase(cluster);                 // "Preston moulding planes"
   const singular = clusterPhraseSingular(cluster);       // "Preston moulding plane"
@@ -526,6 +528,16 @@ export default function GuideView({
             ...(brandPage ? [{ key: brandPage.cluster_key, href: clusterPath(brandPage), text: `All ${cluster.canonical_brand} ${typeWords}`, count: countLabel(brandPage) }] : []),
             ...models.map((r) => ({ key: r.cluster_key, href: clusterPath(r), text: r.canonical_model ?? '', count: countLabel(r) })),
           ]}
+        />
+      )}
+
+      {hub && cluster.canonical_brand && (
+        <Chips
+          label={`More from ${cluster.canonical_brand}`}
+          items={[{
+            key: 'hub', href: brandHubPath(slug(cluster.canonical_brand)),
+            text: `All ${cluster.canonical_brand} tools`, count: 'every type',
+          }]}
         />
       )}
 

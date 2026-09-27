@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
-import { listPublishableClusters, clusterPath, clusterPhrase, slug } from '@/lib/price-guide';
+import { listPublishableClusters, listBrandHubs, clusterPath, brandHubPath, clusterPhrase, slug } from '@/lib/price-guide';
 
 export const revalidate = 3600;
 
@@ -14,7 +14,10 @@ export const metadata: Metadata = {
 
 export default async function GuideIndex() {
   // Brand and size pages only; model pages are reached from their brand page.
-  const clusters = await listPublishableClusters({ grains: ['coarse', 'fine'] });
+  const [clusters, hubs] = await Promise.all([
+    listPublishableClusters({ grains: ['coarse', 'fine'] }),
+    listBrandHubs(),
+  ]);
 
   // Group by tool type so the index reads as a table of contents rather than a
   // flat wall of 600 links.
@@ -45,6 +48,26 @@ export default async function GuideIndex() {
       <div className="mt-6 max-w-2xl">
         <SearchForm />
       </div>
+
+      {hubs.length > 0 && (
+        <section id="makers" className="mt-10">
+          <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">By maker</h2>
+          <p className="mt-1 text-sm text-spruce-light">Every tool type a maker has sales for, on one page.</p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {hubs.map((h) => (
+              <li key={h.brandSlug}>
+                <Link
+                  href={brandHubPath(h.brandSlug)}
+                  className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey"
+                >
+                  {h.canonical_brand}
+                  <span className="tnum ml-2 text-xs text-spruce-light">{h.type_count} types</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="mt-10 space-y-10">
         {types.map(([type, list]) => (

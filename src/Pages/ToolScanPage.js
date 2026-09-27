@@ -1,5 +1,5 @@
 // src/Pages/ToolScanPage.js
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../firebase/hooks/useAuth';
 import { useAuthModal } from '../context/AuthModalContext';
 import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
@@ -8,6 +8,7 @@ import ToolScanExampleCard from '../components/ToolScanExampleCard';
 import { getAuth } from 'firebase/auth';
 import { getConfig } from '../utils/environment';
 import { track } from '../utils/analytics';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
   'https://api-sed2e4p6ua-uc.a.run.app',
@@ -46,9 +47,12 @@ const ToolScanPage = () => {
 
   const [emailError, setEmailError] = useState(null);
 
-  useEffect(() => {
-    document.title = 'Scan a Tool | Benchlot';
-  }, []);
+  usePageMeta({
+    title: 'Identify a tool from a photo and see what it sells for · Benchlot',
+    description:
+      'Upload a photo of a hand or power tool. Benchlot names the maker, model and type, then shows what it has actually sold for and what is listed now.',
+    canonical: 'https://benchlot.com/scan',
+  });
 
   const handleFileSelect = useCallback((e) => {
     const files = Array.from(e.target.files);
@@ -435,7 +439,7 @@ const ToolScanPage = () => {
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Sparkles className="w-10 h-10 text-honey" />
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-spruce">
-                  Scan a Tool
+                  Identify a tool from a photo
                 </h1>
               </div>
               <p className="text-lg md:text-xl text-secondary font-body max-w-2xl mx-auto mb-8">

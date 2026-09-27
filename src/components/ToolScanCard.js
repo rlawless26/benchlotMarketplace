@@ -717,6 +717,19 @@ const ToolScanCardFull = ({
                 View full price guide →
               </a>
             )}
+            {PRICE_GUIDE_ENABLED && canonicalBrand && canonicalBrand !== 'Unknown' && (
+              <a
+                href={`/guide/brand/${slug(canonicalBrand)}`}
+                onClick={() => track('toolscan_price_guide_link_clicked', {
+                  scanId: scanId || null,
+                  cluster_key: null,
+                  surface: 'brand_hub',
+                })}
+                className="ml-3 text-sm font-body text-honey hover:text-honey-dark transition-colors"
+              >
+                All {canonicalBrand} tools →
+              </a>
+            )}
           </div>
 
           {!activeListingsLoaded && (

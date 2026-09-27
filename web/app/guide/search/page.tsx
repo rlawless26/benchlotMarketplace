@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
-import { searchClusters, clusterPath, clusterPhrase } from '@/lib/price-guide';
+import { searchClusters, hubForQuery, clusterPath, brandHubPath, clusterPhrase } from '@/lib/price-guide';
 
 export const metadata: Metadata = {
   title: 'Search the price guide',
@@ -15,7 +15,7 @@ type Props = { searchParams: Promise<{ q?: string | string[] }> };
 export default async function SearchPage({ searchParams }: Props) {
   const raw = (await searchParams).q;
   const q = (Array.isArray(raw) ? raw[0] : raw ?? '').trim().slice(0, 80);
-  const results = q ? await searchClusters(q) : [];
+  const [results, hub] = q ? await Promise.all([searchClusters(q), hubForQuery(q)]) : [[], null];
 
   return (
     <div>
@@ -29,6 +29,18 @@ export default async function SearchPage({ searchParams }: Props) {
           Nothing in the guide matches &ldquo;{q}&rdquo; yet. Try the maker&rsquo;s name on its own,
           or <Link href="/guide" className="text-honey-dark hover:underline">browse every tool</Link>.
         </p>
+      )}
+
+      {hub && (
+        <Link
+          href={brandHubPath(hub.brandSlug)}
+          className="mt-8 flex items-baseline justify-between gap-3 rounded border border-honey bg-bone-light px-4 py-3 text-spruce hover:border-honey-dark"
+        >
+          <span className="font-display font-semibold">All {hub.canonical_brand} tools</span>
+          <span className="tnum shrink-0 text-xs text-spruce-light">
+            {hub.type_count} types · {hub.sold_total.toLocaleString('en-US')} sales
+          </span>
+        </Link>
       )}
 
       {results.length > 0 && (

@@ -707,3 +707,106 @@ export async function redirectTarget(
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Brand hubs: /guide/brand/{brand}
+// ---------------------------------------------------------------------------
+
+/**
+ * One page per maker, listing every tool type the guide has a publishable
+ * cluster for. Answers the "millers falls tools price guide" class of query,
+ * which no type-scoped page can rank for. A brand needs at least two
+ * publishable coarse clusters to be a hub; with one, the URL 301s to the type
+ * page instead so the address still answers.
+ */
+export const HUB_MIN_TYPES = 2;
+
+export type HubType = ClusterRef & { sold_p50: string | null };
+
+export type BrandHub = {
+  canonical_brand: string;
+  brandSlug: string;
+  /** Coarse clusters, most sold first. */
+  types: HubType[];
+  sold_total: number;
+  asking_total: number;
+  /** At least HUB_MIN_TYPES types carry 8+ sales: worth offering to the index. */
+  indexable: boolean;
+  note: string | null;
+};
+
+export type BrandHubRef = {
+  canonical_brand: string;
+  brandSlug: string;
+  type_count: number;
+  sold_total: number;
+};
+
+export const brandHubPath = (brandSlug: string) => `/guide/brand/${brandSlug}`;
+
+const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
+
+/**
+ * Every publishable coarse cluster for a brand slug, or null when there are
+ * none. The caller decides what fewer than HUB_MIN_TYPES rows means.
+ */
+export async function getBrandHub(brandSlug: string): Promise<BrandHub | null> {
+  const rows = await sql<RefRow & { sold_p50: string | null }>(
+    `SELECT ${REF_COLUMNS}, sold_p50
+     FROM price_stats
+     WHERE ${HUB_ROWS} AND split_part(cluster_key, '::', 3) = $1
+     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC`,
+    [brandSlug]
+  );
+  if (rows.length === 0) return null;
+  const types = rows.map((r) => ({ ...toRef(r), sold_p50: r.sold_p50 }));
+  const canonical_brand = rows[0].canonical_brand;
+  const note = await brandNote(canonical_brand);
+  return {
+    canonical_brand,
+    brandSlug,
+    types,
+    sold_total: types.reduce((n, t) => n + t.sold_count, 0),
+    asking_total: types.reduce((n, t) => n + t.asking_count, 0),
+    indexable: types.filter(isIndexable).length >= HUB_MIN_TYPES,
+    note,
+  };
+}
+
+/** Brands with enough publishable types to be a hub, most sold first. */
+export async function listBrandHubs(opts: { indexableOnly?: boolean } = {}): Promise<BrandHubRef[]> {
+  const having = opts.indexableOnly
+    ? `count(*) FILTER (WHERE ${INDEXABLE}) >= ${HUB_MIN_TYPES}`
+    : `count(*) >= ${HUB_MIN_TYPES}`;
+  const rows = await sql<{ canonical_brand: string; brand_slug: string; type_count: number; sold_total: number }>(
+    `SELECT canonical_brand, split_part(cluster_key, '::', 3) AS brand_slug,
+            count(*)::int AS type_count, coalesce(sum(sold_count), 0)::int AS sold_total
+     FROM price_stats
+     WHERE ${HUB_ROWS}
+     GROUP BY canonical_brand, split_part(cluster_key, '::', 3)
+     HAVING ${having}
+     ORDER BY sold_total DESC, canonical_brand`
+  );
+  return rows.map((r) => ({
+    canonical_brand: r.canonical_brand, brandSlug: r.brand_slug,
+    type_count: r.type_count, sold_total: r.sold_total,
+  }));
+}
+
+/** Whether a brand slug has a hub page; used to decide whether to link one. */
+export async function brandHubExists(brandSlug: string): Promise<boolean> {
+  const rows = await sql<{ n: number }>(
+    `SELECT count(*)::int AS n FROM price_stats WHERE ${HUB_ROWS} AND split_part(cluster_key, '::', 3) = $1`,
+    [brandSlug]
+  );
+  return (rows[0]?.n ?? 0) >= HUB_MIN_TYPES;
+}
+
+/** Hub brand whose name matches a search query exactly (punctuation-insensitive), or null. */
+export async function hubForQuery(q: string): Promise<BrandHubRef | null> {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const wanted = norm(q);
+  if (!wanted) return null;
+  const hubs = await listBrandHubs();
+  return hubs.find((h) => norm(h.canonical_brand) === wanted) ?? null;
+}
