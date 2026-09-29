@@ -2062,247 +2062,6 @@ app.post('/create-refund', async (req, res) => {
   }
 });
 
-// ─── ToolScan Endpoint ───────────────────────────────────────────────────────
-
-const Anthropic = require('@anthropic-ai/sdk');
-const { TOOLSCAN_SYSTEM_PROMPT } = require('./toolscan-prompt');
-
-// Rate-limit ToolScan more tightly (costs real money per call)
-const toolscanLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20, // 20 scans per 15 minutes per IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  validate: { ip: false }, // Disable IP validation for Firebase emulator compatibility
-  message: { error: 'Too many scan requests, please try again later.' }
-});
-
-// Map of media_type → file extension for stored scan images.
-const MEDIA_TYPE_EXT = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/heic': 'heic',
-};
-
-/**
- * POST /toolscan
- * Accepts a base64-encoded image (or array of images) and optional context.
- * Returns structured tool identifications via Claude vision.
- *
- * Images are persisted to gs://<bucket>/toolscans/{scanId}/{i}.{ext} so the
- * paired (image, identification, correction) tuples form a queryable training
- * set for future model improvements.
- *
- * Body: { images: [{ data: "base64...", media_type: "image/jpeg" }], context?: string }
- */
-// Vision model for ToolScan. The previous pin, claude-sonnet-4-20250514, was
-// retired upstream and every scan 404'd from 2026-09 until this was changed.
-// Keep it a fixed ID with no date suffix.
-const TOOLSCAN_MODEL = 'claude-opus-5';
-
-app.post('/toolscan', toolscanLimiter, optionalAuth, async (req, res) => {
-  try {
-    const { images, context, previous_scan_id } = req.body;
-
-    if (!images || !Array.isArray(images) || images.length === 0) {
-      return res.status(400).json({ error: 'At least one image is required.' });
-    }
-
-    if (images.length > 5) {
-      return res.status(400).json({ error: 'Maximum 5 images per scan.' });
-    }
-
-    // Validate each image
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
-    for (const img of images) {
-      if (!img.data || !img.media_type) {
-        return res.status(400).json({ error: 'Each image must have data and media_type fields.' });
-      }
-      if (!allowedTypes.includes(img.media_type)) {
-        return res.status(400).json({ error: `Unsupported image type: ${img.media_type}. Use JPEG, PNG, or WebP.` });
-      }
-    }
-
-    // Initialize Anthropic client
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    if (!anthropicKey) {
-      console.error('ANTHROPIC_API_KEY environment variable is not set.');
-      return res.status(500).json({ error: 'ToolScan is not configured. Missing API key.' });
-    }
-
-    // Follow-up (multi-turn) scan: fetch the prior scan's result so we can
-    // prepend it as context to the model. The follow-up is a new scan with
-    // a new id; lineage is tracked in `previousScanId` on the new doc.
-    let previousScan = null;
-    if (previous_scan_id && typeof previous_scan_id === 'string') {
-      try {
-        const prevSnap = await db.collection('toolscans').doc(previous_scan_id).get();
-        if (prevSnap.exists) {
-          previousScan = prevSnap.data();
-        }
-      } catch (e) {
-        console.warn('[toolscan] previous_scan_id lookup failed:', e.message);
-      }
-    }
-
-    // Pre-generate scanId so image storage paths and Firestore doc share an
-    // identity. Doc.set() instead of collection.add() locks in the id.
-    const scanRef = db.collection('toolscans').doc();
-    const scanId = scanRef.id;
-
-    // Persist images to Storage in parallel with the Anthropic call. We don't
-    // await the upload before calling the model — if Storage is slow, the
-    // user shouldn't wait. We do collect the promises and resolve before
-    // writing the Firestore doc so imagePaths can be persisted alongside.
-    const bucket = admin.storage().bucket();
-    const imagePaths = [];
-    const uploadPromises = images.map((img, i) => {
-      const ext = MEDIA_TYPE_EXT[img.media_type] || 'bin';
-      const path = `toolscans/${scanId}/${i}.${ext}`;
-      imagePaths.push(path);
-      const buffer = Buffer.from(img.data, 'base64');
-      return bucket.file(path).save(buffer, {
-        metadata: { contentType: img.media_type },
-        resumable: false,
-      }).catch((err) => {
-        // Non-fatal — scan still returns results; we just note the upload failure.
-        console.warn(`[toolscan] image upload failed for ${path}:`, err.message);
-        return null;
-      });
-    });
-
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
-
-    // Build the user message content: image blocks + optional context
-    const content = [];
-
-    for (const img of images) {
-      content.push({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: img.media_type,
-          data: img.data,
-        },
-      });
-    }
-
-    // Add user context if provided
-    let userText = 'Identify the tool in this image.';
-    if (previousScan && previousScan.results && previousScan.results.tool) {
-      // Multi-turn: prepend the prior identification so the model can refine
-      // rather than start from scratch.
-      const prev = previousScan.results.tool;
-      const prevName = [prev.canonical_brand, prev.canonical_model].filter(Boolean).join(' ') || prev.canonical_type || 'unknown';
-      const prevHint = (prev.next_photo_hint || 'a different angle').replace(/"/g, '');
-      userText = `On the previous photo you identified this as ${prevName}`
-        + (Number.isInteger(prev.plane_type_number) ? `, Type ${prev.plane_type_number}` : '')
-        + ` with ${prev.confidence || 'Medium'} confidence. The user is now sending the ${prevHint} view you requested. Refine your identification — your confidence should escalate if the new view confirms what you saw, or change if it reveals a different tool.`;
-    }
-    if (context && context.trim()) {
-      userText += `\n\nUser context: "${context.trim()}"`;
-    }
-    content.push({ type: 'text', text: userText });
-
-    // Call Claude API. Thinking is on by default on this model and shares
-    // max_tokens with the answer, so the cap is wider than the JSON needs.
-    // Sampling parameters are rejected by the current models — do not add
-    // temperature back.
-    const message = await anthropic.messages.create({
-      model: TOOLSCAN_MODEL,
-      max_tokens: 8192,
-      system: TOOLSCAN_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content }],
-    });
-
-    // The safety classifiers can decline an image with a normal 200; that is
-    // not a parse failure and should not be reported as one.
-    if (message.stop_reason === 'refusal') {
-      console.warn('[toolscan] model declined the request', message.stop_details || null);
-      return res.status(400).json({ error: 'The image could not be analysed. Try a different photo.' });
-    }
-
-    // Extract the text response (thinking blocks, if any, are skipped)
-    const responseText = message.content
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text)
-      .join('');
-
-    // Parse JSON from response — Claude may wrap in ```json ... ```
-    let parsed;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in response');
-      }
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('Failed to parse ToolScan response:', parseError.message);
-      console.error('Raw response:', responseText.substring(0, 500));
-      return res.status(500).json({
-        error: 'Failed to parse tool identification results.',
-        raw: responseText,
-      });
-    }
-
-    // Wait for image uploads so imagePaths can be persisted alongside the doc.
-    await Promise.all(uploadPromises);
-
-    // Store the scan session in Firestore. v5 emits a single `tool` object;
-    // toolCount is 1 when populated, 0 otherwise. `previousScanId` links
-    // multi-turn refinement scans back to their origin.
-    const scanSession = {
-      userId: req.user?.uid || 'anonymous',
-      imageCount: images.length,
-      imagePaths,
-      toolCount: parsed.tool ? 1 : 0,
-      context: context || null,
-      results: parsed,
-      model: TOOLSCAN_MODEL,
-      previousScanId: previous_scan_id || null,
-      usage: {
-        input_tokens: message.usage?.input_tokens || 0,
-        output_tokens: message.usage?.output_tokens || 0,
-      },
-      createdAt: admin.firestore.FieldValue
-        ? admin.firestore.FieldValue.serverTimestamp()
-        : new Date(),
-    };
-
-    let scanRefId = scanId;
-    try {
-      await scanRef.set(scanSession);
-    } catch (firestoreError) {
-      // Don't fail the scan if Firestore write fails — still return results.
-      console.error('Failed to store scan session:', firestoreError.message);
-      scanRefId = null;
-    }
-
-    res.json({
-      success: true,
-      scanId: scanRefId,
-      imagePaths,
-      results: parsed,
-    });
-  } catch (error) {
-    console.error('ToolScan error:', error.message || error);
-    console.error('ToolScan error stack:', error.stack);
-
-    // Handle Anthropic API errors specifically
-    if (error.status === 429) {
-      return res.status(429).json({ error: 'AI service rate limit reached. Please try again in a moment.' });
-    }
-    if (error.status === 400) {
-      const detail = error.message || 'Image could not be processed.';
-      console.error('Anthropic 400 detail:', detail);
-      return res.status(400).json({ error: `Image could not be processed: ${detail}` });
-    }
-
-    res.status(500).json({ error: error.message || 'An error occurred during tool scanning.' });
-  }
-});
-
 // ─── Unified Check Endpoints ────────────────────────────────────────────────
 // Internal name "check" — user-facing surface is just "Benchlot". Powers the
 // /check page where a user pastes a listing URL or uploads a photo and gets
@@ -2638,196 +2397,10 @@ exports.api = functions.https.onRequest(app);
 // Maintain backward compatibility with previous stripeApi endpoint
 exports.stripeApi = exports.api;
 
-/**
- * POST /send-scan-results
- * Sends Template 1 (Scan Welcome) to a user's email after a successful scan.
- * Public endpoint, rate-limited. Generates a Firebase password reset link
- * server-side so the recipient can claim their pending account.
- *
- * Body: { email, scanResult: { canonical_brand, canonical_type, canonical_model,
- *         plane_type_number, era_estimate, condition, confidence, condition_notes } }
- */
-app.post('/send-scan-results', toolscanLimiter, async (req, res) => {
-  try {
-    const { email, scanResult } = req.body;
-
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Valid email is required.' });
-    }
-    if (!scanResult) {
-      return res.status(400).json({ error: 'Scan result data is required.' });
-    }
-
-    // Generate a password reset link so the recipient can claim their account.
-    // Failures here are non-fatal — template will simply omit the secondary CTA.
-    let setPasswordUrl;
-    try {
-      setPasswordUrl = await admin.auth().generatePasswordResetLink(email);
-    } catch (linkErr) {
-      console.warn(`[scan-results] could not generate password reset link for ${email}:`, linkErr.message);
-    }
-
-    // v5 doesn't emit a suggested price band; pricing context comes from
-    // the priceStats lookup below ("Benchlot index" line). Headline price
-    // vars are empty strings so the template hides that block.
-    const valueLow = '';
-    const valueHigh = '';
-
-    // Compose a display name from canonical fields.
-    const toolNameParts = [scanResult.canonical_brand, scanResult.canonical_model].filter(Boolean);
-    let toolName = toolNameParts.join(' ');
-    if (Number.isInteger(scanResult.plane_type_number)) {
-      toolName = toolName ? `${toolName} · Type ${scanResult.plane_type_number}` : `Type ${scanResult.plane_type_number}`;
-    }
-    if (!toolName) toolName = scanResult.canonical_type || '';
-
-    let benchlotIndexLow = '';
-    let benchlotIndexHigh = '';
-    let benchlotIndexCount = 0;
-    let benchlotIndexSource = '';
-    // Mirror the client-side `PRICE_GUIDE_ENABLED` flag server-side so
-    // the email's "Benchlot index" line stays hidden in production
-    // until we expose the price guide publicly. Data still accumulates
-    // — this only gates the user-facing surface. Set
-    // `PRICE_GUIDE_ENABLED=true` in functions env to flip on.
-    const priceGuideExposed = process.env.PRICE_GUIDE_ENABLED === 'true';
-    if (priceGuideExposed) {
-      try {
-        if (scanResult.canonical_type && scanResult.canonical_brand) {
-          const { lookupStats, pickReference } = require('./pricestats/lookup');
-          const stats = await lookupStats({
-            canonical_type: scanResult.canonical_type,
-            canonical_brand: scanResult.canonical_brand,
-            // priceStats clusters on `canonical_size`; v5's canonical_model maps to it.
-            canonical_size: scanResult.canonical_model || null,
-          });
-          const ref = pickReference(stats);
-          if (ref && ref.p25 != null && ref.p75 != null) {
-            benchlotIndexLow = `$${Math.round(ref.p25)}`;
-            benchlotIndexHigh = `$${Math.round(ref.p75)}`;
-            benchlotIndexCount = ref.count;
-            benchlotIndexSource = ref.source; // 'sold' or 'asking'
-          }
-        }
-      } catch (e) {
-        // Decorative — never let a stats lookup break an email send.
-        console.warn('[send-scan-results] priceStats lookup failed:', e.message);
-      }
-    }
-    console.log(`[send-scan-results] tool="${toolName}"; benchlot index ${benchlotIndexLow}-${benchlotIndexHigh} (${benchlotIndexCount} ${benchlotIndexSource})`);
-
-    const result = await sendEmail({
-      templateId: '01-scan-welcome',
-      to: email,
-      vars: {
-        toolName,
-        maker: scanResult.canonical_brand || '',
-        model: scanResult.canonical_model || '',
-        era: scanResult.era_estimate || '',
-        condition: scanResult.condition || '',
-        // Empty in v5 — template should conditionally hide the AI estimate block.
-        valueLow,
-        valueHigh,
-        // Benchlot index context — empty strings when no priceStats
-        // coverage (template should conditionally render).
-        benchlotIndexLow,
-        benchlotIndexHigh,
-        benchlotIndexCount,
-        benchlotIndexSource,
-        confidence: scanResult.confidence || '',
-        // Derive scanPageUrl from the request Origin so a scan submitted on a
-        // preview deployment links back to that deployment, not production.
-        scanPageUrl: (() => {
-          const origin = req.headers.origin || req.headers.referer;
-          if (origin && typeof origin === 'string') {
-            try {
-              const u = new URL(origin);
-              if (u.hostname.includes('benchlot')) return `${u.protocol}//${u.host}/scan`;
-            } catch (e) { /* fall through */ }
-          }
-          return `${process.env.BENCHLOT_BASE_URL || 'https://benchlot.com'}/scan`;
-        })(),
-        setPasswordUrl,
-      },
-    });
-
-    if (result.status === 'sent' || result.status === 'dry-run') {
-      res.json({ success: true });
-    } else {
-      console.error('Failed to send scan results email:', result.error);
-      res.status(500).json({ error: 'Failed to send email. Results are still saved.' });
-    }
-  } catch (error) {
-    console.error('Send scan results error:', error.message);
-    res.status(500).json({ error: 'Failed to send email.' });
-  }
-});
 
 // Note: Email test functions have been removed after successful testing
 
-/**
- * Sync new waitlist signups to HubSpot as contacts.
- * Triggers on every new document created in the 'waitlist' collection.
- * Uses firebase-functions v2 Firestore trigger syntax.
- */
 const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
-
-exports.syncWaitlistToHubSpot = onDocumentCreated('waitlist/{docId}', async (event) => {
-  const snap = event.data;
-  if (!snap) {
-    console.error('No data in event');
-    return null;
-  }
-
-  const data = snap.data();
-  const email = data.email;
-
-  if (!email) {
-    console.error('Waitlist doc missing email:', event.params.docId);
-    return null;
-  }
-
-  const hubspotApiKey = process.env.HUBSPOT_API_KEY;
-  if (!hubspotApiKey) {
-    console.error('HUBSPOT_API_KEY not set — skipping HubSpot sync');
-    return null;
-  }
-
-  const axios = require('axios');
-
-  try {
-    await axios.post(
-      'https://api.hubapi.com/crm/v3/objects/contacts',
-      {
-        properties: {
-          email: email,
-          lifecyclestage: 'subscriber',
-          hs_lead_status: 'NEW'
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${hubspotApiKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log(`HubSpot contact created for ${email}`);
-    await snap.ref.update({ hubspot_synced: true });
-  } catch (error) {
-    // 409 = contact already exists in HubSpot — not an error
-    if (error.response && error.response.status === 409) {
-      console.log(`HubSpot contact already exists for ${email}`);
-      await snap.ref.update({ hubspot_synced: true, hubspot_existing: true });
-    } else {
-      console.error('HubSpot sync error:', error.response?.data || error.message);
-      await snap.ref.update({ hubspot_synced: false, hubspot_error: error.message });
-    }
-  }
-
-  return null;
-});
 
 /**
  * Template 4: Listing Published.
@@ -2895,7 +2468,7 @@ exports.onToolActivated = onDocumentUpdated('tools/{toolId}', async (event) => {
 /**
  * Template 3: Welcome (Full Account Creation).
  * Fires on users/{uid} onCreate. Skips users created via the scan flow
- * (those get Template 1 from the /send-scan-results endpoint instead).
+ * (the scan flow sends its own results email from web/app/api/toolscan/email).
  */
 exports.onUserCreated = onDocumentCreated('users/{uid}', async (event) => {
   const snap = event.data;
@@ -2903,7 +2476,7 @@ exports.onUserCreated = onDocumentCreated('users/{uid}', async (event) => {
   const user = snap.data();
   if (!user || !user.email) return null;
 
-  // Scan-flow users get Template 1 from the /send-scan-results endpoint.
+  // Scan-flow users get their results email from web/app/api/toolscan/email.
   if (user.source === 'scan') return null;
 
   const baseUrl = process.env.BENCHLOT_BASE_URL || 'https://benchlot.com';
@@ -3223,49 +2796,18 @@ exports.onConversationMessageCreated = onDocumentCreated(
  *   - The scheduledAlertMatcher pause comment. Alerts were ported to SQL on
  *     Vercel Cron (web/app/api/cron/alerts, commit eeb9a476).
  *
- * These functions are still DEPLOYED until the next `firebase deploy
- * --only functions`; deleting the code does not undeploy them.
- */
-const { onSchedule } = require('firebase-functions/v2/scheduler');
-
-/**
- * Scheduled promotion of scan corrections into the training_examples corpus.
+ * Removed 2026-09-29, when ToolScan left Firebase for web/ (Postgres +
+ * Vercel Blob; see web/lib/toolscan.ts and migration/schema/011):
+ *   - POST /toolscan and POST /send-scan-results on this Express app.
+ *   - syncWaitlistToHubSpot — the waitlist now lands in Postgres `leads`
+ *     via /api/leads; nothing syncs it to HubSpot any more.
+ *   - scheduledPromoteScanCorrections — corrections go to Postgres
+ *     `scan_feedback`; there is no nightly promotion into a corpus.
  *
- * Runs nightly at 04:30 UTC, between the alert matcher (04:15) and the
- * pricestats build (04:35). Reads new scan_feedback rows and writes them as
- * `label_provenance: 'user_correction'` training_examples docs. Cumulative
- * cursor in `system/training_corrections_promotion`.
+ * What is left here: Stripe and marketplace routes, the marketplace email
+ * triggers, and the unshipped /url-check + /check-from-canonical routes.
+ *
+ * Removed functions stay DEPLOYED until the next `firebase deploy
+ * --only functions --force`; deleting the code does not undeploy them.
  */
-const promoteScanCorrections = require('./training-data/promote-scan-corrections');
 
-exports.scheduledPromoteScanCorrections = onSchedule(
-  {
-    schedule: '30 4 * * *',
-    timeZone: 'Etc/UTC',
-    timeoutSeconds: 540,
-    memory: '256MiB',
-  },
-  async () => {
-    const t0 = Date.now();
-    try {
-      const summary = await promoteScanCorrections.run();
-      console.log('[scheduledPromoteScanCorrections] done', summary);
-      posthog.capture({
-        distinctId: 'system',
-        event: 'training_corrections_promoted',
-        properties: summary,
-      });
-    } catch (err) {
-      console.error('[scheduledPromoteScanCorrections] failed:', err.message, err.stack);
-      posthog.capture({
-        distinctId: 'system',
-        event: 'training_corrections_promotion_failed',
-        properties: {
-          error_message: err.message,
-          duration_ms: Date.now() - t0,
-        },
-      });
-      throw err;
-    }
-  }
-);

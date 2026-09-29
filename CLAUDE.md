@@ -159,6 +159,23 @@ first one is `guide-alert-placement` (`web/components/GuideAlert.tsx`). At
 ~150 visitors/month nothing reaches significance — judge variants by replays
 and the Bayesian readout, and keep swings structural, not copy tweaks.
 
+**ToolScan runs on `web/`, not Firebase (2026-09-29).** `POST /api/toolscan`
+(`web/lib/toolscan.ts`) calls the Anthropic SDK with the v5 prompt in
+`web/lib/toolscan-prompt.js` (the only copy; the eval scripts require it from
+there), writes `tool_scans`, and stores photos in the private Vercel Blob store
+`benchlot-scans` (`image_store = 'blob'`, path in `image_paths`; older rows
+still point at Firebase Storage). Corrections go to `scan_feedback`; every
+email capture outside alerts (scan gate, digest footer, waitlist page,
+category card) goes to `leads` via `/api/leads`. The CRA reaches all of it
+same-origin through root `vercel.json` rewrites. Photos are downscaled in the
+browser (`src/utils/downscaleImage.js`) because Vercel caps request bodies at
+4.5 MB. The scan page is anonymous; nothing on it touches Firebase.
+
+**Firebase is now only Stripe, the frozen marketplace and the unshipped
+`/check` endpoints.** The `api` Cloud Function deploys manually
+(`firebase deploy --only functions --force --project prod`); nothing
+user-facing on the aggregator depends on it.
+
 **Alerts require no account** — email + double opt-in + signed links. See the
 `project_alerts_no_auth` memory before changing any of it; several properties
 that look like over-engineering are load-bearing.

@@ -11,7 +11,6 @@
 const path = require('path');
 
 // Load templates directly so we don't drag in client.js (which requires firebase-admin).
-const t01 = require('../templates/01-scan-welcome');
 const t03 = require('../templates/03-welcome-full-account');
 const t04 = require('../templates/04-listing-published');
 const t05 = require('../templates/05-order-confirmation-buyer');
@@ -22,38 +21,6 @@ const t09 = require('../templates/09-offer-status-update');
 const t10 = require('../templates/10-message-notification');
 
 describe('email templates — P0', () => {
-  describe('01-scan-welcome', () => {
-    const vars = {
-      toolName: 'Stanley No. 4 Smoothing Plane',
-      maker: 'Stanley',
-      model: 'No. 4',
-      era: '1948-1961',
-      condition: 'Good',
-      valueLow: '$45',
-      valueHigh: '$75',
-      confidence: 'High',
-      scanPageUrl: 'https://benchlot.com/scan',
-      setPasswordUrl: 'https://benchlot.com/auth/reset?oobCode=abc',
-    };
-
-    test('renders subject with tool name', () => {
-      expect(t01.subject(vars)).toBe('Your Stanley No. 4 Smoothing Plane has been identified');
-    });
-
-    test('falls back to generic subject when toolName missing', () => {
-      expect(t01.subject({})).toBe("Your tool has been identified — here's what it's worth");
-    });
-
-    test('renders html and text', () => {
-      const out = t01.render(vars);
-      expect(out.html).toContain('Stanley No. 4 Smoothing Plane');
-      expect(out.html).toContain('$45 – $75');
-      expect(out.html).toContain(vars.scanPageUrl);
-      expect(out.text).toContain('Stanley No. 4 Smoothing Plane');
-      expect(out.text).toContain(vars.scanPageUrl);
-    });
-  });
-
   describe('04-listing-published', () => {
     const baseVars = {
       sellerName: 'Rob',

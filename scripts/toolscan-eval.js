@@ -37,7 +37,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const Anthropic = require('@anthropic-ai/sdk');
-const { TOOLSCAN_SYSTEM_PROMPT } = require('../functions/toolscan-prompt');
+const { TOOLSCAN_SYSTEM_PROMPT } = require('../web/lib/toolscan-prompt');
 
 const TEST_PHOTOS_DIR = path.join(__dirname, '..', 'Test Photos');
 const RESULTS_FILE = path.join(TEST_PHOTOS_DIR, 'eval_results.json');
