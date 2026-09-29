@@ -1,28 +1,20 @@
 // src/Pages/ToolScanPage.js
 import React, { useState, useCallback } from 'react';
-import { useAuth } from '../firebase/hooks/useAuth';
-import { useAuthModal } from '../context/AuthModalContext';
 import { Camera, Loader2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ToolScanCard from '../components/ToolScanCard';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
-import { getAuth } from 'firebase/auth';
-import { getConfig } from '../utils/environment';
-import { track } from '../utils/analytics';
+import { track, getDistinctId } from '../utils/analytics';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { prepareImages, MAX_IMAGES } from '../utils/downscaleImage';
 
-const API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_FIREBASE_API_URL || getConfig(
-  'https://api-sed2e4p6ua-uc.a.run.app',
-  'https://api-sed2e4p6ua-uc.a.run.app',
-  'https://api-sed2e4p6ua-uc.a.run.app'
-);
+// Same-origin: /api/toolscan is rewritten to the Next.js app (root vercel.json).
+const API_URL = process.env.REACT_APP_SEARCH_API_BASE || '';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_IMAGES = 5;
+// Photos are shrunk in the browser before upload, so the only cap that matters
+// here is one that stops a 200MB screenshot dump from being decoded at all.
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const ToolScanPage = () => {
-  const { user } = useAuth();
-  const { open: openAuthModal } = useAuthModal();
-
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -36,9 +28,6 @@ const ToolScanPage = () => {
   const [scanResults, setScanResults] = useState(null);
   const [scanId, setScanId] = useState(null);
   const [imagePaths, setImagePaths] = useState([]);
-
-  // Auth state
-  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   // Email capture state
   const [emailCollected, setEmailCollected] = useState(false);
@@ -66,7 +55,7 @@ const ToolScanPage = () => {
 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        setScanError(`${file.name} is too large. Maximum file size is 5MB.`);
+        setScanError(`${file.name} is too large. Maximum file size is 25MB.`);
         return;
       }
       if (!file.type.startsWith('image/')) {
@@ -111,18 +100,6 @@ const ToolScanPage = () => {
     handleFileSelect(fakeEvent);
   }, [handleFileSelect]);
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleScan = async () => {
     if (selectedFiles.length === 0) return;
 
@@ -133,40 +110,19 @@ const ToolScanPage = () => {
     track('toolscan_started', {
       image_count: selectedFiles.length,
       has_context: Boolean(context.trim()),
-      is_authed: Boolean(user),
     });
 
     try {
-      const images = await Promise.all(
-        selectedFiles.map(async (file) => {
-          const data = await fileToBase64(file);
-          // Detect actual image format from base64 header bytes
-          // (browser file.type can be wrong, e.g. reporting jpeg for webp)
-          let media_type = file.type || 'image/jpeg';
-          if (data.startsWith('UklGR')) media_type = 'image/webp';
-          else if (data.startsWith('/9j/')) media_type = 'image/jpeg';
-          else if (data.startsWith('iVBOR')) media_type = 'image/png';
-          if (file.type === 'image/heic') media_type = 'image/heic';
-          return { data, media_type };
-        })
-      );
+      const images = await prepareImages(selectedFiles);
 
-      // Include auth token if user is signed in, skip if not
-      const headers = { 'Content-Type': 'application/json' };
-      if (user) {
-        try {
-          const auth = getAuth();
-          const token = await auth.currentUser.getIdToken();
-          headers['Authorization'] = `Bearer ${token}`;
-        } catch (e) {
-          // No auth — proceed without token
-        }
-      }
-
-      const response = await fetch(`${API_URL}/toolscan`, {
+      const response = await fetch(`${API_URL}/api/toolscan`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ images, context: context.trim() || undefined }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          images,
+          context: context.trim() || undefined,
+          distinct_id: getDistinctId() || undefined,
+        }),
       });
 
       const data = await response.json();
@@ -187,7 +143,6 @@ const ToolScanPage = () => {
         plane_type_number: (tool && Number.isInteger(tool.plane_type_number)) ? tool.plane_type_number : null,
         confidence: (tool && tool.confidence) || null,
         duration_ms: Date.now() - scanStartedAt,
-        is_authed: Boolean(user),
       });
     } catch (error) {
       console.error('ToolScan error:', error);
@@ -197,7 +152,6 @@ const ToolScanPage = () => {
         tool_count: 0,
         error_message: error.message || 'unknown',
         duration_ms: Date.now() - scanStartedAt,
-        is_authed: Boolean(user),
       });
     } finally {
       setScanning(false);
@@ -230,28 +184,15 @@ const ToolScanPage = () => {
     setScanning(true);
     setScanError(null);
     try {
-      const data = await fileToBase64(file);
-      let media_type = file.type || 'image/jpeg';
-      if (data.startsWith('UklGR')) media_type = 'image/webp';
-      else if (data.startsWith('/9j/')) media_type = 'image/jpeg';
-      else if (data.startsWith('iVBOR')) media_type = 'image/png';
-      if (file.type === 'image/heic') media_type = 'image/heic';
+      const images = await prepareImages([file]);
 
-      const headers = { 'Content-Type': 'application/json' };
-      if (user) {
-        try {
-          const auth = getAuth();
-          const token = await auth.currentUser.getIdToken();
-          headers['Authorization'] = `Bearer ${token}`;
-        } catch (e) { /* proceed without auth */ }
-      }
-
-      const response = await fetch(`${API_URL}/toolscan`, {
+      const response = await fetch(`${API_URL}/api/toolscan`, {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          images: [{ data, media_type }],
+          images,
           previous_scan_id: scanId,
+          distinct_id: getDistinctId() || undefined,
         }),
       });
       const json = await response.json();
@@ -276,7 +217,7 @@ const ToolScanPage = () => {
     } finally {
       setScanning(false);
     }
-  }, [scanId, scanResults, user]);
+  }, [scanId, scanResults]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -289,70 +230,37 @@ const ToolScanPage = () => {
     setEmailSubmitting(true);
     setEmailError(null);
 
+    // One call saves the lead and sends the results email. Results are revealed
+    // either way: the capture is an opt-in copy, not a gate.
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-
-      // Save scan data to toolscan_leads using v5 canonical schema.
       const tool = scanResults?.tool || null;
-      await addDoc(collection(db, 'toolscan_leads'), {
-        email,
-        scanId: scanId || null,
-        toolsIdentified: tool ? 1 : 0,
-        tool: tool ? {
-          canonical_brand: tool.canonical_brand || null,
-          canonical_type: tool.canonical_type || null,
-          canonical_model: tool.canonical_model || null,
-          plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
-          era_estimate: tool.era_estimate || null,
-          condition: tool.condition || null,
-          confidence: tool.confidence || null,
-        } : null,
-        source: 'scan_email_gate',
-        created_at: serverTimestamp(),
+      const response = await fetch(`${API_URL}/api/toolscan/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          scan_id: scanId || null,
+          tool: tool ? {
+            canonical_brand: tool.canonical_brand || null,
+            canonical_type: tool.canonical_type || null,
+            canonical_model: tool.canonical_model || null,
+            plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
+            era_estimate: tool.era_estimate || null,
+            condition: tool.condition || null,
+            confidence: tool.confidence || null,
+            condition_notes: tool.condition_notes || null,
+          } : null,
+        }),
       });
-
-      // Also save to waitlist for HubSpot sync
-      await addDoc(collection(db, 'waitlist'), {
-        email,
-        signed_up_at: serverTimestamp(),
-        source: 'scan_email_gate',
-      });
-
-      setEmailCollected(true);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.error('Email capture error:', data.error || response.status);
+      }
     } catch (error) {
       console.error('Email capture error:', error);
-      // Don't block the user — reveal results even if save fails
-      setEmailCollected(true);
     } finally {
+      setEmailCollected(true);
       setEmailSubmitting(false);
-
-      // Send scan results email (always fires, non-blocking).
-      // v5 already emits canonical_* fields — no bridge call needed.
-      const tool = scanResults?.tool || null;
-      if (tool && email) {
-        const canonical_brand =
-          tool.canonical_brand && tool.canonical_brand !== 'Unknown' && tool.confidence !== 'Low'
-            ? tool.canonical_brand
-            : null;
-        fetch(`${API_URL}/send-scan-results`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            scanResult: {
-              canonical_brand,
-              canonical_type: tool.canonical_type || null,
-              canonical_model: tool.canonical_model || null,
-              plane_type_number: Number.isInteger(tool.plane_type_number) ? tool.plane_type_number : null,
-              era_estimate: tool.era_estimate || null,
-              condition: tool.condition || null,
-              confidence: tool.confidence || null,
-              condition_notes: tool.condition_notes || null,
-            },
-          }),
-        }).catch(err => console.error('Scan results email error:', err));
-      }
     }
   };
 
@@ -361,25 +269,24 @@ const ToolScanPage = () => {
   // off before the guide link could render. Email capture survives below the
   // results as an opt-in "send me a copy" (showEmailOffer).
   const showFullResults = Boolean(scanResults);
-  const showEmailOffer = scanResults && !emailCollected && !user;
+  const showEmailOffer = Boolean(scanResults) && !emailCollected;
 
   const handleFeedback = async (feedback) => {
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-
-      await addDoc(collection(db, 'scan_feedback'), {
-        vote: feedback.vote,              // 'correct' | 'corrected'
-        scanId: feedback.scanId || scanId || null,
-        // Denormalized image paths so (image, correction) pairs are queryable
-        // as a single row — easier ML access than joining via scanId.
-        imagePaths: imagePaths || [],
-        email: captureEmail || null,
-        originalResult: feedback.originalResult,
-        correctedResult: feedback.correctedResult || null,
-        userEdits: feedback.userEdits || null,
-        hasEdits: !!feedback.userEdits,
-        created_at: serverTimestamp(),
+      await fetch(`${API_URL}/api/toolscan/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vote: feedback.vote,              // 'correct' | 'corrected'
+          scan_id: feedback.scanId || scanId || null,
+          // Denormalized image paths so (image, correction) pairs are one row.
+          image_paths: imagePaths || [],
+          email: captureEmail || null,
+          original_result: feedback.originalResult,
+          corrected_result: feedback.correctedResult || null,
+          user_edits: feedback.userEdits || null,
+          has_edits: !!feedback.userEdits,
+        }),
       });
     } catch (error) {
       console.error('Feedback save error:', error);
@@ -395,7 +302,6 @@ const ToolScanPage = () => {
     setScanId(null);
     setImagePaths([]);
     setScanError(null);
-    setShowAuthPrompt(false);
     setEmailCollected(false);
     setCaptureEmail('');
     setEmailError(null);
@@ -403,33 +309,6 @@ const ToolScanPage = () => {
 
   return (
     <div className="min-h-screen bg-bone">
-      {/* Auth prompt modal */}
-      {showAuthPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-teal/50">
-          <div className="bg-bone-light rounded-xl shadow-lg p-8 max-w-md mx-4 text-center">
-            <Sparkles className="w-10 h-10 text-honey mx-auto mb-4" />
-            <h3 className="text-xl font-display font-semibold text-spruce mb-2">Create an account to save your tools</h3>
-            <p className="text-secondary font-body mb-6">
-              Your scan results are ready. Sign up or log in to save this tool to your Tool Chest on Benchlot.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => { setShowAuthPrompt(false); openAuthModal({ reason: 'toolscan' }); }}
-                className="w-full py-3 px-6 bg-honey text-dark-teal rounded-lg font-medium font-body hover:bg-honey-light transition-colors"
-              >
-                Sign Up / Log In
-              </button>
-            </div>
-            <button
-              onClick={() => setShowAuthPrompt(false)}
-              className="mt-4 text-sm font-body text-secondary hover:text-dark-teal transition-colors underline"
-            >
-              Continue reviewing
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Landing page — shown before user starts */}
         {!started && !scanResults && (
@@ -487,7 +366,7 @@ const ToolScanPage = () => {
                       />
                     </label>
                   </div>
-                  <p className="text-xs text-secondary mt-3">JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.</p>
+                  <p className="text-xs text-secondary mt-3">JPEG, PNG, WebP or HEIC. Up to {MAX_IMAGES} photos — we shrink them before upload.</p>
                 </div>
               </div>
               <p className="text-sm text-secondary font-body">No account needed · Free to try</p>
@@ -674,7 +553,7 @@ const ToolScanPage = () => {
                       {dragging ? 'Drop photos here' : 'Drag photos here or tap to upload'}
                     </p>
                     <p className="text-sm text-secondary">
-                      JPEG, PNG, or WebP. Up to {MAX_IMAGES} photos, 5MB each.
+                      JPEG, PNG, WebP or HEIC. Up to {MAX_IMAGES} photos — we shrink them before upload.
                     </p>
                   </div>
                   <input
@@ -735,7 +614,7 @@ const ToolScanPage = () => {
 
             {scanning && (
               <p className="text-center text-sm text-secondary mt-3">
-                This usually takes 10-20 seconds depending on the number of tools.
+                This usually takes 15-40 seconds.
               </p>
             )}
           </div>

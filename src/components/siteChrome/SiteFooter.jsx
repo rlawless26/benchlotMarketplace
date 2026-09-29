@@ -6,16 +6,14 @@
  * Middle: nav (RAQ only, per post-consolidation spec).
  * Right: weekly-digest signup form (no fake subscriber counts).
  *
- * Pulls live-index count from Firestore stats for the top-row freshness line;
+ * Pulls the live-index count from the search API for the top-row freshness line;
  * falls back to "Updated nightly" if the query fails.
  */
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-import { db } from '../../firebase/config';
 import { getAggregatorStats } from '../../firebase/adapters/aggregatorFacets';
 
 function formatIndexLine(stats) {
@@ -57,11 +55,12 @@ export default function SiteFooter() {
     setSubmitting(true);
     setFeedback(null);
     try {
-      await addDoc(collection(db, 'waitlist'), {
-        email: normalized,
-        signed_up_at: serverTimestamp(),
-        source: 'digest_footer',
+      const response = await fetch(`${process.env.REACT_APP_SEARCH_API_BASE || ''}/api/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalized, source: 'digest_footer' }),
       });
+      if (!response.ok) throw new Error(`leads ${response.status}`);
       setFeedback({ kind: 'ok', msg: "You're in. Look for the first digest Sunday morning." });
       setEmail('');
     } catch (err) {

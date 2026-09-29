@@ -43,15 +43,20 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
     setSubmitting(true);
     setError(null);
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-      await addDoc(collection(db, 'category_interest'), {
-        email: email.trim().toLowerCase(),
-        requested_category: tool?.canonical_type || 'unknown',
-        scanId: scanId || null,
-        imagePaths: imagePaths || [],
-        created_at: serverTimestamp(),
+      const response = await fetch(`${process.env.REACT_APP_SEARCH_API_BASE || ''}/api/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          source: 'category_interest',
+          scan_id: scanId || null,
+          payload: {
+            requested_category: tool?.canonical_type || 'unknown',
+            image_paths: imagePaths || [],
+          },
+        }),
       });
+      if (!response.ok) throw new Error(`leads ${response.status}`);
       setSubmitted(true);
       track('category_gate_email_captured', {
         scanId: scanId || null,

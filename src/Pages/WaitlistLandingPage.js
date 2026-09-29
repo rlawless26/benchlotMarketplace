@@ -1,8 +1,6 @@
 // src/Pages/WaitlistLandingPage.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase/config';
 import ToolScanExampleCard from '../components/ToolScanExampleCard';
 
 const WaitlistLandingPage = () => {
@@ -20,10 +18,12 @@ const WaitlistLandingPage = () => {
     setSubmitStatus({ type: '', message: '' });
 
     try {
-      await addDoc(collection(db, 'waitlist'), {
-        email: email.toLowerCase().trim(),
-        signed_up_at: serverTimestamp()
+      const response = await fetch(`${process.env.REACT_APP_SEARCH_API_BASE || ''}/api/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), source: 'waitlist' }),
       });
+      if (!response.ok) throw new Error(`leads ${response.status}`);
 
       setSubmitStatus({
         type: 'success',
