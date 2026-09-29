@@ -108,3 +108,42 @@ export function confirmEmail(summary: string, confirmUrl: string) {
     ),
   };
 }
+
+/** The one email after a scan: what it is, and what the guide says it sells for. */
+export function scanResultsEmail(v: {
+  toolName: string;
+  era: string | null;
+  condition: string | null;
+  confidence: string | null;
+  reference: { low: string; high: string; count: number; source: 'sold' | 'asking'; guidePath: string } | null;
+  siteUrl: string;
+}) {
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+  const name = v.toolName ? esc(v.toolName) : 'your tool';
+  const facts = [
+    v.era ? `<li><strong>Era:</strong> ${esc(v.era)}</li>` : '',
+    v.condition ? `<li><strong>Condition:</strong> ${esc(v.condition)}</li>` : '',
+    v.confidence ? `<li><strong>Confidence:</strong> ${esc(v.confidence)}</li>` : '',
+  ].join('');
+  const band = v.reference
+    ? `<p style="margin:0 0 16px;">Half of recent ${v.reference.source === 'sold' ? 'sales' : 'asking prices'} for this tool fall between
+         <strong style="color:#b8903f;">${esc(v.reference.low)} and ${esc(v.reference.high)}</strong>
+         (${v.reference.count} ${v.reference.source === 'sold' ? 'recorded sales' : 'listings'}).
+         <a href="${v.siteUrl}${v.reference.guidePath}" style="color:#b8903f;">See every sale and what's listed now →</a></p>`
+    : `<p style="margin:0 0 16px;">The guide doesn't have enough recorded sales for this one yet to quote a price band.</p>`;
+  return {
+    subject: v.toolName ? `Your ${v.toolName} has been identified` : 'Your tool has been identified',
+    html: emailShell(
+      `<p style="margin:0 0 12px;">Here is what the photo showed:</p>
+       <p style="margin:0 0 8px;font-size:18px;font-weight:600;color:#1a3030;">${name}</p>
+       ${facts ? `<ul style="margin:0 0 16px;padding-left:18px;">${facts}</ul>` : ''}
+       ${band}
+       <p style="margin:0 0 20px;">
+         <a href="${v.siteUrl}/scan" style="display:inline-block;background:#d4aa60;color:#0c1c1e;
+            text-decoration:none;padding:11px 20px;border-radius:6px;font-weight:600;">Scan another tool</a>
+       </p>
+       <p style="margin:0;color:#2a4a48;font-size:13px;">Identifications and price bands are suggestions, not appraisals.</p>`,
+      `<p style="margin:0;">You asked for this on the scan page. It's a one-off; we won't email you again unless you ask.</p>`
+    ),
+  };
+}

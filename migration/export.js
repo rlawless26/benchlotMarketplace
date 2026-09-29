@@ -33,6 +33,10 @@ const COLLECTIONS = {
   email_sends:       'email_log',
   tool_scans:        'toolscans',
   training_examples: 'training_examples',
+  // Email captures that never got a Postgres home until schema/011 (leads).
+  leads_scan:        'toolscan_leads',
+  leads_waitlist:    'waitlist',
+  leads_category:    'category_interest',
   // Subcollection data: priceSnapshots/{docId}/snapshots/{id}. Reachable only
   // via a collectionGroup query -- a count on the top-level `priceSnapshots`
   // collection returns 0 because the parent docs are implicit.

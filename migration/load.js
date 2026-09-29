@@ -158,6 +158,53 @@ const TABLES = [
       FROM stg
       ON CONFLICT (id) DO NOTHING`,
   },
+  // ---------------------------------------------------------------------------
+  // leads (schema/011): three Firestore capture collections into one table.
+  // No unique key on leads, so each load skips rows already present by
+  // (email, source, created_at) and is safe to re-run.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'leads_scan',
+    target: 'leads',
+    sql: `
+      INSERT INTO leads (email, source, scan_id, payload, created_at)
+      SELECT lower(doc->>'email'), coalesce(doc->>'source', 'scan_email_gate'), doc->>'scanId',
+             jsonb_build_object('tool', doc->'tool'), coalesce(${ts('created_at')}, now())
+      FROM stg
+      WHERE coalesce(doc->>'email', '') <> ''
+        AND NOT EXISTS (SELECT 1 FROM leads l WHERE lower(l.email) = lower(stg.doc->>'email')
+                          AND l.source = coalesce(stg.doc->>'source', 'scan_email_gate')
+                          AND l.created_at = coalesce(${ts('created_at')}, now()))`,
+  },
+  {
+    key: 'leads_waitlist',
+    target: 'leads',
+    sql: `
+      INSERT INTO leads (email, source, scan_id, payload, created_at)
+      SELECT lower(doc->>'email'), coalesce(doc->>'source', 'waitlist'), NULL,
+             '{}'::jsonb, coalesce(${ts('signed_up_at')}, now())
+      FROM stg
+      WHERE coalesce(doc->>'email', '') <> ''
+        AND NOT EXISTS (SELECT 1 FROM leads l WHERE lower(l.email) = lower(stg.doc->>'email')
+                          AND l.source = coalesce(stg.doc->>'source', 'waitlist')
+                          AND l.created_at = coalesce(${ts('signed_up_at')}, now()))`,
+  },
+  {
+    key: 'leads_category',
+    target: 'leads',
+    sql: `
+      INSERT INTO leads (email, source, scan_id, payload, created_at)
+      SELECT lower(doc->>'email'), 'category_interest', doc->>'scanId',
+             jsonb_build_object('requested_category', doc->>'requested_category',
+                                'image_paths', coalesce(doc->'imagePaths', '[]'::jsonb),
+                                'image_store', 'firebase'),
+             coalesce(${ts('created_at')}, now())
+      FROM stg
+      WHERE coalesce(doc->>'email', '') <> ''
+        AND NOT EXISTS (SELECT 1 FROM leads l WHERE lower(l.email) = lower(stg.doc->>'email')
+                          AND l.source = 'category_interest'
+                          AND l.created_at = coalesce(${ts('created_at')}, now()))`,
+  },
   {
     key: 'price_snapshots',
     target: 'price_snapshots',
