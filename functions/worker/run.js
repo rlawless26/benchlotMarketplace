@@ -130,6 +130,12 @@ async function main() {
         const summary = await mod.runIngestion({ maxPages: args.maxPages });
         const secs = ((Date.now() - t0) / 1000).toFixed(1);
         console.log(`[worker] ${name}: ${JSON.stringify(summary)}  (${secs}s)`);
+        // A scraper that parses nothing has broken, not found an empty shop.
+        // Treat it as a failure so the job goes red instead of recording a
+        // green run with no data (oldtools, 2026-10-08).
+        if (summary && summary.scraped === 0) {
+          throw new Error(`scraped 0 records — parser or fetch is broken`);
+        }
         // Bookkeeping so a paused source and a broken one stop looking alike.
         await store.recordScrapeRun(name, { ok: true, note: JSON.stringify(summary) });
         results.push({ name, ...summary });

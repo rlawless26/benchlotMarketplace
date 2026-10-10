@@ -16,7 +16,7 @@ export default async function Home() {
   const [clusters, totals] = await Promise.all([
     listPublishableClusters(),
     sql<{ listings: string; sold: string; sources: string }>(
-      `SELECT count(*) FILTER (WHERE status = 'active')::text AS listings,
+      `SELECT count(*) FILTER (WHERE status = 'active' AND last_seen_at > now() - interval '45 days')::text AS listings,
               count(*) FILTER (WHERE status = 'sold')::text   AS sold,
               count(DISTINCT source)::text                    AS sources
        FROM listings`

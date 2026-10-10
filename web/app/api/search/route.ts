@@ -46,7 +46,9 @@ export async function GET(req: NextRequest) {
   }
 
   const params: unknown[] = [source ? [source] : INDEXED_SOURCES, perSource];
-  const conds = [`source = ANY($1)`, `status = 'active'`];
+  // Same freshness floor as the guide pages (FRESH in lib/price-guide.ts):
+  // a row the sweep has not reached yet must not show as for sale.
+  const conds = [`source = ANY($1)`, `status = 'active'`, `last_seen_at > now() - interval '45 days'`];
   if (canonicalType) {
     params.push(canonicalType);
     conds.push(`canonical_type = $${params.length}`);

@@ -699,7 +699,7 @@ async function runIngestion(opts = {}) {
   // posts we didn't reach. Same guard as Sawmill Creek.
   const shouldSweep = opts.maxNew == null && opts.maxPages == null && opts.bucket == null;
   const expireSummary = shouldSweep
-    ? await markExpired(SOURCE, runStartedAt)
+    ? await markExpired(SOURCE, runStartedAt, { scraped: records.length + knownPosts.length })
     : { expired: 0 };
 
   return {

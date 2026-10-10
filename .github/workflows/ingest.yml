@@ -151,9 +151,27 @@ jobs:
             .catch(e => { console.error('[aliases]', e.message); process.exit(1); });
           "
 
+      # Retire `active` rows nobody has seen for longer than their source's TTL
+      # (schema/012). Runs EVERY day, including days with no scrape: eBay never
+      # sweeps itself and a paused source's sweep never fires, which is how
+      # 135k eBay rows and 814 FB rows from May were still "for sale" in
+      # October. Sets `expired`, never `sold`.
+      - name: Expire stale listings
+        if: ${{ !inputs.skip_downstream }}
+        working-directory: functions
+        run: |
+          node -e "
+          const { Pool } = require('pg');
+          const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED });
+          pool.query('SELECT * FROM expire_stale_listings()')
+            .then(r => { console.table(r.rows.filter(x => Number(x.expired) > 0)); return pool.end(); })
+            .catch(e => { console.error('[expire]', e.message); process.exit(1); });
+          "
+
       # Replaces scheduledPriceStatsBuild. ~3s in SQL against ~168k rows.
+      # Also daily, so the expiry above reaches the asking counts the same night.
       - name: Rebuild price stats
-        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        if: ${{ !inputs.skip_downstream }}
         working-directory: functions
         run: |
           node -e "

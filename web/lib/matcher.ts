@@ -60,6 +60,7 @@ async function matchesFor(a: DueAlert): Promise<Match[]> {
       WHERE l.canonical_type = $1
         AND l.canonical_brand = $2
         AND l.status = 'active'
+        AND l.last_seen_at > now() - interval '45 days'
         AND l.first_seen_at > $3::timestamptz
         AND l.price_cents IS NOT NULL${extra}
       ORDER BY l.first_seen_at DESC
