@@ -47,6 +47,28 @@ export function clusterJsonLd(
   return jsonLd;
 }
 
+/**
+ * BreadcrumbList mirroring the visible breadcrumb. Cheap, honest, and the one
+ * structured-data type that helps every page: it tells a search engine and an
+ * AI crawler where this page sits in the guide without a second fetch.
+ */
+export function breadcrumbJsonLd(
+  items: { name: string; path: string }[],
+  siteUrl: string
+): Record<string, unknown> | null {
+  if (items.length === 0) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: `${siteUrl}${it.path}`,
+    })),
+  };
+}
+
 export function JsonLd({ data }: { data: Record<string, unknown> | null }) {
   if (!data) return null;
   return (

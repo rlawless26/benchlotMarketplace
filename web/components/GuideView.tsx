@@ -14,13 +14,18 @@ const KIND_CLASS: Record<string, string> = {
   Marketplace: 'bg-kind-marketplace', Auction: 'bg-kind-auction',
 };
 
+/**
+ * One figure in a stats card. Rendered as a definition pair so the numbers
+ * are machine-readable in the HTML without JavaScript: wrap a group of these
+ * in a <dl>. An AI crawler quoting the page sees "Median sold: $85".
+ */
 export function Stat({ label, value, big = false }: { label: string; value: string | null; big?: boolean }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-wide text-spruce-light">{label}</div>
-      <div className={`tnum font-display font-semibold text-honey-dark ${big ? 'text-3xl' : 'text-xl'}`}>
+      <dt className="text-xs uppercase tracking-wide text-spruce-light">{label}</dt>
+      <dd className={`tnum font-display font-semibold text-honey-dark ${big ? 'text-3xl' : 'text-xl'}`}>
         {value ?? '—'}
-      </div>
+      </dd>
     </div>
   );
 }
@@ -249,11 +254,17 @@ export const countLabel = (r: { sold_count: number; asking_count: number }) =>
   r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`;
 
 export default function GuideView({
-  cluster, sold, active, related, sizes, models, types, points, facts, note, hub = false,
+  cluster, sold, active, activeCount: activeCountProp, related, sizes, models, types, points, facts, note, hub = false,
 }: {
   cluster: Cluster;
   sold: Listing[];
   active: Listing[];
+  /**
+   * Live for-sale count from activeAggregate(): the same fresh, eligible
+   * filter the table and the JSON-LD use. price_stats' asking_count_active is
+   * a nightly snapshot and can disagree with the rows actually shown.
+   */
+  activeCount?: number;
   related: ClusterRef[];
   sizes: ClusterRef[];
   models: ClusterRef[];
@@ -268,7 +279,7 @@ export default function GuideView({
   const singular = clusterPhraseSingular(cluster);       // "Preston moulding plane"
   const soldCount = cluster.sold_count ?? 0;
   const askingCount = cluster.asking_count ?? 0;
-  const activeCount = cluster.asking_count_active ?? active.length;
+  const activeCount = activeCountProp ?? cluster.asking_count_active ?? active.length;
   const hasSoldReference = soldCount >= SOLD_MIN_FOR_REFERENCE;
   const hasAskingReference = askingCount >= ASKING_MIN_FOR_REFERENCE;
   const typeSlug = cluster.canonical_type ? slug(cluster.canonical_type) : null;
@@ -340,11 +351,12 @@ export default function GuideView({
       <section className="mt-8 rounded-lg border border-bone-dark bg-bone-light p-6">
         <h2 className="font-display text-lg font-semibold text-spruce">Sold prices</h2>
         {hasSoldReference ? (
-          <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-3">
+          <dl className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
             <Stat label="Median sold" value={money(cluster.sold_p50)} big />
             <Stat label="Most sell for" value={`${money(cluster.sold_p25)}–${money(cluster.sold_p75)}`} />
             <Stat label="Sales on record" value={soldCount.toLocaleString()} />
-          </div>
+            <Stat label="For sale now" value={activeCount.toLocaleString()} />
+          </dl>
         ) : (
           <p className="mt-3 text-sm text-spruce-light">
             Only {soldCount} {soldCount === 1 ? 'sale' : 'sales'} on record — too few to
@@ -477,11 +489,11 @@ export default function GuideView({
       {hasAskingReference && (
         <section className="mt-6 rounded-lg border border-bone-dark p-6">
           <h2 className="font-display text-lg font-semibold text-spruce">Asking prices</h2>
-          <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
+          <dl className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
             <Stat label="Median asking" value={money(cluster.asking_p50)} big />
             <Stat label="Most ask" value={`${money(cluster.asking_p25)}–${money(cluster.asking_p75)}`} />
             <Stat label="Listings" value={askingCount.toLocaleString()} />
-          </div>
+          </dl>
           <p className="mt-4 text-sm text-spruce-light">
             Asking prices run higher than sold prices. Sellers post hopefully, and unsold listings
             linger; treat the sold figures above as the real signal.
