@@ -3,6 +3,8 @@ import PriceDistribution from './PriceDistribution';
 import AlertSignup from './AlertSignup';
 import GuideAlert from './GuideAlert';
 import OutboundListingLink from './OutboundListingLink';
+import ForSaleTable from './ForSaleTable';
+import ScanLink from './ScanLink';
 import {
   Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint, TypeRow,
   clusterPath, brandHubPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
@@ -363,13 +365,10 @@ export default function GuideView({
             quote a reliable figure. The individual sales are listed below; judge them yourself.
           </p>
         )}
-        <p className="mt-4 border-t border-bone-dark pt-4 text-sm text-spruce-light">
-          Have one?{' '}
-          <a href="/scan" className="font-medium text-honey-dark hover:underline">
-            Scan a photo of your {singular}
-          </a>{' '}
-          to see what yours is worth against these sales.
-        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-bone-dark pt-4 text-sm text-spruce-light">
+          <ScanLink singular={singular} />
+          <span>to see what yours is worth against these sales.</span>
+        </div>
       </section>
 
       {/* The most useful thing on the page goes right under the number: what
@@ -379,13 +378,24 @@ export default function GuideView({
         <>
           {alertSlot('top')}
           <section className="mt-8">
-            <h2 className="font-display text-xl font-semibold text-spruce">
+            <h2 className="mb-2 font-display text-xl font-semibold text-spruce">
               For sale now ({activeCount.toLocaleString()})
             </h2>
-            <p className="mb-3 text-sm text-spruce-light">
-              Currently listed. Benchlot links straight to the seller — no fees, no middleman.
-            </p>
-            <Table rows={active} dateLabel="Listed" status="active" clusterKey={cluster.cluster_key} />
+            <ForSaleTable
+              rows={active}
+              clusterKey={cluster.cluster_key}
+              stats={{
+                p25: cluster.sold_p25 ? Number(cluster.sold_p25) : null,
+                p50: cluster.sold_p50 ? Number(cluster.sold_p50) : null,
+                p75: cluster.sold_p75 ? Number(cluster.sold_p75) : null,
+                soldCount, min: SOLD_MIN_FOR_REFERENCE,
+              }}
+            />
+            {activeCount > active.length && (
+              <p className="mt-2 text-xs text-spruce-light">
+                The {active.length} most recent of {activeCount.toLocaleString()} listings.
+              </p>
+            )}
           </section>
         </>
       ) : (

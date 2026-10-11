@@ -69,6 +69,35 @@ export function breadcrumbJsonLd(
   };
 }
 
+/** Site-level markup for the homepage only: who publishes this, and how to search it. */
+export function siteJsonLd(siteUrl: string): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: 'Benchlot',
+        url: siteUrl,
+        logo: `${siteUrl}/android-chrome-512x512.png`,
+        description: 'Recorded sale prices and current listings for used woodworking tools, gathered from dealers, forum classifieds, auctions and marketplaces.',
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'Benchlot',
+        publisher: { '@id': `${siteUrl}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${siteUrl}/search?q={search_term_string}` },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
+}
+
 export function JsonLd({ data }: { data: Record<string, unknown> | null }) {
   if (!data) return null;
   return (
