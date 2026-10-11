@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import PriceDistribution from './PriceDistribution';
 import AlertSignup from './AlertSignup';
-import GuideAlert from './GuideAlert';
+import ReturnPrompt from './ReturnPrompt';
 import OutboundListingLink from './OutboundListingLink';
 import ForSaleTable from './ForSaleTable';
 import ScanLink from './ScanLink';
@@ -298,19 +298,21 @@ export default function GuideView({
 
   const hasCluster = Boolean(cluster.canonical_type && cluster.canonical_brand);
 
-  // Experiment `guide-alert-placement` (see GuideAlert.tsx). Only pages with
-  // something for sale take part: when nothing is listed the form already
-  // stands in for the for-sale list right under the number, so both arms
-  // would render the same page.
+  // Two inline asks on a page with listings: under the sold card (within the
+  // first screen and a half on a phone — ChatGPT visitors scroll a median
+  // 18%) and after the recorded sales. The guide-alert-placement experiment
+  // that chose between them is retired: at ~80 sessions per source a month
+  // nothing reaches significance, so both ship and are compared by placement.
   const alertSlot = (slot: 'top' | 'bottom') =>
     hasCluster ? (
-      <GuideAlert
-        slot={slot}
+      <AlertSignup
         canonicalType={cluster.canonical_type!}
         canonicalBrand={cluster.canonical_brand!}
         canonicalSize={cluster.canonical_size}
         phrase={phrase}
         className="mt-8"
+        surface="guide_page"
+        placement={slot}
       />
     ) : null;
 
@@ -381,6 +383,14 @@ export default function GuideView({
             <h2 className="mb-2 font-display text-xl font-semibold text-spruce">
               For sale now ({activeCount.toLocaleString()})
             </h2>
+            {hasCluster && (
+              <ReturnPrompt
+                canonicalType={cluster.canonical_type!}
+                canonicalBrand={cluster.canonical_brand!}
+                canonicalSize={cluster.canonical_size}
+                singular={singular}
+              />
+            )}
             <ForSaleTable
               rows={active}
               clusterKey={cluster.cluster_key}

@@ -159,12 +159,6 @@ const Header = ({ publicMode = false }) => {
               >
                 Scan a Tool
               </Link>
-              <a
-                href="#scan-waitlist"
-                className="px-3 py-1.5 bg-honey text-dark-teal rounded-md hover:bg-honey/90 font-body font-medium whitespace-nowrap"
-              >
-                Join Waitlist
-              </a>
             </div>
           </div>
         </div>

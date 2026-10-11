@@ -2,6 +2,9 @@
 
 import { track, GOAL_EVENTS } from '@/lib/analytics';
 
+/** Fired on window after every click-out so the page can react when the visitor returns. */
+export const CLICKOUT_EVENT = 'benchlot:clickout';
+
 /**
  * The anchor a guide page uses to send someone to a source listing.
  *
@@ -36,7 +39,8 @@ export default function OutboundListingLink({
       target="_blank"
       rel="nofollow noopener"
       className={className}
-      onClick={() =>
+      onClick={() => {
+        try { window.dispatchEvent(new CustomEvent(CLICKOUT_EVENT, { detail: { surface } })); } catch { /* ignore */ }
         track(GOAL_EVENTS.LISTING_CLICKED_OUT, {
           surface,
           listing_id: listingId,
@@ -47,8 +51,8 @@ export default function OutboundListingLink({
           position,
           cluster_key: clusterKey,
           price_band: priceBand ?? null,
-        })
-      }
+        });
+      }}
     >
       {children}
     </a>

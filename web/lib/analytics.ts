@@ -28,8 +28,16 @@ export const GOAL_EVENTS = {
   ALERT_CONFIRMED: 'alert_confirmed',
 } as const;
 
-/** The one flag-driven guide-page variant in flight. See components/GuideAlert.tsx. */
-export const GUIDE_ALERT_PLACEMENT_FLAG = 'guide-alert-placement';
+/**
+ * Email-ask instrumentation. `placement` names the capture point (top,
+ * bottom, for_sale_slot, return_prompt) so signups can be compared by where
+ * the ask sat — traffic is too low for A/B tests, so every ask ships and the
+ * counts are read side by side.
+ */
+export const PROMPT_EVENTS = {
+  SHOWN: 'email_prompt_shown',
+  DISMISSED: 'email_prompt_dismissed',
+} as const;
 
 function loaded(): boolean {
   return typeof window !== 'undefined' && Boolean(posthog.__loaded);
