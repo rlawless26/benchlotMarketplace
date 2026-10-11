@@ -14,6 +14,7 @@ export async function GET() {
              MAX(last_seen_at)  AS last_seen
       FROM listings
       WHERE status = 'active'
+        AND last_seen_at > now() - interval '45 days'
       GROUP BY source`);
 
     const sourceCounts: Record<string, number> = {};

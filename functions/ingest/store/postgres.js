@@ -249,13 +249,44 @@ async function upsertListings(records, runStartedAt) {
 }
 
 /**
+ * A sweep is only meaningful when the scrape actually saw the catalogue. Below
+ * this share of the source's current active rows, assume the scraper broke
+ * (parser drift, challenge page served as 200) rather than that the dealer
+ * sold half their stock overnight.
+ */
+const SWEEP_MIN_SEEN_SHARE = 0.5;
+
+/**
  * Flip `active` listings for `source` last seen before this run to `sold`.
  * Same contract as the Firestore version, including the `expired` key name.
  * In Firestore this was a paginated read-then-batch-write loop; here it is one
  * statement.
+ *
+ * `opts.scraped` is the number of records this run parsed. When supplied, the
+ * sweep refuses to run if that is zero, or under half the rows currently
+ * active for the source, and THROWS so the worker records the run as failed
+ * and the job goes red. Without the guard, oldtools (2026-10-08: the site
+ * dropped its microdata, zero prices parsed) marked all 186 live listings
+ * sold and the green workflow rebuilt the comps on top of them.
  */
-async function markExpired(source, runStartedAt) {
+async function markExpired(source, runStartedAt, opts = {}) {
   const at = toIso(runStartedAt) || new Date().toISOString();
+  if (typeof opts.scraped === 'number') {
+    const { rows } = await getPool().query(
+      `SELECT count(*)::int AS n FROM listings WHERE source = $1 AND status = 'active'`,
+      [source]
+    );
+    const active = rows[0]?.n ?? 0;
+    if (active > 0 && opts.scraped === 0) {
+      throw new Error(`[${source}] scraped 0 records with ${active} active rows — refusing to sweep`);
+    }
+    if (active >= 20 && opts.scraped < active * SWEEP_MIN_SEEN_SHARE) {
+      throw new Error(
+        `[${source}] scraped ${opts.scraped} records against ${active} active rows ` +
+        `(< ${SWEEP_MIN_SEEN_SHARE * 100}%) — refusing to sweep`
+      );
+    }
+  }
   const { rowCount } = await getPool().query(
     `UPDATE listings
         SET status = 'sold', sold_at = $2::timestamptz

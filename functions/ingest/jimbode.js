@@ -246,7 +246,7 @@ async function runIngestion(opts = {}) {
 
   const records = await scrapeAll(opts);
   const upsertSummary = await upsertListings(records, runStartedAt);
-  const expireSummary = await markExpired(SOURCE, runStartedAt);
+  const expireSummary = await markExpired(SOURCE, runStartedAt, { scraped: records.length });
 
   return {
     source: SOURCE,

@@ -97,9 +97,17 @@ const snaps = async () =>
   check('canonical_brand preserved', after.canonical_brand, 'Stanley');
   check('canonical_type preserved', after.canonical_type, 'Bench Plane');
 
-  console.log('\n6. markExpired flips stale actives to sold');
+  console.log('\n6a. markExpired refuses to sweep after an empty scrape');
+  // oldtools 2026-10-08: the parser returned nothing and the sweep marked the
+  // whole catalogue sold. With `scraped` supplied the store must throw instead.
   const later = new Date('2026-08-26T00:00:00Z');
-  const m = await store.markExpired(SOURCE, later);
+  let threw = false;
+  try { await store.markExpired(SOURCE, later, { scraped: 0 }); } catch { threw = true; }
+  check('throws on scraped=0 with active rows', threw, true);
+  check('row still active', (await row()).status, 'active');
+
+  console.log('\n6. markExpired flips stale actives to sold');
+  const m = await store.markExpired(SOURCE, later, { scraped: 1 });
   const sold = await row();
   check('this row is now sold', sold.status, 'sold');
   check('sold_at set', sold.sold_at.toISOString(), later.toISOString());

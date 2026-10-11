@@ -220,7 +220,7 @@ async function runIngestion(opts = {}) {
   // expire everything past the cap.
   const shouldSweep = !opts.maxItems;
   const expireSummary = shouldSweep
-    ? await markExpired(SOURCE, runStartedAt)
+    ? await markExpired(SOURCE, runStartedAt, { scraped: records.length })
     : { expired: 0 };
 
   return {

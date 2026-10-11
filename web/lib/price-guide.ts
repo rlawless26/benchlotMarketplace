@@ -251,6 +251,15 @@ export type Listing = {
 const ELIGIBLE = `NOT bl_is_junk(l.title_raw, l.condition_raw) AND NOT bl_is_lot(l.title_raw)`;
 
 /**
+ * "For sale" means seen recently. The nightly expire_stale_listings() sweep
+ * (schema/012) retires rows past their source's TTL, but a day of lag or a
+ * paused sweep must not put a months-old listing back in front of a buyer, so
+ * every read of active rows carries this floor too. `l` is the listings alias.
+ */
+export const FRESH_DAYS = 45;
+export const FRESH = `(l.status <> 'active' OR l.last_seen_at > now() - interval '${FRESH_DAYS} days')`;
+
+/**
  * Listings behind a cluster. Queried by exact canonical values rather than by
  * re-deriving slugs in SQL -- exact equality is what the composite indexes on
  * (status, canonical_type, ...) can actually serve.
@@ -286,7 +295,7 @@ async function listingsFor(
               ${dated} AS dated_at
        FROM listings l JOIN sources s ON s.id = l.source
        WHERE l.canonical_type = $1 AND l.canonical_brand = $2 AND l.status = $3::listing_status
-         AND l.price_cents IS NOT NULL AND ${ELIGIBLE}${sizeClause}
+         AND l.price_cents IS NOT NULL AND ${ELIGIBLE} AND ${FRESH}${sizeClause}
        ORDER BY lower(btrim(l.title_raw)), COALESCE(l.sold_price_cents, l.price_cents),
                 l.sold_at DESC NULLS LAST, l.posted_at DESC NULLS LAST
      ) d
@@ -365,7 +374,7 @@ export async function activeAggregate(c: Cluster): Promise<ActiveAggregate> {
     `SELECT count(*)::text AS offer_count, min(price_cents) AS low_cents, max(price_cents) AS high_cents
      FROM listings l
      WHERE l.canonical_type = $1 AND l.canonical_brand = $2
-       AND l.status = 'active' AND l.price_cents IS NOT NULL AND ${ELIGIBLE}${sizeClause}`,
+       AND l.status = 'active' AND l.price_cents IS NOT NULL AND ${ELIGIBLE} AND ${FRESH}${sizeClause}`,
     params
   );
   const r = rows[0];

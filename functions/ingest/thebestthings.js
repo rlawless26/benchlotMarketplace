@@ -346,7 +346,7 @@ async function runIngestion(opts = {}) {
   // filter) — would falsely expire items we didn't reach this run.
   const shouldSweep = !opts.maxItems && !opts.categories;
   const expireSummary = shouldSweep
-    ? await markExpired(SOURCE, runStartedAt)
+    ? await markExpired(SOURCE, runStartedAt, { scraped: records.length })
     : { expired: 0 };
 
   return {

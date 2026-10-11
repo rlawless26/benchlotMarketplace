@@ -7,11 +7,11 @@
  * scrape strategy is straightforward:
  *
  *   1. Fetch `/shop/sitemap/sitemap-items-1.xml`, pull `<loc>` URLs.
- *   2. For each item URL, fetch the HTML and parse Schema.org Product
- *      microdata (`itemprop="name"`, `itemprop="price"`, etc.).
- *   3. Skip items with no real price (a 0.00 placeholder is hard-coded on
- *      every page; the canonical Offer price appears as a second
- *      `itemprop="price"` later in the document).
+ *   2. For each item URL, fetch the HTML and parse the Schema.org Product
+ *      JSON-LD (`offers.price`); fall back to the microdata the site used
+ *      to emit (`itemprop="price"` etc.) if it ever returns.
+ *   3. Skip items with no real price (the old microdata rendered a 0.00
+ *      placeholder on every page, so prices are max()-ed, not first()-ed).
  *   4. Standard `markExpired` flips items whose URLs drop from the sitemap.
  *
  * `itemprop="brand"` is the seller's storefront brand ("Falcon-Wood"),
@@ -67,12 +67,43 @@ async function fetchSitemapUrls() {
   return urls;
 }
 
-// `itemprop="price" content="0.00"` is rendered on every page as a
+/**
+ * Schema.org Product from the page's JSON-LD blocks, or null.
+ *
+ * The storefront dropped its microdata in early October 2026 (verified
+ * 2026-10-10: no `itemprop="price"` on any item page) and now publishes
+ * Product / Offer as `application/ld+json`. The 2026-10-08 run parsed zero
+ * prices because of that and, with nothing to upsert, swept the whole
+ * catalogue to sold. JSON-LD is the primary source now; microdata stays as
+ * the fallback in case the site flips back.
+ */
+function parseJsonLdProduct($) {
+  let product = null;
+  $('script[type="application/ld+json"]').each((_, el) => {
+    if (product) return;
+    let data;
+    try { data = JSON.parse($(el).contents().text()); } catch { return; }
+    const nodes = Array.isArray(data) ? data : Array.isArray(data?.['@graph']) ? data['@graph'] : [data];
+    for (const node of nodes) {
+      if (node && node['@type'] === 'Product') { product = node; break; }
+    }
+  });
+  return product;
+}
+
+function offerOf(product) {
+  const o = product?.offers;
+  return Array.isArray(o) ? o[0] : o || null;
+}
+
+// `itemprop="price" content="0.00"` was rendered on every page as a
 // placeholder, followed later by the real Offer price. Take the maximum of
 // all parsed prices — handles both the placeholder case and any future
 // page that drops the placeholder.
-function parsePriceCents($) {
+function parsePriceCents($, product) {
   const candidates = [];
+  const ld = Number(String(offerOf(product)?.price ?? '').trim());
+  if (Number.isFinite(ld) && ld > 0) candidates.push(ld);
   $('[itemprop="price"]').each((_, el) => {
     const raw = $(el).attr('content') ?? $(el).text();
     const n = Number(String(raw || '').trim());
@@ -82,7 +113,7 @@ function parsePriceCents($) {
   return Math.round(Math.max(...candidates) * 100);
 }
 
-function parseImages($) {
+function parseImages($, product) {
   const seen = new Set();
   const out = [];
   const push = (src) => {
@@ -97,32 +128,37 @@ function parseImages($) {
   // (`_th` suffix on oldtools.com — significantly worse for the card hero).
   const og = $('meta[property="og:image"]').attr('content');
   if (og) push(og);
+  const ld = product?.image;
+  (Array.isArray(ld) ? ld : [ld]).forEach((i) => push(typeof i === 'string' ? i : i?.url));
   $('[itemprop="image"]').each((_, el) => {
     push($(el).attr('content') || $(el).attr('src'));
   });
   return out;
 }
 
-function parseDescription($) {
+function parseDescription($, product) {
   const raw = $('[itemprop="description"]').attr('content')
-    || $('[itemprop="description"]').first().text();
+    || $('[itemprop="description"]').first().text()
+    || product?.description
+    || $('meta[name="description"]').attr('content');
   if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
   if (!trimmed) return null;
   return trimmed.slice(0, MAX_DESCRIPTION_CHARS);
 }
 
-function parseTitle($) {
-  // Two reasonable sources — the visible h1 and the microdata `name`. The
-  // h1 is usually cleaner; fall through if it's missing for any reason.
+function parseTitle($, product) {
+  // Three reasonable sources — the visible h1, the microdata `name`, and the
+  // JSON-LD Product name. The h1 is usually cleanest.
   const h1 = $('h1.itemName').first().text().trim();
   if (h1) return h1;
   const meta = $('[itemprop="name"]').attr('content') || $('[itemprop="name"]').first().text();
-  return (meta || '').trim();
+  return (meta || product?.name || '').trim();
 }
 
-function parseCurrency($) {
-  const cur = $('[itemprop="priceCurrency"]').first().attr('content');
+function parseCurrency($, product) {
+  const cur = $('[itemprop="priceCurrency"]').first().attr('content')
+    || offerOf(product)?.priceCurrency;
   return (cur || '').trim() || 'USD';
 }
 
@@ -131,10 +167,11 @@ function buildRecord(url, html) {
   if (!slug) return null;
 
   const $ = cheerio.load(html);
-  const title = parseTitle($);
+  const product = parseJsonLdProduct($);
+  const title = parseTitle($, product);
   if (!title) return null;
 
-  const price_cents = parsePriceCents($);
+  const price_cents = parsePriceCents($, product);
   if (price_cents === null) return null; // sold / unpriced — skip
 
   const listing = {
@@ -142,11 +179,11 @@ function buildRecord(url, html) {
     source_id: slug,
     source_url: url,
     title_raw: title,
-    description_raw: parseDescription($),
+    description_raw: parseDescription($, product),
     price_cents,
-    currency: parseCurrency($),
+    currency: parseCurrency($, product),
     condition_raw: null,
-    images: parseImages($),
+    images: parseImages($, product),
     posted_at: null, // oldtools doesn't expose a per-item posted-at
     tags: [],
     heuristic_brand: extractBrand(title),
@@ -173,9 +210,9 @@ function buildRecord(url, html) {
     price_cents,
     currency: listing.currency,
     images: listing.images,
-    sku: $('[itemprop="sku"]').first().attr('content') || null,
-    mpn: $('[itemprop="mpn"]').first().attr('content') || null,
-    productID: $('[itemprop="productID"]').first().attr('content') || null,
+    sku: $('[itemprop="sku"]').first().attr('content') || product?.sku || null,
+    mpn: $('[itemprop="mpn"]').first().attr('content') || product?.mpn || null,
+    productID: $('[itemprop="productID"]').first().attr('content') || product?.productID || null,
   };
 
   return { listing, raw, raw_format: RAW_FORMAT };
@@ -217,7 +254,9 @@ async function runIngestion(opts = {}) {
 
   const records = await scrapeAll(opts);
   const upsertSummary = await upsertListings(records, runStartedAt);
-  const expireSummary = await markExpired(SOURCE, runStartedAt);
+  // `scraped` lets the store refuse a sweep when the parser came back empty —
+  // the 2026-10-08 run marked the whole catalogue sold that way.
+  const expireSummary = await markExpired(SOURCE, runStartedAt, { scraped: records.length });
 
   return {
     source: SOURCE,

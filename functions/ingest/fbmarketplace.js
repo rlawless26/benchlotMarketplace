@@ -402,7 +402,7 @@ async function runIngestion(opts = {}) {
   const shouldSweep = !isPartialRun && !totalScrapeFailure;
 
   const expireSummary = shouldSweep
-    ? await markExpired(SOURCE, runStartedAt)
+    ? await markExpired(SOURCE, runStartedAt, { scraped: records.length })
     : { expired: 0 };
 
   const summary = {

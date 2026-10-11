@@ -60,6 +60,7 @@ natural keys), so a re-run tops up rather than duplicating. To start clean:
 | `schema/009_lots_dedupe_brand_notes.sql` | `bl_is_lot()` / `bl_is_junk()` — comp eligibility shared by `rebuild_price_stats()` and the guide pages — plus the `brand_notes` table. **Re-apply 006 after 009**: the rebuild function calls both. |
 | `schema/010_brand_aliases.sql` | `brand_aliases` table (one maker, one spelling), `bl_normalize_size()`, and `apply_brand_aliases()` which rewrites listings + merges brand_notes. The ingest workflow runs it nightly before the stats rebuild. Regenerate the review list with `functions/normalize/brand-alias-candidates.js`. |
 | `schema/011_toolscan_on_postgres.sql` | ToolScan off Firebase: `tool_scans` gains `created_ip` / `image_store` / `posthog_distinct_id`, plus the `scan_feedback` and `leads` tables. Photos for new rows live in the private Vercel Blob store (`image_store = 'blob'`, path in `image_paths`); older rows still point at Firebase Storage. |
+| `schema/012_expire_stale.sql` | `bl_stale_ttl()` + `expire_stale_listings()` — retires `active` rows unseen past a per-source TTL (eBay 30 d, other marketplaces 14 d, dealers 45 d, forums 60 d) to `expired`, never `sold`. The ingest workflow runs it every night, scrape or not. First run on 2026-10-10 retired ~136k rows (eBay never swept itself; FB was paused since May). |
 
 Indexes are deliberately deferred: building a GIN index incrementally across a
 167k-row import is far slower than building it once at the end.

@@ -631,7 +631,7 @@ async function runIngestion(opts = {}) {
 
   const shouldSweep = !opts.maxPages && opts.maxNewThreads == null;
   const expireSummary = shouldSweep
-    ? await markExpired(SOURCE, runStartedAt)
+    ? await markExpired(SOURCE, runStartedAt, { scraped })
     : { expired: 0 };
 
   return {
