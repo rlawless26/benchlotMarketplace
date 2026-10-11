@@ -107,6 +107,7 @@ export default function SiteFooter() {
           <div>
             <Link
               to="/"
+              reloadDocument
               onClick={scrollTop}
               style={{
                 display: 'inline-block',

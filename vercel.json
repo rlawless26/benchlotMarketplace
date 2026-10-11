@@ -8,7 +8,7 @@
     "silent": true,
     "autoAlias": true
   },
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && mv build/index.html build/app.html",
   "env": {
     "NODE_ENV": "production"
   },
@@ -105,6 +105,30 @@
     {
       "source": "/_next/:path*",
       "destination": "https://benchlot-web.vercel.app/_next/:path*"
+    },
+    {
+      "source": "/",
+      "destination": "https://benchlot-web.vercel.app/"
+    },
+    {
+      "source": "/scan",
+      "destination": "https://benchlot-web.vercel.app/scan"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://benchlot-web.vercel.app/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://benchlot-web.vercel.app/sitemap.xml"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "https://benchlot-web.vercel.app/llms.txt"
+    },
+    {
+      "source": "/:path((?!static/|api/|_next/).*)",
+      "destination": "/app.html"
     }
   ]
 }

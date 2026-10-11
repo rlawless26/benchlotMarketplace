@@ -120,10 +120,10 @@ function MarketplaceRoute({ element }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (AGGREGATOR_MODE && !user) {
-    return <Navigate to="/?gated=1" replace />;
+    return <Navigate to="/search?gated=1" replace />;
   }
   if (!MARKETPLACE_BETA && !user) {
-    return <Navigate to="/?gated=1" replace />;
+    return <Navigate to="/search?gated=1" replace />;
   }
   return element;
 }
@@ -133,7 +133,10 @@ function AppLayout() {
   const location = useLocation();
   const { user } = useAuth();
   const isWaitlistPage = location.pathname === '/' && !MARKETPLACE_BETA && !AGGREGATOR_MODE;
-  const isAggregatorHome = location.pathname === '/' && AGGREGATOR_MODE;
+  // `/` is served by the Next.js app through a rewrite in production; the CRA
+  // grid lives at /search. The `/` route stays mounted so a rewrite rollback
+  // is one commit, and for local dev.
+  const isAggregatorHome = ['/', '/search'].includes(location.pathname) && AGGREGATOR_MODE;
   const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
   // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
   // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
@@ -166,6 +169,11 @@ function AppLayout() {
                 : (MARKETPLACE_BETA ? <LandingPageNew /> : <WaitlistLandingPage />)
             }
           />
+
+          {/* The listings grid. In production benchlot.com/ is the Next.js
+              homepage (root vercel.json rewrites it to benchlot-web), and the
+              grid answers here; its state stays in the query string. */}
+          <Route path="/search" element={<AggregatorHomePage />} />
 
           {/* App Home (previous landing page, preserved) */}
           <Route path="/app" element={<MarketplaceRoute element={<LandingPageNew />} />} />
@@ -225,7 +233,7 @@ function AppLayout() {
               Gated off when the aggregator is on; page file preserved for future marketplace relaunch. */}
           <Route
             path="/founding-sellers"
-            element={AGGREGATOR_MODE ? <Navigate to="/?gated=1" replace /> : <FoundingSellersPage />}
+            element={AGGREGATOR_MODE ? <Navigate to="/search?gated=1" replace /> : <FoundingSellersPage />}
           />
 
           {/* Tool Routes — gated */}

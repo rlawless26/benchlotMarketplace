@@ -58,7 +58,7 @@ const HomeIntroBanner = ({ visible, onDismiss }) => {
   };
 
   const onChip = (chip) => {
-    navigate(`/?${chip.param}=${encodeURIComponent(chip.value)}`);
+    navigate(`/search?${chip.param}=${encodeURIComponent(chip.value)}`);
   };
 
   const countLabel =
@@ -235,6 +235,7 @@ const HomeIntroBanner = ({ visible, onDismiss }) => {
                 weight so neither dominates. */}
             <Link
               to="/scan"
+              reloadDocument
               className="inline-flex items-center"
               style={{
                 gap: 4,

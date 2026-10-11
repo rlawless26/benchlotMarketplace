@@ -244,7 +244,7 @@ const ResultsState = ({ state, actions }) => {
   const showPersistentChips =
     !hibVisible && !query && activeFilterChips.length === 0;
   const onChipClick = (chip) => {
-    navigate(`/?${chip.param}=${encodeURIComponent(chip.value)}`);
+    navigate(`/search?${chip.param}=${encodeURIComponent(chip.value)}`);
   };
 
   // Server query — push the cheapest filters to Firestore, refine client-side.

@@ -280,7 +280,7 @@ const AlertsPage = () => {
               Run a search and click "Save this search as an alert." We'll email you when new matches are indexed.
             </p>
             <Link
-              to="/"
+              to="/search"
               className="inline-flex items-center gap-1.5"
               style={{
                 padding: '10px 18px',
