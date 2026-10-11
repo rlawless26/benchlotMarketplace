@@ -32,14 +32,32 @@ export const metadata: Metadata = {
   robots: IS_INDEXABLE
     ? { index: true, follow: true }
     : { index: false, follow: false },
+  // The icon files are served by the CRA project at the domain root (its
+  // build/ wins the filesystem phase before any rewrite), so both apps share
+  // one head.
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
 };
 
+/**
+ * Link rule: next/link only for routes this app serves (/, /scan, /guide/*,
+ * /alerts/confirm|unsubscribe). Plain <a> for everything the CRA app serves
+ * (/search, /faq, /privacy, /terms) — a client-side navigation to one of those
+ * would try to fetch an RSC payload that does not exist.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${petrona.variable} ${outfit.variable}`}>
       <body className="min-h-screen bg-bone text-dark-teal antialiased">
         <header className="border-b border-bone-dark bg-bone-light">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
             <Link href="/" className="font-display text-xl font-semibold text-spruce">
               Benchlot
             </Link>
@@ -47,6 +65,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/guide" className="text-spruce hover:text-honey-dark">
                 Price guide
               </Link>
+              <Link href="/scan" className="text-spruce hover:text-honey-dark">
+                Scan a tool
+              </Link>
+              <a href="/search" className="hidden text-spruce hover:text-honey-dark sm:inline">
+                Listings
+              </a>
               <SearchForm compact />
             </nav>
           </div>
@@ -60,6 +84,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Benchlot indexes public listings and links back to the source. We don&apos;t
               broker sales, take a cut, or use affiliate links.
             </p>
+            <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+              <Link href="/guide" className="hover:text-honey-dark">Price guide</Link>
+              <a href="/search" className="hover:text-honey-dark">All listings</a>
+              <Link href="/scan" className="hover:text-honey-dark">Scan a tool</Link>
+              <a href="/faq" className="hover:text-honey-dark">FAQ</a>
+              <a href="/privacy" className="hover:text-honey-dark">Privacy</a>
+              <a href="/terms" className="hover:text-honey-dark">Terms</a>
+            </nav>
           </div>
         </footer>
 

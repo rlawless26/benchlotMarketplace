@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
-import { listPublishableClusters, listBrandHubs, clusterPath, brandHubPath, clusterPhrase, slug } from '@/lib/price-guide';
+import {
+  listPublishableClusters, listBrandHubs, machineTypeSummaries, clusterPath, brandHubPath, clusterPhrase,
+  typePlural, slug,
+} from '@/lib/price-guide';
 
 export const revalidate = 3600;
 
@@ -14,9 +17,10 @@ export const metadata: Metadata = {
 
 export default async function GuideIndex() {
   // Brand and size pages only; model pages are reached from their brand page.
-  const [clusters, hubs] = await Promise.all([
+  const [clusters, hubs, machines] = await Promise.all([
     listPublishableClusters({ grains: ['coarse', 'fine'] }),
     listBrandHubs(),
+    machineTypeSummaries(6),
   ]);
 
   // Group by tool type so the index reads as a table of contents rather than a
@@ -63,6 +67,47 @@ export default async function GuideIndex() {
                   {h.canonical_brand}
                   <span className="tnum ml-2 text-xs text-spruce-light">{h.type_count} types</span>
                 </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Machines get their own door. They are where ChatGPT sends buyers and
+          where Google shows the pages without clicking; one hop from the root
+          is what keeps them cited. Each row leads with what is for sale. */}
+      {machines.length > 0 && (
+        <section id="machines" className="mt-10">
+          <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">Machines and power tools</h2>
+          <p className="mt-1 text-sm text-spruce-light">
+            Table saws, planers, dust collectors and the rest, by maker. Sold prices first, then what is listed now.
+          </p>
+          <ul className="mt-4 divide-y divide-bone-dark border-y border-bone-dark">
+            {machines.map((m) => (
+              <li key={m.canonical_type} className="py-3">
+                <div className="flex items-baseline justify-between gap-4">
+                  <Link href={`#${m.typeSlug}`} className="font-medium text-spruce hover:text-honey-dark">
+                    {typePlural(m.canonical_type)}
+                  </Link>
+                  <span className="tnum shrink-0 text-xs text-spruce-light">
+                    {m.sold_total.toLocaleString()} sold · {m.active_total.toLocaleString()} for sale
+                  </span>
+                </div>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {m.top.map((r) => (
+                    <li key={r.cluster_key}>
+                      <Link
+                        href={clusterPath(r)}
+                        className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey"
+                      >
+                        {r.canonical_brand}
+                        <span className="tnum ml-2 text-xs text-spruce-light">
+                          {r.asking_count_active > 0 ? `${r.asking_count_active} for sale` : `${r.sold_count} sold`}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ul>

@@ -1,20 +1,31 @@
 /**
  * Plain GET form: works without JavaScript, which matters for a page whose
  * whole audience arrives from a search engine and may leave in two seconds.
+ *
+ * `action` defaults to the price-guide search. The homepage points it at the
+ * CRA listings grid (/search), which reads the same `q` parameter.
  */
 export default function SearchForm({
-  compact = false, defaultValue = '',
-}: { compact?: boolean; defaultValue?: string }) {
+  compact = false, defaultValue = '', action = '/guide/search', placeholder, label, id,
+}: {
+  compact?: boolean;
+  defaultValue?: string;
+  action?: string;
+  placeholder?: string;
+  label?: string;
+  id?: string;
+}) {
+  const inputId = id ?? (compact ? 'q-header' : 'q');
   return (
-    <form action="/guide/search" method="get" role="search"
+    <form action={action} method="get" role="search"
           className={compact ? 'flex items-center gap-2' : 'flex flex-col gap-2 sm:flex-row'}>
-      <label htmlFor={compact ? 'q-header' : 'q'} className="sr-only">Search the price guide</label>
+      <label htmlFor={inputId} className="sr-only">{label ?? 'Search the price guide'}</label>
       <input
-        id={compact ? 'q-header' : 'q'}
+        id={inputId}
         type="search"
         name="q"
         defaultValue={defaultValue}
-        placeholder={compact ? 'Search a brand or tool' : 'Brand or tool, e.g. Stanley No. 5 or Festool Domino'}
+        placeholder={placeholder ?? (compact ? 'Search a brand or tool' : 'Brand or tool, e.g. Stanley No. 5 or Festool Domino')}
         autoComplete="off"
         className={
           compact

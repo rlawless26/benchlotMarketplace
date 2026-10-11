@@ -1,4 +1,7 @@
-/**
+// slug(), clusterPath() and brandHubPath() live in guide-paths.ts (no db
+// import) so client components can build links; re-exported here.
+import { slug, clusterPath, brandHubPath } from './guide-paths';
+export { slug, clusterPath, brandHubPath };/**
  * Price-guide data access.
  *
  * Cluster identity mirrors functions/pricestats/cluster.js:
@@ -16,17 +19,25 @@ import { sql } from './db';
 export const SOLD_MIN_FOR_REFERENCE = 8;
 export const ASKING_MIN_FOR_REFERENCE = 10;
 
-/** Mirror of slug() in functions/pricestats/cluster.js. Keep in sync. */
-export function slug(s: string | null | undefined): string {
-  if (!s) return '_';
-  const out = String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return out || '_';
-}
+/**
+ * Machines and portable power tools, as grouped in
+ * functions/normalize/vocabulary.js (CANONICAL_TYPES, the M5 sections).
+ * Keep in sync by hand; the vocabulary is CommonJS and not importable here.
+ *
+ * Why it matters: Search Console (2026-10-10) shows these pages earn the most
+ * impressions and almost no clicks, because a "delta band saw" searcher wants
+ * listings, not a price study, while ChatGPT sends buyers straight to them.
+ * Their descriptions lead with what is for sale.
+ */
+export const MACHINE_TYPES = new Set([
+  'Table Saw', 'Band Saw', 'Miter Saw', 'Jointer', 'Thickness Planer', 'Lathe', 'Drill Press',
+  'Router', 'Shaper', 'Mortiser', 'Drum Sander', 'Scroll Saw', 'Dust Collector', 'Air Compressor',
+  'Circular Saw', 'Track Saw', 'Jigsaw', 'Reciprocating Saw', 'Sander', 'Impact Driver', 'Drill',
+  'Angle Grinder', 'Biscuit Joiner', 'Domino', 'Multi-Tool', 'CNC',
+]);
+
+export const isMachineType = (type: string | null | undefined) => !!type && MACHINE_TYPES.has(type);
+
 
 export type Cluster = {
   cluster_key: string;
@@ -99,14 +110,20 @@ export type ClusterRef = {
   canonical_model: string | null;
   sold_count: number;
   asking_count: number;
+  /** Listings for sale now (seen within the stats window). */
+  asking_count_active: number;
+  sold_p50: string | null;
+  /** When rebuild_price_stats() last wrote this row; the sitemap's lastModified. */
+  last_built_at: string | null;
 };
 
 type RefRow = {
   cluster_key: string; canonical_type: string; canonical_brand: string;
   canonical_size: string | null; canonical_model: string | null;
   sold_count: number | null; asking_count: number | null;
+  asking_count_active: number | null; sold_p50: string | null; last_built_at: string | null;
 };
-const REF_COLUMNS = `cluster_key, canonical_type, canonical_brand, canonical_size, canonical_model, sold_count, asking_count`;
+const REF_COLUMNS = `cluster_key, canonical_type, canonical_brand, canonical_size, canonical_model, sold_count, asking_count, asking_count_active, sold_p50, last_built_at`;
 
 /**
  * Cluster keys, as rebuild_price_stats() writes them:
@@ -135,6 +152,9 @@ function toRef(r: RefRow): ClusterRef {
     canonical_model: r.canonical_model,
     sold_count: r.sold_count ?? 0,
     asking_count: r.asking_count ?? 0,
+    asking_count_active: r.asking_count_active ?? 0,
+    sold_p50: r.sold_p50,
+    last_built_at: r.last_built_at,
   };
 }
 
@@ -320,16 +340,6 @@ export async function relatedClusters(c: Cluster, limit = 8): Promise<ClusterRef
   return rows.map(toRef);
 }
 
-export function clusterPath(c: {
-  typeSlug: string; brandSlug: string; sizeSlug: string | null;
-  modelSlug?: string | null; planeType?: number | null;
-}) {
-  const third = c.modelSlug ?? c.sizeSlug;
-  if (!third) return `/guide/${c.typeSlug}/${c.brandSlug}`;
-  const base = `/guide/${c.typeSlug}/${c.brandSlug}/${third}`;
-  return c.modelSlug && c.planeType ? `${base}/type-${c.planeType}` : base;
-}
-
 type Nameable = {
   canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
   canonical_model?: string | null; plane_type_number?: number | null; planeType?: number | null;
@@ -342,16 +352,9 @@ export function clusterTitle(c: Nameable) {
     .filter(Boolean).join(' ');
 }
 
-export const money = (v: string | number | null | undefined) => {
-  if (v === null || v === undefined) return null;
-  const n = typeof v === 'string' ? parseFloat(v) : v;
-  if (Number.isNaN(n)) return null;
-  return n >= 1000
-    ? `$${Math.round(n).toLocaleString('en-US')}`
-    : `$${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`;
-};
-
-export const centsToMoney = (c: number | null) => (c === null ? null : money(c / 100));
+// money(), centsToMoney() and cleanTitle() live in format.ts (no imports) so
+// client components can use them; re-exported here.
+export { money, centsToMoney, cleanTitle } from './format';
 
 export type ActiveAggregate = {
   offer_count: number;
@@ -475,26 +478,6 @@ export function clusterPhraseSingular(c: Nameable): string {
     .filter(Boolean).join(' ');
 }
 
-/**
- * Strips dealer stock numbers and "AS OF <date>" suffixes from a listing
- * title: "Rare PRESTON No. 13935 Beader - 119406" -> "Rare PRESTON No. 13935
- * Beader". Model numbers inside the title ("No. 13935") are untouched because
- * the suffix has to trail a dash, equals or asterisk at the very end.
- */
-export function cleanTitle(title: string): string {
-  let s = title.replace(/\s+/g, ' ').trim();
-  for (let i = 0; i < 3; i++) {
-    const before = s;
-    s = s
-      .replace(/\s*[-–—=*]+\s*AS OF [A-Z]{3,9}\.?\s*\d{1,2}\s*$/i, '')
-      .replace(/\s*[-–—=*]+\s*(EXCELSIOR\s+)?#?\d{4,6}[A-Z]{0,2}\s*$/, '')
-      .replace(/\s*[-–—=*]+\s*$/, '')
-      .trim();
-    if (s === before) break;
-  }
-  return s || title;
-}
-
 // ---------------------------------------------------------------------------
 // Per-page facts: what is unique about THIS cluster's evidence
 // ---------------------------------------------------------------------------
@@ -602,7 +585,7 @@ export async function modelClusters(c: Cluster, limit = 16): Promise<ClusterRef[
   return rows.map(toRef);
 }
 
-export type TypeRow = ClusterRef & { sold_p50: string | null; publishable: boolean };
+export type TypeRow = ClusterRef & { publishable: boolean };
 
 /**
  * Plane type-study breakdown for a model (Stanley No. 4: Type 11, 13, 16,
@@ -611,15 +594,15 @@ export type TypeRow = ClusterRef & { sold_p50: string | null; publishable: boole
  */
 export async function typeClusters(c: Cluster): Promise<TypeRow[]> {
   if (!c.canonical_model) return [];
-  const rows = await sql<RefRow & { sold_p50: string | null; publishable: boolean }>(
-    `SELECT ${REF_COLUMNS}, sold_p50, (${PUBLISHABLE}) AS publishable
+  const rows = await sql<RefRow & { publishable: boolean }>(
+    `SELECT ${REF_COLUMNS}, (${PUBLISHABLE}) AS publishable
      FROM price_stats
      WHERE grain = 'type-fine' AND canonical_type = $1 AND canonical_brand = $2
        AND canonical_model = $3 AND coalesce(sold_count, 0) > 0
      ORDER BY plane_type_number`,
     [c.canonical_type, c.canonical_brand, c.canonical_model]
   );
-  return rows.map((r) => ({ ...toRef(r), sold_p50: r.sold_p50, publishable: r.publishable }));
+  return rows.map((r) => ({ ...toRef(r), publishable: r.publishable }));
 }
 
 /** Maker note, if one has been generated and published for this brand. */
@@ -630,6 +613,97 @@ export async function brandNote(brand: string | null): Promise<string | null> {
     [brand]
   );
   return rows[0]?.note ?? null;
+}
+
+/**
+ * Whether a brand-level note belongs on this page. brand_notes is keyed by
+ * maker only, so the Festool note (written about track saws and the Domino)
+ * also rendered on the Festool dust-collector page. Until notes are keyed by
+ * (brand, type), a machine page only shows the note when the text actually
+ * mentions its tool type. Hand-tool makers' notes are about the maker's
+ * tools generally and stay.
+ */
+export function noteFitsPage(note: string | null, type: string | null): string | null {
+  if (!note || !type) return note;
+  if (!isMachineType(type)) return note;
+  const words = typeLower(type).split(' ');
+  const stem = words[words.length - 1].replace(/s$/i, '');
+  return new RegExp(`\\b${stem}`, 'i').test(note) ? note : null;
+}
+
+/**
+ * Everything a maker has for sale across every tool type, newest first. The
+ * brand hub had no listings at all, which is why /guide/brand/festool sat at
+ * position 16 with no clicks while the Festool type pages converted.
+ */
+export type BrandListing = Listing & { canonical_type: string };
+
+export async function brandActiveListings(brand: string, limit = 12): Promise<BrandListing[]> {
+  return sql<BrandListing>(
+    `SELECT l.id::text, l.source, s.name AS source_name, s.kind::text AS source_kind,
+            l.source_url, l.title_raw, l.price_cents, l.condition_raw, l.images, l.location_display,
+            l.posted_at, l.sold_at, l.first_seen_at, l.last_seen_at, l.canonical_type,
+            COALESCE(l.posted_at, l.first_seen_at, l.last_seen_at) AS dated_at
+     FROM listings l JOIN sources s ON s.id = l.source
+     WHERE l.canonical_brand = $1 AND l.status = 'active' AND l.price_cents IS NOT NULL
+       AND l.canonical_type IS NOT NULL AND l.canonical_type <> 'Other'
+       AND ${ELIGIBLE} AND ${FRESH}
+     ORDER BY dated_at DESC
+     LIMIT $2`,
+    [brand, limit]
+  );
+}
+
+/** For-sale count across a brand, for its hub description. */
+export async function brandActiveCount(brand: string): Promise<number> {
+  const rows = await sql<{ n: number }>(
+    `SELECT count(*)::int AS n FROM listings l
+     WHERE l.canonical_brand = $1 AND l.status = 'active' AND l.price_cents IS NOT NULL
+       AND l.canonical_type IS NOT NULL AND l.canonical_type <> 'Other' AND ${ELIGIBLE} AND ${FRESH}`,
+    [brand]
+  );
+  return rows[0]?.n ?? 0;
+}
+
+export type MachineTypeSummary = {
+  canonical_type: string;
+  typeSlug: string;
+  brands: number;
+  sold_total: number;
+  active_total: number;
+  /** Brand pages under this type, most sold first. */
+  top: ClusterRef[];
+};
+
+/**
+ * The machine and power-tool section of the guide index: one row per type
+ * with its brand pages, so the pages ChatGPT lands on are one hop from the
+ * root and from llms.txt.
+ */
+export async function machineTypeSummaries(perType = 6): Promise<MachineTypeSummary[]> {
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
+     FROM price_stats
+     WHERE ${PUBLISHABLE} AND grain = 'coarse' AND canonical_type = ANY($1)
+     ORDER BY canonical_type, coalesce(sold_count,0) DESC, coalesce(asking_count_active,0) DESC`,
+    [[...MACHINE_TYPES]]
+  );
+  const byType = new Map<string, ClusterRef[]>();
+  for (const r of rows) {
+    const list = byType.get(r.canonical_type) ?? [];
+    list.push(toRef(r));
+    byType.set(r.canonical_type, list);
+  }
+  return [...byType.entries()]
+    .map(([canonical_type, refs]) => ({
+      canonical_type,
+      typeSlug: slug(canonical_type),
+      brands: refs.length,
+      sold_total: refs.reduce((n, r) => n + r.sold_count, 0),
+      active_total: refs.reduce((n, r) => n + r.asking_count_active, 0),
+      top: refs.slice(0, perType),
+    }))
+    .sort((a, b) => b.active_total + b.sold_total - (a.active_total + a.sold_total));
 }
 
 /**
@@ -730,7 +804,7 @@ export async function redirectTarget(
  */
 export const HUB_MIN_TYPES = 2;
 
-export type HubType = ClusterRef & { sold_p50: string | null };
+export type HubType = ClusterRef;
 
 export type BrandHub = {
   canonical_brand: string;
@@ -751,8 +825,6 @@ export type BrandHubRef = {
   sold_total: number;
 };
 
-export const brandHubPath = (brandSlug: string) => `/guide/brand/${brandSlug}`;
-
 const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
 
 /**
@@ -760,15 +832,15 @@ const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
  * none. The caller decides what fewer than HUB_MIN_TYPES rows means.
  */
 export async function getBrandHub(brandSlug: string): Promise<BrandHub | null> {
-  const rows = await sql<RefRow & { sold_p50: string | null }>(
-    `SELECT ${REF_COLUMNS}, sold_p50
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
      FROM price_stats
      WHERE ${HUB_ROWS} AND split_part(cluster_key, '::', 3) = $1
      ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC`,
     [brandSlug]
   );
   if (rows.length === 0) return null;
-  const types = rows.map((r) => ({ ...toRef(r), sold_p50: r.sold_p50 }));
+  const types = rows.map(toRef);
   const canonical_brand = rows[0].canonical_brand;
   const note = await brandNote(canonical_brand);
   return {

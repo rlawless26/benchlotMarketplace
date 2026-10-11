@@ -15,20 +15,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Pages with more sold evidence are the ones worth crawling first.
   const maxSold = Math.max(1, ...clusters.map((c) => c.sold_count));
 
-  // Only /guide/* is served on the canonical domain (via a rewrite from the
-  // benchlot-marketplace project). benchlot.com/ belongs to the CRA app and is
-  // deliberately absent — advertising it here would claim a page we don't own.
+  // lastModified is the stats rebuild that last touched the row. It is the
+  // same clock for every page (the rebuild is nightly), but it still tells a
+  // crawler the guide is alive, which "changeFrequency: daily" alone does not.
+  const built = clusters.map((c) => c.last_built_at).filter((d): d is string => !!d).sort();
+  const latest = built.length ? new Date(built[built.length - 1]) : undefined;
+
+  // /, /scan and /guide/* are all served on the canonical domain through
+  // rewrites from the benchlot-marketplace project, so this file can claim
+  // them. The CRA listings grid at /search is deliberately absent: its state
+  // lives in the query string and it has no stable content to index.
   return [
-    { url: `${BASE}/guide`, changeFrequency: 'daily', priority: 1 },
+    { url: `${BASE}/`, changeFrequency: 'daily', priority: 1, lastModified: latest },
+    { url: `${BASE}/scan`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE}/guide`, changeFrequency: 'daily', priority: 1, lastModified: latest },
     ...hubs.map((h) => ({
       url: `${BASE}${brandHubPath(h.brandSlug)}`,
       changeFrequency: 'daily' as const,
       priority: 0.7,
+      lastModified: latest,
     })),
     ...clusters.map((c) => ({
       url: `${BASE}${clusterPath(c)}`,
       changeFrequency: 'daily' as const,
       priority: Math.round((0.3 + 0.6 * (c.sold_count / maxSold)) * 100) / 100,
+      lastModified: c.last_built_at ? new Date(c.last_built_at) : latest,
     })),
   ];
 }
