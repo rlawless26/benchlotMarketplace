@@ -13,7 +13,7 @@ import { track, GOAL_EVENTS } from '@/lib/analytics';
  */
 export default function OutboundListingLink({
   href, children, className,
-  listingId, source, sourceKind, priceCents, status, position, clusterKey, surface,
+  listingId, source, sourceKind, priceCents, status, position, clusterKey, surface, priceBand = null,
 }: {
   href: string;
   children: React.ReactNode;
@@ -27,6 +27,8 @@ export default function OutboundListingLink({
   position: number;
   clusterKey: string | null;
   surface: string;
+  /** How the row's price sat against the page's sold range, when shown. */
+  priceBand?: 'below' | 'typical' | 'above' | null;
 }) {
   return (
     <a
@@ -44,6 +46,7 @@ export default function OutboundListingLink({
           price_usd: priceCents != null ? priceCents / 100 : null,
           position,
           cluster_key: clusterKey,
+          price_band: priceBand ?? null,
         })
       }
     >

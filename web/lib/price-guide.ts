@@ -1,4 +1,7 @@
-/**
+// slug(), clusterPath() and brandHubPath() live in guide-paths.ts (no db
+// import) so client components can build links; re-exported here.
+import { slug, clusterPath, brandHubPath } from './guide-paths';
+export { slug, clusterPath, brandHubPath };/**
  * Price-guide data access.
  *
  * Cluster identity mirrors functions/pricestats/cluster.js:
@@ -35,17 +38,6 @@ export const MACHINE_TYPES = new Set([
 
 export const isMachineType = (type: string | null | undefined) => !!type && MACHINE_TYPES.has(type);
 
-/** Mirror of slug() in functions/pricestats/cluster.js. Keep in sync. */
-export function slug(s: string | null | undefined): string {
-  if (!s) return '_';
-  const out = String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return out || '_';
-}
 
 export type Cluster = {
   cluster_key: string;
@@ -348,16 +340,6 @@ export async function relatedClusters(c: Cluster, limit = 8): Promise<ClusterRef
   return rows.map(toRef);
 }
 
-export function clusterPath(c: {
-  typeSlug: string; brandSlug: string; sizeSlug: string | null;
-  modelSlug?: string | null; planeType?: number | null;
-}) {
-  const third = c.modelSlug ?? c.sizeSlug;
-  if (!third) return `/guide/${c.typeSlug}/${c.brandSlug}`;
-  const base = `/guide/${c.typeSlug}/${c.brandSlug}/${third}`;
-  return c.modelSlug && c.planeType ? `${base}/type-${c.planeType}` : base;
-}
-
 type Nameable = {
   canonical_brand: string | null; canonical_type: string | null; canonical_size: string | null;
   canonical_model?: string | null; plane_type_number?: number | null; planeType?: number | null;
@@ -370,16 +352,9 @@ export function clusterTitle(c: Nameable) {
     .filter(Boolean).join(' ');
 }
 
-export const money = (v: string | number | null | undefined) => {
-  if (v === null || v === undefined) return null;
-  const n = typeof v === 'string' ? parseFloat(v) : v;
-  if (Number.isNaN(n)) return null;
-  return n >= 1000
-    ? `$${Math.round(n).toLocaleString('en-US')}`
-    : `$${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`;
-};
-
-export const centsToMoney = (c: number | null) => (c === null ? null : money(c / 100));
+// money(), centsToMoney() and cleanTitle() live in format.ts (no imports) so
+// client components can use them; re-exported here.
+export { money, centsToMoney, cleanTitle } from './format';
 
 export type ActiveAggregate = {
   offer_count: number;
@@ -501,26 +476,6 @@ export function clusterPhraseSingular(c: Nameable): string {
   const t = typeNo(c);
   return [c.canonical_brand, c.canonical_model, t ? `Type ${t}` : null, c.canonical_size, type]
     .filter(Boolean).join(' ');
-}
-
-/**
- * Strips dealer stock numbers and "AS OF <date>" suffixes from a listing
- * title: "Rare PRESTON No. 13935 Beader - 119406" -> "Rare PRESTON No. 13935
- * Beader". Model numbers inside the title ("No. 13935") are untouched because
- * the suffix has to trail a dash, equals or asterisk at the very end.
- */
-export function cleanTitle(title: string): string {
-  let s = title.replace(/\s+/g, ' ').trim();
-  for (let i = 0; i < 3; i++) {
-    const before = s;
-    s = s
-      .replace(/\s*[-–—=*]+\s*AS OF [A-Z]{3,9}\.?\s*\d{1,2}\s*$/i, '')
-      .replace(/\s*[-–—=*]+\s*(EXCELSIOR\s+)?#?\d{4,6}[A-Z]{0,2}\s*$/, '')
-      .replace(/\s*[-–—=*]+\s*$/, '')
-      .trim();
-    if (s === before) break;
-  }
-  return s || title;
 }
 
 // ---------------------------------------------------------------------------
@@ -869,8 +824,6 @@ export type BrandHubRef = {
   type_count: number;
   sold_total: number;
 };
-
-export const brandHubPath = (brandSlug: string) => `/guide/brand/${brandSlug}`;
 
 const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
 

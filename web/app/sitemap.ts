@@ -21,10 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const built = clusters.map((c) => c.last_built_at).filter((d): d is string => !!d).sort();
   const latest = built.length ? new Date(built[built.length - 1]) : undefined;
 
-  // Only /guide/* is served on the canonical domain (via a rewrite from the
-  // benchlot-marketplace project). benchlot.com/ and /scan belong to the CRA
-  // app until the entry-point rewrites ship; they join this file then.
+  // /, /scan and /guide/* are all served on the canonical domain through
+  // rewrites from the benchlot-marketplace project, so this file can claim
+  // them. The CRA listings grid at /search is deliberately absent: its state
+  // lives in the query string and it has no stable content to index.
   return [
+    { url: `${BASE}/`, changeFrequency: 'daily', priority: 1, lastModified: latest },
+    { url: `${BASE}/scan`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE}/guide`, changeFrequency: 'daily', priority: 1, lastModified: latest },
     ...hubs.map((h) => ({
       url: `${BASE}${brandHubPath(h.brandSlug)}`,

@@ -16,7 +16,7 @@ import { randomUUID } from 'crypto';
 import { sql } from './db';
 import { TOOLSCAN_SYSTEM_PROMPT } from './toolscan-prompt';
 import {
-  slug, resolveBrandAlias, clusterPath, SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE,
+  slug, resolveBrandAlias, clusterPath, SOLD_MIN_FOR_REFERENCE, ASKING_MIN_FOR_REFERENCE, FRESH_DAYS,
 } from './price-guide';
 
 export const TOOLSCAN_MODEL = 'claude-opus-5';
@@ -284,6 +284,42 @@ export async function scanReference(tool: Pick<ScanTool, 'canonical_type' | 'can
     }
   }
   return null;
+}
+
+export type ScanListing = {
+  id: string; source: string; source_name: string; source_url: string; title_raw: string;
+  price_cents: number | null; image: string | null;
+};
+
+/**
+ * Up to six live listings matching the identified tool: type and maker when
+ * the maker is trusted, type alone otherwise. Returned with the scan so the
+ * result card renders in one round trip instead of the CRA's two client-side
+ * fetches (/api/search then /api/pricestats).
+ */
+export async function scanActiveListings(
+  tool: Pick<ScanTool, 'canonical_type' | 'canonical_brand' | 'confidence'>, limit = 6
+): Promise<ScanListing[]> {
+  const type = tool.canonical_type;
+  if (!type || type === 'Other') return [];
+  const brand = tool.canonical_brand && tool.canonical_brand !== 'Unknown' && tool.confidence !== 'Low'
+    ? tool.canonical_brand : null;
+  const params: unknown[] = [type];
+  let brandClause = '';
+  if (brand) { params.push(brand); brandClause = ` AND l.canonical_brand = $${params.length}`; }
+  params.push(limit);
+  return sql<ScanListing>(
+    `SELECT l.id::text, l.source, s.name AS source_name, l.source_url, l.title_raw, l.price_cents,
+            (l.images)[1] AS image
+     FROM listings l JOIN sources s ON s.id = l.source
+     WHERE l.canonical_type = $1${brandClause}
+       AND l.status = 'active' AND l.price_cents IS NOT NULL
+       AND l.last_seen_at > now() - interval '${FRESH_DAYS} days'
+       AND NOT bl_is_junk(l.title_raw, l.condition_raw) AND NOT bl_is_lot(l.title_raw)
+     ORDER BY l.first_seen_at DESC
+     LIMIT $${params.length}`,
+    params
+  );
 }
 
 /** "Stanley No. 5 · Type 11", falling back to the type. Mirrors the old email. */
