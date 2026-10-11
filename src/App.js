@@ -18,7 +18,6 @@ import LandingPage from './Pages/LandingPage';
 import LandingPageNew from './Pages/LandingPageNew';
 import WaitlistLandingPage from './Pages/WaitlistLandingPage';
 import AggregatorHomePage from './Pages/aggregator/AggregatorHomePage';
-import AlertsPage from './Pages/aggregator/AlertsPage';
 import PriceGuidePage from './Pages/aggregator/PriceGuidePage';
 import PlaneTypePage from './Pages/aggregator/PlaneTypePage';
 import CheckPage from './Pages/aggregator/CheckPage';
@@ -137,15 +136,14 @@ function AppLayout() {
   // grid lives at /search. The `/` route stays mounted so a rewrite rollback
   // is one commit, and for local dev.
   const isAggregatorHome = ['/', '/search'].includes(location.pathname) && AGGREGATOR_MODE;
-  const isAggregatorAlerts = location.pathname === '/alerts' && AGGREGATOR_MODE;
   // Campaign landing pages: no site chrome (Header/Footer) — focused conversion funnels.
-  // AggregatorHomePage and AlertsPage ship their own editorial header + dark-teal footer.
+  // AggregatorHomePage ships its own editorial header + dark-teal footer.
   // Editorial content pages (About/FAQ/Contact) also ship their own chrome
   // per the post-pivot design handoff — see src/components/siteChrome/.
   const contentPagePaths = ['/faq', '/privacy', '/terms'];
   const isContentPage = contentPagePaths.includes(location.pathname);
   const isChromelessPage =
-    location.pathname === '/founding-sellers' || isAggregatorHome || isAggregatorAlerts || isContentPage;
+    location.pathname === '/founding-sellers' || isAggregatorHome || isContentPage;
 
   // Public mode: aggregator is on OR marketplace not yet launched, AND user not signed in.
   // Header/Footer adapt their CTAs when publicMode is true.
@@ -186,9 +184,10 @@ function AppLayout() {
           {/* ToolScan — always public */}
           <Route path="/scan" element={<ToolScanPage />} />
 
-          {/* Aggregator: saved-search management (/alerts). Gated to signed-in
-              users at the page level — anonymous visitors see a sign-in CTA. */}
-          <Route path="/alerts" element={<AlertsPage />} />
+          {/* Alerts need no account (web/lib/alerts.ts): there is nothing to
+              manage here any more. The old page read a frozen Firestore
+              collection. Every guide page carries the alert form. */}
+          <Route path="/alerts" element={<Navigate to="/guide" replace />} />
 
           {/* Aggregator: per-cluster price guide (Reverb-style detail pages).
               Coarse: /guide/:typeSlug/:brandSlug
