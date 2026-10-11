@@ -55,6 +55,7 @@ export default function SiteHeader({ current }) {
         >
           <Link
             to="/"
+            reloadDocument
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 900,

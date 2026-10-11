@@ -34,7 +34,7 @@ const AggregatorHomePage = () => {
       : 'Benchlot — search used woodworking tools and see what they sell for',
     description:
       'One search across dealers, forum classifieds and auctions for used hand and power tools, with sold prices alongside. Save a search and get an email when a match appears.',
-    canonical: query ? undefined : 'https://benchlot.com/',
+    canonical: query ? undefined : 'https://benchlot.com/search',
   });
 
   const actions = {

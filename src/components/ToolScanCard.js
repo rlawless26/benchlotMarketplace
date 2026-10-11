@@ -92,7 +92,7 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
         <p className="text-sm font-semibold font-body text-dark-teal mb-2">What you can do</p>
         <ul className="text-sm font-body text-secondary space-y-1">
           <li>· Try another photo — maker&rsquo;s marks, medallions, and castings help most</li>
-          <li>· <a href="/" className="text-honey hover:text-honey-dark">Search the index</a> for it by name</li>
+          <li>· <a href="/search" className="text-honey hover:text-honey-dark">Search the index</a> for it by name</li>
           <li>· <a href="/guide" className="text-honey hover:text-honey-dark">Browse the price guide</a> by category and brand</li>
         </ul>
       </div>
@@ -297,7 +297,7 @@ const ToolScanCardFull = ({
     if (queryBits.length) params.set('q', queryBits.join(' '));
     if (canonicalType) params.set('cat', canonicalType);
     if (canonicalBrand) params.set('maker', canonicalBrand);
-    return params.toString() ? `/?${params.toString()}` : '/';
+    return params.toString() ? `/search?${params.toString()}` : '/search';
   })();
 
   // Display name composed from canonical fields. e.g. "Stanley No. 5 · Type 11".

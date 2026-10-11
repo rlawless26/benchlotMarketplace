@@ -377,7 +377,7 @@ const ToolScanPage = () => {
                     Nothing to scan right now? Browse what's currently on the bench.
                   </p>
                   <a
-                    href="/"
+                    href="/search"
                     className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                   >
                     See all listings →
@@ -440,7 +440,7 @@ const ToolScanPage = () => {
                     A pre-war No. 7. A Lie-Nielsen shoulder plane. A Starrett square. Save a search and we'll email you when a matching listing hits any of our sources.
                   </p>
                   <a
-                    href="/"
+                    href="/search"
                     className="text-honey font-body font-medium hover:text-honey-dark transition-colors"
                   >
                     Search the index →
@@ -468,7 +468,7 @@ const ToolScanPage = () => {
                   Browse listings indexed from dealers, forums, and auctions across the web. Save an alert and we'll email you when matching listings appear.
                 </p>
                 <a
-                  href="/"
+                  href="/search"
                   className="inline-block px-6 py-3 bg-honey text-dark-teal font-medium rounded-lg hover:bg-honey-light transition-colors font-body"
                 >
                   Browse the index →
@@ -652,7 +652,7 @@ const ToolScanPage = () => {
                 Scan another tool →
               </button>
               <p className="text-sm text-secondary font-body mt-3">
-                  Or <a href="/" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
+                  Or <a href="/search" className="text-honey hover:text-honey-dark underline">browse the full index</a> and save an alert for similar tools.
                 </p>
             </div>
 

@@ -260,7 +260,7 @@ const PriceGuidePage = () => {
           Benchlot needs at least 8 sold comps or 10 active/recent listings to publish a guide.
           We'll start one as soon as the data threshold is met.
         </p>
-        <Link to="/" style={{ color: '#d4aa60', fontWeight: 600, textDecoration: 'none' }}>
+        <Link to="/search" style={{ color: '#d4aa60', fontWeight: 600, textDecoration: 'none' }}>
           ← Back to search
         </Link>
       </div>
@@ -298,7 +298,7 @@ const PriceGuidePage = () => {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 8 }}>
         <div>
           <Link
-            to="/"
+            to="/search"
             style={{ color: '#4a5a54', fontSize: 12, textDecoration: 'none' }}
           >
             ← All listings

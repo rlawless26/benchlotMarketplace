@@ -68,6 +68,7 @@ const StickyTopBar = ({ query, onQueryChange }) => {
         {/* Wordmark */}
         <Link
           to="/"
+          reloadDocument
           style={{
             flexShrink: 0,
             fontFamily: "'Petrona', Georgia, serif",

@@ -19,6 +19,7 @@ const NotFoundPage = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to="/"
+            reloadDocument
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-honey text-dark-teal rounded-lg hover:bg-honey-light transition-colors"
           >
             <Home size={18} />

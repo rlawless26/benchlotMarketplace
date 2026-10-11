@@ -88,7 +88,8 @@ const Header = ({ publicMode = false }) => {
     try {
       setProfileMenuOpen(false); // Close the profile menu
       await signOut();
-      navigate('/');
+      // `/` belongs to the Next.js app; leave the SPA.
+      window.location.assign('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -148,10 +149,11 @@ const Header = ({ publicMode = false }) => {
       <header className="border-b shadow-sm">
         <div className="bg-dark-teal">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
+            <Link to="/" reloadDocument className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
             <div className="flex items-center gap-4">
               <Link
                 to="/scan"
+                reloadDocument
                 className="text-bone/70 hover:text-bone font-body font-medium transition-colors"
                 style={{ fontSize: '13px', letterSpacing: '0.3px' }}
               >
@@ -186,7 +188,7 @@ const Header = ({ publicMode = false }) => {
 
           {/* Logo */}
           <div className="mr-6 flex-shrink-0">
-            <Link to="/" className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
+            <Link to="/" reloadDocument className="font-display font-black text-bone" style={{ fontSize: '24px', letterSpacing: '-1.5px' }}>Benchlot</Link>
           </div>
 
           {/* Search bar - centered and expanded */}
@@ -449,7 +451,7 @@ const Header = ({ publicMode = false }) => {
 
             {/* Right side - Utility links */}
             <div className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
-              <Link to="/scan" className="text-honey hover:text-honey-light font-medium">Scan a Tool</Link>
+              <Link to="/scan" reloadDocument className="text-honey hover:text-honey-light font-medium">Scan a Tool</Link>
               <Link to="/faq" className="text-bone/70 hover:text-bone">RAQ</Link>
               <a
                 href="https://blog.benchlot.com/blog"

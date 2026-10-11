@@ -314,7 +314,7 @@ const PlaneTypePage = () => {
         <p style={{ color: '#4a5a54', marginBottom: 16 }}>
           The brand or model in the URL didn't match anything we know about. Try searching from the home page.
         </p>
-        <Link to="/" style={{ color: '#d4aa60', fontWeight: 600, textDecoration: 'none' }}>← Back to search</Link>
+        <Link to="/search" style={{ color: '#d4aa60', fontWeight: 600, textDecoration: 'none' }}>← Back to search</Link>
       </div>
     );
   }
@@ -354,7 +354,7 @@ const PlaneTypePage = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 8 }}>
         <div>
-          <Link to="/" style={{ color: '#4a5a54', fontSize: 12, textDecoration: 'none' }}>← All listings</Link>
+          <Link to="/search" style={{ color: '#4a5a54', fontSize: 12, textDecoration: 'none' }}>← All listings</Link>
           <h1 style={{ fontFamily: "'Petrona', serif", fontSize: 32, fontWeight: 600, margin: '6px 0 4px' }}>
             {heading}
           </h1>
