@@ -31,6 +31,14 @@ export function AuthProvider({ children }) {
   // state changes (sign out, account swap) and provider unmount.
   const unsubscribeUserDocRef = useRef(null);
 
+  // Whether this provider has seen a signed-in user. posthog.reset() must run
+  // only on a real sign-out: Firebase reports "no user" on every page load for
+  // anonymous visitors (everyone, since the aggregator pivot), and resetting
+  // there minted a fresh anonymous id and session per load. That split every
+  // visit into unlinkable fragments and is what made homepage sessions look
+  // like 0-second bots in PostHog.
+  const hadUserRef = useRef(false);
+
   // Set up auth state listener + per-user-doc snapshot listener.
   //
   // We use onSnapshot (not getDoc) so any update to users/{uid} — e.g.
@@ -50,10 +58,15 @@ export function AuthProvider({ children }) {
       if (!firebaseUser) {
         setUser(null);
         setProfile(null);
-        posthog.reset();
+        if (hadUserRef.current) {
+          hadUserRef.current = false;
+          posthog.reset();
+        }
         setLoading(false);
         return;
       }
+
+      hadUserRef.current = true;
 
       const userRef = doc(db, 'users', firebaseUser.uid);
 
