@@ -11,6 +11,8 @@
  * check below is the backstop, not the primary limit.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { Anthropic as PostHogAnthropic } from '@posthog/ai/anthropic';
+import { PostHog } from 'posthog-node';
 import { put } from '@vercel/blob';
 import { randomUUID } from 'crypto';
 import { sql } from './db';
@@ -163,17 +165,50 @@ export async function runScan(input: {
   // Built per call, not at module top level: `next build` evaluates modules
   // without the key. Sampling params are rejected on this model; thinking is
   // on by default and shares max_tokens with the answer.
-  const anthropic = new Anthropic({ apiKey, timeout: 90_000, maxRetries: 1 });
+  //
+  // PostHog LLM analytics: the @posthog/ai wrapper captures one
+  // `$ai_generation` per call (model, latency, tokens, cost, the prompt text
+  // and the reply) against the scanner's PostHog identity, with the scan id
+  // as the trace. Base64 image blocks are redacted by the wrapper before
+  // capture, so the five photos never leave for PostHog. A short-lived
+  // PostHog client per request, flushed before we return, is deliberate:
+  // this runs on Fluid compute where a process-wide queue may never flush.
+  const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const posthog = posthogKey
+    ? new PostHog(posthogKey, {
+        host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+        flushAt: 1,
+        flushInterval: 0,
+      })
+    : null;
+  const anthropic = posthog
+    ? new PostHogAnthropic({ apiKey, posthog, timeout: 90_000, maxRetries: 1 })
+    : new Anthropic({ apiKey, timeout: 90_000, maxRetries: 1 });
+
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: TOOLSCAN_MODEL,
+    max_tokens: 8192,
+    system: TOOLSCAN_SYSTEM_PROMPT,
+    output_config: { effort: 'medium' },
+    messages: [{ role: 'user', content }],
+  };
+  const telemetry = posthog
+    ? {
+        posthogDistinctId: distinctId ?? `scan:${scanId}`,
+        posthogTraceId: scanId,
+        posthogProperties: {
+          feature: 'toolscan',
+          scan_id: scanId,
+          image_count: images.length,
+          has_context: Boolean(context),
+          previous_scan_id: previousScanId,
+        },
+      }
+    : {};
 
   let message: Anthropic.Message;
   try {
-    message = await anthropic.messages.create({
-      model: TOOLSCAN_MODEL,
-      max_tokens: 8192,
-      system: TOOLSCAN_SYSTEM_PROMPT,
-      output_config: { effort: 'medium' },
-      messages: [{ role: 'user', content }],
-    });
+    message = (await anthropic.messages.create({ ...request, ...telemetry })) as Anthropic.Message;
   } catch (e) {
     await uploads;
     if (e instanceof Anthropic.RateLimitError) {
@@ -185,6 +220,9 @@ export async function runScan(input: {
     }
     console.error('[toolscan] Anthropic error:', e instanceof Error ? e.message : e);
     return { status: 500, error: 'An error occurred during tool scanning.' };
+  } finally {
+    // Telemetry must never fail the scan that carried it.
+    await posthog?.shutdown().catch((e) => console.warn('[toolscan] posthog flush failed:', e?.message));
   }
 
   const imagePaths = (await uploads).filter((p): p is string => p !== null);

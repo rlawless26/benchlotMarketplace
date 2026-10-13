@@ -28,7 +28,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { Pool } = require('pg');
-const { normalizeListing } = require('./normalizer');
+const { normalizeListing, shutdownClient } = require('./normalizer');
 const { canonicalizeBrand } = require('./vocabulary');
 
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -212,5 +212,6 @@ async function mapWithConcurrency(items, n, worker) {
     console.log(`\nEXTRAPOLATION: ${remaining} titles remaining x $${per.toFixed(6)} = ~$${(remaining * per).toFixed(2)}`);
     console.log(`  at ${(done / secs).toFixed(1)} titles/s and concurrency ${CONCURRENCY}: ~${(remaining / (done / secs) / 3600).toFixed(1)}h`);
   }
+  await shutdownClient();
   await pool.end();
 })().catch((e) => { console.error('FATAL', e.message); process.exit(1); });

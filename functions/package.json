@@ -14,7 +14,8 @@
   },
   "main": "index.js",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.78.0",
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@posthog/ai": "^8.13.6",
     "axios": "^1.6.0",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
