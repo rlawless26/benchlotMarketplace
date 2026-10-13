@@ -12,7 +12,8 @@
  * difference between $1 and $30.
  */
 
-const Anthropic = require('@anthropic-ai/sdk');
+const { randomUUID } = require('crypto');
+const { createAnthropic, telemetry } = require('../lib/anthropic-client');
 
 const { SYSTEM_PROMPT } = require('./prompt');
 const { CANONICAL_BRANDS, CANONICAL_TYPES } = require('./vocabulary');
@@ -81,13 +82,18 @@ function buildUserMessage(listing) {
   return parts.join('\n');
 }
 
-let cachedClient = null;
+let cached = null;
 function getClient() {
-  if (cachedClient) return cachedClient;
+  if (cached) return cached.client;
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
-  cachedClient = new Anthropic({ apiKey });
-  return cachedClient;
+  cached = createAnthropic({ apiKey });
+  return cached.client;
+}
+
+/** Flush LLM-analytics events; the batch runner calls this before exiting. */
+async function shutdownClient() {
+  if (cached) await cached.shutdown();
 }
 
 /**
@@ -117,6 +123,10 @@ async function normalizeListing(listing, opts = {}) {
     messages: [
       { role: 'user', content: buildUserMessage(listing) },
     ],
+    ...telemetry('normalizer', randomUUID(), {
+      title: String(listing.title_raw || '').slice(0, 200),
+      source: listing.source || null,
+    }),
   });
 
   const toolUse = response.content.find((b) => b.type === 'tool_use');
@@ -138,6 +148,7 @@ async function normalizeListing(listing, opts = {}) {
 
 module.exports = {
   normalizeListing,
+  shutdownClient,
   CLASSIFY_TOOL,
   DEFAULT_MODEL,
 };

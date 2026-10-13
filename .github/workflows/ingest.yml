@@ -68,6 +68,11 @@ jobs:
       EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
       EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # PostHog LLM analytics for the normalizer, brand notes and the forum
+      # sold-check (functions/lib/anthropic-client.js). This is the public
+      # project token — the same one the browser bundle ships — so it is a
+      # plain variable, not a secret.
+      POSTHOG_KEY: phc_tkEarEEmJxFJtjU4Jp9LXC6VZyhJfpJet4eVrJYmEPnD
       # reddit.js defaults to `oauth`, which hard-fails without
       # CLIENT_ID/SECRET/USERNAME. Left explicit so the intent is visible if
       # reddit is ever re-enabled below.

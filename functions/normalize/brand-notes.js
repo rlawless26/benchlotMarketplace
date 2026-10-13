@@ -34,6 +34,8 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { randomUUID } = require('crypto');
+const { createAnthropic, telemetry } = require('../lib/anthropic-client');
 const { Pool } = require('pg');
 
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -103,7 +105,7 @@ function parseJson(text) {
 
 async function main() {
   const pool = new Pool({ connectionString: DB, max: 2 });
-  const anthropic = new Anthropic.Anthropic();
+  const { client: anthropic, shutdown: shutdownTelemetry } = createAnthropic();
 
   // Brands with at least one publishable cluster, richest first. Mirrors
   // PUBLISHABLE in web/lib/price-guide.ts.
@@ -159,6 +161,7 @@ async function main() {
     output_config: { effort: 'medium' },
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: userPrompt(b) }],
+    ...telemetry('brand_notes', randomUUID(), { brand: b.brand, total_sold: b.total_sold }),
     });
   } catch (err) {
     tally.failed++;
@@ -214,6 +217,7 @@ async function main() {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
   console.log(`\n${n} note(s) written, $${cost.toFixed(3)} spent. high ${tally.high}, medium ${tally.medium}, low ${tally.low}, failed ${tally.failed}`);
+  await shutdownTelemetry();
   await pool.end();
 }
 

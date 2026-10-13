@@ -36,6 +36,8 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Anthropic = require('@anthropic-ai/sdk');
+const { randomUUID } = require('crypto');
+const { createAnthropic, telemetry } = require('../lib/anthropic-client');
 const { Pool } = require('pg');
 
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -195,6 +197,7 @@ async function classify(anthropic, listing, posts) {
       role: 'user',
       content: `Title: ${listing.title_raw}\nAsking price: ${listing.price_cents != null ? `$${(listing.price_cents / 100).toFixed(2)}` : 'not stated'}\n\n${transcript}`,
     }],
+    ...telemetry('forum_sold_check', randomUUID(), { source: listing.source, source_id: listing.source_id }),
   });
 
   const text = msg.content?.[0]?.text || '';
@@ -243,7 +246,7 @@ async function apply(pool, listing, result) {
 
 async function main() {
   const pool = new Pool({ connectionString: DB, max: 2 });
-  const anthropic = new Anthropic.Anthropic();
+  const { client: anthropic, shutdown: shutdownTelemetry } = createAnthropic();
 
   const { rows: candidates } = await pool.query(
     `SELECT source, source_id, source_url, title_raw, price_cents
@@ -297,6 +300,7 @@ async function main() {
   }
 
   console.log(`\nverdicts: ${JSON.stringify(tally)}  cost: $${cost.toFixed(4)}`);
+  await shutdownTelemetry();
   await pool.end();
   process.exit(tally.failed > 0 && tally.failed === candidates.length ? 1 : 0);
 }
