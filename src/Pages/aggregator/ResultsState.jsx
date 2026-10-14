@@ -15,13 +15,12 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { X, ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 import { getAggregatedListings } from '../../firebase/adapters/externalListingAdapter';
 import { computeFacets, getAggregatorStats, getSourceCounts } from '../../firebase/adapters/aggregatorFacets';
 import { SOURCES } from '../../firebase/adapters/sources';
-import { useAuth } from '../../firebase/hooks/useAuth';
 import { track } from '../../utils/analytics';
 
 import StickyTopBar from '../../components/aggregator/StickyTopBar';
@@ -29,10 +28,8 @@ import FilterRail from '../../components/aggregator/FilterRail';
 import ResultCard from '../../components/aggregator/ResultCard';
 import SaveAlertButton from '../../components/aggregator/SaveAlertButton';
 import SiteFooter from '../../components/siteChrome/SiteFooter';
-import HomeIntroBanner from '../../components/aggregator/HomeIntroBanner';
 import { BROWSE_CHIPS } from './browseChips';
 
-const HIB_STORAGE_KEY = 'benchlot.hib.dismissed';
 
 const CHIP_GROUP_PREFIX = {
   cat: 'Type',
@@ -176,8 +173,6 @@ function activeCategory(filters) {
 
 const ResultsState = ({ state, actions }) => {
   const { query, filters, sort, activeFilterChips } = state;
-  const { user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
   const [raw, setRaw] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -204,45 +199,11 @@ const ResultsState = ({ state, actions }) => {
       .catch(() => {});
   }, []);
 
-  // HomeIntroBanner — dismissal is per-device, persisted in localStorage. We
-  // own the state here (not in the banner) so the persistent quick-picks
-  // chip row can stay in sync: chips show only when the banner is hidden AND
-  // there's no query/filter narrowing the view.
-  const [hibDismissed, setHibDismissed] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.localStorage &&
-      window.localStorage.getItem(HIB_STORAGE_KEY) === '1'
-  );
-  useEffect(() => {
-    // Debug reset — exposed so reviewers can re-trigger the banner from the
-    // browser console without clearing all localStorage.
-    if (typeof window === 'undefined') return undefined;
-    window.__benchlotResetIntroBanner = () => {
-      try {
-        window.localStorage.removeItem(HIB_STORAGE_KEY);
-      } catch (e) {}
-      window.location.reload();
-    };
-    return undefined;
-  }, []);
-  const dismissHib = () => {
-    try {
-      window.localStorage.setItem(HIB_STORAGE_KEY, '1');
-    } catch (e) {}
-    setHibDismissed(true);
-  };
-  // Recall — re-open the banner without clearing the localStorage flag, so
-  // the dismissal still sticks on refresh. Bound to the chevron on the
-  // persistent quick-picks eyebrow.
-  const recallHib = () => setHibDismissed(false);
-  // Banner visibility — three conditions, cheapest first.
-  const hibVisible = !user && location.search.length === 0 && !hibDismissed;
-  // Persistent quick-picks chip row — appears only when the banner is
-  // hidden, no query is active, and no filters are active. The active-filter
-  // chip row already handles the "you have filters" case.
-  const showPersistentChips =
-    !hibVisible && !query && activeFilterChips.length === 0;
+  // The intro banner that used to sit here ("Find used tools across the
+  // web", quick picks) now lives on the Next.js homepage at /, which is the
+  // page a cold visitor lands on. /search is the grid: header, filters,
+  // results. The quick-picks row stays for returning visitors with no query.
+  const showPersistentChips = !query && activeFilterChips.length === 0;
   const onChipClick = (chip) => {
     navigate(`/search?${chip.param}=${encodeURIComponent(chip.value)}`);
   };
@@ -359,10 +320,11 @@ const ResultsState = ({ state, actions }) => {
         className="sticky top-0"
         style={{
           zIndex: 50,
-          background: 'rgba(242,240,235,0.92)',
+          // bone-light, matching the Next.js header (web/app/layout.tsx).
+          background: 'rgba(248,246,242,0.96)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
-          borderBottom: '1px solid #e4e2dc',
+          borderBottom: '1px solid #e8e6e0',
         }}
       >
         <StickyTopBar
@@ -427,31 +389,6 @@ const ResultsState = ({ state, actions }) => {
                   </span>{' '}
                   result{filtered.length === 1 ? '' : 's'}
                 </span>
-
-                {/* Mobile-only banner recall — chevron next to the title,
-                    same predicate as the desktop persistent chips row.
-                    Click re-opens the HomeIntroBanner without clearing
-                    localStorage, so the dismissal still sticks on refresh. */}
-                {showPersistentChips && (
-                  <button
-                    type="button"
-                    onClick={recallHib}
-                    aria-label="Show intro again"
-                    title="Show intro again"
-                    className="md:hidden inline-flex items-center justify-center cursor-pointer"
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 6,
-                      border: '1px solid #e4e2dc',
-                      background: '#f8f6f2',
-                      color: '#4a5a54',
-                      padding: 0,
-                    }}
-                  >
-                    <ChevronDown size={14} aria-hidden />
-                  </button>
-                )}
               </div>
 
               {/* Mobile-only Filters button. Lives in the same row as Sort
@@ -572,18 +509,10 @@ const ResultsState = ({ state, actions }) => {
           </div>
       </div>
 
-      {/* HomeIntroBanner — first-visit identity strip for signed-out users
-          on a clean `/`. Hides once dismissed (per-device localStorage),
-          when signed in, or whenever a query/filter is active. */}
-      <HomeIntroBanner visible={hibVisible} onDismiss={dismissHib} />
-
-      {/* Persistent quick-picks row — slim chip strip that replaces the
-          banner's chips for returning visitors. Only visible when the
-          banner is hidden AND no query/filter is narrowing the view; the
-          moment the user filters or searches, this hides and the
-          active-filter chip row below takes over. Hidden on mobile —
-          chips are too cramped on phones, and without chips the recall
-          chevron has no obvious context. */}
+      {/* Quick-picks row — a slim chip strip when no query or filter is
+          narrowing the view; the moment the user filters or searches, this
+          hides and the active-filter chip row below takes over. Hidden on
+          mobile, where chips are too cramped. */}
       {showPersistentChips && (
         <div
           className="hidden md:block"
@@ -635,33 +564,6 @@ const ResultsState = ({ state, actions }) => {
                 {chip.label}
               </button>
             ))}
-            {/* Recall trigger — slot mirrors the dismiss X's position in the
-                open-banner state so the affordance reads as "inverse of
-                dismiss," not "more chips behind a disclosure." Click
-                re-opens the banner; the localStorage flag is left intact so
-                refresh still respects the prior dismissal. */}
-            <button
-              type="button"
-              onClick={recallHib}
-              aria-label="Show intro again"
-              title="Show intro again"
-              className="cursor-pointer"
-              style={{
-                marginLeft: 'auto',
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                border: '1px solid #e4e2dc',
-                background: '#f8f6f2',
-                color: '#4a5a54',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-              }}
-            >
-              <ChevronDown size={14} aria-hidden />
-            </button>
           </div>
         </div>
       )}

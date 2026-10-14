@@ -86,7 +86,7 @@ export function useAggregatorState() {
       const p = serializeToParams(next);
       // If the next state has zero query + zero filters + default sort, the
       // serialized URLSearchParams is empty. A clean `/` would re-show the
-      // HomeIntroBanner for anon visitors, which is wrong for intra-session
+      // intro banner for anon visitors (since removed), which is wrong for intra-session
       // actions like clearAllFilters — the user is mid-browse, not arriving
       // cold. Inject `browse=1` so the URL stays non-empty and the banner
       // visibility predicate keeps it hidden.
