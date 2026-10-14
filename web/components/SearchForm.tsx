@@ -4,6 +4,10 @@
  *
  * `action` defaults to the price-guide search. The homepage points it at the
  * CRA listings grid (/search), which reads the same `q` parameter.
+ *
+ * The field is bone-light with a spruce border: a bone field on the bone
+ * page (and on the bone-light header) disappeared into the background, so
+ * only the honey button read as a control.
  */
 export default function SearchForm({
   compact = false, defaultValue = '', action = '/guide/search', placeholder, label, id,
@@ -29,8 +33,8 @@ export default function SearchForm({
         autoComplete="off"
         className={
           compact
-            ? 'w-40 rounded border border-bone-dark bg-bone px-2.5 py-1.5 text-sm text-dark-teal placeholder:text-spruce-light focus:border-honey focus:outline-none sm:w-64'
-            : 'w-full rounded border border-bone-dark bg-bone px-3 py-2.5 text-dark-teal placeholder:text-spruce-light focus:border-honey focus:outline-none'
+            ? 'w-40 rounded border border-spruce/35 bg-bone-light px-2.5 py-1.5 text-sm text-dark-teal shadow-[inset_0_1px_2px_rgba(26,48,48,0.08)] placeholder:text-spruce-light focus:border-honey focus:outline-none sm:w-64'
+            : 'w-full rounded border border-spruce/35 bg-bone-light px-3 py-2.5 text-dark-teal shadow-[inset_0_1px_2px_rgba(26,48,48,0.08)] placeholder:text-spruce-light focus:border-honey focus:outline-none'
         }
       />
       <button type="submit"
