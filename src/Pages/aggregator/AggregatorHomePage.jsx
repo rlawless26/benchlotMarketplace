@@ -3,7 +3,7 @@
  *
  * Listings-first per the listings-first handoff. `/` always renders
  * ResultsState; the retired EmptyState's identity payload (live count,
- * "across the web" headline, quick-picks) lives on inside HomeIntroBanner,
+ * "across the web" headline, quick-picks) now lives on the Next.js homepage,
  * which mounts at the top of ResultsState for first-time signed-out
  * visitors. State lives in `useAggregatorState` (URL-sync).
  */

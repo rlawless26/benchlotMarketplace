@@ -1,5 +1,5 @@
 /**
- * Browse chips — the 8-chip on-ramp that appears in HomeIntroBanner (first
+ * Browse chips — the 8-chip on-ramp that appears on the Next.js homepage (first
  * visit) and as the persistent quick-picks row in the breadcrumb area
  * (returning visitors with no query and no active filters). Each chip sets a
  * filter param (cat= or maker=) and lands the user in ResultsState with the
