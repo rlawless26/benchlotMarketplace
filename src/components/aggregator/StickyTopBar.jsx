@@ -115,8 +115,11 @@ const StickyTopBar = ({ query, onQueryChange }) => {
             className="aggregator-search-input"
             style={{
               width: '100%',
-              background: '#f2f0eb',
-              border: '1px solid #e8e6e0',
+              // Same field treatment as web/components/SearchForm.tsx: a
+              // lighter fill and a spruce border so it stands off the bar.
+              background: '#f8f6f2',
+              border: '1px solid rgba(26,48,48,0.35)',
+              boxShadow: 'inset 0 1px 2px rgba(26,48,48,0.08)',
               borderRadius: 6,
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 500,
