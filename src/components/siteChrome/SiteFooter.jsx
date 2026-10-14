@@ -61,7 +61,7 @@ export default function SiteFooter() {
         body: JSON.stringify({ email: normalized, source: 'digest_footer' }),
       });
       if (!response.ok) throw new Error(`leads ${response.status}`);
-      setFeedback({ kind: 'ok', msg: "You're in. Look for the first digest Sunday morning." });
+      setFeedback({ kind: 'ok', msg: "You're in. We'll write when there's something worth sending." });
       setEmail('');
     } catch (err) {
       console.error('[SiteFooter] digest signup failed:', err);
@@ -185,7 +185,7 @@ export default function SiteFooter() {
 
           {/* Col 2 — Weekly digest */}
           <div>
-            <div style={labelStyle}>The Weekly Digest</div>
+            <div style={labelStyle}>Occasional notes</div>
             <div
               style={{
                 fontFamily: 'var(--font-display)',
@@ -197,7 +197,7 @@ export default function SiteFooter() {
                 letterSpacing: '-0.3px',
               }}
             >
-              The week&rsquo;s best new listings, in one email.
+              New guide pages and notable sales, now and then.
             </div>
             <div
               style={{
@@ -210,7 +210,7 @@ export default function SiteFooter() {
                 letterSpacing: '0.01em',
               }}
             >
-              Hand-picked from every source we index. Sent Sunday mornings.
+              No schedule: we write when there is something worth your time.
               Unsubscribe anytime.
             </div>
             <form

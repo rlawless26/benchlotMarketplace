@@ -171,6 +171,12 @@ function activeCategory(filters) {
   return keys.length === 1 ? keys[0] : undefined;
 }
 
+/** The one selected value of a multi-select filter group, or null. */
+const singleFilter = (group) => {
+  const keys = Object.keys(group || {}).filter((k) => group[k]);
+  return keys.length === 1 ? keys[0] : null;
+};
+
 const ResultsState = ({ state, actions }) => {
   const { query, filters, sort, activeFilterChips } = state;
   const navigate = useNavigate();
@@ -503,7 +509,17 @@ const ResultsState = ({ state, actions }) => {
                     />
                   </div>
                 </div>
-                <SaveAlertButton surface="search_results" />
+                {/* Alerts are cluster-scoped (type + maker). When the filters
+                    pin exactly one of each — which is what the scan card's
+                    "save an alert" link sets — the inline form appears here;
+                    otherwise the button points at the guide, where every
+                    tool page has one. */}
+                <SaveAlertButton
+                  surface="search_results"
+                  canonicalType={singleFilter(filters.cat)}
+                  canonicalBrand={singleFilter(filters.maker)}
+                  query={query}
+                />
               </div>
             </div>
           </div>
