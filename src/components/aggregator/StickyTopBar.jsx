@@ -1,9 +1,11 @@
 /**
- * StickyTopBar — replaces the editorial header when in results state.
- * Pinned to top of viewport while scrolling results.
+ * StickyTopBar — the /search header, pinned while scrolling results.
  *
- * Layout matches the homepage hero nav for smooth page-to-page transitions:
- *   Wordmark · [search input] · [mobile filter chip] · RAQ
+ * Mirrors the Next.js app's header (web/app/layout.tsx) so the hop from the
+ * homepage or a guide page to the grid does not look like a change of site:
+ * same bone-light bar, same wordmark, the same Price guide / Scan a tool /
+ * Listings links, with the listings search field in the middle.
+ *   Wordmark · [search input] · Price guide · Scan a tool · Listings
  *
  * No auth entry point: alerts need only an email address (SaveAlertButton posts
  * to /api/alerts), so a Sign in link advertised an account system the product
@@ -41,14 +43,12 @@ const StickyTopBar = ({ query, onQueryChange }) => {
     : 'Try "Stanley No. 4" or "moulding plane"';
 
   // X-clear is a tactical "forget this query" action. Drop `q`, keep every
-  // other search param. If that would leave the URL truly empty (just `/`),
-  // fall through to `/?browse=1` so the HomeIntroBanner stays hidden — the
-  // user is mid-browse, not arriving cold. Per nav handoff Q2.
+  // other search param, stay on /search (a bare `/` is the Next.js homepage).
   const handleClear = () => {
     const params = new URLSearchParams(location.search);
     params.delete('q');
     const remaining = params.toString();
-    navigate(remaining ? `/?${remaining}` : '/?browse=1', { replace: true });
+    navigate(remaining ? `/search?${remaining}` : '/search', { replace: true });
     // Focus the input so users who cleared to type a new query can just go.
     window.requestAnimationFrame(() => {
       if (inputRef.current) inputRef.current.focus();
@@ -72,9 +72,8 @@ const StickyTopBar = ({ query, onQueryChange }) => {
           style={{
             flexShrink: 0,
             fontFamily: "'Petrona', Georgia, serif",
-            fontWeight: 900,
+            fontWeight: 600,
             fontSize: 20,
-            letterSpacing: '-1px',
             color: '#1a3030',
             textDecoration: 'none',
           }}
@@ -116,9 +115,9 @@ const StickyTopBar = ({ query, onQueryChange }) => {
             className="aggregator-search-input"
             style={{
               width: '100%',
-              background: 'var(--bone-light)',
-              border: '1px solid #e4e2dc',
-              borderRadius: 8,
+              background: '#f2f0eb',
+              border: '1px solid #e8e6e0',
+              borderRadius: 6,
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 500,
               // 16px (not 15) to prevent iOS Safari auto-zooming the page
@@ -163,18 +162,26 @@ const StickyTopBar = ({ query, onQueryChange }) => {
             but moved to the breadcrumb row alongside Sort, where it pairs
             naturally with the other 'refine current results' control. */}
         <nav
-          className="flex items-center gap-3 md:gap-5 order-2 md:order-3"
+          className="flex items-center gap-4 md:gap-6 order-2 md:order-3"
           style={{
             flexShrink: 0,
             marginLeft: 'auto',
             fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            fontSize: 13,
+            fontWeight: 400,
+            fontSize: 14,
           }}
         >
-          <Link to="/faq" style={{ color: '#4a5a54', textDecoration: 'none' }}>
-            RAQ
-          </Link>
+          {/* /guide and /scan are served by the Next.js app: plain anchors,
+              not router links, so the navigation leaves this bundle. */}
+          <a href="/guide" className="hover:text-honey-dark" style={{ color: '#1a3030', textDecoration: 'none' }}>
+            Price guide
+          </a>
+          <a href="/scan" className="hover:text-honey-dark" style={{ color: '#1a3030', textDecoration: 'none' }}>
+            Scan a tool
+          </a>
+          <span aria-current="page" className="hidden sm:inline" style={{ color: '#b08a40' }}>
+            Listings
+          </span>
         </nav>
       </div>
     </div>
