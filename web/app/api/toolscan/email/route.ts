@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         canonical_type: tool.canonical_type ?? null,
         canonical_brand: tool.canonical_brand ?? null,
         canonical_model: tool.canonical_model ?? null,
+        canonical_size: tool.canonical_size ?? null,
       }).catch((e) => { console.warn('[api/toolscan/email] reference lookup failed:', e?.message); return null; });
 
       const { subject, html } = scanResultsEmail({
