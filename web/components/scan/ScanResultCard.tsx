@@ -5,6 +5,7 @@ import { track } from '@/lib/analytics';
 import { guidePathFor, brandHubPath, slug } from '@/lib/guide-paths';
 import OutboundListingLink from '@/components/OutboundListingLink';
 import type { ScanTool, ScanReference, ScanListing } from '@/lib/toolscan';
+import { TOOLSCAN_TYPES } from '@/lib/toolscan-prompt';
 
 export type Feedback = {
   vote: 'correct' | 'corrected';
@@ -19,13 +20,8 @@ const CONFIDENCE: Record<string, string> = {
   Low: 'bg-error/10 text-error',
 };
 const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Project'];
-const TYPES = [
-  'Bench Plane', 'Block Plane', 'Shoulder Plane', 'Router Plane', 'Plow Plane', 'Rabbet Plane',
-  'Moulding Plane', 'Infill Plane', 'Scrub Plane', 'Combination Plane', 'Spokeshave', 'Chisel',
-  'Hand Saw', 'Back Saw', 'Brace', 'Hammer', 'Axe', 'Square', 'Rule', 'Level', 'Vise',
-  'Table Saw', 'Band Saw', 'Jointer', 'Thickness Planer', 'Lathe', 'Drill Press', 'Router',
-  'Dust Collector', 'Track Saw', 'Sander', 'Drill', 'Domino', 'Other',
-];
+// The closed type list the scanner emits; the correction select offers the same.
+const TYPES: string[] = TOOLSCAN_TYPES;
 
 const dollars = (c: number | null) => (c == null ? '—' : `$${Math.round(c / 100).toLocaleString('en-US')}`);
 
@@ -112,8 +108,11 @@ export default function ScanResultCard({
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-xl font-semibold text-spruce">{name}</h2>
             {tool.canonical_type && <p className="mt-0.5 text-sm text-spruce-light">{tool.canonical_type}</p>}
-            {tool.era_estimate && (
-              <p className="mt-2 text-spruce-light"><strong className="text-dark-teal">Era:</strong> {tool.era_estimate}</p>
+            {(tool.era_estimate || tool.canonical_size) && (
+              <p className="mt-2 flex flex-wrap gap-x-4 text-spruce-light">
+                {tool.canonical_size && <span><strong className="text-dark-teal">Size:</strong> {tool.canonical_size}</span>}
+                {tool.era_estimate && <span><strong className="text-dark-teal">Era:</strong> {tool.era_estimate}</span>}
+              </p>
             )}
             {reference && (
               <p className="mt-2 text-sm text-spruce-light">

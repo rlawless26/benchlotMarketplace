@@ -37,6 +37,8 @@ export type ScanTool = {
   canonical_brand: string | null;
   canonical_type: string | null;
   canonical_model: string | null;
+  /** Defining dimension ("26 inch", "1/2 inch", "16 oz"); null for planes. */
+  canonical_size?: string | null;
   plane_type_number: number | null;
   era_estimate: string | null;
   condition: string | null;
@@ -289,13 +291,19 @@ export type ScanReference = {
  * cluster. Sold prices when there are enough, asking prices otherwise, nothing
  * when neither clears the guide's own thresholds.
  */
-export async function scanReference(tool: Pick<ScanTool, 'canonical_type' | 'canonical_brand' | 'canonical_model'>): Promise<ScanReference | null> {
-  if (!tool.canonical_type || !tool.canonical_brand || tool.canonical_brand === 'Unknown') return null;
+export async function scanReference(tool: Pick<ScanTool, 'canonical_type' | 'canonical_brand' | 'canonical_model' | 'canonical_size'>): Promise<ScanReference | null> {
+  if (!tool.canonical_type || !tool.canonical_brand || tool.canonical_brand === 'Unknown' || tool.canonical_type === 'Other') return null;
   const typeSlug = slug(tool.canonical_type);
   const rawBrand = slug(tool.canonical_brand);
   const brandSlug = (await resolveBrandAlias(rawBrand)) ?? rawBrand;
   const keys: string[] = [];
   if (tool.canonical_model) keys.push(`pt::${typeSlug}::${brandSlug}::m-${slug(tool.canonical_model)}`);
+  // Size pages ("26 inch" Disston hand saw, "1/2 inch" chisel) are keyed by
+  // the normalised size slug the stats rebuild uses (schema/010).
+  if (tool.canonical_size) {
+    const rows = await sql<{ s: string }>(`SELECT bl_slug(bl_normalize_size($1)) AS s`, [tool.canonical_size]);
+    if (rows[0]?.s && rows[0].s !== '_') keys.push(`pt::${typeSlug}::${brandSlug}::${rows[0].s}`);
+  }
   keys.push(`pt::${typeSlug}::${brandSlug}::_`);
 
   const rows = await sql<{
@@ -308,10 +316,12 @@ export async function scanReference(tool: Pick<ScanTool, 'canonical_type' | 'can
     [keys]
   );
   for (const r of rows) {
-    const isModel = r.cluster_key.includes('::m-');
+    const third = r.cluster_key.split('::')[3] ?? '_';
+    const isModel = third.startsWith('m-');
     const guidePath = clusterPath({
-      typeSlug, brandSlug, sizeSlug: null,
-      modelSlug: isModel && tool.canonical_model ? slug(tool.canonical_model) : null,
+      typeSlug, brandSlug,
+      sizeSlug: !isModel && third !== '_' ? third : null,
+      modelSlug: isModel ? third.slice(2) : null,
     });
     const dollars = (v: string | null) => (v === null ? null : `$${Math.round(parseFloat(v))}`);
     if ((r.sold_count ?? 0) >= SOLD_MIN_FOR_REFERENCE && r.sold_p25 && r.sold_p75) {
