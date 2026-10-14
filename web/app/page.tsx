@@ -141,11 +141,11 @@ export default async function Home() {
         <div className="rounded-xl border border-bone-dark bg-bone-light p-6">
           <h2 className="font-display text-xl font-semibold text-spruce">Hunting something specific?</h2>
           <p className="mt-2 text-spruce-light">
-            Every price-guide page has an alert form: one email when a matching tool is listed anywhere Benchlot indexes.
-            No account, one click to confirm, unsubscribe any time.
+            Open the tool&rsquo;s page in the price guide and use the alert form under its prices: one email
+            when a match is listed anywhere Benchlot indexes. No account, one click to confirm, unsubscribe any time.
           </p>
           <Link href="/guide" className="mt-4 inline-block rounded border border-bone-dark bg-bone px-5 py-2.5 font-medium text-spruce hover:border-honey">
-            Open the price guide
+            Find the tool&rsquo;s page
           </Link>
         </div>
       </section>

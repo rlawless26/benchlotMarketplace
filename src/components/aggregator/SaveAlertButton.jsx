@@ -21,7 +21,7 @@ import PropTypes from 'prop-types';
 
 import { track, getDistinctId, GOAL_EVENTS } from '../../utils/analytics';
 
-export default function SaveAlertButton({ canonicalType, canonicalBrand, canonicalSize, label, surface = 'cra' }) {
+export default function SaveAlertButton({ canonicalType, canonicalBrand, canonicalSize, label, surface = 'cra', query = '' }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState('idle'); // idle | open | sending | done | error
   const [message, setMessage] = useState('');
@@ -72,14 +72,17 @@ export default function SaveAlertButton({ canonicalType, canonicalBrand, canonic
     [email, canonicalType, canonicalBrand, canonicalSize, state, surface]
   );
 
-  // No cluster to watch (free-text search): send people where alerts work.
+  // No cluster to watch (free-text search): send people to the guide's
+  // search for the same words — every result there is a tool page with an
+  // alert form — or to the guide index when there is nothing to search for.
   if (!clusterKnown) {
+    const href = query.trim() ? `/guide/search?q=${encodeURIComponent(query.trim())}` : '/guide';
     return (
       <a
-        href="/guide"
+        href={href}
         className="inline-flex items-center gap-2 rounded-md border border-bone-dark bg-bone-light px-3 py-2 text-sm font-medium text-spruce hover:border-honey"
       >
-        Get price alerts
+        Set a price alert
       </a>
     );
   }
