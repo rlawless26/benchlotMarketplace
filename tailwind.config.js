@@ -51,8 +51,8 @@ module.exports = {
       fontFamily: {
         display: ["'Petrona'", 'Georgia', "'Times New Roman'", 'serif'],
         body: ["'Outfit'", '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'sans-serif'],
-        sans: ["'Inter'", 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        mono: ["'JetBrains Mono'", 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+        sans: ["'Outfit'", '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'sans-serif'],
+        mono: ['ui-monospace', "'SF Mono'", 'Menlo', 'monospace'],
       },
       fontSize: {
         // Semantic scale

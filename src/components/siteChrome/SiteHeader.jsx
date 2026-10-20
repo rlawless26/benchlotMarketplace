@@ -15,6 +15,7 @@ function NavLink({ to, label, active }) {
   return (
     <Link
       to={to}
+      reloadDocument
       style={{
         color: active ? 'var(--spruce)' : 'var(--fg-secondary)',
         fontWeight: active ? 600 : 500,

@@ -38,7 +38,7 @@ const Footer = ({ publicMode = false }) => {
               <div>
                 <ul className="space-y-2">
                   <li>
-                    <Link to="/faq" className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
+                    <Link to="/faq" reloadDocument className="hover:text-bone transition-colors text-sm font-body" style={{ color: '#6a8a84' }}>
                       RAQ
                     </Link>
                   </li>

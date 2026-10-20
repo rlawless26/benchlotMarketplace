@@ -47,9 +47,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Link rule: next/link only for routes this app serves (/, /scan, /guide/*,
- * /alerts/confirm|unsubscribe). Plain <a> for everything the CRA app serves
- * (/search, /faq, /privacy, /terms) — a client-side navigation to one of those
+ * Link rule: next/link only for routes this app serves (/, /scan, /faq,
+ * /guide/*, /alerts/confirm|unsubscribe). Plain <a> for everything the CRA
+ * app serves (/search, /privacy, /terms) — a client-side navigation to one of those
  * would try to fetch an RSC payload that does not exist.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/guide" className="hover:text-honey-dark">Price guide</Link>
               <a href="/search" className="hover:text-honey-dark">All listings</a>
               <Link href="/scan" className="hover:text-honey-dark">Scan a tool</Link>
-              <a href="/faq" className="hover:text-honey-dark">FAQ</a>
+              <Link href="/faq" className="hover:text-honey-dark">FAQ</Link>
               <a href="/privacy" className="hover:text-honey-dark">Privacy</a>
               <a href="/terms" className="hover:text-honey-dark">Terms</a>
             </nav>

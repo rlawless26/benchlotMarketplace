@@ -65,6 +65,13 @@ import './styles/design-system.css';
 import './styles/auth.css';
 import './App.css';
 
+
+/** A full-document redirect, for routes the Next.js app serves via rewrite. */
+function LeaveTo({ href }) {
+  React.useEffect(() => { window.location.replace(href); }, [href]);
+  return null;
+}
+
 // Component to fix seller status when user is authenticated
 function SellerStatusFix() {
   const { user } = useAuth();
@@ -272,11 +279,14 @@ function AppLayout() {
           <Route path="/seller/create-pending-listing" element={<MarketplaceRoute element={<CreatePendingListingPage />} />} />
 
           {/* Always public: About, Help, Legal, Categories */}
+          {/* /faq is served by the Next.js app through a rewrite in production
+              (web/app/faq/page.tsx); every in-app link to it reloads the
+              document. This route is the local-dev fallback only. */}
           <Route path="/faq" element={<FAQPage />} />
           {/* /about and /contact consolidated into /faq (RAQ). Keep /help
               pointing at legacy HelpPage so old deep-links don't 404. */}
-          <Route path="/about" element={<Navigate to="/faq" replace />} />
-          <Route path="/contact" element={<Navigate to="/faq" replace />} />
+          <Route path="/about" element={<LeaveTo href="/faq" />} />
+          <Route path="/contact" element={<LeaveTo href="/faq" />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/terms" element={<TermsPageAggregator />} />

@@ -166,6 +166,7 @@ export default function SiteFooter() {
             </p>
             <Link
               to="/faq"
+              reloadDocument
               onClick={scrollTop}
               style={{
                 display: 'inline-flex',

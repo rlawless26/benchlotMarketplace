@@ -446,7 +446,7 @@ const Header = ({ publicMode = false }) => {
             {/* Right side - Utility links */}
             <div className="flex items-center gap-6 font-body" style={{ fontSize: '13px' }}>
               <Link to="/scan" reloadDocument className="text-honey hover:text-honey-light font-medium">Scan a Tool</Link>
-              <Link to="/faq" className="text-bone/70 hover:text-bone">RAQ</Link>
+              <Link to="/faq" reloadDocument className="text-bone/70 hover:text-bone">RAQ</Link>
               <a
                 href="https://blog.benchlot.com/blog"
                 target="_blank"
@@ -713,6 +713,7 @@ const Header = ({ publicMode = false }) => {
             <div className="border-t pt-4 border-dark">
               <Link
                 to="/faq"
+                reloadDocument
                 className="block py-2 text-dark-teal hover:text-spruce font-body"
                 onClick={() => setIsMenuOpen(false)}
               >

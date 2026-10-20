@@ -115,6 +115,10 @@
       "destination": "https://benchlot-web.vercel.app/scan"
     },
     {
+      "source": "/faq",
+      "destination": "https://benchlot-web.vercel.app/faq"
+    },
+    {
       "source": "/robots.txt",
       "destination": "https://benchlot-web.vercel.app/robots.txt"
     },
