@@ -6,6 +6,7 @@ import OutboundListingLink from '@/components/OutboundListingLink';
 import { Stat } from '@/components/GuideView';
 import { JsonLd, breadcrumbJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
+import { ogImagePath } from '@/lib/og-cards';
 import {
   getBrandHub, listBrandHubs, resolveBrandAlias, brandHubPath, clusterPath,
   brandActiveListings, brandActiveCount, cleanTitle, centsToMoney,
@@ -44,12 +45,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     ? `What used ${b} tools sell for: median sold prices for ${n} tool types from ${sales} recorded sales, led by ${top}.${supply} Free alert when one is listed.`
     : `Recorded sales and current listings for used ${b} tools (${top}), gathered from dealers, forum classifieds and marketplaces.${supply} Free alert when one is listed.`;
   const path = brandHubPath(hub.brandSlug);
+  const builtAt = hub.types.map((t) => t.last_built_at).filter((d): d is string => !!d).sort().pop() ?? null;
   return {
     title: { absolute: `${title} · Benchlot` },
     description,
     alternates: { canonical: path },
     ...(hub.indexable ? {} : { robots: { index: false, follow: true } }),
-    openGraph: { title: `${title} · Benchlot`, description, url: path, type: 'website' },
+    openGraph: {
+      title: `${title} · Benchlot`, description, url: path, type: 'website',
+      images: [{ url: ogImagePath(path, builtAt), width: 1200, height: 630, alt: `Used ${b} tool prices on Benchlot` }],
+    },
+    twitter: { card: 'summary_large_image' },
   };
 }
 

@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import GuideView from '@/components/GuideView';
 import { JsonLd, clusterJsonLd, breadcrumbJsonLd } from './jsonld';
 import { SITE_URL } from './site';
+import { ogImagePath } from './og-cards';
 import {
   getCluster, soldComps, activeListings, relatedClusters, sizeClusters, modelClusters, typeClusters,
   activeAggregate, soldPricePoints, clusterFacts, brandNote, brandHubExists, redirectTarget, isIndexable,
@@ -82,7 +83,13 @@ export async function guideMetadata(p: GuideParams): Promise<Metadata> {
     // Thin pages stay live for the for-sale list and the alert form but are
     // not offered to the index; the sitemap leaves them out for the same reason.
     ...(isIndexable(cluster) ? {} : { robots: { index: false, follow: true } }),
-    openGraph: { title: `${title} · Benchlot`, description, url: path, type: 'website' },
+    // One card per page, drawn from the same numbers as the title, so a link
+    // pasted into a forum or a chat unfurls with the median on it.
+    openGraph: {
+      title: `${title} · Benchlot`, description, url: path, type: 'website',
+      images: [{ url: ogImagePath(path, cluster.last_built_at), width: 1200, height: 630, alt: `${singular}: used prices on Benchlot` }],
+    },
+    twitter: { card: 'summary_large_image' },
   };
 }
 
