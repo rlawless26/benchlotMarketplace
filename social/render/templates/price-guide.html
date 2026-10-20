@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  {{{fontCss}}}
+  :root {
+    --spruce: #1a3030; --spruce-deep: #132424; --bone: #f2f0eb; --bone-dim: rgba(242,240,235,0.62);
+    --honey: #d4aa60; --dark-teal: #0c1c1e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: {{width}}px; height: {{height}}px; overflow: hidden; }
+  body {
+    background: var(--spruce);
+    background-image: linear-gradient(160deg, var(--spruce) 0%, var(--spruce-deep) 100%);
+    color: var(--bone);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    display: flex; flex-direction: column;
+    padding: 64px 72px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .wordmark { font-family: 'Petrona', serif; font-weight: 700; font-size: 52px; letter-spacing: 0.01em; }
+  .tag { font-size: 24px; color: var(--honey); font-weight: 500; letter-spacing: 0.08em; }
+
+  .eyebrow { margin-top: 68px; font-size: 26px; color: var(--honey); font-weight: 500; letter-spacing: 0.1em; }
+  .title { margin-top: 12px; font-family: 'Petrona', serif; font-weight: 700; font-size: 92px; line-height: 1.04; letter-spacing: -0.01em; }
+  .title.mid { font-size: 76px; }
+  .title.long { font-size: 62px; }
+
+  .figure-row { margin-top: 44px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .figure { font-family: 'Petrona', serif; font-weight: 700; font-size: 220px; line-height: 0.9; color: var(--honey); letter-spacing: -0.02em; }
+  .figure-label { margin-top: 18px; font-size: 32px; }
+  .sales { font-size: 28px; color: var(--bone-dim); text-align: right; line-height: 1.35; padding-bottom: 6px; }
+  .sales span { display: block; }
+  .sales span:first-child { color: var(--bone); }
+
+  .spark { margin-top: 56px; }
+  .spark-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 24px; color: var(--bone-dim); }
+  .spark-head b { color: var(--bone); font-weight: 500; }
+  .spark svg { display: block; margin-top: 4px; }
+  .spark svg text { font-family: 'Outfit', sans-serif; }
+
+  .band { margin-top: 56px; }
+  .band-bar { position: relative; height: 22px; border-radius: 11px; background: rgba(242,240,235,0.14); }
+  .band-fill { position: absolute; top: 0; height: 22px; border-radius: 11px; background: var(--honey); opacity: 0.9; }
+  .band-median { position: absolute; top: -8px; width: 5px; height: 38px; margin-left: -2px; border-radius: 3px; background: var(--bone); }
+  .band-labels { display: flex; justify-content: space-between; margin-top: 14px; font-size: 24px; color: var(--bone-dim); }
+  .band-labels b { color: var(--bone); font-weight: 500; }
+
+  .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-size: 24px; color: var(--bone-dim); }
+  .path { background: var(--dark-teal); color: var(--bone); border-radius: 8px; padding: 8px 16px; font-size: 25px; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <div class="wordmark">Benchlot</div>
+    <div class="tag">PRICE GUIDE OF THE WEEK</div>
+  </div>
+
+  <div class="eyebrow">{{eyebrow}}</div>
+  <div class="title {{titleClass}}">{{title}}</div>
+
+  <div class="figure-row">
+    <div>
+      <div class="figure">{{figure}}</div>
+      <div class="figure-label">{{figureLabel}}</div>
+    </div>
+    <div class="sales"><span>{{salesLine}}</span>{{#supplyLine}}<span>{{supplyLine}}</span>{{/supplyLine}}</div>
+  </div>
+
+  <div class="spark">
+    <div class="spark-head"><span>{{sparkTitle}}</span><b>{{sparkTrend}}</b></div>
+    {{{sparkSvg}}}
+  </div>
+
+  <div class="band">
+    <div class="band-bar">
+      <div class="band-fill" style="left: {{bandLeft}}%; width: {{bandWidth}}%"></div>
+      <div class="band-median" style="left: {{bandMedian}}%"></div>
+    </div>
+    <div class="band-labels"><span>{{bandLow}} low</span><b>{{bandLabel}}</b><span>{{bandHigh}} high</span></div>
+  </div>
+
+  <div class="foot">
+    <span>Sold prices, not asking prices.</span>
+    <span class="path">{{path}}</span>
+  </div>
+</body>
+</html>

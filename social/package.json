@@ -1,0 +1,16 @@
+{
+  "name": "benchlot-social",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Benchlot's Instagram content pipeline: generate posts from the price guide and listings, render them, preview, export, publish.",
+  "scripts": {
+    "generate": "node cli.js generate",
+    "render": "node cli.js render",
+    "preview": "node cli.js preview"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "pg": "^8.23.0",
+    "playwright": "^1.58.2"
+  }
+}
