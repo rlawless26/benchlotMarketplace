@@ -14,7 +14,7 @@ import {
 import usePriceStats from '../firebase/hooks/usePriceStats';
 import { pickReference } from '../utils/priceStats';
 import { getAggregatedListings } from '../firebase/adapters/externalListingAdapter';
-import { track, trackListingClickOut } from '../utils/analytics';
+import { track, trackListingClickOut, getDistinctId } from '../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../utils/featureFlags';
 
 // ── Category gate ────────────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ const CategoryGate = ({ tool, scanId, imagePaths, previewImage }) => {
           email: email.trim().toLowerCase(),
           source: 'category_interest',
           scan_id: scanId || null,
+          posthog_distinct_id: getDistinctId(),
           payload: {
             requested_category: tool?.canonical_type || 'unknown',
             image_paths: imagePaths || [],

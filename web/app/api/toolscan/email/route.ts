@@ -5,6 +5,7 @@ import {
 import { isPlausibleEmail } from '@/lib/alerts';
 import { sendEmail, scanResultsEmail } from '@/lib/email';
 import { SITE_URL } from '@/lib/site';
+import { captureServer } from '@/lib/posthog-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
     await recordLead({ email, source: 'scan_email_gate', scanId, payload: { tool }, ip });
+    const distinctId = typeof body.posthog_distinct_id === 'string' ? body.posthog_distinct_id.slice(0, 200) : '';
+    if (distinctId) await captureServer(distinctId, 'lead_captured', { source: 'scan_email_gate', scan_id: scanId });
 
     if (tool) {
       const reference = await scanReference({

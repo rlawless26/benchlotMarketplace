@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { track, getDistinctId, GOAL_EVENTS, PROMPT_EVENTS } from '@/lib/analytics';
+import { track, getDistinctId, GOAL_EVENTS, PROMPT_EVENTS, ALERT_SUBMIT_FAILED_EVENT } from '@/lib/analytics';
 import { getAlertEmail, rememberAlertEmail, subscribeAlertEmail } from '@/lib/alert-memory';
 
 /**
@@ -86,6 +86,7 @@ export default function AlertSignup({
       if (!res.ok) {
         setState('error');
         setMessage(data.error || 'Something went wrong.');
+        track(ALERT_SUBMIT_FAILED_EVENT, { surface, placement, status: res.status, one_tap: Boolean(known) });
         return;
       }
       setState('done');
@@ -101,6 +102,7 @@ export default function AlertSignup({
     } catch {
       setState('error');
       setMessage('Network problem — try again.');
+      track(ALERT_SUBMIT_FAILED_EVENT, { surface, placement, status: 0, one_tap: Boolean(known) });
     }
   }
 

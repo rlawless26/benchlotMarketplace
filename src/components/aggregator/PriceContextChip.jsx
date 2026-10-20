@@ -50,7 +50,6 @@ const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
   const [popPos, setPopPos] = useState({ top: 0, left: 0, width: 320 });
   const popoverRef = useRef(null);
   const buttonRef = useRef(null);
-  const firedShownRef = useRef(false);
 
   const askingCount = stats?.asking_count || 0;
   const soldCount = stats?.sold_count || 0;
@@ -59,23 +58,9 @@ const PriceContextChip = ({ stats, grain, clusterKey, listingKind }) => {
   const askingByKind = stats ? perKindBlocks(stats, 'asking') : [];
   const soldByKind = stats ? perKindBlocks(stats, 'sold') : [];
 
-  useEffect(() => {
-    if (firedShownRef.current || !showable) return;
-    firedShownRef.current = true;
-    track('price_chip_shown', {
-      listing_kind: listingKind || null,
-      sold_count: soldCount,
-      asking_count: askingCount,
-      asking_count_dealer: askingByKind.find((b) => b.kind === 'Dealer')?.count || 0,
-      asking_count_marketplace: askingByKind.find((b) => b.kind === 'Marketplace')?.count || 0,
-      asking_count_forum: askingByKind.find((b) => b.kind === 'Forum')?.count || 0,
-      grain: grain || null,
-      cluster_key: clusterKey || null,
-      canonical_type: stats?.canonical_type || null,
-      canonical_brand: stats?.canonical_brand || null,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // `price_chip_shown` used to fire here, once per card with stats: ~1,200
+  // events in 90 days against ~600 pageviews, read by nobody. The actions
+  // (`price_chip_popover_opened`, `price_guide_link_clicked`) still fire.
 
   // Compute popover position from chip's bounding rect when it opens.
   // Re-runs on resize / scroll so the popover follows the chip if the

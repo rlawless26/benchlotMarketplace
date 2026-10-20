@@ -5,6 +5,7 @@ import SearchForm from '@/components/SearchForm';
 import OutboundListingLink from '@/components/OutboundListingLink';
 import { Stat } from '@/components/GuideView';
 import ShareBar from '@/components/ShareBar';
+import GuideLink from '@/components/GuideLink';
 import { JsonLd, breadcrumbJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { ogImagePath } from '@/lib/og-cards';
@@ -183,8 +184,8 @@ export default async function BrandHubPage({ params }: Params) {
             const median = isIndexable(t) ? money(t.sold_p50) : null;
             return (
               <li key={t.cluster_key}>
-                <Link
-                  href={clusterPath(t)}
+                <GuideLink
+                  href={clusterPath(t)} kind="hub_type" clusterKey={`hub::${hub.brandSlug}`}
                   className="flex items-baseline justify-between gap-4 py-3 hover:text-honey-dark"
                 >
                   <span className="text-spruce">
@@ -197,7 +198,7 @@ export default async function BrandHubPage({ params }: Params) {
                   <span className="tnum shrink-0 font-display font-semibold text-honey-dark">
                     {median ?? <span className="text-sm font-normal text-spruce-light">too few sales</span>}
                   </span>
-                </Link>
+                </GuideLink>
               </li>
             );
           })}

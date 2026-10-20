@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordLead, leadRateLimited, clientIp, LEAD_SOURCES } from '@/lib/toolscan';
 import { isPlausibleEmail } from '@/lib/alerts';
+import { captureServer } from '@/lib/posthog-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +32,12 @@ export async function POST(req: NextRequest) {
     if (await leadRateLimited(ip, email)) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
-    await recordLead({
-      email, source,
-      scanId: typeof body.scan_id === 'string' ? body.scan_id.slice(0, 64) : null,
-      payload, ip,
-    });
+    const scanId = typeof body.scan_id === 'string' ? body.scan_id.slice(0, 64) : null;
+    await recordLead({ email, source, scanId, payload, ip });
+    // Every email capture outside alerts, in one event, attributed to the
+    // browser that sent it (the CRA and Next forms both pass their PostHog id).
+    const distinctId = typeof body.posthog_distinct_id === 'string' ? body.posthog_distinct_id.slice(0, 200) : '';
+    if (distinctId) await captureServer(distinctId, 'lead_captured', { source, scan_id: scanId });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('[api/leads]', e instanceof Error ? e.message : e);

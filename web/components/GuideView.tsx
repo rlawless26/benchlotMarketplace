@@ -6,6 +6,7 @@ import OutboundListingLink from './OutboundListingLink';
 import ForSaleTable from './ForSaleTable';
 import ScanLink from './ScanLink';
 import ShareBar from './ShareBar';
+import GuideLink, { type GuideLinkKind } from './GuideLink';
 import {
   Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint, TypeRow,
   clusterPath, brandHubPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
@@ -233,7 +234,9 @@ function evidenceParagraph(phrase: string, f: ClusterFacts): string {
   return parts.join(' ');
 }
 
-function Chips({ items, label }: { items: { key: string; href: string; text: string; count: string }[]; label: string }) {
+function Chips({ items, label, kind, clusterKey }: {
+  items: { key: string; href: string; text: string; count: string }[]; label: string; kind: GuideLinkKind; clusterKey: string;
+}) {
   if (items.length === 0) return null;
   return (
     <section className="mt-12 border-t border-bone-dark pt-6">
@@ -241,11 +244,11 @@ function Chips({ items, label }: { items: { key: string; href: string; text: str
       <ul className="mt-3 flex flex-wrap gap-2">
         {items.map((r) => (
           <li key={r.key}>
-            <Link href={r.href}
+            <GuideLink href={r.href} kind={kind} clusterKey={clusterKey}
                   className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
               {r.text}
               <span className="tnum ml-2 text-xs text-spruce-light">{r.count}</span>
-            </Link>
+            </GuideLink>
           </li>
         ))}
       </ul>
@@ -342,13 +345,13 @@ export default function GuideView({
         {brandPage && (
           <>
             <span className="px-1.5">/</span>
-            <Link href={clusterPath(brandPage)} className="hover:text-honey-dark">{cluster.canonical_brand}</Link>
+            <GuideLink href={clusterPath(brandPage)} kind="breadcrumb" clusterKey={cluster.cluster_key} className="hover:text-honey-dark">{cluster.canonical_brand}</GuideLink>
           </>
         )}
         {isTypePage && modelPath && (
           <>
             <span className="px-1.5">/</span>
-            <Link href={modelPath} className="hover:text-honey-dark">{cluster.canonical_model}</Link>
+            <GuideLink href={modelPath} kind="breadcrumb" clusterKey={cluster.cluster_key} className="hover:text-honey-dark">{cluster.canonical_model}</GuideLink>
           </>
         )}
       </nav>
@@ -452,11 +455,11 @@ export default function GuideView({
           <ul className="mt-3 flex flex-wrap gap-2">
             {models.map((r) => (
               <li key={r.cluster_key}>
-                <Link href={clusterPath(r)}
+                <GuideLink href={clusterPath(r)} kind="model" clusterKey={cluster.cluster_key}
                       className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
                   {r.canonical_model}
                   <span className="tnum ml-2 text-xs text-spruce-light">{countLabel(r)}</span>
-                </Link>
+                </GuideLink>
               </li>
             ))}
           </ul>
@@ -564,6 +567,7 @@ export default function GuideView({
 
       {sizePages.length > 0 && (
         <Chips
+          kind="size" clusterKey={cluster.cluster_key}
           label={`${cluster.canonical_brand} ${typeWords} by size`}
           items={[
             ...(brandPage ? [{ key: brandPage.cluster_key, href: clusterPath(brandPage), text: 'All sizes', count: countLabel(brandPage) }] : []),
@@ -574,6 +578,7 @@ export default function GuideView({
 
       {(isModelPage || isTypePage) && models.length > 0 && (
         <Chips
+          kind="model" clusterKey={cluster.cluster_key}
           label={`Other ${cluster.canonical_brand} ${typeWord} models`}
           items={[
             ...(brandPage ? [{ key: brandPage.cluster_key, href: clusterPath(brandPage), text: `All ${cluster.canonical_brand} ${typeWords}`, count: countLabel(brandPage) }] : []),
@@ -584,6 +589,7 @@ export default function GuideView({
 
       {hub && cluster.canonical_brand && (
         <Chips
+          kind="brand_hub" clusterKey={cluster.cluster_key}
           label={`More from ${cluster.canonical_brand}`}
           items={[{
             key: 'hub', href: brandHubPath(slug(cluster.canonical_brand)),
@@ -594,6 +600,7 @@ export default function GuideView({
 
       {related.length > 0 && (
         <Chips
+          kind="related_brand" clusterKey={cluster.cluster_key}
           label={`Other ${typeWord} brands`}
           items={related.map((r) => ({ key: r.cluster_key, href: clusterPath(r), text: clusterPhrase(r), count: `${r.sold_count} sold` }))}
         />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { getDistinctId } from '@/lib/analytics';
 import type { ScanTool } from '@/lib/toolscan';
 
 /**
@@ -28,6 +29,7 @@ export default function EmailCopyForm({
         body: JSON.stringify({
           email: addr,
           scan_id: scanId || null,
+          posthog_distinct_id: getDistinctId(),
           tool: tool ? {
             canonical_brand: tool.canonical_brand || null,
             canonical_type: tool.canonical_type || null,

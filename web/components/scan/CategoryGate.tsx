@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { track } from '@/lib/analytics';
+import { track, getDistinctId } from '@/lib/analytics';
 import type { ScanTool } from '@/lib/toolscan';
 
 /**
@@ -32,6 +32,7 @@ export default function CategoryGate({
           email: email.trim().toLowerCase(),
           source: 'category_interest',
           scan_id: scanId || null,
+          posthog_distinct_id: getDistinctId(),
           payload: { requested_category: tool.canonical_type || 'unknown', image_paths: imagePaths || [] },
         }),
       });

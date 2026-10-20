@@ -46,6 +46,15 @@ export const PROMPT_EVENTS = {
  */
 export const SHARE_EVENT = 'share_clicked';
 
+/** Internal navigation between guide pages, by link kind (GuideLink). */
+export const GUIDE_LINK_EVENT = 'guide_link_clicked';
+/** /guide/search rendered with no matches; `query` is the gap list. */
+export const SEARCH_NO_RESULTS_EVENT = 'search_no_results';
+/** The app's 404 rendered; `path` and `referrer`. */
+export const PAGE_NOT_FOUND_EVENT = 'page_not_found';
+/** The alert POST was refused or failed; `status` is the HTTP status (0 = network). */
+export const ALERT_SUBMIT_FAILED_EVENT = 'alert_submit_failed';
+
 function loaded(): boolean {
   return typeof window !== 'undefined' && Boolean(posthog.__loaded);
 }

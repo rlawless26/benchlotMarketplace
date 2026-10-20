@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
+import SearchNoResults from '@/components/SearchNoResults';
 import { searchClusters, hubForQuery, clusterPath, brandHubPath, clusterPhrase } from '@/lib/price-guide';
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <SearchForm defaultValue={q} />
       </div>
 
+      {q && results.length === 0 && <SearchNoResults query={q} />}
       {q && results.length === 0 && (
         <p className="mt-8 text-spruce-light">
           Nothing in the guide matches &ldquo;{q}&rdquo; yet. Try the maker&rsquo;s name on its own,
