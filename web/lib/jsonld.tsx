@@ -97,6 +97,7 @@ export function webPageJsonLd(opts: {
  */
 export function guideDatasetJsonLd(opts: {
   siteUrl: string; soldTotal: number; clusterCount: number; dateModified: string | null;
+  firstYear: number | null;
   types: { name: string; path: string; sold: number }[];
 }): Record<string, unknown> {
   const base = `${opts.siteUrl}/guide`;
@@ -116,7 +117,7 @@ export function guideDatasetJsonLd(opts: {
         isAccessibleForFree: true,
         creator: { '@id': `${opts.siteUrl}/#organization` },
         keywords: ['used woodworking tools', 'hand tool prices', 'sold prices', 'price guide', 'vintage tools'],
-        temporalCoverage: `2024/${(modified ?? new Date().toISOString()).slice(0, 10)}`,
+        ...(opts.firstYear ? { temporalCoverage: `${opts.firstYear}/${(modified ?? new Date().toISOString()).slice(0, 10)}` } : {}),
         spatialCoverage: 'United States',
         ...(modified ? { dateModified: modified } : {}),
         variableMeasured: ['median sold price', 'interquartile range of sold prices', 'recorded sales', 'listings for sale'],

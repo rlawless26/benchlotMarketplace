@@ -874,6 +874,15 @@ export async function listBrandHubs(opts: { indexableOnly?: boolean } = {}): Pro
   }));
 }
 
+/** Year of the earliest eligible recorded sale (2020: the Jim Bode Value Guide archive), for the Dataset's coverage. */
+export async function firstSoldYear(): Promise<number | null> {
+  const rows = await sql<{ y: number | null }>(
+    `SELECT extract(year FROM min(coalesce(l.sold_at, l.posted_at)))::int AS y
+     FROM listings l WHERE l.status = 'sold' AND l.price_cents IS NOT NULL AND ${ELIGIBLE}`
+  );
+  return rows[0]?.y ?? null;
+}
+
 /** Whether a brand slug has a hub page; used to decide whether to link one. */
 export async function brandHubExists(brandSlug: string): Promise<boolean> {
   const rows = await sql<{ n: number }>(

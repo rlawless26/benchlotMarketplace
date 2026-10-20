@@ -5,7 +5,7 @@ import { JsonLd, guideDatasetJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import {
   listPublishableClusters, listBrandHubs, machineTypeSummaries, clusterPath, brandHubPath, clusterPhrase,
-  typePlural, slug,
+  typePlural, slug, firstSoldYear,
 } from '@/lib/price-guide';
 
 export const revalidate = 3600;
@@ -19,10 +19,11 @@ export const metadata: Metadata = {
 
 export default async function GuideIndex() {
   // Brand and size pages only; model pages are reached from their brand page.
-  const [clusters, hubs, machines] = await Promise.all([
+  const [clusters, hubs, machines, firstYear] = await Promise.all([
     listPublishableClusters({ grains: ['coarse', 'fine'] }),
     listBrandHubs(),
     machineTypeSummaries(6),
+    firstSoldYear(),
   ]);
 
   // Group by tool type so the index reads as a table of contents rather than a
@@ -46,7 +47,7 @@ export default async function GuideIndex() {
   return (
     <div>
       <JsonLd data={guideDatasetJsonLd({
-        siteUrl: SITE_URL, soldTotal: totalSold, clusterCount: clusters.length, dateModified: lastBuilt,
+        siteUrl: SITE_URL, soldTotal: totalSold, clusterCount: clusters.length, dateModified: lastBuilt, firstYear,
         types: types.map(([type, list]) => ({ name: typePlural(type), path: `/guide#${slug(type)}`, sold: list.reduce((n, c) => n + c.sold_count, 0) })),
       })} />
       <h1 className="font-display text-4xl font-semibold text-spruce">Price guide</h1>
