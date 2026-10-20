@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
+import { JsonLd, guideDatasetJsonLd } from '@/lib/jsonld';
+import { SITE_URL } from '@/lib/site';
 import {
   listPublishableClusters, listBrandHubs, machineTypeSummaries, clusterPath, brandHubPath, clusterPhrase,
   typePlural, slug,
@@ -38,9 +40,15 @@ export default async function GuideIndex() {
   });
 
   const totalSold = clusters.reduce((n, c) => n + c.sold_count, 0);
+  const built = clusters.map((c) => c.last_built_at).filter((d): d is string => !!d).sort();
+  const lastBuilt = built.length ? built[built.length - 1] : null;
 
   return (
     <div>
+      <JsonLd data={guideDatasetJsonLd({
+        siteUrl: SITE_URL, soldTotal: totalSold, clusterCount: clusters.length, dateModified: lastBuilt,
+        types: types.map(([type, list]) => ({ name: typePlural(type), path: `/guide#${slug(type)}`, sold: list.reduce((n, c) => n + c.sold_count, 0) })),
+      })} />
       <h1 className="font-display text-4xl font-semibold text-spruce">Price guide</h1>
       <p className="mt-3 max-w-2xl text-spruce-light">
         What used woodworking tools actually sell for — built from{' '}

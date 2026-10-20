@@ -1,7 +1,7 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import GuideView from '@/components/GuideView';
-import { JsonLd, clusterJsonLd, breadcrumbJsonLd } from './jsonld';
+import { JsonLd, clusterJsonLd, breadcrumbJsonLd, webPageJsonLd } from './jsonld';
 import { SITE_URL } from './site';
 import { ogImagePath } from './og-cards';
 import {
@@ -189,6 +189,11 @@ export async function GuideRoute(p: GuideParams) {
 
   return (
     <>
+      <JsonLd data={webPageJsonLd({
+        url, name: `${clusterPhraseSingular(cluster)} prices`, siteUrl: SITE_URL,
+        description: `What used ${clusterPhrase(cluster)} sell for: recorded sales and current listings.`,
+        dateModified: cluster.last_built_at,
+      })} />
       <JsonLd data={clusterJsonLd(cluster, agg, url)} />
       <JsonLd data={breadcrumbJsonLd(crumbs, SITE_URL)} />
       <GuideView

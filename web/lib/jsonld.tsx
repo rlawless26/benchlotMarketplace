@@ -69,6 +69,76 @@ export function breadcrumbJsonLd(
   };
 }
 
+/**
+ * The page itself, with the date the numbers on it were last rebuilt. The
+ * Product node cannot carry a date (schema.org gives Product none), and the
+ * visible "Updated 2026-10-13" line is prose; this is the machine-readable
+ * version of the same fact for crawlers that weigh freshness.
+ */
+export function webPageJsonLd(opts: {
+  url: string; name: string; description: string; dateModified: string | null; siteUrl: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: opts.url,
+    name: opts.name,
+    description: opts.description,
+    ...(opts.dateModified ? { dateModified: new Date(opts.dateModified).toISOString() } : {}),
+    isPartOf: { '@id': `${opts.siteUrl}/#website` },
+    publisher: { '@id': `${opts.siteUrl}/#organization` },
+  };
+}
+
+/**
+ * The guide as a dataset: what it measures, how big it is, when it was last
+ * rebuilt, and an ItemList of the tool types it covers. Dataset Search and
+ * AI crawlers read this; nothing on the page changes.
+ */
+export function guideDatasetJsonLd(opts: {
+  siteUrl: string; soldTotal: number; clusterCount: number; dateModified: string | null;
+  types: { name: string; path: string; sold: number }[];
+}): Record<string, unknown> {
+  const base = `${opts.siteUrl}/guide`;
+  // pg hands timestamptz columns back as Date objects whatever the row type
+  // says, so normalise before slicing.
+  const modified = opts.dateModified ? new Date(opts.dateModified).toISOString() : null;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Dataset',
+        '@id': `${base}#dataset`,
+        name: 'Benchlot used woodworking tool price guide',
+        description: `Median sold prices for used woodworking hand tools and machines, by maker, tool type, size and model, from ${opts.soldTotal.toLocaleString('en-US')} recorded sales across ${opts.clusterCount.toLocaleString('en-US')} tools. Built nightly from public listings at tool dealers, forum classifieds, auction houses and marketplaces; sets, lots and parts are excluded; a median is quoted only from eight or more sales.`,
+        url: base,
+        license: `${opts.siteUrl}/terms`,
+        isAccessibleForFree: true,
+        creator: { '@id': `${opts.siteUrl}/#organization` },
+        keywords: ['used woodworking tools', 'hand tool prices', 'sold prices', 'price guide', 'vintage tools'],
+        temporalCoverage: `2024/${(modified ?? new Date().toISOString()).slice(0, 10)}`,
+        spatialCoverage: 'United States',
+        ...(modified ? { dateModified: modified } : {}),
+        variableMeasured: ['median sold price', 'interquartile range of sold prices', 'recorded sales', 'listings for sale'],
+        measurementTechnique: 'Recorded sale prices from public listings, de-duplicated and filtered for sets, lots and parts; median and quartiles per maker, tool type, size and model.',
+        distribution: { '@type': 'DataDownload', encodingFormat: 'text/html', contentUrl: base },
+      },
+      {
+        '@type': 'ItemList',
+        '@id': `${base}#types`,
+        name: 'Tool types in the price guide',
+        numberOfItems: opts.types.length,
+        itemListElement: opts.types.map((t, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: t.name,
+          url: `${opts.siteUrl}${t.path}`,
+        })),
+      },
+    ],
+  };
+}
+
 /** Site-level markup for the homepage only: who publishes this, and how to search it. */
 export function siteJsonLd(siteUrl: string): Record<string, unknown> {
   return {
