@@ -5,6 +5,7 @@ import ReturnPrompt from './ReturnPrompt';
 import OutboundListingLink from './OutboundListingLink';
 import ForSaleTable from './ForSaleTable';
 import ScanLink from './ScanLink';
+import ShareBar from './ShareBar';
 import {
   Cluster, ClusterRef, ClusterFacts, Listing, SoldPoint, TypeRow,
   clusterPath, brandHubPath, clusterPhrase, clusterPhraseSingular, cleanTitle, typeLower, typePlural,
@@ -256,9 +257,11 @@ export const countLabel = (r: { sold_count: number; asking_count: number }) =>
   r.sold_count > 0 ? `${r.sold_count} sold` : `${r.asking_count} listed`;
 
 export default function GuideView({
-  cluster, sold, active, activeCount: activeCountProp, related, sizes, models, types, points, facts, note, hub = false,
+  cluster, sold, active, activeCount: activeCountProp, related, sizes, models, types, points, facts, note, hub = false, path,
 }: {
   cluster: Cluster;
+  /** The page's own site-relative path, from the route; the share row copies it. */
+  path: string;
   sold: Listing[];
   active: Listing[];
   /**
@@ -318,6 +321,14 @@ export default function GuideView({
 
   const evidence = evidenceParagraph(phrase, facts);
 
+  // What "Copy the figure" puts on the clipboard: the sentence a woodworker
+  // would type into a thread anyway, with the evidence attached.
+  const shareStat = hasSoldReference
+    ? `Used ${phrase} sell for a median of ${money(cluster.sold_p50)} (${soldCount.toLocaleString()} recorded sales, half between ${money(cluster.sold_p25)} and ${money(cluster.sold_p75)}).`
+    : activeCount > 0
+      ? `${activeCount.toLocaleString()} used ${activeCount === 1 ? singular : phrase} for sale now, with ${soldCount.toLocaleString()} recorded ${soldCount === 1 ? 'sale' : 'sales'} for comparison.`
+      : `Recorded sales and current listings for used ${phrase}.`;
+
   return (
     <article>
       <nav className="mb-3 text-sm text-spruce-light">
@@ -371,6 +382,14 @@ export default function GuideView({
           <ScanLink singular={singular} />
           <span>to see what yours is worth against these sales.</span>
         </div>
+        <ShareBar
+          className="mt-3"
+          stat={shareStat}
+          path={path}
+          title={`${singular} prices: ${hasSoldReference ? `median ${money(cluster.sold_p50)} from ${soldCount.toLocaleString()} sales` : 'recorded sales and listings'}`}
+          clusterKey={cluster.cluster_key}
+          pageType={cluster.grain}
+        />
       </section>
 
       {/* The most useful thing on the page goes right under the number: what

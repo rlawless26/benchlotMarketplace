@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import SearchForm from '@/components/SearchForm';
 import OutboundListingLink from '@/components/OutboundListingLink';
 import { Stat } from '@/components/GuideView';
+import ShareBar from '@/components/ShareBar';
 import { JsonLd, breadcrumbJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { ogImagePath } from '@/lib/og-cards';
@@ -115,6 +116,14 @@ export default async function BrandHubPage({ params }: Params) {
           />
           <Stat label="For sale now" value={forSaleCount.toLocaleString('en-US')} />
         </dl>
+        <ShareBar
+          className="mt-4 border-t border-bone-dark pt-4"
+          stat={`Used ${b} tools: ${hub.sold_total.toLocaleString('en-US')} recorded sales across ${hub.types.length} tool types${lead.sold_count >= 8 && money(lead.sold_p50) ? `; ${typeLower(typePlural(lead.canonical_type))} median ${money(lead.sold_p50)}` : ''}.`}
+          path={path}
+          title={`What used ${b} tools sell for: ${hub.sold_total.toLocaleString('en-US')} recorded sales`}
+          pageType="brand_hub"
+          surface="brand_hub"
+        />
       </section>
 
       {/* What can be bought today, across every type. Before this the hub had

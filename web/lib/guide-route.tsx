@@ -147,7 +147,7 @@ export async function GuideRoute(p: GuideParams) {
         cluster={cluster} sold={sold} active={active} activeCount={agg.offer_count}
         related={related} sizes={sizes}
         models={models} types={types} points={points} facts={facts}
-        note={noteFitsPage(note, cluster.canonical_type)} hub={hub}
+        note={noteFitsPage(note, cluster.canonical_type)} hub={hub} path={path}
       />
     </>
   );

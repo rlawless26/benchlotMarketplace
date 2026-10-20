@@ -39,6 +39,13 @@ export const PROMPT_EVENTS = {
   DISMISSED: 'email_prompt_dismissed',
 } as const;
 
+/**
+ * Share affordances (ShareBar). `method` is copy_stat, copy_link, native or
+ * reddit; `page_type` is the guide grain or hub kind. The plan's sharing
+ * hypothesis is judged on this count and on forum/social referrals.
+ */
+export const SHARE_EVENT = 'share_clicked';
+
 function loaded(): boolean {
   return typeof window !== 'undefined' && Boolean(posthog.__loaded);
 }
