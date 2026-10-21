@@ -203,10 +203,23 @@ const WRITE_SQL = `
     normalize_last_error = NULL
   WHERE id = ANY($1::bigint[])`;
 
+/** Haiku 5.5 occasionally returns the string "None" (or "null") where the
+ * schema says integer|null; Postgres rejects it for a smallint. */
+function planeType(v) {
+  const n = typeof v === 'string' ? parseInt(v, 10) : v;
+  return Number.isInteger(n) && n >= 1 && n <= 20 ? n : null;
+}
+/** Same for the nullable strings: "None"/"null" mean null. */
+function nullable(v) {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return s === '' || /^(none|null|n\/a)$/i.test(s) ? null : s;
+}
+
 function writeParams(ids, r) {
   return [ids, canonicalizeBrand(r.canonical_brand), r.canonical_type,
-    r.canonical_model ?? null, r.canonical_size ?? null, r.era_estimate ?? null,
-    r.plane_type_number ?? null, r.model];
+    nullable(r.canonical_model), nullable(r.canonical_size), nullable(r.era_estimate),
+    planeType(r.plane_type_number), r.model];
 }
 
 async function markFailed(pool, ids, message) {
@@ -485,8 +498,8 @@ async function runCollect(pool) {
         good.push({
           custom_id: result.custom_id, title_key,
           brand: canonicalizeBrand(parsed.canonical_brand), type: parsed.canonical_type,
-          model: parsed.canonical_model ?? null, size: parsed.canonical_size ?? null,
-          era: parsed.era_estimate ?? null, ptn: parsed.plane_type_number ?? null,
+          model: nullable(parsed.canonical_model), size: nullable(parsed.canonical_size),
+          era: nullable(parsed.era_estimate), ptn: planeType(parsed.plane_type_number),
         });
       } else if (r.type === 'errored') {
         bad.push({ custom_id: result.custom_id, title_key, status: 'errored', error: `${r.error?.type}: ${r.error?.message || ''}` });
