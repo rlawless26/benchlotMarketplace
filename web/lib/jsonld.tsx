@@ -122,7 +122,12 @@ export function guideDatasetJsonLd(opts: {
         ...(modified ? { dateModified: modified } : {}),
         variableMeasured: ['median sold price', 'interquartile range of sold prices', 'recorded sales', 'listings for sale'],
         measurementTechnique: 'Recorded sale prices from public listings, de-duplicated and filtered for sets, lots and parts; median and quartiles per maker, tool type, size and model.',
-        distribution: { '@type': 'DataDownload', encodingFormat: 'text/html', contentUrl: base },
+        distribution: [
+          { '@type': 'DataDownload', encodingFormat: 'text/html', contentUrl: base },
+          // The same figures as JSON, with confidence/freshness/coverage fields
+          // (lib/api). openapi.json is the entry point; /developers explains it.
+          { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${opts.siteUrl}/api/v1/openapi.json` },
+        ],
       },
       {
         '@type': 'ItemList',

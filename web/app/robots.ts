@@ -17,6 +17,10 @@ const MARKETPLACE_PATHS = [
   '/founding-sellers', '/app', '/old-home', '/login',
   // Bearer-token pages.
   '/alerts/confirm/', '/alerts/unsubscribe/',
+  // The data layer's write endpoints and the MCP transport: nothing for a
+  // crawler to read, and a scan costs inference. Reads under /api/v1 stay
+  // allowed so answer engines can fetch openapi.json and /meta.
+  '/mcp', '/api/v1/identify', '/api/v1/alerts', '/api/v1/keys',
 ];
 
 export default function robots(): MetadataRoute.Robots {

@@ -1,0 +1,94 @@
+{
+  "taken_at": "2026-10-21T21:14:46.305Z",
+  "total": 222697,
+  "typed": 109551,
+  "price_guide": 75071,
+  "pct_typed": 0.49192849477092193,
+  "pct_price_guide": 0.3370992873725286,
+  "attempts_exhausted": 0,
+  "unnormalized_titles": 89643,
+  "pending_batch_items": 0,
+  "open_batches": 0,
+  "remaining_cost_usd_estimate": 116.54,
+  "by_source": {
+    "ebay": {
+      "total": 179889,
+      "typed": 66744,
+      "price_guide": 45445
+    },
+    "jimbode_valueguide": {
+      "total": 26686,
+      "typed": 26686,
+      "price_guide": 19749
+    },
+    "fbmarketplace": {
+      "total": 6208,
+      "typed": 6207,
+      "price_guide": 2639
+    },
+    "teddawson": {
+      "total": 4267,
+      "typed": 4267,
+      "price_guide": 2899
+    },
+    "jimbode": {
+      "total": 2493,
+      "typed": 2493,
+      "price_guide": 1856
+    },
+    "hyperkitten": {
+      "total": 1323,
+      "typed": 1323,
+      "price_guide": 1197
+    },
+    "rouillard": {
+      "total": 530,
+      "typed": 530,
+      "price_guide": 435
+    },
+    "thebestthings": {
+      "total": 405,
+      "typed": 405,
+      "price_guide": 234
+    },
+    "woodnet": {
+      "total": 284,
+      "typed": 284,
+      "price_guide": 181
+    },
+    "oldtools": {
+      "total": 235,
+      "typed": 235,
+      "price_guide": 164
+    },
+    "vintagevials": {
+      "total": 221,
+      "typed": 221,
+      "price_guide": 180
+    },
+    "sawmillcreek": {
+      "total": 150,
+      "typed": 150,
+      "price_guide": 91
+    },
+    "reddit": {
+      "total": 6,
+      "typed": 6,
+      "price_guide": 1
+    }
+  },
+  "by_status": {
+    "expired": {
+      "total": 145702,
+      "typed": 66504
+    },
+    "sold": {
+      "total": 38684,
+      "typed": 38684
+    },
+    "active": {
+      "total": 38311,
+      "typed": 4363
+    }
+  }
+}

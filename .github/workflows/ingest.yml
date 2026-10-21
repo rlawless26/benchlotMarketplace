@@ -50,6 +50,10 @@ on:
         required: false
         type: boolean
         default: false
+      normalize_max_cost:
+        description: 'Backfill: submit a Batch API chunk of the FULL backlog (incl. eBay) up to this many USD. Blank = nightly durable-only pass.'
+        required: false
+        type: string
 
 # Never let two ingest runs overlap: markExpired compares against the run's
 # start time, so a concurrent run can expire rows the other is still writing.
@@ -68,6 +72,10 @@ jobs:
       EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
       EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Normalizer model. Switched from claude-haiku-4-5 on 2026-10-21 after the
+      # precision check in docs/normalizer-backfill-runbook.md; also the default
+      # in functions/normalize/normalizer.js, repeated here so a change is visible.
+      BENCHLOT_NORMALIZER_MODEL: claude-haiku-5-5
       # PostHog LLM analytics for the normalizer, brand notes and the forum
       # sold-check (functions/lib/anthropic-client.js). This is the public
       # project token — the same one the browser bundle ships — so it is a
@@ -129,9 +137,26 @@ jobs:
       # an unbounded pass here would spend ~$143 a night on data that expires.
       # --max-cost is a hard ceiling, not an estimate. Draining the eBay
       # backlog is a deliberate manual decision, not something a cron should do.
-      - name: Normalize new listings
-        if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
-        run: node functions/normalize/run-postgres.js --durable-only --max-cost 5
+      #
+      # Since schema/013 the nightly pass is asynchronous: collect yesterday's
+      # Batch API results first, then submit today's new durable titles as a
+      # batch (50% of standard pricing). Results land the next night, which is
+      # fine for data the price guide rebuilds daily anyway. A manual run with
+      # `normalize_max_cost` set submits a chunk of the whole backlog instead —
+      # that is how the backfill is paid out in approved slices from the
+      # Actions UI (docs/normalizer-backfill-runbook.md).
+      - name: Collect normalizer batch results
+        if: ${{ !inputs.skip_downstream }}
+        run: node functions/normalize/run-postgres.js --collect
+
+      - name: Submit normalizer batch
+        if: ${{ !inputs.skip_downstream && (steps.plan.outputs.sources != '' || inputs.normalize_max_cost != '') }}
+        run: |
+          if [ -n "${{ inputs.normalize_max_cost }}" ]; then
+            node functions/normalize/run-postgres.js --batch-submit --max-cost "${{ inputs.normalize_max_cost }}"
+          else
+            node functions/normalize/run-postgres.js --batch-submit --durable-only --max-cost 5
+          fi
 
       # Verify paged-off forum threads actually sold before their asks count
       # as comps. Only rows without a verdict are touched, so most nights this
@@ -186,6 +211,12 @@ jobs:
             .then(r => { console.log('[pricestats]', JSON.stringify(r.rows[0])); return pool.end(); })
             .catch(e => { console.error('[pricestats]', e.message); process.exit(1); });
           "
+
+      # Normalization coverage, stored in coverage_snapshots (schema/013) so
+      # /api/v1/meta can report it without scanning listings on every call.
+      - name: Coverage snapshot
+        if: ${{ !inputs.skip_downstream }}
+        run: node scripts/coverage-report.js --write
 
       # A paused source and a broken one look identical from the data alone.
       # The worker records every run in sources.last_scrape_ok/_note; surface it

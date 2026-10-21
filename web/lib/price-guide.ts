@@ -117,7 +117,7 @@ export type ClusterRef = {
   last_built_at: string | null;
 };
 
-type RefRow = {
+export type RefRow = {
   cluster_key: string; canonical_type: string; canonical_brand: string;
   canonical_size: string | null; canonical_model: string | null;
   sold_count: number | null; asking_count: number | null;
@@ -132,7 +132,7 @@ const REF_COLUMNS = `cluster_key, canonical_type, canonical_brand, canonical_siz
  *   pt::type::brand::m-<model>         model-fine
  *   pt::type::brand::m-<model>::t-<n>  type-fine
  */
-function toRef(r: RefRow): ClusterRef {
+export function toRef(r: RefRow): ClusterRef {
   const p = r.cluster_key.split('::');
   const third = p[3] ?? '_';
   const isModel = third.startsWith('m-');

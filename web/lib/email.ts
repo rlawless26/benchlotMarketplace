@@ -147,3 +147,22 @@ export function scanResultsEmail(v: {
     ),
   };
 }
+
+/** The one-time delivery of a self-serve API key (schema/014, /api/v1/keys). */
+export function apiKeyEmail(name: string, key: string, docsUrl: string) {
+  return {
+    subject: 'Your Benchlot API key',
+    html: emailShell(
+      `<p style="margin:0 0 16px;">Here is the API key for <strong>${name}</strong>:</p>
+       <p style="margin:0 0 20px;font-family:ui-monospace,Menlo,monospace;font-size:15px;
+          background:#f3efe6;padding:12px 14px;border-radius:6px;word-break:break-all;">${key}</p>
+       <p style="margin:0 0 12px;">Send it as <code>Authorization: Bearer &lt;key&gt;</code> on requests to
+          <code>/api/v1</code> and <code>/mcp</code>. This is the only copy; we store a hash.</p>
+       <p style="margin:0 0 12px;">The key is free. In return, show <em>via Benchlot</em> and link the
+          <code>guide_url</code> or <code>source_url</code> we return next to any figure or listing you display.
+          The full policy and examples are at <a href="${docsUrl}" style="color:#1d5c57;">${docsUrl}</a>.</p>
+       <p style="margin:0;color:#2a4a48;font-size:13px;">Lose it? Request another; the old one keeps working until you ask us to revoke it.</p>`,
+      `<p style="margin:0;">If you didn't request this, ignore it. The key cannot do anything a browser on benchlot.com can't.</p>`
+    ),
+  };
+}

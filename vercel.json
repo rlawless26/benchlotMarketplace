@@ -55,6 +55,30 @@
   ],
   "rewrites": [
     {
+      "source": "/api/v1",
+      "destination": "https://benchlot-web.vercel.app/api/v1"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://benchlot-web.vercel.app/api/v1/:path*"
+    },
+    {
+      "source": "/mcp",
+      "destination": "https://benchlot-web.vercel.app/mcp"
+    },
+    {
+      "source": "/mcp/:path*",
+      "destination": "https://benchlot-web.vercel.app/mcp/:path*"
+    },
+    {
+      "source": "/developers",
+      "destination": "https://benchlot-web.vercel.app/developers"
+    },
+    {
+      "source": "/developers/:path*",
+      "destination": "https://benchlot-web.vercel.app/developers/:path*"
+    },
+    {
       "source": "/api/alerts",
       "destination": "https://benchlot-web.vercel.app/api/alerts"
     },
