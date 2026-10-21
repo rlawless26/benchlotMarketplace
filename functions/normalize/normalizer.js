@@ -64,16 +64,29 @@ const CLASSIFY_TOOL = {
   },
 };
 
+/**
+ * Scraped text occasionally carries a lone UTF-16 surrogate (a truncated
+ * emoji). JSON.stringify emits it as an unpaired \\udXXX escape, which the API
+ * rejects as invalid JSON — and in a batch that one title sinks all 2,500
+ * requests (seen 2026-10-21). Node 20+ repairs it in place.
+ */
+function wellFormed(v) {
+  const s = String(v ?? '');
+  return typeof s.toWellFormed === 'function'
+    ? s.toWellFormed()
+    : s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD');
+}
+
 function buildUserMessage(listing) {
   const parts = [];
-  parts.push(`Title: ${listing.title_raw || '(missing)'}`);
+  parts.push(`Title: ${wellFormed(listing.title_raw) || '(missing)'}`);
   if (listing.description_raw) {
     // Trim aggressively — descriptions can be huge and rarely useful beyond a paragraph.
-    const desc = String(listing.description_raw).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const desc = wellFormed(listing.description_raw).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     if (desc) parts.push(`Description: ${desc.slice(0, 1200)}`);
   }
   if (Array.isArray(listing.tags) && listing.tags.length > 0) {
-    parts.push(`Tags: ${listing.tags.slice(0, 20).join(', ')}`);
+    parts.push(`Tags: ${listing.tags.slice(0, 20).map(wellFormed).join(', ')}`);
   }
   if (listing.heuristic_brand && listing.heuristic_brand !== 'Unknown') {
     parts.push(`Heuristic brand guess: ${listing.heuristic_brand}`);
@@ -81,7 +94,9 @@ function buildUserMessage(listing) {
   if (listing.heuristic_type) {
     parts.push(`Heuristic type guess: ${listing.heuristic_type}`);
   }
-  return parts.join('\n');
+  // Once more over the whole message: the heuristic hints are substrings of
+  // the title and carry the same damage.
+  return wellFormed(parts.join('\n'));
 }
 
 let cached = null;
