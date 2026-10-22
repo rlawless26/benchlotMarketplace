@@ -83,7 +83,14 @@ export async function createAlert(input: AlertInput): Promise<CreateResult> {
     // Unconfirmed duplicate: re-issue rather than create a second row, so a
     // lost confirmation email is recoverable without piling up rows.
     const t = token();
-    await sql(`UPDATE alerts SET confirm_token = $2, created_at = now() WHERE id = $1`, [row.id, t]);
+    // The dedupe key ignores the price ceiling, so a re-request with a new
+    // ceiling (an agent refining the ask) updates it rather than being lost.
+    await sql(
+      `UPDATE alerts SET confirm_token = $2, created_at = now(),
+              max_price_cents = coalesce($3, max_price_cents)
+        WHERE id = $1`,
+      [row.id, t, input.max_price_cents ?? null]
+    );
     return { status: 'resent', confirmToken: t };
   }
 

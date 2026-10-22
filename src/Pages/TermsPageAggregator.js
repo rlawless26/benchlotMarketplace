@@ -131,7 +131,10 @@ export default function TermsPageAggregator() {
             <h2>5. Acceptable use</h2>
             <p>You agree not to:</p>
             <ul>
-              <li>Scrape, copy, or redistribute Benchlot&rsquo;s indexed data in bulk</li>
+              <li>
+                Scrape, copy, or redistribute Benchlot&rsquo;s indexed data in bulk, except as permitted by
+                the API data-use policy at <a href="/developers/policy">/developers/policy</a>
+              </li>
               <li>Interfere with the operation of the Services (denial-of-service, probing, etc.)</li>
               <li>Use Benchlot to build a competing aggregator by harvesting our search results</li>
               <li>Use Benchlot for any illegal purpose or in violation of these Terms</li>

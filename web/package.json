@@ -10,17 +10,20 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",
+    "@modelcontextprotocol/server": "^2.3.1",
     "@posthog/ai": "^8.13.6",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.8.0",
     "@vercel/functions": "^3.9.5",
+    "mcp-handler": "^2.3.0",
     "next": "16.3.3",
     "pg": "^8.23.0",
     "posthog-js": "^1.424.1",
     "posthog-node": "^5.21.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "resend": "^6.24.0"
+    "resend": "^6.24.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -44,6 +44,15 @@ export async function GET() {
   lines.push('- "For sale now" rows are live listings seen within the last 45 days, with the seller linked directly.');
   lines.push('- Figures are rebuilt nightly; each page states when it was last updated.');
   lines.push('');
+  // Self-contained so the type-hub section (growth plan B7) can land above or
+  // below it without a merge conflict.
+  lines.push('## API and MCP server');
+  lines.push('');
+  lines.push(`- JSON API, base URL \`${abs('/api/v1')}\`; description at ${abs('/api/v1/openapi.json')}; docs at ${abs('/developers')}.`);
+  lines.push(`- MCP server (Streamable HTTP): \`${abs('/mcp')}\` with tools get_price_guide, search_price_guide, search_listings, get_coverage, identify_tool, create_alert.`);
+  lines.push(`- Example: \`${abs('/api/v1/prices?type=bench%20plane&brand=stanley&model=no.%204')}\` returns the sold median and quartiles with a \`confidence\` field (high: 20+ sales, medium: 8-19, low: under 8, no median).`);
+  lines.push(`- Free, no key needed for reads. Attribution required: say "via Benchlot" and link the guide_url or source_url returned. Policy: ${abs('/developers/policy')}.`);
+  lines.push('');
   lines.push('## How pages are organised');
   lines.push('');
   lines.push(`- [Price guide index](${abs('/guide')}): every tool type, with its makers.`);
