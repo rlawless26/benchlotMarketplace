@@ -51,9 +51,14 @@ export async function identify(body: IdentifyBody, ctx: ApiContext): Promise<Ser
   if (total > IDENTIFY_MAX_BASE64) {
     return { ok: false, status: 413, error: { code: 'payload_too_large', message: 'Images total more than 3 MB of base64. Downscale to about 1600px on the long edge.' } };
   }
+  // A directory listing (Claude's, ChatGPT's) sends one shared key for every
+  // user behind it. The scan limiter counts by distinct id, so key the bucket
+  // by key + caller IP hash instead of the key alone; otherwise 20 scans per
+  // 15 minutes would be the cap for the whole directory audience.
+  const scanIdentity = ctx.key && ctx.ipHash ? `${ctx.distinctId}:${ctx.ipHash.slice(0, 12)}` : ctx.distinctId;
   const out = await runScan({
     images: body.images, context: body.context, previous_scan_id: body.previous_scan_id,
-    distinct_id: ctx.distinctId, ip: ctx.ip,
+    distinct_id: scanIdentity, ip: ctx.ip,
   });
   if (out.status !== 200) {
     const code = out.status === 429 ? 'scan_rate_limited' : out.status === 400 ? 'invalid_parameter' : 'scan_failed';
