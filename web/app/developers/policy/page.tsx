@@ -49,7 +49,7 @@ export default function PolicyPage() {
               <strong>Respect source licences.</strong> eBay asking prices and availability may not be stored past the <code>price_valid_until</code> we return, and never past 24 hours; after that the row says <code>price_status: stale</code> and you fetch the listing itself. Listings from r/handtools are credited <em>via r/handtools</em> and never to an individual.
             </li>
             <li>
-              <strong>Respect the limits.</strong> Thirty requests a minute anonymously; more with a free key. Do not rotate keys or addresses to get around them. If you need more, ask.
+              <strong>Respect the limits.</strong> Thirty requests and five photo identifications per window anonymously; more with a free key. Do not rotate keys or addresses to get around them. If you need more, ask.
             </li>
           </ol>
         </section>

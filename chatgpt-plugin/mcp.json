@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "benchlot": {
+      "type": "http",
+      "url": "https://benchlot.com/mcp",
+      "auth": { "type": "none" }
+    }
+  }
+}
