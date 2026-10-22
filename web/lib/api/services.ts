@@ -2,6 +2,7 @@
  * The write operations, as plain functions. The REST routes and the MCP
  * tools both call these; neither goes through HTTP to reach the other.
  */
+import { sql } from '@/lib/db';
 import { runScan, scanReference, scanActiveListings, TOOLSCAN_MODEL } from '@/lib/toolscan';
 import { createAlert } from '@/lib/alerts';
 import { sendEmail, confirmEmail } from '@/lib/email';
@@ -29,7 +30,23 @@ export type IdentifyResult = {
   active_listings: Awaited<ReturnType<typeof scanActiveListings>>;
 };
 
+// Anonymous callers (ChatGPT's connector portal has no API-key option) get a
+// quarter of the keyed scan allowance per IP hash; a key restores the full 20.
+const ANON_SCANS_PER_WINDOW = 5;
+
+async function anonScanLimited(ip: string | null): Promise<boolean> {
+  if (!ip) return false;
+  const rows = await sql<{ n: number }>(
+    `SELECT count(*)::int AS n FROM tool_scans WHERE created_at > now() - interval '15 minutes' AND created_ip = $1`,
+    [ip]
+  );
+  return (rows[0]?.n ?? 0) >= ANON_SCANS_PER_WINDOW;
+}
+
 export async function identify(body: IdentifyBody, ctx: ApiContext): Promise<ServiceResult<IdentifyResult>> {
+  if (!ctx.key && (await anonScanLimited(ctx.ip))) {
+    return { ok: false, status: 429, error: { code: 'scan_rate_limited', message: `Anonymous callers get ${ANON_SCANS_PER_WINDOW} scans per 15 minutes. A free API key raises it to 20: see ${SITE_URL}/developers.` } };
+  }
   const total = body.images.reduce((n, i) => n + i.data.length, 0);
   if (total > IDENTIFY_MAX_BASE64) {
     return { ok: false, status: 413, error: { code: 'payload_too_large', message: 'Images total more than 3 MB of base64. Downscale to about 1600px on the long edge.' } };

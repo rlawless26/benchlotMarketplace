@@ -71,6 +71,10 @@
       "destination": "https://benchlot-web.vercel.app/mcp/:path*"
     },
     {
+      "source": "/.well-known/openai-apps-challenge",
+      "destination": "https://benchlot-web.vercel.app/.well-known/openai-apps-challenge"
+    },
+    {
       "source": "/developers",
       "destination": "https://benchlot-web.vercel.app/developers"
     },

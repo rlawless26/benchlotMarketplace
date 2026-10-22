@@ -24,6 +24,7 @@ promise in BENCHLOT-HANDOFF.md §3.3 stands).
 | REST routes | `web/app/api/v1/**/route.ts` |
 | MCP tools and server | `web/lib/mcp/tools.ts`, `web/app/mcp/route.ts` (mcp-handler 2.x) |
 | Developers page, policy | `web/app/developers/` |
+| Directory submissions (ChatGPT plugin, Claude connector) | `docs/directory-submissions.md`, `chatgpt-plugin/`, `web/app/.well-known/` |
 | Rewrites from benchlot.com | root `vercel.json` (`/api/v1`, `/mcp`, `/developers`) |
 | CORS on framework responses | `web/next.config.ts` |
 
@@ -39,7 +40,10 @@ promise in BENCHLOT-HANDOFF.md §3.3 stands).
   lose their price past it (`price_status: stale`).
 - Anonymous: 30/min per salted IP hash (`API_ANON_LIMIT_PER_MIN`,
   `API_IP_SALT`). Keyed: `api_keys.rate_limit_per_min` (default 120).
-  `identify` and `alerts` need a key. The limiter is a Postgres count over
+  Since 2026-10-21 `identify` and `alerts` work without a key too (ChatGPT's
+  connector portal has no API-key option): anonymous identify is capped at
+  5 scans per 15 minutes per IP (`ANON_SCANS_PER_WINDOW` in services.ts),
+  alerts rely on double opt-in. The limiter is a Postgres count over
   `api_requests`, same pattern as `scanRateLimited`.
 - Alerts keep the identical-response invariant from `/api/alerts`.
 - `/meta` coverage comes from `coverage_snapshots` (nightly,

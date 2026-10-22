@@ -1,0 +1,81 @@
+{
+  "name": "benchlot",
+  "version": "1.0.0",
+  "description": "Recorded sale prices, live listings and photo identification for used woodworking tools.",
+  "extensions": {
+    "com.openai.interface": {
+      "displayName": "Benchlot",
+      "shortDescription": "Used woodworking tool prices",
+      "longDescription": "What a used woodworking tool actually sells for, from recorded sales at specialist dealers, forum classifieds and marketplaces, plus what is for sale right now.\n\nAsk for a maker and tool type (\"Stanley No. 4 plane\", \"Disston D-8 saw\", \"Lie-Nielsen chisel\") and Benchlot returns the sold median and quartiles, how many sales they rest on, when the last one was, and which sources they came from. Every answer carries a confidence rating: high for 20 or more recorded sales, medium for 8 to 19, low below that, where no median is published. Asking prices are reported separately and never mixed with sales.\n\nSearch live listings and recent sales across every source Benchlot indexes; each result links to the original listing, unaltered. Send photos of a single tool and get the maker, type, model, era and condition with the model's own confidence, alongside the guide's price band. Ask for an email alert when a tool is newly listed; the address confirms by email before anything is sent.\n\nBenchlot is not a marketplace. It holds no inventory, brokers nothing, takes no commission and carries no affiliate links. The data is free; attribution to Benchlot with a link back is the only ask. Data-use policy: https://benchlot.com/developers/policy",
+      "developerName": "Benchlot",
+      "category": "Shopping",
+      "websiteURL": "https://benchlot.com/developers",
+      "supportURL": "https://benchlot.com/faq",
+      "privacyPolicyURL": "https://benchlot.com/privacy",
+      "termsOfServiceURL": "https://benchlot.com/terms",
+      "logo": "./assets/logo.png",
+      "logoDark": "./assets/logo-dark.svg",
+      "brandColor": "#1a3030",
+      "brandColorDark": "#d4aa60",
+      "defaultPrompt": [
+        "What does a Stanley No. 4 plane sell for?",
+        "Find Disston hand saws for sale under $60",
+        "Is $450 a fair price for a Lie-Nielsen No. 7 jointer?"
+      ]
+    },
+    "com.openai.review": {
+      "demo_recording_url": "REPLACE_WITH_REVIEWER_ACCESSIBLE_VIDEO_URL",
+      "test_cases": {
+        "positive": [
+          {
+            "description": "Price lookup by maker, type and model",
+            "prompt": "What does a Stanley No. 4 plane sell for?",
+            "tools_triggered": ["get_price_guide"],
+            "expected_behavior": "Calls get_price_guide with type bench plane, brand Stanley, model No. 4. Reports the sold median (about $118 from 268 sales), names the confidence (high) and last-sale date, says 'via Benchlot' and links https://benchlot.com/guide/bench-plane/stanley/no-4."
+          },
+          {
+            "description": "Fair-price check with a low-evidence fallback",
+            "prompt": "Is $450 a fair price for a Lie-Nielsen No. 7 jointer plane?",
+            "tools_triggered": ["get_price_guide"],
+            "expected_behavior": "Calls get_price_guide (type bench plane, brand Lie-Nielsen, model No. 7). If the page has 8+ sales, compares $450 to the quartiles. If it returns insufficient_evidence or confidence low, says so, does not invent a median, and offers the nearest pages from meta.suggestions."
+          },
+          {
+            "description": "Live listings with a price ceiling",
+            "prompt": "Find Disston hand saws for sale right now under $60",
+            "tools_triggered": ["search_listings"],
+            "expected_behavior": "Calls search_listings with type hand saw, brand Disston, status active, max_price 60. Lists results with price, source name and a direct link to each listing (source.url), unaltered. Notes price_status stale rows as needing a click-through for a live price."
+          },
+          {
+            "description": "Fuzzy maker or type spelling resolved through search",
+            "prompt": "How much is a millers falls brace worth?",
+            "tools_triggered": ["search_price_guide", "get_price_guide"],
+            "expected_behavior": "Resolves the spelling via search_price_guide (or directly via get_price_guide), reports the Millers Falls brace median with sale count and confidence, and links the guide page with attribution."
+          },
+          {
+            "description": "Coverage question about the data itself",
+            "prompt": "Where does Benchlot's price data come from and how complete is it?",
+            "tools_triggered": ["get_coverage"],
+            "expected_behavior": "Calls get_coverage and summarises the sources (dealers, forums, marketplaces), the share of listings in the price guide, the confidence thresholds (8 sales for a median, 20 for high), and that Benchlot is not a marketplace."
+          }
+        ],
+        "negative": [
+          {
+            "description": "Unrelated topic should not trigger any Benchlot tool",
+            "prompt": "What's a good recipe for banana bread?"
+          },
+          {
+            "description": "New-tool retail pricing is out of scope; the data is used tools only",
+            "prompt": "How much does a brand new Festool Domino DF 500 cost at the store?"
+          },
+          {
+            "description": "Non-woodworking item should not trigger a price lookup",
+            "prompt": "What is my 1998 Honda Civic worth?"
+          }
+        ]
+      }
+    },
+    "com.openai.publication": {
+      "release_notes": "Initial release: price guide lookups, listing search, coverage, photo identification and email alerts over the Benchlot MCP server."
+    }
+  }
+}

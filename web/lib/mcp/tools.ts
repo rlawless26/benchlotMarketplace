@@ -25,11 +25,22 @@ type ToolResult = {
 
 const ATTRIBUTION_RULE = `Attribution is required: when you state a figure or show a listing from this result, say "via Benchlot" and link the guide_url (prices) or source.url (listings). Policy: ${LICENSE_URL}.`;
 
+/** Every tool returns the same envelope the REST API does; `data` may be an
+ * object, an array, or null (with `errors` explaining why). */
+const Envelope = z.object({
+  data: z.unknown(),
+  meta: z.record(z.string(), z.unknown()),
+  errors: z.array(z.object({ code: z.string(), message: z.string(), field: z.string().optional() })),
+});
+
 function result(data: unknown, extra: Record<string, unknown> = {}, isError = false): ToolResult {
   const body = envelope(data, extra, isError ? [extra.error as { code: string; message: string }] : []);
-  const structured: Record<string, unknown> = Array.isArray(data) ? { ...body, data: undefined, items: data } : (body as unknown as Record<string, unknown>);
-  return { content: [{ type: 'text', text: JSON.stringify(body) }], structuredContent: structured, isError };
+  return { content: [{ type: 'text', text: JSON.stringify(body) }], structuredContent: body as unknown as Record<string, unknown>, isError };
 }
+
+/** Explicit booleans on every tool: the ChatGPT and Claude directories require them. */
+const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true } as const;
+const WRITE = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true } as const;
 
 function errorResult(code: string, message: string, extra: Record<string, unknown> = {}): ToolResult {
   return result(null, { ...extra, error: { code, message } }, true);
@@ -65,6 +76,8 @@ export function registerTools(server: McpServer) {
     'get_price_guide',
     {
       title: 'What a used tool sells for',
+      annotations: READ,
+      outputSchema: Envelope,
       description: [
         'Recorded sale prices (median, quartiles) and current asking prices for one maker + tool type, optionally narrowed to a model ("No. 4") or size ("26 inch").',
         'Read `confidence` before quoting: high = 20+ sales, medium = 8-19, low = fewer than 8 (no sold median is published; do not state one). `freshness.last_sale_at` tells you how current the evidence is; `coverage.sources` where it came from (specialist dealers skew high).',
@@ -112,6 +125,8 @@ export function registerTools(server: McpServer) {
     'search_price_guide',
     {
       title: 'Find price-guide pages',
+      annotations: READ,
+      outputSchema: Envelope,
       description: `Free-text search over the maker/type/model/size pages the price guide publishes, e.g. "millers falls brace", "stanley 45", "disston d8". Returns up to 60 pages with sale counts, the sold median where 8+ sales exist, confidence and the guide_url to cite. Use get_price_guide for the full figures. ${ATTRIBUTION_RULE}`,
       inputSchema: z.object({
         q: z.string().min(2).max(120),
@@ -131,6 +146,8 @@ export function registerTools(server: McpServer) {
     'search_listings',
     {
       title: 'Listings for sale now, or recorded sales',
+      annotations: READ,
+      outputSchema: Envelope,
       description: [
         'Search listings aggregated from tool dealers, forum classifieds and marketplaces. status "active" = for sale now (seen within 45 days); "sold" = recorded sales, newest first.',
         'Every row has source.url: that is the listing, link it, unaltered. `price_status: stale` means the source licence does not allow the asking price to be repeated past 24 hours (eBay); fetch source.url for a live price.',
@@ -164,7 +181,9 @@ export function registerTools(server: McpServer) {
     'get_coverage',
     {
       title: 'Coverage, freshness, sources and thresholds',
-      description: 'What Benchlot indexes and how complete it is: listings total, share with a tool type, share in the price guide, sources with last-scrape times, the 73 tool types, the thresholds behind `confidence`, and the licensing rules. Call this once before relying on the numbers, and whenever a user asks what the data covers.',
+      annotations: READ,
+      outputSchema: Envelope,
+      description: 'What Benchlot indexes and how complete it is: listings total, share with a tool type, share in the price guide, sources with last-scrape times, the 73 tool types, the thresholds behind `confidence`, and the licensing rules. Use it when a user asks what the data covers or how trustworthy a figure is. No input.',
       inputSchema: z.object({}),
     },
     async (_args, ctx) => {
@@ -180,10 +199,12 @@ export function registerTools(server: McpServer) {
     'identify_tool',
     {
       title: 'Identify a tool from photos',
+      annotations: WRITE,
+      outputSchema: Envelope,
       description: [
         'Identify ONE woodworking tool from one to five photos: maker, type, model, size, era, condition, with the model\'s own confidence and reasoning, plus the price guide\'s reference band and live listings for the same tool.',
         'Photos as base64 (no data: prefix), JPEG/PNG/WebP, total under 3 MB; downscale to about 1600px on the long edge first. If the answer includes next_photo_hint, take that photo and call again with previous_scan_id.',
-        'Needs an API key (free, see ' + DOCS_URL + '); 20 scans per 15 minutes.',
+        'Limits: 5 scans per 15 minutes without a key, 20 with a free key (' + DOCS_URL + '). Each scan runs a vision model and takes 5-15 seconds.',
         ATTRIBUTION_RULE,
       ].join(' '),
       inputSchema: z.object({
@@ -193,7 +214,7 @@ export function registerTools(server: McpServer) {
       }),
     },
     async (args, ctx) => {
-      const g = await gate(ctx, 'identify_tool', 'required');
+      const g = await gate(ctx, 'identify_tool', 'optional');
       if ('error' in g) return g.error;
       const r = await identify(args, g.ctx);
       finishRequest(g.ctx, r.ok ? 200 : r.status);
@@ -206,9 +227,11 @@ export function registerTools(server: McpServer) {
     'create_alert',
     {
       title: 'Email alert for new listings of a tool',
+      annotations: WRITE,
+      outputSchema: Envelope,
       description: [
         'Ask Benchlot to email an address when a maker + type (optionally size, optionally under a USD ceiling) is newly listed anywhere it indexes. Only call this when the user has given their own email address and asked for it.',
-        'The address must click a confirmation email before anything is sent; the response is the same whatever happened (no email enumeration). No account is created. Needs an API key.',
+        'The address must click a confirmation email before anything is sent; the response is the same whatever happened (no email enumeration). No account is created, no key is needed.',
       ].join(' '),
       inputSchema: z.object({
         email: z.string().email().max(254),
@@ -219,7 +242,7 @@ export function registerTools(server: McpServer) {
       }),
     },
     async (args, ctx) => {
-      const g = await gate(ctx, 'create_alert', 'required');
+      const g = await gate(ctx, 'create_alert', 'optional');
       if ('error' in g) return g.error;
       const r = await requestAlert(args, g.ctx);
       finishRequest(g.ctx, r.ok ? 200 : r.status);
@@ -230,8 +253,8 @@ export function registerTools(server: McpServer) {
 }
 
 export const SERVER_INSTRUCTIONS = [
-  'Benchlot: prices and listings for used woodworking hand tools and machines, aggregated from dealers, forums and marketplaces. Not a marketplace; every listing links to its source.',
-  'Start with get_price_guide for "what is X worth"; search_price_guide when you are not sure of the maker/type spelling; search_listings for what is for sale now or recent sales; get_coverage for what the data covers.',
-  'Honesty: quote the sold median only when confidence is high or medium. Say how many sales it rests on and when the last one was. Asking prices are not selling prices.',
-  `Attribution: say "via Benchlot" and link guide_url or source.url whenever you show a figure or listing. Site: ${SITE_URL}. Docs: ${DOCS_URL}.`,
+  'Benchlot: recorded sale prices and live listings for used woodworking hand tools and machines, from dealers, forums and marketplaces. Not a marketplace; every listing links to its source.',
+  'Use get_price_guide for "what is X worth" (maker + type, optionally model/size). Use search_price_guide when unsure of the spelling. Use search_listings for what is for sale now or recent sales. Use get_coverage for what the data covers.',
+  'Quote the sold median only when confidence is high or medium; say how many sales it rests on and when the last one was. Asking prices are not selling prices.',
+  `Attribution: say "via Benchlot" and link guide_url or source.url whenever you show a figure or listing. ${SITE_URL}`,
 ].join('\n');

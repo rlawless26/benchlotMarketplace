@@ -133,3 +133,4 @@ firebase functions:config:set
 migration/data/
 migration/node_modules/
 .env*
+dist/

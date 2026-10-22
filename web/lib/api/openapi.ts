@@ -65,7 +65,7 @@ export function openapi() {
         `Free. Attribution required: show "${ATTRIBUTION.text}" and link the \`guide_url\` or \`source_url\` returned with any figure or listing. Policy: ${LICENSE_URL}.`,
         'Benchlot is not a marketplace: it holds no inventory, brokers nothing and takes no commission. Every listing links to its source, unaltered.',
         'Honesty fields: read `confidence`, `freshness` and `coverage` on every price answer, and `price_status` on every listing. A `confidence` of `low` means fewer than 8 recorded sales; do not state a sold median.',
-        `Rate limits: ${process.env.API_ANON_LIMIT_PER_MIN || 30}/min anonymous, higher with a free key (POST /api/v1/keys). MCP server: ${SITE_URL}/mcp.`,
+        `Rate limits: ${process.env.API_ANON_LIMIT_PER_MIN || 30}/min anonymous and 5 identify scans per 15 minutes; higher with a free key (POST /api/v1/keys). MCP server: ${SITE_URL}/mcp.`,
       ].join('\n\n'),
       termsOfService: LICENSE_URL,
       contact: { url: DOCS_URL },
@@ -114,15 +114,15 @@ export function openapi() {
       },
       '/identify': {
         post: {
-          operationId: 'identifyTool', summary: 'Identify a tool from photos', security: keyed,
-          description: 'One tool, one to five photos. Returns the identification with its own confidence, the price-guide reference band and live listings for the same tool. Rate limited to 20 scans per 15 minutes per key.',
+          operationId: 'identifyTool', summary: 'Identify a tool from photos', security: [{}, ...keyed],
+          description: 'One tool, one to five photos. Returns the identification with its own confidence, the price-guide reference band and live listings for the same tool. 5 scans per 15 minutes without a key, 20 with one.',
           requestBody: { required: true, content: { 'application/json': { schema: js(S.IdentifyBody) } } },
           responses: { ...responses({ type: 'object' }), '413': { description: 'Body over 3 MB' } },
         },
       },
       '/alerts': {
         post: {
-          operationId: 'createAlert', summary: 'Email alert for new listings of a tool', security: keyed,
+          operationId: 'createAlert', summary: 'Email alert for new listings of a tool', security: [{}, ...keyed],
           description: 'Always answers 200 with the same message, whatever happened (no email enumeration). The address must click a confirmation email before any alert is sent.',
           requestBody: { required: true, content: { 'application/json': { schema: js(S.AlertBody) } } },
           responses: responses({ type: 'object', properties: { status: { type: 'string', const: 'pending_confirmation' }, message: { type: 'string' } } }),

@@ -35,12 +35,12 @@ const ENDPOINTS: { method: 'GET' | 'POST'; path: string; what: string; key?: boo
   { method: 'GET', path: '/types', what: 'The tool types the guide knows, with evidence counts.' },
   { method: 'GET', path: '/brands?type=', what: 'Makers with price-guide pages.' },
   { method: 'GET', path: '/meta', what: 'Coverage, freshness, sources, thresholds, licensing. Read it first.' },
-  { method: 'POST', path: '/identify', what: 'Identify a tool from one to five photos, with the guide band and live listings.', key: true },
-  { method: 'POST', path: '/alerts', what: 'Email alert when a tool is newly listed. The address confirms by email.', key: true },
+  { method: 'POST', path: '/identify', what: 'Identify a tool from one to five photos, with the guide band and live listings. 5 scans per 15 minutes without a key, 20 with one.' },
+  { method: 'POST', path: '/alerts', what: 'Email alert when a tool is newly listed. The address confirms by email.' },
   { method: 'POST', path: '/keys', what: 'Request a free key by email.' },
 ];
 
-const TOOLS = ['get_price_guide', 'search_price_guide', 'search_listings', 'get_coverage', 'identify_tool (key)', 'create_alert (key)'];
+const TOOLS = ['get_price_guide', 'search_price_guide', 'search_listings', 'get_coverage', 'identify_tool', 'create_alert'];
 
 function Code({ children }: { children: string }) {
   return (
@@ -70,7 +70,7 @@ export default async function DevelopersPage() {
         <p className="mt-2 text-spruce">Streamable HTTP at <code className="text-sm">{MCP}</code>. Six tools: {TOOLS.join(', ')}.</p>
         <p className="mt-3 text-sm font-medium text-spruce">Claude Code</p>
         <Code>{`claude mcp add --transport http benchlot ${MCP}
-# with a key, for identify_tool and create_alert:
+# optional, raises the limits:
 claude mcp add --transport http benchlot ${MCP} --header "Authorization: Bearer bl_live_…"`}</Code>
         <p className="mt-3 text-sm font-medium text-spruce">Claude Desktop, Cursor, and other clients that take an HTTP URL</p>
         <Code>{`{ "mcpServers": { "benchlot": { "type": "http", "url": "${MCP}" } } }`}</Code>
@@ -114,7 +114,7 @@ claude mcp add --transport http benchlot ${MCP} --header "Authorization: Bearer 
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold text-spruce">Keys and limits</h2>
         <p className="mt-2 text-spruce">
-          Reads work without a key at 30 requests a minute per address. A key is free, raises that to 120, and is required for <code className="text-sm">identify</code> and <code className="text-sm">alerts</code>. Send it as <code className="text-sm">Authorization: Bearer bl_live_…</code>. We log route, status, latency, key and a salted hash of the IP; never request bodies.
+          Everything works without a key: 30 requests a minute per address, and 5 photo identifications per 15 minutes. A key is free, raises those to 120 and 20, and makes your usage attributable so we can help if something breaks. Send it as <code className="text-sm">Authorization: Bearer bl_live_…</code>. We log route, status, latency, key and a salted hash of the IP; never request bodies.
         </p>
         <KeyRequestForm action={`${API}/keys`} />
       </section>
