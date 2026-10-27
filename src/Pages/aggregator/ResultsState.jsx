@@ -28,6 +28,7 @@ import FilterRail from '../../components/aggregator/FilterRail';
 import ResultCard from '../../components/aggregator/ResultCard';
 import SaveAlertButton from '../../components/aggregator/SaveAlertButton';
 import SiteFooter from '../../components/siteChrome/SiteFooter';
+import NearestGuidePages from '../../components/aggregator/NearestGuidePages';
 import { BROWSE_CHIPS } from './browseChips';
 
 
@@ -259,13 +260,15 @@ const ResultsState = ({ state, actions }) => {
   const filtered = useMemo(() => filterLocally(raw, { query, filters }), [raw, query, filters]);
   const visible = useMemo(() => filtered.slice(0, visibleLimit), [filtered, visibleLimit]);
 
-  // search_submitted analytics event — fires once per stabilized query with
-  // the post-filter result count. Debounced 600ms so typing "festool" doesn't
-  // produce 7 events. Skipped when query is empty (no intent signal).
+  // search_submitted analytics event — fires once per settled query with the
+  // post-filter result count. The grid filters live as you type, so there is
+  // no submit to hook; "settled" is 2.5 s without a change (600 ms logged one
+  // event per word for slow typists: 15 prefixes of one hand-drill search on
+  // 2026-10-27) and at least three characters. Skipped when empty.
   const lastTrackedQueryRef = useRef('');
   useEffect(() => {
     const trimmed = (query || '').trim();
-    if (!trimmed) {
+    if (!trimmed || trimmed.length < 3) {
       lastTrackedQueryRef.current = '';
       return undefined;
     }
@@ -283,7 +286,7 @@ const ResultsState = ({ state, actions }) => {
         result_count: filtered.length,
         was_zero_results: filtered.length === 0,
       });
-    }, 600);
+    }, 2500);
     return () => clearTimeout(t);
   }, [query, filtered.length, loading, sort, activeFilterChips.length]);
 
@@ -809,6 +812,7 @@ const ResultsState = ({ state, actions }) => {
                 }}
               >
                 No listings match. Try widening the filters or clearing the search.
+                <NearestGuidePages query={query} />
               </div>
             )}
 

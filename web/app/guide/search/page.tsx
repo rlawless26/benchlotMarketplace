@@ -27,10 +27,18 @@ export default async function SearchPage({ searchParams }: Props) {
 
       {q && results.length === 0 && <SearchNoResults query={q} />}
       {q && results.length === 0 && (
-        <p className="mt-8 text-spruce-light">
-          Nothing in the guide matches &ldquo;{q}&rdquo; yet. Try the maker&rsquo;s name on its own,
-          or <Link href="/guide" className="text-honey-dark hover:underline">browse every tool</Link>.
-        </p>
+        <div className="mt-8 space-y-3 text-spruce-light">
+          <p>
+            Nothing in the guide matches &ldquo;{q}&rdquo; yet. Try the maker&rsquo;s name on its own,
+            or <Link href="/guide" className="text-honey-dark hover:underline">browse every tool</Link>.
+          </p>
+          <p>
+            The guide only has pages for tools with enough recorded sales. Live listings cover more:{' '}
+            <a href={`/search?q=${encodeURIComponent(q)}`} className="text-honey-dark hover:underline">
+              search everything for sale for &ldquo;{q}&rdquo;
+            </a>.
+          </p>
+        </div>
       )}
 
       {hub && (

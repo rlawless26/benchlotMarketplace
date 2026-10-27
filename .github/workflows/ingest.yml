@@ -218,6 +218,17 @@ jobs:
         if: ${{ !inputs.skip_downstream }}
         run: node scripts/coverage-report.js --write
 
+      # Growth plan B11: tell Bing (and through it ChatGPT search and
+      # DuckDuckGo) which guide pages changed tonight. Only pages whose figures
+      # moved are sent (schema/015 keeps the last hash); the key is public by
+      # design and is also served at benchlot.com/<key>.txt from public/.
+      - name: IndexNow
+        if: ${{ !inputs.skip_downstream }}
+        env:
+          INDEXNOW_KEY: 1ac970a9ea7034b7e0e74418363f8240
+          DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: node scripts/indexnow-submit.js
+
       # A paused source and a broken one look identical from the data alone.
       # The worker records every run in sources.last_scrape_ok/_note; surface it
       # in the job log so a failure is visible without opening the database.

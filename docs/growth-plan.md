@@ -99,6 +99,7 @@ weeks plus replays, as the instrumentation memory already says.
 - Hypothesis: ChatGPT search reads Bing; Bing Webmaster Tools is registered but nothing pings it. Submitting changed URLs nightly after the stats rebuild gets new hub pages and title changes into ChatGPT faster.
 - Build: a step in `.github/workflows/ingest.yml` that posts the sitemap's URLs with today's `lastmod` to the IndexNow endpoint with a key file served from `web/public`.
 - Measure: Bing/DuckDuckGo sessions (baseline 26 per 90 days); AI-channel sessions.
+- **Shipped 2026-10-27**: `scripts/indexnow-submit.js` runs after the coverage snapshot in `ingest.yml`; it reads the live sitemap, hashes each cluster's figures (schema/015 `indexnow_submissions`) and submits only changed URLs. Key file lives in the CRA `public/` (served at the domain root), not `web/public`, which the rewrites do not expose. `--all` resubmits everything: run it after the 2026-11-03 title flip.
 
 **B12. Retire the remaining CRA public routes** — S/M
 - `/privacy`, `/terms`, `/help`, `/categories` move to Next (static content, real heads); `/planes/*` and `/check` routes removed (duplicates and unshipped); the CRA keeps `/search` and the marketplace behind its flag. Also the cleanup the findability memory already owes (`ToolScanPage.js` etc.).
