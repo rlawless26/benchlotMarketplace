@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
+import FamilyGrid from '@/components/FamilyGrid';
+import TypeTable from '@/components/TypeTable';
 import { JsonLd, guideDatasetJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { groupClustersByType } from '@/lib/guide-index';
-import {
-  listPublishableClusters, listBrandHubs, machineTypeSummaries, clusterPath, brandHubPath, clusterPhrase,
-  typePlural, slug, firstSoldYear,
-} from '@/lib/price-guide';
+import { groupByFamily } from '@/lib/guide-families';
+import { listPublishableClusters, listBrandHubs, brandHubPath, typePlural, firstSoldYear } from '@/lib/price-guide';
 
 export const revalidate = 3600;
 
@@ -18,18 +18,25 @@ export const metadata: Metadata = {
   alternates: { canonical: '/guide' },
 };
 
+/**
+ * The guide's front door. Until 2026-10-28 this page listed every maker as
+ * a chip, then every maker+type page under 62 headings: ~790 links with no
+ * hierarchy, no picture and no price, and 26 views in 90 days. Now it reads
+ * top-down: eight tool families with photos, a priced table of types under
+ * each, and the makers as an alphabetical index at the end. Every type
+ * links to its own /guide/{type} page; the maker+type pages are one click
+ * below that.
+ */
 export default async function GuideIndex() {
-  // Brand and size pages only; model pages are reached from their brand page.
-  const [clusters, hubs, machines, firstYear] = await Promise.all([
-    listPublishableClusters({ grains: ['coarse', 'fine'] }),
+  const [clusters, hubs, firstYear] = await Promise.all([
+    listPublishableClusters({ grains: ['coarse'] }),
     listBrandHubs(),
-    machineTypeSummaries(6),
     firstSoldYear(),
   ]);
 
-  // Group by tool type so the index reads as a table of contents rather than a
-  // flat wall of 600 links. Shared with the homepage's type index.
-  const types = groupClustersByType(clusters).map((g) => [g.type, g.clusters] as const);
+  const types = groupClustersByType(clusters);
+  const families = groupByFamily(types);
+  const makers = [...hubs].sort((a, b) => a.canonical_brand.localeCompare(b.canonical_brand));
 
   const totalSold = clusters.reduce((n, c) => n + c.sold_count, 0);
   const built = clusters.map((c) => c.last_built_at).filter((d): d is string => !!d).sort();
@@ -39,103 +46,55 @@ export default async function GuideIndex() {
     <div>
       <JsonLd data={guideDatasetJsonLd({
         siteUrl: SITE_URL, soldTotal: totalSold, clusterCount: clusters.length, dateModified: lastBuilt, firstYear,
-        types: types.map(([type, list]) => ({ name: typePlural(type), path: `/guide#${slug(type)}`, sold: list.reduce((n, c) => n + c.sold_count, 0) })),
+        types: types.map((t) => ({ name: typePlural(t.type), path: `/guide/${t.slug}`, sold: t.sold })),
       })} />
       <h1 className="font-display text-4xl font-semibold text-spruce">Price guide</h1>
       <p className="mt-3 max-w-2xl text-spruce-light">
-        What used woodworking tools actually sell for — built from{' '}
-        <span className="tnum">{totalSold.toLocaleString()}</span> recorded sales across{' '}
-        <span className="tnum">{clusters.length.toLocaleString()}</span> tools. Sold prices, not
-        asking prices.
+        What used woodworking tools actually sell for, by tool type and maker — built from{' '}
+        <span className="tnum">{totalSold.toLocaleString('en-US')}</span> recorded sales across{' '}
+        <span className="tnum">{types.length}</span> tool types and <span className="tnum">{makers.length}</span> makers.
+        Sold prices, not asking prices.
       </p>
 
       <div className="mt-6 max-w-2xl">
         <SearchForm />
       </div>
 
-      {hubs.length > 0 && (
-        <section id="makers" className="mt-10">
-          <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">By maker</h2>
-          <p className="mt-1 text-sm text-spruce-light">Every tool type a maker has sales for, on one page.</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {hubs.map((h) => (
-              <li key={h.brandSlug}>
-                <Link
-                  href={brandHubPath(h.brandSlug)}
-                  className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey"
-                >
-                  {h.canonical_brand}
-                  <span className="tnum ml-2 text-xs text-spruce-light">{h.type_count} types</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section className="mt-10" aria-label="Tool families">
+        <FamilyGrid families={families} surface="guide_index" />
+      </section>
 
-      {/* Machines get their own door. They are where ChatGPT sends buyers and
-          where Google shows the pages without clicking; one hop from the root
-          is what keeps them cited. Each row leads with what is for sale. */}
-      {machines.length > 0 && (
-        <section id="machines" className="mt-10">
-          <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">Machines and power tools</h2>
-          <p className="mt-1 text-sm text-spruce-light">
-            Table saws, planers, dust collectors and the rest, by maker. Sold prices first, then what is listed now.
-          </p>
-          <ul className="mt-4 divide-y divide-bone-dark border-y border-bone-dark">
-            {machines.map((m) => (
-              <li key={m.canonical_type} className="py-3">
-                <div className="flex items-baseline justify-between gap-4">
-                  <Link href={`#${m.typeSlug}`} className="font-medium text-spruce hover:text-honey-dark">
-                    {typePlural(m.canonical_type)}
-                  </Link>
-                  <span className="tnum shrink-0 text-xs text-spruce-light">
-                    {m.sold_total.toLocaleString()} sold · {m.active_total.toLocaleString()} for sale
-                  </span>
-                </div>
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {m.top.map((r) => (
-                    <li key={r.cluster_key}>
-                      <Link
-                        href={clusterPath(r)}
-                        className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey"
-                      >
-                        {r.canonical_brand}
-                        <span className="tnum ml-2 text-xs text-spruce-light">
-                          {r.asking_count_active > 0 ? `${r.asking_count_active} for sale` : `${r.sold_count} sold`}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div className="mt-10 space-y-10">
-        {types.map(([type, list]) => (
-          <section key={type} id={slug(type)}>
-            <h2 className="scroll-mt-6 font-display text-xl font-semibold text-spruce">{type}</h2>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {list.map((c) => (
-                <li key={c.cluster_key}>
-                  <Link
-                    href={clusterPath(c)}
-                    className="flex items-baseline justify-between gap-3 rounded border border-bone-dark bg-bone-light px-3 py-2 text-sm text-spruce hover:border-honey"
-                  >
-                    <span>{clusterPhrase(c)}</span>
-                    <span className="tnum shrink-0 text-xs text-spruce-light">
-                      {c.sold_count > 0 ? `${c.sold_count} sold` : `${c.asking_count} listed`}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+      <div className="mt-12 space-y-12">
+        {families.map((f) => (
+          <section key={f.family.slug} id={f.family.slug}>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 className="scroll-mt-6 font-display text-2xl font-semibold text-spruce">{f.family.name}</h2>
+              <span className="tnum text-sm text-spruce-light">
+                {f.sold.toLocaleString('en-US')} sales · {f.makers.toLocaleString('en-US')} maker pages · {f.forSaleNow.toLocaleString('en-US')} for sale
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-spruce-light">{f.family.blurb}</p>
+            <TypeTable types={f.types} />
           </section>
         ))}
       </div>
+
+      {makers.length > 0 && (
+        <section id="makers" className="mt-14">
+          <h2 className="scroll-mt-6 font-display text-2xl font-semibold text-spruce">Makers A–Z</h2>
+          <p className="mt-1 text-sm text-spruce-light">Every tool type a maker has sales for, on one page.</p>
+          <ul className="mt-4 columns-2 gap-x-6 text-sm sm:columns-3 lg:columns-4">
+            {makers.map((h) => (
+              <li key={h.brandSlug} className="break-inside-avoid py-1">
+                <Link href={brandHubPath(h.brandSlug)} className="text-spruce hover:text-honey-dark hover:underline">
+                  {h.canonical_brand}
+                </Link>
+                <span className="tnum ml-2 text-xs text-spruce-light">{h.sold_total.toLocaleString('en-US')} sales</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

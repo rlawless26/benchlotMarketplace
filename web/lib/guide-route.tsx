@@ -178,7 +178,7 @@ export async function GuideRoute(p: GuideParams) {
   // Same trail the visible breadcrumb renders in GuideView.
   const crumbs = [{ name: 'Price guide', path: '/guide' }];
   if (cluster.canonical_type) {
-    crumbs.push({ name: cluster.canonical_type, path: `/guide#${slug(cluster.canonical_type)}` });
+    crumbs.push({ name: cluster.canonical_type, path: `/guide/${slug(cluster.canonical_type)}` });
   }
   if (cluster.grain !== 'coarse' && cluster.canonical_brand) {
     crumbs.push({ name: cluster.canonical_brand, path: clusterPath({ typeSlug: p.typeSlug, brandSlug: p.brandSlug, sizeSlug: null, modelSlug: null, planeType: null }) });

@@ -15,7 +15,10 @@ import { track, GUIDE_LINK_EVENT } from '@/lib/analytics';
 export type GuideLinkKind =
   | 'breadcrumb' | 'size' | 'model' | 'plane_type' | 'related_brand' | 'brand_hub' | 'hub_type' | 'type_hub' | 'listings'
   // Homepage surfaces: the type index chips, the "sold this week" cards, the hero chips.
-  | 'type_index' | 'home_sold' | 'home_chip';
+  | 'type_index' | 'home_sold' | 'home_chip'
+  // The family cards (index and home), a type link inside a card, and the
+  // maker rows on a /guide/{type} page.
+  | 'family_card' | 'family_type' | 'type_maker';
 
 export default function GuideLink({
   href, kind, clusterKey = null, className, children,

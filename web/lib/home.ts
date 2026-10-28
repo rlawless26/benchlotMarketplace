@@ -46,9 +46,12 @@ export type RecentSale = Listing & {
  * so this shows the week's dealer and forum sales rather than archive rows.
  * Realised price where the forum sold-check extracted one.
  */
-export async function recentSales(limit = 8, days = 7): Promise<RecentSale[]> {
+export async function recentSales(limit = 8, days = 7, opts: { type?: string } = {}): Promise<RecentSale[]> {
   // A dealer sweep marks everything that vanished as sold at the same instant,
   // so without a per-source cap one shop's Monday fills the whole strip.
+  const params: unknown[] = [limit];
+  let typeClause = '';
+  if (opts.type) { params.push(opts.type); typeClause = ` AND l.canonical_type = $${params.length}`; }
   const rows = await sql<Listing & { canonical_type: string; canonical_brand: string }>(
     `SELECT * FROM (
        SELECT d.*, row_number() OVER (PARTITION BY d.source ORDER BY d.dated_at DESC, d.id DESC) AS rn
@@ -63,7 +66,7 @@ export async function recentSales(limit = 8, days = 7): Promise<RecentSale[]> {
                 l.sold_at AS dated_at
          FROM listings l JOIN sources s ON s.id = l.source
          WHERE l.status = 'sold' AND l.sold_at > now() - interval '${Math.max(1, Math.round(days))} days'
-           AND l.canonical_type IS NOT NULL AND l.canonical_type <> 'Other'
+           AND l.canonical_type IS NOT NULL AND l.canonical_type <> 'Other'${typeClause}
            AND l.canonical_brand IS NOT NULL AND l.canonical_brand <> 'Unknown'
            AND COALESCE(l.sold_price_cents, l.price_cents) > 0
            AND NOT bl_is_junk(l.title_raw, l.condition_raw) AND NOT bl_is_lot(l.title_raw)
@@ -73,7 +76,7 @@ export async function recentSales(limit = 8, days = 7): Promise<RecentSale[]> {
      WHERE r.rn <= 3
      ORDER BY r.dated_at DESC, r.id DESC
      LIMIT $1`,
-    [limit]
+    params
   );
   return rows.flatMap((r) => {
     const guidePath = guidePathFor(r.canonical_type, r.canonical_brand);

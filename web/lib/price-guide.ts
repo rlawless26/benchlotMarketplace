@@ -900,3 +900,179 @@ export async function hubForQuery(q: string): Promise<BrandHubRef | null> {
   const hubs = await listBrandHubs();
   return hubs.find((h) => norm(h.canonical_brand) === wanted) ?? null;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Tool-type hub pages: /guide/{type}                                        */
+/* ------------------------------------------------------------------------ */
+
+export type TypeMakerRow = ClusterRef & {
+  sold_p25: string | null;
+  sold_p75: string | null;
+  asking_p50: string | null;
+  sold_by_kind: Record<string, unknown> | null;
+};
+
+/**
+ * The makers with a page for this type, most sales first: the ranked table
+ * a /guide/{type} page is built around. Publishable rows only, so every row
+ * links to a page that exists; rows under the 8-sale line still appear (the
+ * page carries "too few sales" in the price cells) because a buyer who
+ * knows the maker wants the link, not a verdict.
+ */
+export async function typeMakerRows(type: string): Promise<TypeMakerRow[]> {
+  const rows = await sql<RefRow & { sold_p25: string | null; sold_p75: string | null; asking_p50: string | null; sold_by_kind: Record<string, unknown> | null }>(
+    `SELECT ${REF_COLUMNS}, sold_p25, sold_p75, asking_p50, sold_by_kind
+     FROM price_stats
+     WHERE grain = 'coarse' AND canonical_type = $1 AND ${PUBLISHABLE}
+     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count_active,0) DESC, canonical_brand`,
+    [type]
+  );
+  return rows.map((r) => ({ ...toRef(r), sold_p25: r.sold_p25, sold_p75: r.sold_p75, asking_p50: r.asking_p50, sold_by_kind: r.sold_by_kind }));
+}
+
+export type TypeFacts = ClusterFacts & {
+  p25: number | null;
+  p50: number | null;
+  p75: number | null;
+  /** Eligible sold comps by source kind (Dealer, Marketplace, Forum …). */
+  byKind: Record<string, number>;
+  /** Listings for sale now across every maker, publishable or not. */
+  active: number;
+};
+
+/**
+ * The whole type's sold evidence in one query: the same de-duplication and
+ * exclusions as clusterFacts(), with the brand predicate removed, plus the
+ * quartiles. No price_stats row exists at this grain (the rebuild stops at
+ * type+brand), and a median of maker medians would weight a two-sale maker
+ * like Stanley, so the figure comes from the listings themselves. Bench
+ * planes are ~3k sold rows; under ISR that is a few hundred milliseconds
+ * once an hour.
+ */
+export async function typeFacts(type: string): Promise<TypeFacts> {
+  const rows = await sql<{
+    name: string | null; kind: string | null; n: string; first_at: string | null; last_at: string | null;
+    recent: string; lots: string; junk: string; p25: string | null; p50: string | null; p75: string | null; active: string;
+  }>(
+    `WITH sold AS (
+       SELECT l.title_raw, l.condition_raw, l.source, l.sold_at, l.posted_at,
+              COALESCE(l.sold_price_cents, l.price_cents) AS price_cents
+       FROM listings l
+       WHERE l.canonical_type = $1 AND l.status = 'sold' AND l.price_cents IS NOT NULL
+         AND l.canonical_brand IS NOT NULL AND l.canonical_brand <> 'Unknown'
+     ),
+     eligible AS (
+       SELECT DISTINCT ON (lower(btrim(l.title_raw)), l.price_cents)
+              s.name, s.kind::text AS kind, l.price_cents, COALESCE(l.sold_at, l.posted_at) AS dated_at
+       FROM sold l JOIN sources s ON s.id = l.source
+       WHERE NOT bl_is_junk(l.title_raw, l.condition_raw) AND NOT bl_is_lot(l.title_raw)
+       ORDER BY lower(btrim(l.title_raw)), l.price_cents, l.sold_at DESC NULLS LAST
+     )
+     SELECT name, kind, count(*)::text AS n,
+            min(dated_at)::text AS first_at, max(dated_at)::text AS last_at,
+            count(*) FILTER (WHERE dated_at > now() - interval '365 days')::text AS recent,
+            '0' AS lots, '0' AS junk, NULL AS p25, NULL AS p50, NULL AS p75, '0' AS active
+     FROM eligible GROUP BY name, kind
+     UNION ALL
+     SELECT NULL, NULL, '0', NULL, NULL, '0',
+            (SELECT count(*) FILTER (WHERE bl_is_lot(title_raw)) FROM sold)::text,
+            (SELECT count(*) FILTER (WHERE bl_is_junk(title_raw, condition_raw) AND NOT bl_is_lot(title_raw)) FROM sold)::text,
+            (percentile_cont(0.25) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
+            (percentile_cont(0.5)  WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
+            (percentile_cont(0.75) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
+            (SELECT count(*) FROM listings l
+              WHERE l.canonical_type = $1 AND l.status = 'active' AND l.price_cents IS NOT NULL
+                AND ${FRESH} AND ${ELIGIBLE})::text
+     FROM eligible
+     ORDER BY 1 NULLS LAST`,
+    [type]
+  );
+
+  const bySource = rows.filter((r) => r.name !== null);
+  const summary = rows.find((r) => r.name === null);
+  const sourceTotals = new Map<string, number>();
+  const byKind: Record<string, number> = {};
+  for (const r of bySource) {
+    const n = Number(r.n);
+    sourceTotals.set(r.name as string, (sourceTotals.get(r.name as string) ?? 0) + n);
+    const k = r.kind ?? 'Other';
+    byKind[k] = (byKind[k] ?? 0) + n;
+  }
+  const sources = [...sourceTotals.entries()]
+    .map(([name, n]) => ({ name, n }))
+    .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  const dates = bySource.flatMap((r) => [r.first_at, r.last_at]).filter((d): d is string => !!d);
+  const num = (v: string | null | undefined) => (v === null || v === undefined ? null : parseFloat(v));
+  return {
+    sources,
+    total: sources.reduce((n, s) => n + s.n, 0),
+    firstAt: dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null,
+    lastAt: dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null,
+    recent: bySource.reduce((n, r) => n + Number(r.recent), 0),
+    lotsExcluded: Number(summary?.lots ?? 0),
+    junkExcluded: Number(summary?.junk ?? 0),
+    p25: num(summary?.p25), p50: num(summary?.p50), p75: num(summary?.p75),
+    byKind,
+    active: Number(summary?.active ?? 0),
+  };
+}
+
+/**
+ * The best-documented size, model and plane-type pages for a type (Stanley
+ * No. 4, Disston 26 inch), for the "best-documented pages" strip on a type
+ * page. Indexable rows only: a chip that leads to a "too few sales" page is
+ * a dead end here.
+ */
+export async function typeTopPages(type: string, limit = 12): Promise<ClusterRef[]> {
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
+     FROM price_stats
+     WHERE grain IN ('fine', 'model-fine', 'type-fine') AND canonical_type = $1 AND ${PUBLISHABLE} AND ${INDEXABLE}
+     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC
+     LIMIT $2`,
+    [type, limit]
+  );
+  return rows.map(toRef);
+}
+
+/**
+ * Canonical type name for a /guide/{type} slug, or null when no maker has a
+ * publishable page for it (or the slug is "other", which is never a page).
+ * Slugs are matched against the coarse rows rather than a static list so a
+ * type that gains its first page appears without a deploy.
+ */
+export async function resolveTypeSlug(typeSlug: string): Promise<string | null> {
+  if (!typeSlug || typeSlug === '_' || typeSlug === 'other') return null;
+  const rows = await sql<{ canonical_type: string }>(
+    `SELECT canonical_type
+     FROM price_stats
+     WHERE grain = 'coarse' AND split_part(cluster_key, '::', 2) = $1 AND ${PUBLISHABLE}
+     LIMIT 1`,
+    [typeSlug]
+  );
+  return rows[0]?.canonical_type ?? null;
+}
+
+/**
+ * Every type with at least one publishable maker page, for static params and
+ * the sitemap. `sold_total` counts every maker's sales, publishable or not
+ * (a Craftsman router table sale is still a router table sale), which is
+ * also what typeFacts() counts, so the sitemap and the page agree on which
+ * types clear the 8-sale line.
+ */
+export async function listTypeHubs(opts: { indexableOnly?: boolean } = {}): Promise<{ canonical_type: string; typeSlug: string; sold_total: number; makers: number; last_built_at: string | null }[]> {
+  const having = [`count(*) FILTER (WHERE ${PUBLISHABLE}) > 0`];
+  if (opts.indexableOnly) having.push(`coalesce(sum(sold_count), 0) >= ${SOLD_MIN_FOR_REFERENCE}`);
+  return sql(
+    `SELECT canonical_type, split_part(cluster_key, '::', 2) AS "typeSlug",
+            coalesce(sum(sold_count), 0)::int AS sold_total,
+            count(*) FILTER (WHERE ${PUBLISHABLE})::int AS makers,
+            max(last_built_at) FILTER (WHERE ${PUBLISHABLE})::text AS last_built_at
+     FROM price_stats
+     WHERE grain = 'coarse' AND canonical_type IS NOT NULL AND canonical_type <> 'Other'
+       AND canonical_brand IS NOT NULL AND canonical_brand <> 'Unknown'
+     GROUP BY canonical_type, split_part(cluster_key, '::', 2)
+     HAVING ${having.join(' AND ')}
+     ORDER BY sold_total DESC, canonical_type`
+  );
+}

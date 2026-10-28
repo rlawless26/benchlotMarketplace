@@ -3,12 +3,13 @@ import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import OutboundListingLink from '@/components/OutboundListingLink';
 import GuideLink from '@/components/GuideLink';
-import TypeIndex from '@/components/TypeIndex';
+import FamilyGrid from '@/components/FamilyGrid';
 import { JsonLd, siteJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { indexStats } from '@/lib/index-stats';
 import { recentListings, recentSales } from '@/lib/home';
 import { groupClustersByType } from '@/lib/guide-index';
+import { groupByFamily } from '@/lib/guide-families';
 import {
   listPublishableClusters, listBrandHubs, brandHubPath, cleanTitle, centsToMoney, slug,
 } from '@/lib/price-guide';
@@ -46,14 +47,14 @@ export const metadata: Metadata = {
 
 /** Eight ways into the guide: the biggest types and the makers people search for. */
 const CHIPS: { label: string; href: string }[] = [
-  { label: 'Bench planes', href: `/guide#${slug('Bench Plane')}` },
-  { label: 'Hand saws', href: `/guide#${slug('Hand Saw')}` },
-  { label: 'Chisels', href: `/guide#${slug('Chisel')}` },
+  { label: 'Bench planes', href: `/guide/${slug('Bench Plane')}` },
+  { label: 'Hand saws', href: `/guide/${slug('Hand Saw')}` },
+  { label: 'Chisels', href: `/guide/${slug('Chisel')}` },
   { label: 'Stanley', href: brandHubPath('stanley') },
   { label: 'Lie-Nielsen', href: brandHubPath('lie-nielsen') },
-  { label: 'Table saws', href: `/guide#${slug('Table Saw')}` },
-  { label: 'Band saws', href: `/guide#${slug('Band Saw')}` },
-  { label: 'Jointers', href: `/guide#${slug('Jointer')}` },
+  { label: 'Table saws', href: `/guide/${slug('Table Saw')}` },
+  { label: 'Band saws', href: `/guide/${slug('Band Saw')}` },
+  { label: 'Jointers', href: `/guide/${slug('Jointer')}` },
 ];
 
 function soldDay(iso: string | null): string {
@@ -71,7 +72,7 @@ export default async function Home() {
   ]);
   // A quiet week still gets a strip: widen to a fortnight before giving up.
   const sold = soldRaw.length >= 3 ? soldRaw : await recentSales(8, 14);
-  const groups = groupClustersByType(clusters);
+  const families = groupByFamily(groupClustersByType(clusters));
   const topHubs = hubs.slice(0, 10);
 
   return (
@@ -110,17 +111,17 @@ export default async function Home() {
         </ul>
       </section>
 
-      {groups.length > 0 && (
+      {families.length > 0 && (
         <section className="mt-14">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="font-display text-xl font-semibold text-spruce">Price guide by tool type</h2>
             <Link href="/guide" className="text-sm text-honey-dark hover:underline">Full guide →</Link>
           </div>
           <p className="mt-1 text-sm text-spruce-light">
-            Median sold prices by maker, from at least eight recorded sales. Machines and hand tools alike.
+            Sold prices by maker, from at least eight recorded sales. Machines and hand tools alike.
           </p>
           <div className="mt-4">
-            <TypeIndex groups={groups} limit={24} />
+            <FamilyGrid families={families} surface="home" />
           </div>
         </section>
       )}

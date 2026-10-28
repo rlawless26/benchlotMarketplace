@@ -56,7 +56,8 @@ export async function GET() {
   lines.push('');
   lines.push('## How pages are organised');
   lines.push('');
-  lines.push(`- [Price guide index](${abs('/guide')}): every tool type, with its makers.`);
+  lines.push(`- [Price guide index](${abs('/guide')}): tool families, every tool type with its sale count and the spread of maker medians, and the makers A-Z.`);
+  lines.push(`- Tool type: \`${abs('/guide/{type}')}\`, e.g. ${abs('/guide/bench-plane')}: the type-wide median and every maker of it in one table.`);
   lines.push(`- Maker + type: \`${abs('/guide/{type}/{maker}')}\`, e.g. ${abs('/guide/bench-plane/stanley')}`);
   lines.push(`- Model: \`${abs('/guide/{type}/{maker}/{model}')}\`, e.g. ${abs('/guide/bench-plane/stanley/no-4')}`);
   lines.push(`- Stanley-pattern plane type studies: \`${abs('/guide/{type}/{maker}/{model}/type-N')}\``);
