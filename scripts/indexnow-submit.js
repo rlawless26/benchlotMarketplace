@@ -17,10 +17,10 @@
  * Needs INDEXNOW_KEY, whose value is also the contents of
  * https://benchlot.com/<key>.txt (served from the CRA project's public/).
  */
-const path = require('path');
 const { createHash } = require('crypto');
-require('dotenv').config({ path: path.join(__dirname, '..', 'web', '.env.local') });
-const { Pool } = require(path.join(__dirname, '..', 'web', 'node_modules', 'pg'));
+const { fromFunctions, loadEnv } = require('./lib/load-env');
+loadEnv('functions/.env', 'web/.env.local');
+const { Pool } = fromFunctions('pg');
 
 const SITE = process.env.INDEXNOW_SITE || 'https://benchlot.com';
 const HOST = new URL(SITE).host;
