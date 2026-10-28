@@ -1,4 +1,4 @@
-import { slug, type ClusterRef } from './price-guide';
+import { slug, type ClusterRef, SOLD_MIN_FOR_REFERENCE } from './price-guide';
 
 /** One tool type's share of the guide, for an index or table of contents. */
 export type TypeGroup = {
@@ -8,6 +8,13 @@ export type TypeGroup = {
   makers: number;
   sold: number;
   forSaleNow: number;
+  /**
+   * Lowest and highest maker median among makers with eight or more sales,
+   * so an index row can say "maker medians $45–$320" from data it already
+   * holds. Null when no maker clears the threshold.
+   */
+  p50Min: number | null;
+  p50Max: number | null;
   /** The clusters themselves, in the order they arrived (most sold first). */
   clusters: ClusterRef[];
 };
@@ -24,13 +31,21 @@ export function groupClustersByType(clusters: ClusterRef[]): TypeGroup[] {
     byType.set(c.canonical_type, list);
   }
   return [...byType.entries()]
-    .map(([type, list]) => ({
-      type,
-      slug: slug(type),
-      makers: list.length,
-      sold: list.reduce((n, c) => n + c.sold_count, 0),
-      forSaleNow: list.reduce((n, c) => n + c.asking_count_active, 0),
-      clusters: list,
-    }))
+    .map(([type, list]) => {
+      const medians = list
+        .filter((c) => c.sold_count >= SOLD_MIN_FOR_REFERENCE && c.sold_p50 !== null)
+        .map((c) => parseFloat(c.sold_p50 as string))
+        .filter((n) => !Number.isNaN(n));
+      return {
+        type,
+        slug: slug(type),
+        makers: list.length,
+        sold: list.reduce((n, c) => n + c.sold_count, 0),
+        forSaleNow: list.reduce((n, c) => n + c.asking_count_active, 0),
+        p50Min: medians.length ? Math.min(...medians) : null,
+        p50Max: medians.length ? Math.max(...medians) : null,
+        clusters: list,
+      };
+    })
     .sort((a, b) => b.sold - a.sold || a.type.localeCompare(b.type));
 }
