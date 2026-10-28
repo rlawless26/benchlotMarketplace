@@ -41,6 +41,7 @@ export async function GET() {
   lines.push('- "Median sold" is the middle recorded sale for that tool; "most sell for" is the middle half (25th to 75th percentile).');
   lines.push('- Sets, pairs, lots, parts and as-is listings are excluded from the figures and marked on the page.');
   lines.push('- A page quotes a median only with 8 or more recorded sales; below that it shows the individual sales and says "too few".');
+  lines.push('- Each page states a confidence tier: high for 20 or more recorded sales, medium for 8 to 19, low below that (no median), with the date of the latest sale and how many sales came from dealers versus marketplaces and forums. The same tiers are in the API\'s `confidence` field.');
   lines.push('- "For sale now" rows are live listings seen within the last 45 days, with the seller linked directly.');
   lines.push('- Figures are rebuilt nightly; each page states when it was last updated.');
   lines.push('');

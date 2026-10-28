@@ -145,6 +145,61 @@ export function guideDatasetJsonLd(opts: {
   };
 }
 
+/**
+ * One page's figures as a Dataset: the median, the middle half, the sale
+ * count and the confidence tier, with the API call that returns the same
+ * numbers as its distribution. Emitted only on pages with enough sales to
+ * publish a median (the caller checks), so the markup never claims a figure
+ * the page does not show. schema.org has no "confidence" property; it rides
+ * as a measured variable with its definition in the description.
+ */
+export function clusterDatasetJsonLd(opts: {
+  siteUrl: string;
+  url: string;
+  phrase: string;
+  cluster: {
+    canonical_type: string | null; canonical_brand: string | null; canonical_model: string | null;
+    canonical_size: string | null; plane_type_number: number | null;
+    sold_count: number | null; sold_p25: string | null; sold_p50: string | null; sold_p75: string | null;
+    last_built_at: string | null;
+  };
+  facts: { firstAt: string | null; lastAt: string | null; recent: number };
+  confidence: string;
+}): Record<string, unknown> {
+  const { siteUrl, url, phrase, cluster: c, facts, confidence } = opts;
+  const n = (v: string | null) => (v === null ? null : Number(v));
+  const day = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : null);
+  const q = new URLSearchParams({ type: c.canonical_type ?? '', brand: c.canonical_brand ?? '' });
+  if (c.canonical_model) q.set('model', c.canonical_model);
+  else if (c.canonical_size) q.set('size', c.canonical_size);
+  if (c.canonical_model && c.plane_type_number) q.set('plane_type', String(c.plane_type_number));
+  const first = day(facts.firstAt);
+  const last = day(facts.lastAt);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    '@id': `${url}#dataset`,
+    name: `${phrase} recorded sale prices`,
+    description: `Median and middle-half sold prices for used ${phrase}, from ${c.sold_count ?? 0} recorded sales at tool dealers, forum classifieds and marketplaces, de-duplicated across sources with sets, lots and parts excluded.`,
+    url,
+    isPartOf: { '@id': `${siteUrl}/guide#dataset` },
+    creator: { '@id': `${siteUrl}/#organization` },
+    license: `${siteUrl}/terms`,
+    isAccessibleForFree: true,
+    ...(c.last_built_at ? { dateModified: new Date(c.last_built_at).toISOString() } : {}),
+    ...(first && last ? { temporalCoverage: `${first}/${last}` } : {}),
+    measurementTechnique: 'Recorded sale prices from public listings, de-duplicated and filtered for sets, lots and parts; median and quartiles per maker, tool type, size and model.',
+    variableMeasured: [
+      { '@type': 'PropertyValue', name: 'median sold price', value: n(c.sold_p50), unitText: 'USD' },
+      { '@type': 'PropertyValue', name: 'interquartile range of sold prices', minValue: n(c.sold_p25), maxValue: n(c.sold_p75), unitText: 'USD' },
+      { '@type': 'PropertyValue', name: 'recorded sales', value: c.sold_count ?? 0 },
+      { '@type': 'PropertyValue', name: 'sales in the last twelve months', value: facts.recent },
+      { '@type': 'PropertyValue', name: 'confidence', value: confidence, description: 'high: 20 or more recorded sales; medium: 8 to 19; low: fewer than 8 (no median published)' },
+    ],
+    distribution: { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${siteUrl}/api/v1/prices?${q.toString()}` },
+  };
+}
+
 /** Site-level markup for the homepage only: who publishes this, and how to search it. */
 export function siteJsonLd(siteUrl: string): Record<string, unknown> {
   return {
