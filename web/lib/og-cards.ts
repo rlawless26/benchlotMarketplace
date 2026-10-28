@@ -1,7 +1,8 @@
 import {
   getCluster, activeAggregate, getBrandHub, brandActiveCount, isMachineType,
   clusterPhraseSingular, typePlural, typeLower, money, centsToMoney, isIndexable,
-  SOLD_MIN_FOR_REFERENCE, HUB_MIN_TYPES, type Cluster, type BrandHub,
+  resolveTypeSlug, typeFacts, typeMakerRows,
+  SOLD_MIN_FOR_REFERENCE, HUB_MIN_TYPES, type Cluster, type BrandHub, type TypeFacts, type TypeMakerRow,
 } from './price-guide';
 import type { OgCard } from './og';
 
@@ -107,4 +108,45 @@ export async function hubOgCard(brandSlug: string, pagePath: string): Promise<{ 
   if (!hub || hub.types.length < HUB_MIN_TYPES) return null;
   const forSale = await brandActiveCount(hub.canonical_brand);
   return { card: hubCard(hub, forSale, pagePath), hub };
+}
+
+/**
+ * A /guide/{type} page's card: the type-wide median, the evidence behind it,
+ * and the four biggest makers with their medians, which is what someone
+ * pasting "what do used bench planes go for" into a thread wants to show.
+ */
+export function typeCard(type: string, facts: TypeFacts, makers: TypeMakerRow[], pagePath: string): OgCard {
+  const plural = typeLower(typePlural(type));
+  const quotable = facts.total >= SOLD_MIN_FOR_REFERENCE && facts.p50 !== null;
+  const tiles: OgCard['tiles'] = [];
+  if (quotable) {
+    tiles.push({ value: facts.total.toLocaleString('en-US'), label: 'recorded sales' });
+    if (facts.p25 !== null && facts.p75 !== null) tiles.push({ value: `${money(facts.p25)}–${money(facts.p75)}`, label: 'middle half of sales' });
+    if (facts.active > 0) tiles.push({ value: facts.active.toLocaleString('en-US'), label: 'for sale now' });
+  } else {
+    tiles.push({ value: String(makers.length), label: makers.length === 1 ? 'maker' : 'makers' });
+    if (facts.active > 0) tiles.push({ value: facts.active.toLocaleString('en-US'), label: 'for sale now' });
+  }
+  const rows = makers
+    .filter((m) => isIndexable(m) && money(m.sold_p50))
+    .slice(0, 4)
+    .map((m) => ({ name: m.canonical_brand, value: money(m.sold_p50) as string }));
+  return {
+    eyebrow: `Used ${plural}, every maker`,
+    title: `What used ${plural} sell for`,
+    figure: quotable ? (money(facts.p50) as string) : facts.total.toLocaleString('en-US'),
+    figureLabel: quotable
+      ? `median sold price across ${makers.length} makers`
+      : 'recorded sales: too few for a median',
+    tiles,
+    rows,
+    pathLabel: `benchlot.com${pagePath}`,
+  };
+}
+
+export async function typeOgCard(typeSlug: string, pagePath: string): Promise<{ card: OgCard; type: string } | null> {
+  const type = await resolveTypeSlug(typeSlug);
+  if (!type) return null;
+  const [facts, makers] = await Promise.all([typeFacts(type), typeMakerRows(type)]);
+  return { card: typeCard(type, facts, makers, pagePath), type };
 }
