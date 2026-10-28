@@ -17,10 +17,9 @@
  *   node scripts/coverage-report.js --json     # machine-readable, for before/after diffs
  *   node scripts/coverage-report.js --write    # also insert a coverage_snapshots row
  */
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', 'functions', '.env') });
-require('dotenv').config({ path: path.join(__dirname, '..', 'web', '.env.local') });
-const { Pool } = require(path.join(__dirname, '..', 'functions', 'node_modules', 'pg'));
+const { fromFunctions, loadEnv } = require('./lib/load-env');
+loadEnv('functions/.env', 'web/.env.local');
+const { Pool } = fromFunctions('pg');
 
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!DB) { console.error('DATABASE_URL is not set'); process.exit(1); }
