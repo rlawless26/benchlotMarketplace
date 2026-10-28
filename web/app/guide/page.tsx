@@ -3,6 +3,7 @@ import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import { JsonLd, guideDatasetJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
+import { groupClustersByType } from '@/lib/guide-index';
 import {
   listPublishableClusters, listBrandHubs, machineTypeSummaries, clusterPath, brandHubPath, clusterPhrase,
   typePlural, slug, firstSoldYear,
@@ -27,18 +28,8 @@ export default async function GuideIndex() {
   ]);
 
   // Group by tool type so the index reads as a table of contents rather than a
-  // flat wall of 600 links.
-  const byType = new Map<string, typeof clusters>();
-  for (const c of clusters) {
-    const list = byType.get(c.canonical_type) ?? [];
-    list.push(c);
-    byType.set(c.canonical_type, list);
-  }
-  const types = [...byType.entries()].sort((a, b) => {
-    const soldA = a[1].reduce((n, c) => n + c.sold_count, 0);
-    const soldB = b[1].reduce((n, c) => n + c.sold_count, 0);
-    return soldB - soldA || a[0].localeCompare(b[0]);
-  });
+  // flat wall of 600 links. Shared with the homepage's type index.
+  const types = groupClustersByType(clusters).map((g) => [g.type, g.clusters] as const);
 
   const totalSold = clusters.reduce((n, c) => n + c.sold_count, 0);
   const built = clusters.map((c) => c.last_built_at).filter((d): d is string => !!d).sort();

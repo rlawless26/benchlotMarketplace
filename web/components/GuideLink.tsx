@@ -13,7 +13,9 @@ import { track, GUIDE_LINK_EVENT } from '@/lib/analytics';
  * key so the plan's internal-linking work can be judged chip by chip.
  */
 export type GuideLinkKind =
-  | 'breadcrumb' | 'size' | 'model' | 'plane_type' | 'related_brand' | 'brand_hub' | 'hub_type' | 'type_hub' | 'listings';
+  | 'breadcrumb' | 'size' | 'model' | 'plane_type' | 'related_brand' | 'brand_hub' | 'hub_type' | 'type_hub' | 'listings'
+  // Homepage surfaces: the type index chips, the "sold this week" cards, the hero chips.
+  | 'type_index' | 'home_sold' | 'home_chip';
 
 export default function GuideLink({
   href, kind, clusterKey = null, className, children,
