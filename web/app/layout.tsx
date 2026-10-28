@@ -57,11 +57,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${petrona.variable} ${outfit.variable}`}>
       <body className="min-h-screen bg-bone text-dark-teal antialiased">
         <header className="border-b border-bone-dark bg-bone-light">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
-            <Link href="/" className="font-display text-xl font-semibold text-spruce">
+          {/* Under 768px: logo and links on one row, the search box full-width
+              on the next. On one row the five items need ~730px, so phones
+              overflowed and tablets lost the search button off the edge. */}
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-3 px-5 py-3 md:flex-nowrap md:gap-x-6 md:py-4">
+            <Link href="/" className="mr-auto font-display text-xl font-semibold text-spruce">
               Benchlot
             </Link>
-            <nav className="flex items-center gap-4 text-sm sm:gap-6">
+            <nav className="flex items-center gap-4 whitespace-nowrap text-sm sm:gap-6">
               <Link href="/guide" className="text-spruce hover:text-honey-dark">
                 Price guide
               </Link>
@@ -71,8 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/search" className="hidden text-spruce hover:text-honey-dark sm:inline">
                 Listings
               </a>
-              <SearchForm compact />
             </nav>
+            <div className="basis-full md:basis-auto">
+              <SearchForm compact />
+            </div>
           </div>
         </header>
 
