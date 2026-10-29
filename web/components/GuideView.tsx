@@ -432,11 +432,23 @@ export default function GuideView({
                 soldCount, min: SOLD_MIN_FOR_REFERENCE,
               }}
             />
-            {activeCount > active.length && (
-              <p className="mt-2 text-xs text-spruce-light">
-                The {active.length} most recent of {activeCount.toLocaleString()} listings.
-              </p>
-            )}
+            {/* The grid at /search holds every listing with its filters; until
+                now the only way there from a guide page was the header, and
+                a fifth of sessions leave for a seller from here. */}
+            <p className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs text-spruce-light">
+              {activeCount > active.length && (
+                <span>The {active.length} most recent of {activeCount.toLocaleString()} listings.</span>
+              )}
+              {hasCluster && (
+                <GuideLink
+                  external kind="listings_all" clusterKey={cluster.cluster_key}
+                  href={`/search?cat=${encodeURIComponent(cluster.canonical_type!)}&maker=${encodeURIComponent(cluster.canonical_brand!)}`}
+                  className="text-sm text-honey-dark hover:underline"
+                >
+                  All {cluster.canonical_brand} {typeLower(typePlural(cluster.canonical_type!))} for sale, with filters →
+                </GuideLink>
+              )}
+            </p>
           </section>
         </>
       ) : (

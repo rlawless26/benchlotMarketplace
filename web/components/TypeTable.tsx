@@ -7,6 +7,8 @@ import type { TypeGroup } from '@/lib/guide-index';
  * old chip wall could not say. "Maker medians" is the spread of per-maker
  * medians (eight or more sales each), so a reader sees at a glance that a
  * bench plane runs from $40 (Craftsman) to $600 (Norris) before clicking.
+ * Phones keep Type, Sales and the medians; makers and for-sale counts wait
+ * for a wider screen.
  */
 export default function TypeTable({ types }: { types: TypeGroup[] }) {
   return (
@@ -16,8 +18,8 @@ export default function TypeTable({ types }: { types: TypeGroup[] }) {
           <th scope="col" className="py-2 pr-3 font-medium">Tool type</th>
           <th scope="col" className="hidden py-2 pr-3 text-right font-medium sm:table-cell">Makers</th>
           <th scope="col" className="py-2 pr-3 text-right font-medium">Sales</th>
-          <th scope="col" className="py-2 pr-3 text-right font-medium">For sale</th>
-          <th scope="col" className="hidden py-2 text-right font-medium sm:table-cell">Maker medians</th>
+          <th scope="col" className="hidden py-2 pr-3 text-right font-medium sm:table-cell">For sale</th>
+          <th scope="col" className="py-2 text-right font-medium">Maker medians</th>
         </tr>
       </thead>
       <tbody>
@@ -30,8 +32,8 @@ export default function TypeTable({ types }: { types: TypeGroup[] }) {
             </td>
             <td className="tnum hidden py-2 pr-3 text-right text-spruce-light sm:table-cell">{t.makers}</td>
             <td className="tnum py-2 pr-3 text-right text-spruce">{t.sold.toLocaleString('en-US')}</td>
-            <td className="tnum py-2 pr-3 text-right text-spruce-light">{t.forSaleNow.toLocaleString('en-US')}</td>
-            <td className="tnum hidden py-2 text-right sm:table-cell">
+            <td className="tnum hidden py-2 pr-3 text-right text-spruce-light sm:table-cell">{t.forSaleNow.toLocaleString('en-US')}</td>
+            <td className="tnum whitespace-nowrap py-2 text-right">
               {t.p50Min !== null && t.p50Max !== null ? (
                 <span className="font-semibold text-honey-dark">
                   {t.p50Min === t.p50Max ? money(t.p50Min) : `${money(t.p50Min)}–${money(t.p50Max)}`}

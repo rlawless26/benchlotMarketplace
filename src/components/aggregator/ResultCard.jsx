@@ -27,7 +27,7 @@ import { track, trackListingClickOut } from '../../utils/analytics';
 import { PRICE_GUIDE_ENABLED } from '../../utils/featureFlags';
 import usePriceStats from '../../firebase/hooks/usePriceStats';
 import usePriceHistory from '../../firebase/hooks/usePriceHistory';
-import PriceContextChip from './PriceContextChip';
+import PriceContextChip, { guideHref } from './PriceContextChip';
 import PriceDropBadge from './PriceDropBadge';
 import PreviousListingsPopover from './PreviousListingsPopover';
 
@@ -123,6 +123,24 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
     e.preventDefault();
     e.stopPropagation();
     if (typeof onSaveAlert === 'function') onSaveAlert(listing);
+  };
+
+  // The guide page for this listing's maker + type, shown in the footer
+  // when the cluster has a quotable median. Before this the only way from
+  // a listing to the guide was the popover behind the price chip, which
+  // two people a month opened.
+  const guideStats = PRICE_GUIDE_ENABLED && priceStats.stats && priceStats.stats.sold_count >= 8 ? priceStats.stats : null;
+  const guideLink = guideStats ? guideHref(guideStats) : null;
+  const handleGuideClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    track('guide_link_clicked', {
+      kind: 'result_card',
+      cluster_key: priceStats.cluster_key || null,
+      href: guideLink,
+      listing_id: listing.id,
+    });
+    window.location.assign(guideLink);
   };
 
   const handleCardClick = () => {
@@ -351,7 +369,23 @@ const ResultCard = ({ listing, onSaveAlert, searchContext }) => {
         >
           <span className="inline-flex items-center gap-1.5">
             <KindDot kind={source?.kind} />
-            Listed at {source?.name || 'external source'}
+            {guideLink ? (
+              <button
+                type="button"
+                onClick={handleGuideClick}
+                title={`Price guide: median $${Math.round(guideStats.sold_p50)} from ${guideStats.sold_count} sales`}
+                className="inline-flex items-center gap-1 cursor-pointer"
+                style={{
+                  background: 'none', border: 0, padding: 0, font: 'inherit', color: '#1a3030', // spruce
+                  letterSpacing: 'inherit',
+                }}
+              >
+                <span style={{ color: '#d4aa60', fontWeight: 700 }}>${Math.round(guideStats.sold_p50)}</span>
+                <span>median · price guide</span>
+              </button>
+            ) : (
+              <>Listed at {source?.name || 'external source'}</>
+            )}
           </span>
           <span className="inline-flex items-center gap-3">
             {PRICE_GUIDE_ENABLED && priceHistory.snapshots.length >= 2 && (
