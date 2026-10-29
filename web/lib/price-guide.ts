@@ -823,6 +823,8 @@ export type BrandHubRef = {
   brandSlug: string;
   type_count: number;
   sold_total: number;
+  /** Listings for sale now across the maker's pages. */
+  active_total: number;
 };
 
 const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
@@ -859,9 +861,10 @@ export async function listBrandHubs(opts: { indexableOnly?: boolean } = {}): Pro
   const having = opts.indexableOnly
     ? `count(*) FILTER (WHERE ${INDEXABLE}) >= ${HUB_MIN_TYPES}`
     : `count(*) >= ${HUB_MIN_TYPES}`;
-  const rows = await sql<{ canonical_brand: string; brand_slug: string; type_count: number; sold_total: number }>(
+  const rows = await sql<{ canonical_brand: string; brand_slug: string; type_count: number; sold_total: number; active_total: number }>(
     `SELECT canonical_brand, split_part(cluster_key, '::', 3) AS brand_slug,
-            count(*)::int AS type_count, coalesce(sum(sold_count), 0)::int AS sold_total
+            count(*)::int AS type_count, coalesce(sum(sold_count), 0)::int AS sold_total,
+            coalesce(sum(asking_count_active), 0)::int AS active_total
      FROM price_stats
      WHERE ${HUB_ROWS}
      GROUP BY canonical_brand, split_part(cluster_key, '::', 3)
@@ -870,7 +873,7 @@ export async function listBrandHubs(opts: { indexableOnly?: boolean } = {}): Pro
   );
   return rows.map((r) => ({
     canonical_brand: r.canonical_brand, brandSlug: r.brand_slug,
-    type_count: r.type_count, sold_total: r.sold_total,
+    type_count: r.type_count, sold_total: r.sold_total, active_total: r.active_total,
   }));
 }
 

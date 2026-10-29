@@ -27,6 +27,13 @@ export const metadata: Metadata = {
  * links to its own /guide/{type} page; the maker+type pages are one click
  * below that.
  */
+/** "5,337 sales"; a maker with listings but no recorded sale says so instead of "0 sales". */
+function makerCount(h: { sold_total: number; active_total: number }): string {
+  if (h.sold_total > 0) return `${h.sold_total.toLocaleString('en-US')} ${h.sold_total === 1 ? 'sale' : 'sales'}`;
+  if (h.active_total > 0) return `${h.active_total.toLocaleString('en-US')} for sale`;
+  return 'listings only';
+}
+
 export default async function GuideIndex() {
   const [clusters, hubs, firstYear] = await Promise.all([
     listPublishableClusters({ grains: ['coarse'] }),
@@ -89,7 +96,7 @@ export default async function GuideIndex() {
                 <Link href={brandHubPath(h.brandSlug)} className="text-spruce hover:text-honey-dark hover:underline">
                   {h.canonical_brand}
                 </Link>
-                <span className="tnum ml-2 text-xs text-spruce-light">{h.sold_total.toLocaleString('en-US')} sales</span>
+                <span className="tnum ml-2 text-xs text-spruce-light">{makerCount(h)}</span>
               </li>
             ))}
           </ul>

@@ -77,6 +77,7 @@ weeks plus replays, as the instrumentation memory already says.
 - Content per hub: a brand table (brand, sales, median, for sale), models with their own pages, for-sale rows across brands, the evidence sentence, `ItemList` JSON-LD, the alert form, the share bar. **No cross-brand median** — a median of Lie-Nielsen and Stanley No. 4 sales together is a number about nothing. State ranges per brand instead.
 - Gate: ≥2 indexable brands and ≥50 sales, or the page is noindex and absent from the sitemap.
 - Measure: GSC impressions/clicks on `/guide/{type}` (baseline 0); whether "disston saw price guide" consolidates on `/guide/hand-saw` or the Disston hub.
+- **Shipped 2026-10-28** (#41, #43): `web/app/guide/[type]/page.tsx`, 61 pages. The index became eight photo families with a priced type table each (`web/lib/guide-families.ts`), makers A–Z last; the homepage shows the same cards. The type page does state a type-wide median, contrary to the note above, but beside the full maker table and the same evidence row (sources, dealer skew, exclusions) the maker pages carry, so the number is never alone. Gate is 8 sales, as everywhere else; OG cards at `/guide/og/{type}`.
 
 **B8. Brand hubs that read as a guide** — S/M
 - Hypothesis: hubs earn impressions (246) and almost no clicks (2) because the page is a list of chips; a per-type table with medians is what "millers falls tools price guide" wants.
