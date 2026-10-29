@@ -18,10 +18,12 @@ export type GuideLinkKind =
   | 'type_index' | 'home_sold' | 'home_chip'
   // The family cards (index and home), a type link inside a card, and the
   // maker rows on a /guide/{type} page.
-  | 'family_card' | 'family_type' | 'type_maker';
+  | 'family_card' | 'family_type' | 'type_maker'
+  // The "all listings" link from a guide page into the CRA grid at /search.
+  | 'listings_all';
 
 export default function GuideLink({
-  href, kind, clusterKey = null, className, children,
+  href, kind, clusterKey = null, className, children, external = false,
 }: {
   href: string;
   kind: GuideLinkKind;
@@ -29,7 +31,16 @@ export default function GuideLink({
   clusterKey?: string | null;
   className?: string;
   children: React.ReactNode;
+  /** A route the CRA app serves (/search): a plain anchor, never next/link. */
+  external?: boolean;
 }) {
+  if (external) {
+    return (
+      <a href={href} className={className} onClick={() => track(GUIDE_LINK_EVENT, { kind, cluster_key: clusterKey, href })}>
+        {children}
+      </a>
+    );
+  }
   return (
     <Link
       href={href}

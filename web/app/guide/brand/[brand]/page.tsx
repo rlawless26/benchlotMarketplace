@@ -4,15 +4,17 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import SearchForm from '@/components/SearchForm';
 import OutboundListingLink from '@/components/OutboundListingLink';
 import { Stat } from '@/components/GuideView';
+import EvidenceRow from '@/components/EvidenceRow';
+import PriceTable from '@/components/PriceTable';
 import ShareBar from '@/components/ShareBar';
 import GuideLink from '@/components/GuideLink';
 import { JsonLd, breadcrumbJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { ogImagePath } from '@/lib/og-cards';
 import {
-  getBrandHub, listBrandHubs, resolveBrandAlias, brandHubPath, clusterPath,
-  brandActiveListings, brandActiveCount, cleanTitle, centsToMoney,
-  typePlural, typeLower, money, isIndexable, HUB_MIN_TYPES,
+  getBrandHub, listBrandHubs, resolveBrandAlias, brandHubPath, clusterPath, clusterPhrase,
+  brandActiveListings, brandActiveCount, brandFacts, brandTopPages, cleanTitle, centsToMoney,
+  typePlural, typeLower, money, isIndexable, HUB_MIN_TYPES, SOLD_MIN_FOR_REFERENCE,
 } from '@/lib/price-guide';
 
 export const revalidate = 3600;
@@ -85,9 +87,14 @@ export default async function BrandHubPage({ params }: Params) {
   const b = hub.canonical_brand;
   const lead = hub.types[0];
   const soldTypes = hub.types.filter(isIndexable);
-  const [forSale, forSaleCount] = await Promise.all([brandActiveListings(b, 12), brandActiveCount(b)]);
+  const [forSale, forSaleCount, facts, top] = await Promise.all([
+    brandActiveListings(b, 12), brandActiveCount(b), brandFacts(b), brandTopPages(b, 12),
+  ]);
   const path = brandHubPath(hub.brandSlug);
+  const pageKey = `hub::${hub.brandSlug}`;
   const typeFor = (t: string) => hub.types.find((x) => x.canonical_type === t) ?? null;
+  const enough = facts.total >= SOLD_MIN_FOR_REFERENCE;
+  const builtAt = hub.types.map((t) => t.last_built_at).filter((d): d is string => !!d).sort().pop() ?? null;
 
   return (
     <article>
@@ -107,6 +114,9 @@ export default async function BrandHubPage({ params }: Params) {
         Sold prices, not asking prices.
       </p>
 
+      {/* 2026-10-28: the hub reads as a guide, not a list. The stat card
+          carries the same evidence row the type and maker pages do, and the
+          type table with medians comes before the for-sale rows. */}
       <section className="mt-8 rounded-lg border border-bone-dark bg-bone-light p-5">
         <dl className="grid grid-cols-2 gap-6 sm:grid-cols-4">
           <Stat label="Sales on record" value={hub.sold_total.toLocaleString('en-US')} big />
@@ -117,6 +127,9 @@ export default async function BrandHubPage({ params }: Params) {
           />
           <Stat label="For sale now" value={forSaleCount.toLocaleString('en-US')} />
         </dl>
+        {/* The card's count is the sum of the type pages; the sentence uses it
+            too so the two never disagree by a handful of rows. */}
+        <EvidenceRow soldCount={hub.sold_total} askingCount={facts.active} facts={facts} byKind={facts.byKind} builtAt={builtAt} full={enough} />
         <ShareBar
           className="mt-4 border-t border-bone-dark pt-4"
           stat={`Used ${b} tools: ${hub.sold_total.toLocaleString('en-US')} recorded sales across ${hub.types.length} tool types${lead.sold_count >= 8 && money(lead.sold_p50) ? `; ${typeLower(typePlural(lead.canonical_type))} median ${money(lead.sold_p50)}` : ''}.`}
@@ -126,6 +139,44 @@ export default async function BrandHubPage({ params }: Params) {
           surface="brand_hub"
         />
       </section>
+
+      <section className="mt-10">
+        <h2 className="font-display text-xl font-semibold text-spruce">Every {b} tool in the guide</h2>
+        <p className="mt-1 text-sm text-spruce-light">
+          Most recorded sales first. A median is quoted from eight or more sales; the rest link to their listings.
+        </p>
+        <PriceTable
+          labelHeader="Tool type" kind="hub_type" pageKey={pageKey}
+          rows={hub.types.map((t) => ({
+            key: t.cluster_key, label: typePlural(t.canonical_type), href: clusterPath(t),
+            sold_count: t.sold_count, sold_p25: t.sold_p25, sold_p50: t.sold_p50, sold_p75: t.sold_p75,
+            asking_count_active: t.asking_count_active,
+          }))}
+        />
+        {soldTypes.length < hub.types.length && (
+          <p className="mt-3 text-xs text-spruce-light">
+            {hub.types.length - soldTypes.length} of these types have too few recorded sales to quote a median yet.
+          </p>
+        )}
+      </section>
+
+      {top.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-semibold text-spruce">Best-documented {b} pages</h2>
+          <p className="mt-1 text-sm text-spruce-light">The models and sizes with the most recorded sales.</p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {top.map((c) => (
+              <li key={c.cluster_key}>
+                <GuideLink href={clusterPath(c)} kind="model" clusterKey={pageKey}
+                           className="inline-block rounded border border-bone-dark bg-bone-light px-3 py-1.5 text-sm text-spruce hover:border-honey">
+                  {clusterPhrase(c)}
+                  <span className="tnum ml-2 text-xs text-spruce-light">{c.sold_count.toLocaleString('en-US')} sold</span>
+                </GuideLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* What can be bought today, across every type. Before this the hub had
           no listings at all and sat at position 16 with zero clicks while the
@@ -173,42 +224,6 @@ export default async function BrandHubPage({ params }: Params) {
           <p className="mt-3 text-spruce">{hub.note}</p>
         </section>
       )}
-
-      <section className="mt-10">
-        <h2 className="font-display text-xl font-semibold text-spruce">Every {b} tool in the guide</h2>
-        <p className="mt-1 text-sm text-spruce-light">
-          Median is the middle recorded sale. Types with fewer than 8 sales show listings only.
-        </p>
-        <ul className="mt-4 divide-y divide-bone-dark border-y border-bone-dark">
-          {hub.types.map((t) => {
-            const median = isIndexable(t) ? money(t.sold_p50) : null;
-            return (
-              <li key={t.cluster_key}>
-                <GuideLink
-                  href={clusterPath(t)} kind="hub_type" clusterKey={`hub::${hub.brandSlug}`}
-                  className="flex items-baseline justify-between gap-4 py-3 hover:text-honey-dark"
-                >
-                  <span className="text-spruce">
-                    {typePlural(t.canonical_type)}
-                    <span className="tnum ml-2 text-xs text-spruce-light">
-                      {t.sold_count > 0 ? `${t.sold_count} sold` : `${t.asking_count} listed`}
-                      {t.asking_count_active > 0 ? ` · ${t.asking_count_active} for sale` : ''}
-                    </span>
-                  </span>
-                  <span className="tnum shrink-0 font-display font-semibold text-honey-dark">
-                    {median ?? <span className="text-sm font-normal text-spruce-light">too few sales</span>}
-                  </span>
-                </GuideLink>
-              </li>
-            );
-          })}
-        </ul>
-        {soldTypes.length < hub.types.length && (
-          <p className="mt-3 text-xs text-spruce-light">
-            {hub.types.length - soldTypes.length} of these types have too few recorded sales to quote a median yet.
-          </p>
-        )}
-      </section>
 
       <section className="mt-12 border-t border-bone-dark pt-6">
         <h2 className="font-display text-lg font-semibold text-spruce">Looking for another maker?</h2>

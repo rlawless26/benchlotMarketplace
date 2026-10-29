@@ -29,7 +29,7 @@ const fmtPrice = (d) => {
   return `$${Math.round(d)}`;
 };
 
-function guideHref(stats) {
+export function guideHref(stats) {
   if (!stats) return null;
   const { canonical_type, canonical_brand, canonical_size, grain } = stats;
   const slug = (s) =>

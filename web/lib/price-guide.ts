@@ -804,7 +804,7 @@ export async function redirectTarget(
  */
 export const HUB_MIN_TYPES = 2;
 
-export type HubType = ClusterRef;
+export type HubType = ClusterRef & { sold_p25: string | null; sold_p75: string | null };
 
 export type BrandHub = {
   canonical_brand: string;
@@ -834,15 +834,15 @@ const HUB_ROWS = `${PUBLISHABLE} AND grain = 'coarse'`;
  * none. The caller decides what fewer than HUB_MIN_TYPES rows means.
  */
 export async function getBrandHub(brandSlug: string): Promise<BrandHub | null> {
-  const rows = await sql<RefRow>(
-    `SELECT ${REF_COLUMNS}
+  const rows = await sql<RefRow & { sold_p25: string | null; sold_p75: string | null }>(
+    `SELECT ${REF_COLUMNS}, sold_p25, sold_p75
      FROM price_stats
      WHERE ${HUB_ROWS} AND split_part(cluster_key, '::', 3) = $1
      ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC`,
     [brandSlug]
   );
   if (rows.length === 0) return null;
-  const types = rows.map(toRef);
+  const types: HubType[] = rows.map((r) => ({ ...toRef(r), sold_p25: r.sold_p25, sold_p75: r.sold_p75 }));
   const canonical_brand = rows[0].canonical_brand;
   const note = await brandNote(canonical_brand);
   return {
@@ -955,6 +955,15 @@ export type TypeFacts = ClusterFacts & {
  * once an hour.
  */
 export async function typeFacts(type: string): Promise<TypeFacts> {
+  return scopeFacts(`l.canonical_type = $1 AND l.canonical_brand IS NOT NULL AND l.canonical_brand <> 'Unknown'`, [type]);
+}
+
+/** The same figures for one maker across every tool type it has sold. */
+export async function brandFacts(brand: string): Promise<TypeFacts> {
+  return scopeFacts(`l.canonical_brand = $1 AND l.canonical_type IS NOT NULL AND l.canonical_type <> 'Other'`, [brand]);
+}
+
+async function scopeFacts(scope: string, params: unknown[]): Promise<TypeFacts> {
   const rows = await sql<{
     name: string | null; kind: string | null; n: string; first_at: string | null; last_at: string | null;
     recent: string; lots: string; junk: string;
@@ -964,8 +973,7 @@ export async function typeFacts(type: string): Promise<TypeFacts> {
        SELECT l.title_raw, l.condition_raw, l.source, l.sold_at, l.posted_at,
               COALESCE(l.sold_price_cents, l.price_cents) AS price_cents
        FROM listings l
-       WHERE l.canonical_type = $1 AND l.status = 'sold' AND l.price_cents IS NOT NULL
-         AND l.canonical_brand IS NOT NULL AND l.canonical_brand <> 'Unknown'
+       WHERE ${scope} AND l.status = 'sold' AND l.price_cents IS NOT NULL
      ),
      eligible AS (
        SELECT DISTINCT ON (lower(btrim(l.title_raw)), l.price_cents)
@@ -989,11 +997,11 @@ export async function typeFacts(type: string): Promise<TypeFacts> {
             (percentile_cont(0.75) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (percentile_cont(0.90) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (SELECT count(*) FROM listings l
-              WHERE l.canonical_type = $1 AND l.status = 'active' AND l.price_cents IS NOT NULL
+              WHERE ${scope} AND l.status = 'active' AND l.price_cents IS NOT NULL
                 AND ${FRESH} AND ${ELIGIBLE})::text
      FROM eligible
      ORDER BY 1 NULLS LAST`,
-    [type]
+    params
   );
 
   const bySource = rows.filter((r) => r.name !== null);
@@ -1031,6 +1039,18 @@ export async function typeFacts(type: string): Promise<TypeFacts> {
  * page. Indexable rows only: a chip that leads to a "too few sales" page is
  * a dead end here.
  */
+export async function brandTopPages(brand: string, limit = 12): Promise<ClusterRef[]> {
+  const rows = await sql<RefRow>(
+    `SELECT ${REF_COLUMNS}
+     FROM price_stats
+     WHERE grain IN ('fine', 'model-fine', 'type-fine') AND canonical_brand = $1 AND ${PUBLISHABLE} AND ${INDEXABLE}
+     ORDER BY coalesce(sold_count,0) DESC, coalesce(asking_count,0) DESC
+     LIMIT $2`,
+    [brand, limit]
+  );
+  return rows.map(toRef);
+}
+
 export async function typeTopPages(type: string, limit = 12): Promise<ClusterRef[]> {
   const rows = await sql<RefRow>(
     `SELECT ${REF_COLUMNS}

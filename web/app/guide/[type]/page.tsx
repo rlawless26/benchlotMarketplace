@@ -4,7 +4,7 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import SearchForm from '@/components/SearchForm';
 import GuideLink from '@/components/GuideLink';
-import MakerTable from '@/components/MakerTable';
+import PriceTable from '@/components/PriceTable';
 import EvidenceRow from '@/components/EvidenceRow';
 import ShareBar from '@/components/ShareBar';
 import { Stat } from '@/components/GuideView';
@@ -181,7 +181,14 @@ export default async function TypeHub({ params }: Params) {
         <p className="mt-1 text-sm text-spruce-light">
           Every maker with recorded sales, most first. A median is quoted from eight or more sales.
         </p>
-        <MakerTable rows={makers} pageKey={pageKey} />
+        <PriceTable
+          labelHeader="Maker" kind="type_maker" pageKey={pageKey}
+          rows={makers.map((m) => ({
+            key: m.cluster_key, label: m.canonical_brand, href: clusterPath(m),
+            sold_count: m.sold_count, sold_p25: m.sold_p25, sold_p50: m.sold_p50, sold_p75: m.sold_p75,
+            asking_count_active: m.asking_count_active,
+          }))}
+        />
       </section>
 
       {top.length > 0 && (
