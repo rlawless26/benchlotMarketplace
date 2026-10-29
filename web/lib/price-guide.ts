@@ -931,9 +931,11 @@ export async function typeMakerRows(type: string): Promise<TypeMakerRow[]> {
 }
 
 export type TypeFacts = ClusterFacts & {
+  p10: number | null;
   p25: number | null;
   p50: number | null;
   p75: number | null;
+  p90: number | null;
   /** Eligible sold comps by source kind (Dealer, Marketplace, Forum …). */
   byKind: Record<string, number>;
   /** Listings for sale now across every maker, publishable or not. */
@@ -952,7 +954,8 @@ export type TypeFacts = ClusterFacts & {
 export async function typeFacts(type: string): Promise<TypeFacts> {
   const rows = await sql<{
     name: string | null; kind: string | null; n: string; first_at: string | null; last_at: string | null;
-    recent: string; lots: string; junk: string; p25: string | null; p50: string | null; p75: string | null; active: string;
+    recent: string; lots: string; junk: string;
+    p10: string | null; p25: string | null; p50: string | null; p75: string | null; p90: string | null; active: string;
   }>(
     `WITH sold AS (
        SELECT l.title_raw, l.condition_raw, l.source, l.sold_at, l.posted_at,
@@ -971,15 +974,17 @@ export async function typeFacts(type: string): Promise<TypeFacts> {
      SELECT name, kind, count(*)::text AS n,
             min(dated_at)::text AS first_at, max(dated_at)::text AS last_at,
             count(*) FILTER (WHERE dated_at > now() - interval '365 days')::text AS recent,
-            '0' AS lots, '0' AS junk, NULL AS p25, NULL AS p50, NULL AS p75, '0' AS active
+            '0' AS lots, '0' AS junk, NULL AS p10, NULL AS p25, NULL AS p50, NULL AS p75, NULL AS p90, '0' AS active
      FROM eligible GROUP BY name, kind
      UNION ALL
      SELECT NULL, NULL, '0', NULL, NULL, '0',
             (SELECT count(*) FILTER (WHERE bl_is_lot(title_raw)) FROM sold)::text,
             (SELECT count(*) FILTER (WHERE bl_is_junk(title_raw, condition_raw) AND NOT bl_is_lot(title_raw)) FROM sold)::text,
+            (percentile_cont(0.10) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (percentile_cont(0.25) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (percentile_cont(0.5)  WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (percentile_cont(0.75) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
+            (percentile_cont(0.90) WITHIN GROUP (ORDER BY price_cents) / 100.0)::text,
             (SELECT count(*) FROM listings l
               WHERE l.canonical_type = $1 AND l.status = 'active' AND l.price_cents IS NOT NULL
                 AND ${FRESH} AND ${ELIGIBLE})::text
@@ -1011,7 +1016,7 @@ export async function typeFacts(type: string): Promise<TypeFacts> {
     recent: bySource.reduce((n, r) => n + Number(r.recent), 0),
     lotsExcluded: Number(summary?.lots ?? 0),
     junkExcluded: Number(summary?.junk ?? 0),
-    p25: num(summary?.p25), p50: num(summary?.p50), p75: num(summary?.p75),
+    p10: num(summary?.p10), p25: num(summary?.p25), p50: num(summary?.p50), p75: num(summary?.p75), p90: num(summary?.p90),
     byKind,
     active: Number(summary?.active ?? 0),
   };

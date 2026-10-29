@@ -12,6 +12,7 @@ import { JsonLd, breadcrumbJsonLd, webPageJsonLd } from '@/lib/jsonld';
 import { SITE_URL } from '@/lib/site';
 import { recentSales } from '@/lib/home';
 import { familyOf } from '@/lib/guide-families';
+import { ogImagePath } from '@/lib/og-cards';
 import {
   resolveTypeSlug, listTypeHubs, typeMakerRows, typeFacts, typeTopPages,
   clusterPath, clusterPhrase, cleanTitle, centsToMoney, money, typePlural, typeLower,
@@ -64,12 +65,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const description = indexable
     ? `What used ${plural} sell for: median ${money(facts.p50)}, most between ${money(facts.p25)} and ${money(facts.p75)}, from ${sales} recorded sales across ${makers.length} makers. Sold prices by maker, not asking prices.`
     : `Recorded sales and current listings for used ${plural}, by maker, gathered from dealers, forum classifieds and marketplaces.`;
+  const builtAt = makers.map((m) => m.last_built_at).filter((d): d is string => !!d).sort().pop() ?? null;
   return {
     title: { absolute: `${title} · Benchlot` },
     description,
     alternates: { canonical: path },
     ...(indexable ? {} : { robots: { index: false, follow: true } }),
-    openGraph: { title: `${title} · Benchlot`, description, url: path, type: 'website' },
+    openGraph: {
+      title: `${title} · Benchlot`, description, url: path, type: 'website',
+      images: [{ url: ogImagePath(path, builtAt), width: 1200, height: 630, alt: `Used ${plural} prices on Benchlot` }],
+    },
+    twitter: { card: 'summary_large_image' },
   };
 }
 
