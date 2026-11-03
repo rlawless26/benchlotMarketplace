@@ -31,6 +31,15 @@
       ]
     },
     {
+      "source": "/search",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
       "source": "/static/(.*)",
       "headers": [
         {
