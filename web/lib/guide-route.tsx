@@ -37,11 +37,12 @@ function pathFor(p: GuideParams, grain: string, planeType: number | null) {
  * one with 25-90 impressions and 0-1 clicks. Machine pages change first:
  * the searcher wants listings, so when three or more are for sale the title
  * leads with supply. Hand-tool titles are the control and keep the old
- * wording until this flips (planned 2026-11-03, judged on CTR at position
- * 4-10 by group); after that, leave both alone for a month. Descriptions
- * follow the same switch so the control stays clean.
+ * wording until this flips, judged on CTR at position 4-10 by group.
+ * Flipped 2026-11-03 (growth plan G4); titles are frozen until 2026-12-03,
+ * so no title or H1 change before then. Descriptions follow the same switch
+ * so the control stays clean.
  */
-export const HAND_TOOL_WORTH_TITLES = false;
+export const HAND_TOOL_WORTH_TITLES = true;
 
 /** "in 2026" or "from 2024 to 2026", from the sold comps' first and last dates. */
 function yearSpan(firstAt: string | null, lastAt: string | null): string | null {
