@@ -31,6 +31,14 @@ export function getPool(): Pool {
     // legitimately sit for more than ten seconds while Neon is busy. 10s
     // failed the build with "timeout exceeded when trying to connect".
     connectionTimeoutMillis: 30_000,
+    // Bounds a query once it holds a connection, which the two limits above
+    // do not. On 2026-11-02 eight POST /mcp invocations ran to the function
+    // limit without writing a single request-log row, so they never got past
+    // the first query. A socket Neon closed while Fluid compute had this
+    // instance suspended would hang exactly like that. Client-side on
+    // purpose: PgBouncer ignores statement_timeout as a startup parameter.
+    query_timeout: 25_000,
+    keepAlive: true,
   });
 
   // Lets Fluid compute drain in-flight queries instead of killing the sandbox
