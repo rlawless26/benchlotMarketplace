@@ -5,8 +5,9 @@ import { identify, IDENTIFY_MAX_BASE64 } from '@/lib/api/services';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// A scan is one Opus call with up to five images; allow for a slow one.
-export const maxDuration = 120;
+// A scan is one Opus call with up to five images: 90s client timeout plus one
+// retry (lib/toolscan), so ~180s worst case. 120 was below that.
+export const maxDuration = 200;
 
 /**
  * Identify one tool from photos. Same engine as /scan: the model's own
