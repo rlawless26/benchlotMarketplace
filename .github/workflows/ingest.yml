@@ -162,8 +162,15 @@ jobs:
       # as comps. Only rows without a verdict are touched, so most nights this
       # is a no-op; forum scrape days (Thu, Sat) produce a handful. Bounded by
       # --max-cost the same way the normalizer is.
+      #
+      # continue-on-error for the same reason as Scrape: this step only refines
+      # a handful of forum comps, and from 2026-11-06 to 2026-11-25 its failure
+      # skipped every step below, so the price guide rebuilt only on days with
+      # no forum threads to check. The final step re-raises it.
       - name: Verify forum solds
+        id: soldcheck
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
+        continue-on-error: true
         run: node functions/ingest/forum-sold-check.js --limit 200 --max-cost 2
 
       # One maker, one spelling: brand_aliases (schema/010) folds the
@@ -246,7 +253,12 @@ jobs:
 
       # Downstream steps ran on whatever succeeded; now surface the failure.
       - name: Fail if any scrape failed
-        if: steps.scrape.outcome == 'failure'
+        if: steps.scrape.outcome == 'failure' || steps.soldcheck.outcome == 'failure'
         run: |
-          echo "One or more sources failed — see the Scrape step and the freshness table above."
+          if [ "${{ steps.scrape.outcome }}" = "failure" ]; then
+            echo "One or more sources failed — see the Scrape step and the freshness table above."
+          fi
+          if [ "${{ steps.soldcheck.outcome }}" = "failure" ]; then
+            echo "Forum sold verification failed — see the Verify forum solds step."
+          fi
           exit 1

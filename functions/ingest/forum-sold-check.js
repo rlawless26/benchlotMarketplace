@@ -43,9 +43,17 @@ const { Pool } = require('pg');
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!DB) { console.error('DATABASE_URL is not set'); process.exit(1); }
 
+const { modelExtras } = require('../normalize/normalizer');
+
 const MODEL = process.env.BENCHLOT_NORMALIZER_MODEL || 'claude-haiku-4-5';
-// Haiku 4.5, USD per million tokens — mirrors normalize/run-postgres.js.
-const PRICE = { input: 1.0, output: 5.0, cacheWrite: 1.25, cacheRead: 0.1 };
+// USD per million tokens — mirrors normalize/run-postgres.js. An unknown
+// model falls back to Haiku 4.5 rates, which only over-counts against the
+// --max-cost ceiling.
+const PRICES = {
+  'claude-haiku-4-5': { input: 1.0, output: 5.0, cacheWrite: 1.25, cacheRead: 0.1 },
+  'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheWrite: 0.125, cacheRead: 0.01 },
+};
+const PRICE = PRICES[MODEL] || PRICES['claude-haiku-4-5'];
 
 const USER_AGENT = 'Mozilla/5.0 (compatible; BenchlotIngestion/1.0; +https://benchlot.com)';
 const FETCH_DELAY_MS = 2000; // politeness between thread fetches
@@ -189,9 +197,14 @@ async function classify(anthropic, listing, posts) {
     .join('\n\n')
     .slice(0, 24000);
 
+  // modelExtras turns off the adaptive thinking the Haiku 5.x line enables by
+  // default. Left on, a thinking block came back as content[0] (or used up
+  // the whole token budget) and every verdict failed with "no JSON in
+  // response", which failed the step and skipped the price-stats rebuild.
   const msg = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 200,
+    max_tokens: 400,
+    ...modelExtras(MODEL),
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     messages: [{
       role: 'user',
@@ -200,14 +213,20 @@ async function classify(anthropic, listing, posts) {
     ...telemetry('forum_sold_check', randomUUID(), { source: listing.source, source_id: listing.source_id }),
   });
 
-  const text = msg.content?.[0]?.text || '';
+  const cost = costOf(msg.usage || {});
+  // Read every text block, not content[0]: a thinking block can lead.
+  const text = (msg.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   const m = text.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error(`no JSON in response: ${text.slice(0, 120)}`);
+  if (!m) {
+    const err = new Error(`no JSON in response (stop_reason=${msg.stop_reason}): ${text.slice(0, 120)}`);
+    err.cost = cost;
+    throw err;
+  }
   const out = JSON.parse(m[0]);
   if (!['sold', 'withdrawn', 'no_sale', 'unclear'].includes(out.verdict)) {
     throw new Error(`bad verdict: ${out.verdict}`);
   }
-  return { ...out, cost: costOf(msg.usage || {}) };
+  return { ...out, cost };
 }
 
 /* ----------------------------------------------------------------- apply -- */
@@ -294,6 +313,7 @@ async function main() {
       );
       if (!DRY_RUN) await apply(pool, listing, result);
     } catch (err) {
+      if (typeof err.cost === 'number') cost += err.cost;
       tally.failed += 1;
       console.error(`  FAILED     ${listing.source}/${listing.source_id}: ${err.message}`);
     }
