@@ -200,6 +200,7 @@ async function normalizeListing(listing, opts = {}) {
 module.exports = {
   normalizeListing,
   buildRequestParams,
+  modelExtras,
   parseClassification,
   shutdownClient,
   CLASSIFY_TOOL,

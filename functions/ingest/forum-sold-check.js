@@ -38,6 +38,7 @@ const cheerio = require('cheerio');
 const Anthropic = require('@anthropic-ai/sdk');
 const { randomUUID } = require('crypto');
 const { createAnthropic, telemetry } = require('../lib/anthropic-client');
+const { modelExtras } = require('../normalize/normalizer');
 const { Pool } = require('pg');
 
 const DB = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
@@ -191,7 +192,11 @@ async function classify(anthropic, listing, posts) {
 
   const msg = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 200,
+    max_tokens: 300,
+    // Haiku 5.x thinks by default and thinking shares max_tokens with the
+    // answer: at 200 the budget was spent before any JSON was written, and
+    // the same threads failed every night (2026-11-06 → 11-25).
+    ...modelExtras(MODEL),
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     messages: [{
       role: 'user',
@@ -200,9 +205,10 @@ async function classify(anthropic, listing, posts) {
     ...telemetry('forum_sold_check', randomUUID(), { source: listing.source, source_id: listing.source_id }),
   });
 
-  const text = msg.content?.[0]?.text || '';
+  // Never content[0]: a thinking block comes first whenever the model thinks.
+  const text = (msg.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   const m = text.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error(`no JSON in response: ${text.slice(0, 120)}`);
+  if (!m) throw new Error(`no JSON in response (stop_reason=${msg.stop_reason}): ${text.slice(0, 120)}`);
   const out = JSON.parse(m[0]);
   if (!['sold', 'withdrawn', 'no_sale', 'unclear'].includes(out.verdict)) {
     throw new Error(`bad verdict: ${out.verdict}`);

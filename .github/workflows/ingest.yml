@@ -162,7 +162,12 @@ jobs:
       # as comps. Only rows without a verdict are touched, so most nights this
       # is a no-op; forum scrape days (Thu, Sat) produce a handful. Bounded by
       # --max-cost the same way the normalizer is.
+      # continue-on-error for the same reason as Scrape: this is an optional
+      # enrichment, and when it failed (2026-11-06 → 11-25) it skipped expiry,
+      # the stats rebuild, the coverage snapshot and IndexNow with it.
       - name: Verify forum solds
+        id: forumsold
+        continue-on-error: true
         if: steps.plan.outputs.sources != '' && !inputs.skip_downstream
         run: node functions/ingest/forum-sold-check.js --limit 200 --max-cost 2
 
@@ -245,8 +250,8 @@ jobs:
           "
 
       # Downstream steps ran on whatever succeeded; now surface the failure.
-      - name: Fail if any scrape failed
-        if: steps.scrape.outcome == 'failure'
+      - name: Fail if a scrape or the forum sold-check failed
+        if: steps.scrape.outcome == 'failure' || steps.forumsold.outcome == 'failure'
         run: |
-          echo "One or more sources failed — see the Scrape step and the freshness table above."
+          echo "Scrape: ${{ steps.scrape.outcome }} · Verify forum solds: ${{ steps.forumsold.outcome }} — see those steps and the freshness table above."
           exit 1
